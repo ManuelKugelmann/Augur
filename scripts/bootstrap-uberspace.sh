@@ -2,18 +2,25 @@
 # bootstrap-uberspace.sh — Setup MCP signals stack on Uberspace
 set -euo pipefail
 
-echo "🚀 MCP Signals Stack — Uberspace Bootstrap"
+# ── Load central config ──
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONF="${SCRIPT_DIR}/../deploy.conf"
+[[ -f "$CONF" ]] && source "$CONF"
 
-mkdir -p ~/mcp-signals-stack ~/logs
+echo "🚀 MCP Servers — Uberspace Bootstrap"
+echo "   Host: ${UBER_HOST:-$(hostname -f)}"
+echo "   Install dir: $STACK_DIR"
+
+mkdir -p "$STACK_DIR" ~/logs
 
 # ── Python venv ──
-cd ~/mcp-signals-stack
+cd "$STACK_DIR"
 python3 -m venv venv
 source venv/bin/activate
-pip install fastmcp httpx pymongo python-dotenv pytrends
+pip install -r requirements.txt
 
 # ── Node.js ──
-uberspace tools version use node 20 2>/dev/null || true
+uberspace tools version use node "$NODE_VERSION" 2>/dev/null || true
 
 # ── Copy .env ──
 if [ ! -f .env ]; then
@@ -26,8 +33,8 @@ SERVERS=(agri disasters elections macro weather commodities conflict health huma
 for svc in "${SERVERS[@]}"; do
   cat > ~/etc/services.d/mcp-${svc}.ini << EOF
 [program:mcp-${svc}]
-directory=%(ENV_HOME)s/mcp-signals-stack
-command=%(ENV_HOME)s/mcp-signals-stack/venv/bin/python src/servers/${svc}_server.py
+directory=${STACK_DIR}
+command=${STACK_DIR}/venv/bin/python src/servers/${svc}_server.py
 autostart=false
 autorestart=true
 stderr_logfile=%(ENV_HOME)s/logs/mcp-${svc}.err.log
@@ -38,8 +45,8 @@ done
 # ── Signals store ──
 cat > ~/etc/services.d/mcp-store.ini << EOF
 [program:mcp-store]
-directory=%(ENV_HOME)s/mcp-signals-stack
-command=%(ENV_HOME)s/mcp-signals-stack/venv/bin/python src/store/server.py
+directory=${STACK_DIR}
+command=${STACK_DIR}/venv/bin/python src/store/server.py
 autostart=false
 autorestart=true
 stderr_logfile=%(ENV_HOME)s/logs/mcp-store.err.log

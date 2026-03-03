@@ -2,7 +2,13 @@
 # LibreChat Lite bootstrap — curl | bash to install or update
 set -euo pipefail
 
-REPO="${LIBRECHAT_REPO:?Set LIBRECHAT_REPO=user/repo or export it}"
+# ── Load central config ──
+for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
+            "$HOME/mcps/deploy.conf"; do
+    [[ -f "$conf" ]] && { source "$conf"; break; }
+done
+
+REPO="${LIBRECHAT_REPO:-${GH_USER:-ManuelKugelmann}/${GH_REPO_STACK:-TradingAssistant}}"
 API="https://api.github.com/repos/${REPO}/releases/latest"
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -18,7 +24,7 @@ gh_curl() {
 }
 
 echo -e "${CYAN}═══════════════════════════════════════${NC}"
-echo -e "${CYAN} LibreChat Lite → Uberspace${NC}"
+echo -e "${CYAN} LibreChat Lite → ${UBER_HOST:-Uberspace}${NC}"
 echo -e "${CYAN}═══════════════════════════════════════${NC}"
 echo ""
 

@@ -1,0 +1,55 @@
+# Build LibreChat bundle and create GitHub release on tag push.
+# Usage: git tag v0.1.0 && git push --tags
+name: Release LibreChat Bundle
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare bundle
+        run: |
+          mkdir -p bundle/config bundle/scripts
+
+          # Copy LibreChat deployment files
+          cp deploy.conf                                bundle/
+          cp librechat-uberspace/config/librechat.yaml  bundle/config/
+          cp librechat-uberspace/config/.env.example    bundle/config/
+          cp librechat-uberspace/scripts/setup.sh       bundle/scripts/
+          cp librechat-uberspace/scripts/bootstrap.sh   bundle/scripts/
+          cp librechat-uberspace/scripts/lc.sh          bundle/scripts/
+          cp librechat-uberspace/scripts/setup-data-repo.sh bundle/scripts/
+
+          # Pre-install MCP Node packages into bundle
+          cd bundle
+          npm init -y --silent
+          npm install --save \
+            @modelcontextprotocol/server-filesystem \
+            @modelcontextprotocol/server-memory \
+            mcp-sqlite
+          rm -f package-lock.json
+          cd ..
+
+          # Create tarball
+          tar czf librechat-bundle.tar.gz -C bundle .
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            librechat-bundle.tar.gz
+            install.sh
+          generate_release_notes: true
