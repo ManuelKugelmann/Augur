@@ -1,5 +1,5 @@
-# LibreChat Lite configuration
-# MCP servers + minimal config for Uberspace deployment
+# LibreChat configuration
+# MCP servers: utility (filesystem, memory, sqlite) + trading signals stack
 version: 1.2.1
 
 cache: true
@@ -11,46 +11,164 @@ interface:
   endpointsMenu: true
 
 # ── MCP Servers ─────────────────────────────
-# All data stored under ~/librechat-data/ (git-versioned)
+# Utility MCPs: data stored under ~/librechat-data/ (git-versioned)
+# Trading MCPs: signals stack under ~/mcp-signals-stack/
+#
+# IMPORTANT: setup.sh replaces __HOME__ with your actual $HOME path.
+# If editing manually, replace __HOME__ with e.g. /home/youruser
 mcpServers:
-  # File read/write — documents, exports, research files
+
+  # ── Utility ────────────────────────────────
+
   filesystem:
     command: npx
     args:
       - -y
       - "@modelcontextprotocol/server-filesystem"
-      - /home/user/librechat-data/files/
+      - __HOME__/librechat-data/files/
     serverInstructions: |
       Filesystem for persistent file storage.
       Use for documents, research exports, CSV files, reports.
       All files are git-versioned and synced to GitHub.
 
-  # Knowledge graph — entities and relations in JSONL
-  # NOTE: npx may ignore MEMORY_FILE_PATH in some versions.
-  # If memory.jsonl doesn't appear in ~/librechat-data/, symlink the npx cache file there.
   memory:
     command: npx
     args:
       - -y
       - "@modelcontextprotocol/server-memory"
     env:
-      MEMORY_FILE_PATH: /home/user/librechat-data/memory.jsonl
+      MEMORY_FILE_PATH: __HOME__/librechat-data/memory.jsonl
     serverInstructions: |
       Persistent memory as a knowledge graph.
       Store entities (people, projects, preferences) and their relations.
       Use for context that should persist across conversations.
 
-  # SQLite — structured queryable data
   sqlite:
     command: npx
     args:
       - -y
       - mcp-sqlite
-      - /home/user/librechat-data/data.db
+      - __HOME__/librechat-data/data.db
     serverInstructions: |
       SQLite database for structured data.
       Use for logs, research results, structured notes, transaction records.
       Supports full SQL: CREATE TABLE, INSERT, SELECT, UPDATE, DELETE.
+
+  # ── Signals Store ──────────────────────────
+
+  signals-store:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/store/server.py
+    env:
+      PROFILES_DIR: __HOME__/mcp-signals-stack/profiles
+    serverInstructions: |
+      Hybrid profile/snapshot store for trading signals.
+      Profiles: get_profile, put_profile, list_profiles, search_profiles
+        — for countries (DEU, USA), stocks (AAPL), ETFs, crypto, indices, sources.
+      Snapshots: snapshot, event, history, recent_events, trend, aggregate
+        — time-series data stored in MongoDB Atlas with TTL auto-prune.
+      Use profiles for identity/exposure data. Use snapshots for measurements over time.
+
+  # ── Domain Servers (12 domains, 75+ sources) ──
+
+  weather:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/weather_server.py
+    serverInstructions: |
+      Weather and space weather data. Sources: Open-Meteo (forecasts, historical),
+      NOAA SWPC (solar storms, geomagnetic). No API key needed.
+
+  disasters:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/disasters_server.py
+    serverInstructions: |
+      Natural disaster monitoring. Sources: USGS earthquakes, GDACS alerts,
+      NASA EONET events, NASA FIRMS fire data, EM-DAT. Mostly no key needed.
+
+  macro:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/macro_server.py
+    serverInstructions: |
+      Macroeconomic indicators. Sources: FRED (US), World Bank, IMF WEO,
+      ECB SDMX, OECD, Eurostat, BLS, Census. FRED needs free API key.
+
+  agri:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/agri_server.py
+    serverInstructions: |
+      Agriculture and food data. Sources: FAOSTAT, USDA NASS/FAS,
+      GIEWS price monitor, WASDE reports. No key needed for most.
+
+  conflict:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/conflict_server.py
+    serverInstructions: |
+      Conflict, sanctions, and security. Sources: UCDP (Uppsala conflict data),
+      ACLED (armed conflict events), OpenSanctions, SIPRI arms data.
+      ACLED needs free API key + email.
+
+  commodities:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/commodities_server.py
+    serverInstructions: |
+      Commodity and trade data. Sources: UN Comtrade, EIA (energy),
+      LME metals, USDA commodity prices. EIA needs free API key.
+
+  health:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/health_server.py
+    serverInstructions: |
+      Health and disease data. Sources: WHO GHO, disease.sh (COVID/flu),
+      OpenFDA (drug events/recalls), ProMED, WAHIS (animal disease).
+
+  elections:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/elections_server.py
+    serverInstructions: |
+      Elections and political data. Sources: IFES election guide,
+      V-Dem (democracy indices), Google Civic, ReliefWeb situation reports.
+
+  humanitarian:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/humanitarian_server.py
+    serverInstructions: |
+      Humanitarian data. Sources: UNHCR refugee statistics,
+      OCHA HDX datasets, ReliefWeb, IDMC displacement data.
+
+  transport:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/transport_server.py
+    serverInstructions: |
+      Transport and logistics. Sources: OpenSky Network (flights),
+      AIS Stream (ship tracking), MarineTraffic. AIS needs API key.
+
+  water:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/water_server.py
+    serverInstructions: |
+      Water resources and drought. Sources: USGS Water Services,
+      US Drought Monitor, GloFAS (flood awareness). No key needed.
+
+  infra:
+    command: __HOME__/mcp-signals-stack/venv/bin/python
+    args:
+      - __HOME__/mcp-signals-stack/src/servers/infra_server.py
+    serverInstructions: |
+      Internet infrastructure. Sources: Cloudflare Radar (outages, traffic),
+      RIPE Atlas (network measurements), IODA (internet outages).
+      Cloudflare needs API token for some endpoints.
 
 # ── Endpoints ───────────────────────────────
 # Configure your LLM providers here or in .env

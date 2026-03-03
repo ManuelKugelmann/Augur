@@ -82,6 +82,7 @@ Global roadmap and task list. Updated 2026-03-03.
       to Atlas, MCP servers respond, git-versioned data sync works.
 - [ ] **Set up CI/CD** (GitHub Actions)
       Lint Python (`ruff`), run basic import checks, validate JSON profiles against schemas.
+      Release workflow exists (`.github/workflows/release.yml`) — still need lint/test workflow.
 - [ ] **Add monitoring / health dashboard**
       Simple status page or script that checks: Atlas connection, each MCP server,
       last successful ingest timestamp per source.
@@ -109,3 +110,7 @@ Global roadmap and task list. Updated 2026-03-03.
 - [x] **Repo init** — initial structure, 12 domain servers, signals store, profiles
 - [x] **Repo cleanup** — add .gitignore, .env.example, fix nested dirs, align filenames,
       fix scripts, create TODO.md (2026-03-03)
+- [x] **LibreChat full integration** — wire 12 trading MCPs + signals store into
+      librechat.yaml, add __HOME__ path placeholders, add .env.example for LC,
+      add GitHub Actions release workflow, update setup.sh for Python MCP deps,
+      rewrite README with QuickStart (2026-03-03)

@@ -1,172 +1,208 @@
-# LibreChat Lite → Uberspace
+# LibreChat Lite + Trading Signals → Uberspace
 
-Minimal LibreChat deployment: cloud LLMs, MongoDB Atlas, MCP servers (filesystem + memory + sqlite), git-versioned data storage. No Docker, no Meilisearch, no RAG, no Redis.
+LibreChat deployment with 15 MCP servers: 3 utility (filesystem, memory, sqlite) + 1 signals store + 12 trading domain servers covering 75+ data sources. No Docker, no Meilisearch, no RAG, no Redis.
 
 ## Architecture
 
 ```
-┌──────────────┐     ┌────────┐     ┌───────────┐     ┌──────────────────────────┐
-│ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ Uberspace              │
-│ dev + test   │push │  repo  │tag  │ build+tar  │pull │                        │
-└──────────────┘     └────────┘     └───────────┘     │ LibreChat (:3080)      │
-                                                       │ ├─ MCP: filesystem     │
-                                                       │ ├─ MCP: memory (JSON)  │
-                                                       │ └─ MCP: sqlite         │
-                                                       │                        │
-                                                       │ git-sync cron ──push──▶│ GitHub (private)
-                                                       └────────────────────────┘ data repo
+┌──────────────┐     ┌────────┐     ┌───────────┐     ┌──────────────────────────────┐
+│ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ Uberspace                   │
+│ dev + test   │push │  repo  │tag  │ build+tar  │pull │                             │
+└──────────────┘     └────────┘     └───────────┘     │ LibreChat (:3080)           │
+                                                       │ ├─ MCP: filesystem          │
+                                                       │ ├─ MCP: memory (JSONL)      │
+                                                       │ ├─ MCP: sqlite              │
+                                                       │ ├─ MCP: signals-store (Py)  │
+                                                       │ └─ MCP: 12 domain servers   │
+                                                       │                             │
+                                                       │ git-sync cron ──push──▶ GitHub (private)
+                                                       └─────────────────────────────┘
                                                               │
                                               ┌───────────────┼──────────┐
                                               ▼               ▼          ▼
-                                       MongoDB Atlas    Cloud LLMs    FS data
-                                       (free tier)      (APIs)        (git versioned)
+                                       MongoDB Atlas    Cloud LLMs    75+ APIs
+                                       (free tier)      (your keys)   (free data)
 ```
 
-## Prerequisites
+## QuickStart
 
-- GitHub account (fork this repo)
-- MongoDB Atlas account (free tier) — https://cloud.mongodb.com
-- API keys for LLM providers (Anthropic, OpenAI, etc.)
-- Uberspace account — https://uberspace.de
+### Prerequisites
 
-## Quick Start
+| What | Where | Cost |
+|------|-------|------|
+| Uberspace account | https://uberspace.de | ~5 EUR/mo |
+| MongoDB Atlas M0 | https://cloud.mongodb.com | Free |
+| LLM API key | Anthropic / OpenAI / OpenRouter | Per-use |
+| GitHub account | https://github.com | Free |
 
-### 1. Fork & configure GitHub repo
+### Step 1: MongoDB Atlas (5 min)
 
-```bash
-# Fork on GitHub, then clone
-git clone git@github.com:YOUR_USER/librechat-uberspace.git
-cd librechat-uberspace
-```
+1. Go to https://cloud.mongodb.com → Create free M0 cluster
+2. Create a database user (username + password)
+3. Network Access → Add `0.0.0.0/0` (Uberspace has no static IP)
+4. Click Connect → copy connection string:
+   ```
+   mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/LibreChat
+   ```
 
-Add GitHub repo secrets (Settings → Secrets → Actions):
-- `UBERSPACE_HOST` — `yourname.uber.space`
-- `UBERSPACE_USER` — your username
-- `UBERSPACE_SSH_KEY` — private key for SSH access
-
-For private repos, also add:
-- `GH_DEPLOY_TOKEN` — GitHub PAT with `repo` scope
-
-### 2. Create MongoDB Atlas cluster
-
-1. https://cloud.mongodb.com → New Project → Build Database → Shared (free)
-2. Create database user + password
-3. Network Access → Allow `0.0.0.0/0` (Uberspace has no static IP)
-4. Connect → copy connection string
-
-### 3. First deploy to Uberspace
+### Step 2: Deploy to Uberspace (10 min)
 
 ```bash
-# SSH in
+# SSH into your Uberspace
 ssh YOUR_USER@YOUR_HOST.uber.space
 
-# Set Node 22
+# Set Node.js 22
 uberspace tools version use node 22
 
-# Install (one-liner)
-curl -sL https://github.com/YOUR_USER/librechat-uberspace/releases/latest/download/bootstrap.sh | bash
+# Clone the signals stack
+git clone https://github.com/YOUR_USER/TradingAssistant.git ~/mcp-signals-stack
+cd ~/mcp-signals-stack
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 
-# Configure
-nano ~/LibreChat/.env
-# Set: MONGO_URI, CREDS_KEY, CREDS_IV, API keys
-# See config/.env.uberspace for reference
+# Configure signals stack
+cp .env.example .env
+nano .env
+# Set MONGO_URI to your Atlas connection string (database: signals)
 
-# Start
-supervisorctl start librechat
+# Install LibreChat via bootstrap (if release exists)
+export LIBRECHAT_REPO="YOUR_USER/TradingAssistant"
+bash ~/mcp-signals-stack/librechat-uberspace/scripts/bootstrap.sh
+
+# OR install manually (no CI release needed):
+APP="$HOME/LibreChat"
+mkdir -p "$APP/config" "$APP/scripts"
+cp ~/mcp-signals-stack/librechat-uberspace/config/librechat.yaml "$APP/config/"
+cp ~/mcp-signals-stack/librechat-uberspace/config/.env.example "$APP/config/"
+cp ~/mcp-signals-stack/librechat-uberspace/scripts/*.sh "$APP/scripts/"
+bash "$APP/scripts/setup.sh" "$APP" "v0.1.0-manual"
 ```
 
-### 4. Access
+### Step 3: Configure (2 min)
+
+```bash
+# Edit LibreChat environment
+nano ~/LibreChat/.env
+
+# Required — fill these in:
+#   MONGO_URI=mongodb+srv://...
+#   ANTHROPIC_API_KEY=sk-ant-...  (or OPENAI_API_KEY=sk-...)
+
+# Verify MCP paths were patched (should show your home dir, not __HOME__)
+grep __HOME__ ~/LibreChat/librechat.yaml
+# (should return nothing — if it does, run: sed -i "s|__HOME__|$HOME|g" ~/LibreChat/librechat.yaml)
+```
+
+### Step 4: Start (1 min)
+
+```bash
+# Start LibreChat
+supervisorctl start librechat
+
+# Verify it's running
+supervisorctl status librechat
+# Should show: RUNNING
+
+# Check logs if issues
+supervisorctl tail librechat
+```
+
+### Step 5: Access
 
 ```
 https://YOUR_USER.uber.space
 ```
 
-## Updates
+Register your first user → that becomes the admin account.
 
-Same one-liner — detects existing install, preserves `.env` + data:
-```bash
-curl -sL https://github.com/YOUR_USER/librechat-uberspace/releases/latest/download/bootstrap.sh | bash
-```
-
-## Release workflow
+### Step 6: Git-versioned data (optional, 5 min)
 
 ```bash
-# Tag → CI builds → release published
-git tag v0.2.0 && git push --tags
-
-# Then on Uberspace:
-lc u   # shortcut for update
+# Create a PRIVATE repo on GitHub: YOUR_USER/librechat-data
+bash ~/LibreChat/scripts/setup-data-repo.sh YOUR_USER/librechat-data
+# This sets up auto-sync every 15 min via cron
 ```
 
 ## MCP Servers
 
-Configured in `config/librechat.yaml`. Included out of the box:
+### Utility (always available)
 
 | MCP Server | Purpose | Storage |
 |---|---|---|
-| `@modelcontextprotocol/server-filesystem` | File read/write | `~/librechat-data/files/` |
-| `@modelcontextprotocol/server-memory` | Knowledge graph (entities + relations) | `~/librechat-data/memory.json` |
-| `mcp-sqlite` | Structured data (logs, research, notes) | `~/librechat-data/data.db` |
+| `filesystem` | File read/write | `~/librechat-data/files/` |
+| `memory` | Knowledge graph | `~/librechat-data/memory.jsonl` |
+| `sqlite` | Structured data | `~/librechat-data/data.db` |
 
-All data lives under `~/librechat-data/` which is a **git repo synced to GitHub** every 15 minutes.
+### Trading Signals Stack (requires `~/mcp-signals-stack/`)
 
-## Git-versioned data
+| MCP Server | Domain | Key Sources |
+|---|---|---|
+| `signals-store` | Central store | Profiles + MongoDB snapshots |
+| `weather` | Weather | Open-Meteo, NOAA SWPC |
+| `disasters` | Disasters | USGS, GDACS, NASA EONET |
+| `macro` | Economics | FRED, World Bank, IMF |
+| `agri` | Agriculture | FAOSTAT, USDA |
+| `conflict` | Security | UCDP, ACLED, OpenSanctions |
+| `commodities` | Commodities | UN Comtrade, EIA |
+| `health` | Health | WHO, disease.sh, OpenFDA |
+| `elections` | Politics | IFES, V-Dem, Google Civic |
+| `humanitarian` | Humanitarian | UNHCR, OCHA HDX |
+| `transport` | Transport | OpenSky, AIS Stream |
+| `water` | Water | USGS Water, Drought Monitor |
+| `infra` | Internet | Cloudflare Radar, RIPE |
 
-The `~/librechat-data/` directory is a separate private GitHub repo:
-- Full version history of memory, files, SQLite DB
-- Survives host migration
-- Clone to new host instantly
-- `git log` shows what changed when
+## Day-to-Day Operations
 
-Setup: see `scripts/setup-data-repo.sh`
+After install, the `lc` command is available:
 
-## Ops shortcuts
-
-After install, `lc` command is available:
 ```bash
-lc s          # status
-lc l          # tail logs  
+lc s          # status + version
+lc l          # tail logs
 lc r          # restart
 lc v          # show version
 lc u          # update (pull latest release)
 lc rb         # rollback to previous version
 lc sync       # force git sync of data
+lc env        # edit .env
+lc yaml       # edit librechat.yaml
+```
+
+## Updates
+
+```bash
+# Via CI release (tag → build → deploy):
+git tag v0.2.0 && git push --tags
+# Then on Uberspace:
+lc u
+
+# Or re-run bootstrap:
+bash ~/mcp-signals-stack/librechat-uberspace/scripts/bootstrap.sh
 ```
 
 ## Rollback
 
 ```bash
 lc rb
-# or manually:
-supervisorctl stop librechat
-rm -rf ~/LibreChat && mv ~/LibreChat.prev ~/LibreChat
-supervisorctl start librechat
+# Restores ~/LibreChat.prev (kept from last update)
 ```
 
-## Sync with upstream LibreChat
+## Resource Limits (Uberspace)
 
-```bash
-git remote add upstream https://github.com/danny-avila/LibreChat.git
-git fetch upstream
-git merge upstream/main
-git push && git tag v0.X.0 && git push --tags
-```
-
-## Resource limits (Uberspace)
-
-| Resource | Limit | LibreChat usage |
+| Resource | Limit | Usage |
 |---|---|---|
-| RAM | 1.5 GB hard kill | ~500-800 MB runtime |
-| Storage | 10 GB (up to 100 GB) | ~2 GB installed |
-| Node.js | 18, 20, 22 | Requires ≥20.19.0 |
-| Docker | ❌ | Not needed (npm install) |
+| RAM | 1.5 GB hard kill | ~500-800 MB (LibreChat) + ~50 MB per Python MCP |
+| Storage | 10 GB (expandable) | ~2 GB installed |
+| Node.js | 18, 20, 22 | Requires >=20 |
+| Docker | Not available | Not needed |
+
+**Note:** Running all 12 domain servers simultaneously may approach the RAM limit. Start with just the servers you need (weather, macro, disasters are good defaults). The signals store is lightweight and should always run.
 
 ## Cost
 
 | Service | Cost |
 |---|---|
-| Uberspace | ~5€/mo (pay what you want) |
-| MongoDB Atlas | Free (shared tier) |
+| Uberspace | ~5 EUR/mo (pay what you want, min 1 EUR) |
+| MongoDB Atlas | Free (shared tier, 512 MB) |
 | Cloud LLMs | Per-use (your API keys) |
-| GitHub | Free (private repos) |
-| **Total** | **~5€/mo + LLM usage** |
+| GitHub | Free (unlimited private repos) |
+| **Total** | **~5 EUR/mo + LLM usage** |

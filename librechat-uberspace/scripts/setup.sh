@@ -56,9 +56,9 @@ for d in "${PERSIST[@]}"; do mkdir -p "$APP/$d"; done
 # ── Copy default config if missing ──────────
 if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$APP/config/librechat.yaml" ]]; then
     cp "$APP/config/librechat.yaml" "$APP/librechat.yaml"
-    # Patch data path
-    sed -i "s|/home/user/|$HOME/|g" "$APP/librechat.yaml"
-    log "Copied default librechat.yaml (paths adjusted)"
+    # Replace __HOME__ placeholder with actual home directory
+    sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+    log "Copied default librechat.yaml (paths adjusted to $HOME)"
 fi
 
 # ── Data directory ──────────────────────────
@@ -83,11 +83,33 @@ else
     log "MCP packages already bundled"
 fi
 
+# ── Install signals stack (Python MCP servers) ──
+STACK="$HOME/mcp-signals-stack"
+if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
+    log "Setting up signals stack Python environment..."
+    cd "$STACK"
+    python3 -m venv venv
+    venv/bin/pip install -q -r requirements.txt
+    cd - >/dev/null
+    log "Signals stack ready"
+elif [[ -d "$STACK/venv" ]]; then
+    log "Signals stack already set up"
+else
+    warn "Signals stack not found at $STACK — trading MCPs won't be available"
+    warn "Clone with: git clone <your-repo> $STACK"
+fi
+
 # ── First install ───────────────────────────
 if [[ "$MODE" == "install" ]]; then
     # Generate .env from example
     if [[ ! -f "$APP/.env" ]]; then
-        cp "$APP/.env.example" "$APP/.env"
+        if [[ -f "$APP/config/.env.example" ]]; then
+            cp "$APP/config/.env.example" "$APP/.env"
+        elif [[ -f "$APP/.env.example" ]]; then
+            cp "$APP/.env.example" "$APP/.env"
+        else
+            die ".env.example not found — cannot generate .env"
+        fi
         # Generate crypto keys
         CREDS_KEY=$(openssl rand -hex 16)
         CREDS_IV=$(openssl rand -hex 8)
