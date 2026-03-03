@@ -2,11 +2,13 @@
 
 LibreChat deployment with 15 MCP servers: 3 utility (filesystem, memory, sqlite) + 1 signals store + 12 trading domain servers covering 75+ data sources. No Docker, no Meilisearch, no RAG, no Redis.
 
+All scripts read from `deploy.conf` — edit once, applies everywhere.
+
 ## Architecture
 
 ```
 ┌──────────────┐     ┌────────┐     ┌───────────┐     ┌──────────────────────────────┐
-│ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ Uberspace                   │
+│ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ assist.uber.space           │
 │ dev + test   │push │  repo  │tag  │ build+tar  │pull │                             │
 └──────────────┘     └────────┘     └───────────┘     │ LibreChat (:3080)           │
                                                        │ ├─ MCP: filesystem          │
@@ -23,6 +25,29 @@ LibreChat deployment with 15 MCP servers: 3 utility (filesystem, memory, sqlite)
                                        MongoDB Atlas    Cloud LLMs    75+ APIs
                                        (free tier)      (your keys)   (free data)
 ```
+
+## Configuration
+
+All deployment settings live in one file at the repo root:
+
+```bash
+cat deploy.conf
+```
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `UBER_USER` | `assist` | Uberspace username |
+| `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
+| `GH_USER` | `ManuelKugelmann` | GitHub username |
+| `GH_REPO_STACK` | `TradingAssistant` | Signals stack repo |
+| `GH_REPO_DATA` | `librechat-data` | Data repo (private) |
+| `STACK_DIR` | `$HOME/mcp-signals-stack` | Signals stack path |
+| `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
+| `DATA_DIR` | `$HOME/librechat-data` | MCP data path |
+| `LC_PORT` | `3080` | LibreChat port |
+| `NODE_VERSION` | `22` | Node.js version |
+
+Override any value via environment: `UBER_USER=other ./scripts/bootstrap-uberspace.sh`
 
 ## QuickStart
 
@@ -49,13 +74,13 @@ LibreChat deployment with 15 MCP servers: 3 utility (filesystem, memory, sqlite)
 
 ```bash
 # SSH into your Uberspace
-ssh YOUR_USER@YOUR_HOST.uber.space
+ssh assist@assist.uber.space
 
 # Set Node.js 22
 uberspace tools version use node 22
 
 # Clone the signals stack
-git clone https://github.com/YOUR_USER/TradingAssistant.git ~/mcp-signals-stack
+git clone https://github.com/ManuelKugelmann/TradingAssistant.git ~/mcp-signals-stack
 cd ~/mcp-signals-stack
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -66,7 +91,6 @@ nano .env
 # Set MONGO_URI to your Atlas connection string (database: signals)
 
 # Install LibreChat via bootstrap (if release exists)
-export LIBRECHAT_REPO="YOUR_USER/TradingAssistant"
 bash ~/mcp-signals-stack/librechat-uberspace/scripts/bootstrap.sh
 
 # OR install manually (no CI release needed):
@@ -110,7 +134,7 @@ supervisorctl tail librechat
 ### Step 5: Access
 
 ```
-https://YOUR_USER.uber.space
+https://assist.uber.space
 ```
 
 Register your first user → that becomes the admin account.
@@ -118,9 +142,10 @@ Register your first user → that becomes the admin account.
 ### Step 6: Git-versioned data (optional, 5 min)
 
 ```bash
-# Create a PRIVATE repo on GitHub: YOUR_USER/librechat-data
-bash ~/LibreChat/scripts/setup-data-repo.sh YOUR_USER/librechat-data
-# This sets up auto-sync every 15 min via cron
+# Create a PRIVATE repo on GitHub: ManuelKugelmann/librechat-data
+bash ~/LibreChat/scripts/setup-data-repo.sh
+# Reads GH_USER and GH_REPO_DATA from deploy.conf automatically
+# Sets up auto-sync every 15 min via cron
 ```
 
 ## MCP Servers
@@ -156,7 +181,7 @@ bash ~/LibreChat/scripts/setup-data-repo.sh YOUR_USER/librechat-data
 After install, the `lc` command is available:
 
 ```bash
-lc s          # status + version
+lc s          # status + version + host
 lc l          # tail logs
 lc r          # restart
 lc v          # show version
@@ -165,6 +190,7 @@ lc rb         # rollback to previous version
 lc sync       # force git sync of data
 lc env        # edit .env
 lc yaml       # edit librechat.yaml
+lc conf       # edit deploy.conf
 ```
 
 ## Updates

@@ -39,7 +39,7 @@
 
 ```bash
 # 1. Clone
-git clone <your-repo-url>
+git clone https://github.com/ManuelKugelmann/TradingAssistant.git
 cd TradingAssistant
 
 # 2. Setup Python env
@@ -57,12 +57,26 @@ python src/store/server.py
 python src/servers/weather_server.py
 ```
 
+## Central Configuration
+
+All deployment settings live in `deploy.conf` — edit once, applies everywhere:
+
+```bash
+UBER_USER=assist                  # Uberspace username
+UBER_HOST=assist.uber.space       # Uberspace hostname
+GH_USER=ManuelKugelmann           # GitHub username
+GH_REPO_STACK=TradingAssistant    # This repo
+```
+
+Override via environment: `UBER_USER=other ./scripts/bootstrap-uberspace.sh`
+
 ## Project Structure
 
 ```
 ├── README.md
 ├── TODO.md                           ← Project roadmap & tasks
-├── .env.example                      ← All env vars
+├── deploy.conf                       ← Central config (all scripts source this)
+├── .env.example                      ← Signals stack env vars
 ├── .gitignore
 ├── requirements.txt
 │
@@ -114,7 +128,8 @@ python src/servers/weather_server.py
 └── librechat-uberspace/              ← LibreChat Lite deployment package
     ├── README.md
     ├── config/
-    │   └── librechat.yaml
+    │   ├── librechat.yaml
+    │   └── .env.example              ← LibreChat env vars
     └── scripts/
         ├── bootstrap.sh
         ├── lc.sh
@@ -150,11 +165,11 @@ python src/servers/weather_server.py
 
 ## Deployment
 
-Designed for **Uberspace.de** shared hosting (€1+/mo). No Docker, no root, no GPU.
+Default target: **assist.uber.space** (Uberspace.de, ~5 EUR/mo). No Docker, no root, no GPU.
 
-Available: Node.js, Python, supervisord, ~1.5 GB RAM, outbound HTTP.
+Available: Node.js 22, Python 3, supervisord, ~1.5 GB RAM, outbound HTTP.
 
-See `docs/uberspace-deployment.md` for the signals stack guide, and `docs/librechat-uberspace-setup.md` for the LibreChat Lite deployment guide.
+See `librechat-uberspace/README.md` for the full QuickStart, and `docs/uberspace-deployment.md` for the signals stack guide.
 
 ## License
 

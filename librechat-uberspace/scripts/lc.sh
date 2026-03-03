@@ -2,8 +2,14 @@
 # LibreChat ops shortcuts — usage: lc [command]
 set -euo pipefail
 
-APP="$HOME/LibreChat"
-DATA="$HOME/librechat-data"
+# ── Load central config ──
+for conf in "$HOME/mcp-signals-stack/deploy.conf" \
+            "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/deploy.conf"; do
+    [[ -f "$conf" ]] && { source "$conf"; break; }
+done
+
+APP="${APP_DIR:-$HOME/LibreChat}"
+DATA="${DATA_DIR:-$HOME/librechat-data}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 
@@ -11,6 +17,7 @@ case "${1:-help}" in
     s|status)
         supervisorctl status librechat
         echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
         ;;
     r|restart)
         supervisorctl restart librechat
@@ -27,13 +34,13 @@ case "${1:-help}" in
         bash "$APP/scripts/bootstrap.sh"
         ;;
     rb|rollback)
-        if [[ ! -d "$HOME/LibreChat.prev" ]]; then
+        if [[ ! -d "${APP}.prev" ]]; then
             echo -e "${RED}✗${NC} No previous version to rollback to"
             exit 1
         fi
         supervisorctl stop librechat
         rm -rf "$APP"
-        mv "$HOME/LibreChat.prev" "$APP"
+        mv "${APP}.prev" "$APP"
         supervisorctl start librechat
         echo -e "${GREEN}✓${NC} Rolled back to $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         ;;
@@ -58,8 +65,12 @@ case "${1:-help}" in
     yaml)
         ${EDITOR:-nano} "$APP/librechat.yaml"
         ;;
+    conf)
+        ${EDITOR:-nano} "$HOME/mcp-signals-stack/deploy.conf"
+        ;;
     *)
         echo -e "${CYAN}LibreChat Lite — ops shortcuts${NC}"
+        echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
         echo ""
         echo "  lc s|status     Show service status + version"
         echo "  lc r|restart    Restart LibreChat"
@@ -70,5 +81,6 @@ case "${1:-help}" in
         echo "  lc sync         Force git sync of data dir"
         echo "  lc env          Edit .env"
         echo "  lc yaml         Edit librechat.yaml"
+        echo "  lc conf         Edit deploy.conf"
         ;;
 esac

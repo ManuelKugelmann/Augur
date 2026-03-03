@@ -1,10 +1,16 @@
 #!/bin/bash
 # Set up git-versioned data directory for MCP file/memory/sqlite storage
-# Usage: bash setup-data-repo.sh YOUR_USER/librechat-data
+# Usage: bash setup-data-repo.sh [YOUR_USER/librechat-data]
 set -euo pipefail
 
-REPO="${1:?Usage: setup-data-repo.sh YOUR_USER/librechat-data}"
-DATA="$HOME/librechat-data"
+# ── Load central config ──
+for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
+            "$HOME/mcp-signals-stack/deploy.conf"; do
+    [[ -f "$conf" ]] && { source "$conf"; break; }
+done
+
+REPO="${1:-${GH_USER:-ManuelKugelmann}/${GH_REPO_DATA:-librechat-data}}"
+DATA="${DATA_DIR:-$HOME/librechat-data}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -71,16 +77,16 @@ EOF
 fi
 
 if [[ ! -f "$DATA/README.md" ]]; then
-    cat > "$DATA/README.md" <<'EOF'
+    cat > "$DATA/README.md" <<EOF
 # LibreChat Data
 
-Git-versioned data store for LibreChat MCP servers.
+Git-versioned data store for LibreChat MCP servers on ${UBER_HOST:-Uberspace}.
 
 | Path | MCP Server | Content |
 |---|---|---|
-| `files/` | `server-filesystem` | User files, documents, exports |
-| `memory.jsonl` | `server-memory` | Knowledge graph (entities + relations) |
-| `data.db` | `mcp-sqlite` | Structured data (logs, research, notes) |
+| \`files/\` | \`server-filesystem\` | User files, documents, exports |
+| \`memory.jsonl\` | \`server-memory\` | Knowledge graph (entities + relations) |
+| \`data.db\` | \`mcp-sqlite\` | Structured data (logs, research, notes) |
 
 Auto-synced every 15 minutes via cron.
 EOF

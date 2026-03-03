@@ -2,9 +2,13 @@
 # bootstrap-uberspace.sh — Setup MCP signals stack on Uberspace
 set -euo pipefail
 
-STACK_DIR="${MCP_STACK_DIR:-$HOME/mcp-signals-stack}"
+# ── Load central config ──
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONF="${SCRIPT_DIR}/../deploy.conf"
+[[ -f "$CONF" ]] && source "$CONF"
 
 echo "🚀 MCP Signals Stack — Uberspace Bootstrap"
+echo "   Host: ${UBER_HOST:-$(hostname -f)}"
 echo "   Install dir: $STACK_DIR"
 
 mkdir -p "$STACK_DIR" ~/logs
@@ -16,7 +20,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # ── Node.js ──
-uberspace tools version use node 22 2>/dev/null || true
+uberspace tools version use node "$NODE_VERSION" 2>/dev/null || true
 
 # ── Copy .env ──
 if [ ! -f .env ]; then

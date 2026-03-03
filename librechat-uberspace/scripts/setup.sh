@@ -3,13 +3,20 @@
 # Called by bootstrap.sh or directly: bash setup.sh <app-dir> <version>
 set -euo pipefail
 
+# ── Load central config ──
+for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
+            "$HOME/mcp-signals-stack/deploy.conf"; do
+    [[ -f "$conf" ]] && { source "$conf"; break; }
+done
+
 SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
-APP="$HOME/LibreChat"
-BAK="$HOME/LibreChat.prev"
-DATA="$HOME/librechat-data"
+APP="${APP_DIR:-$HOME/LibreChat}"
+BAK="${APP}.prev"
+DATA="${DATA_DIR:-$HOME/librechat-data}"
+STACK="${STACK_DIR:-$HOME/mcp-signals-stack}"
 SVC="$HOME/etc/services.d/librechat.ini"
-PORT=3080
+PORT="${LC_PORT:-3080}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -20,9 +27,9 @@ die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 PERSIST=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
-command -v node &>/dev/null || die "Node.js not found. Run: uberspace tools version use node 22"
+command -v node &>/dev/null || die "Node.js not found. Run: uberspace tools version use node ${NODE_VERSION:-22}"
 NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d 'v')
-[[ "$NODE_MAJOR" -lt 20 ]] && die "Node.js ≥20 required (got $(node -v)). Run: uberspace tools version use node 22"
+[[ "$NODE_MAJOR" -lt 20 ]] && die "Node.js ≥20 required (got $(node -v)). Run: uberspace tools version use node ${NODE_VERSION:-22}"
 
 # ── Detect mode ─────────────────────────────
 if [[ -d "$APP" ]]; then
@@ -84,7 +91,6 @@ else
 fi
 
 # ── Install signals stack (Python MCP servers) ──
-STACK="$HOME/mcp-signals-stack"
 if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
     log "Setting up signals stack Python environment..."
     cd "$STACK"
@@ -96,7 +102,7 @@ elif [[ -d "$STACK/venv" ]]; then
     log "Signals stack already set up"
 else
     warn "Signals stack not found at $STACK — trading MCPs won't be available"
-    warn "Clone with: git clone <your-repo> $STACK"
+    warn "Clone with: git clone https://github.com/${GH_USER:-ManuelKugelmann}/${GH_REPO_STACK:-TradingAssistant}.git $STACK"
 fi
 
 # ── First install ───────────────────────────
@@ -135,7 +141,7 @@ if [[ "$MODE" == "install" ]]; then
     mkdir -p "$(dirname "$SVC")"
     cat > "$SVC" <<EOF
 [program:librechat]
-directory=%(ENV_HOME)s/LibreChat
+directory=${APP}
 command=node --max-old-space-size=1024 api/server/index.js
 environment=NODE_ENV=production
 autostart=true
@@ -172,13 +178,13 @@ EOF
     echo "     nano $APP/librechat.yaml"
     echo ""
     echo -e "  ${YELLOW}3.${NC} Set up git-versioned data (optional):"
-    echo "     bash $APP/scripts/setup-data-repo.sh YOUR_USER/librechat-data"
+    echo "     bash $APP/scripts/setup-data-repo.sh ${GH_USER:-YOUR_USER}/${GH_REPO_DATA:-librechat-data}"
     echo ""
     echo -e "  ${YELLOW}4.${NC} Start:"
     echo "     supervisorctl start librechat"
     echo ""
     echo -e "  ${YELLOW}5.${NC} Access:"
-    echo "     https://$(hostname -f 2>/dev/null || echo 'YOUR_USER.uber.space')"
+    echo "     https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'YOUR_USER.uber.space')}"
     echo ""
 else
     # ── Update: restart ─────────────────────
