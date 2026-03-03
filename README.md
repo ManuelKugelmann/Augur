@@ -1,6 +1,6 @@
 # MCP Signals Stack
 
-> Hybrid intelligence platform: 100+ data sources, structured storage, Uberspace-deployable.
+> Hybrid intelligence platform: 75+ data sources, structured storage, Uberspace-deployable.
 
 ## Architecture
 
@@ -39,12 +39,12 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_USER/mcp-signals-stack.git
-cd mcp-signals-stack
+git clone <your-repo-url>
+cd TradingAssistant
 
 # 2. Setup Python env
 python3 -m venv venv && source venv/bin/activate
-pip install fastmcp httpx pymongo
+pip install -r requirements.txt
 
 # 3. Configure
 cp .env.example .env
@@ -61,54 +61,65 @@ python src/servers/weather_server.py
 
 ```
 ├── README.md
-├── .env.example              ← All env vars
+├── TODO.md                           ← Project roadmap & tasks
+├── .env.example                      ← All env vars
 ├── .gitignore
 ├── requirements.txt
 │
 ├── docs/
-│   ├── architecture-signals-store.md   ← Hybrid storage design
-│   ├── global-datasources-75.md        ← 75+ free API catalog
-│   ├── uberspace-deployment.md         ← Uberspace stack guide
-│   ├── trading-mcp-inventory.md        ← Existing MCP catalog
-│   └── trading-stack-full.md           ← Full stack inventory
+│   ├── architecture-signals-store.md ← Hybrid storage design
+│   ├── global-datasources-75.md      ← 75+ free API catalog
+│   ├── uberspace-deployment.md       ← Uberspace stack guide
+│   ├── trading-mcp-inventory.md      ← Existing MCP catalog
+│   ├── trading-stack-full.md         ← Full stack inventory
+│   └── librechat-uberspace-setup.md  ← LibreChat Lite deployment guide
 │
 ├── src/
 │   ├── store/
-│   │   └── server.py                   ← Hybrid store (profiles + Atlas)
+│   │   └── server.py                 ← Hybrid store (profiles + Atlas)
 │   └── servers/
-│       ├── agri_server.py              ← FAOSTAT, USDA
-│       ├── disasters_server.py         ← USGS, GDACS, EONET
-│       ├── macro_server.py             ← FRED, World Bank, IMF
-│       ├── weather_server.py           ← Open-Meteo, NOAA SWPC
-│       ├── commodities_server.py       ← UN Comtrade, EIA
-│       ├── conflict_server.py          ← UCDP, ACLED, OpenSanctions
-│       ├── health_server.py            ← WHO, disease.sh, OpenFDA
-│       ├── humanitarian_server.py      ← UNHCR, HDX, ReliefWeb
-│       ├── water_server.py             ← USGS Water, Drought Monitor
-│       ├── transport_server.py         ← OpenSky, AIS Stream
-│       ├── elections_server.py         ← ReliefWeb, Google Civic
-│       └── infra_server.py             ← Cloudflare Radar, RIPE
+│       ├── agri_server.py            ← FAOSTAT, USDA
+│       ├── commodities_server.py     ← UN Comtrade, EIA
+│       ├── conflict_server.py        ← UCDP, ACLED, OpenSanctions
+│       ├── disasters_server.py       ← USGS, GDACS, EONET
+│       ├── elections_server.py       ← ReliefWeb, Google Civic
+│       ├── health_server.py          ← WHO, disease.sh, OpenFDA
+│       ├── humanitarian_server.py    ← UNHCR, HDX, ReliefWeb
+│       ├── infra_server.py           ← Cloudflare Radar, RIPE
+│       ├── macro_server.py           ← FRED, World Bank, IMF
+│       ├── transport_server.py       ← OpenSky, AIS Stream
+│       ├── water_server.py           ← USGS Water, Drought Monitor
+│       └── weather_server.py         ← Open-Meteo, NOAA SWPC
 │
-├── profiles/                           ← Git-tracked JSON profiles
+├── profiles/                         ← Git-tracked JSON profiles
 │   ├── countries/
 │   │   ├── _schema.json
-│   │   ├── DEU.json                    ← Example profiles
+│   │   ├── DEU.json
 │   │   └── USA.json
 │   ├── entities/
 │   │   ├── _schema.json
-│   │   ├── stocks/
-│   │   │   ├── AAPL.json
-│   │   │   └── NVDA.json
-│   │   └── etfs/
-│   │       └── VWO.json
+│   │   ├── stocks/   (AAPL.json, NVDA.json)
+│   │   ├── etfs/     (VWO.json)
+│   │   ├── crypto/
+│   │   └── indices/
 │   └── sources/
 │       ├── usgs.json
 │       ├── faostat.json
-│       └── open_meteo.json
+│       └── open-meteo.json
 │
-└── scripts/
-    ├── bootstrap-uberspace.sh          ← Uberspace setup
-    └── nightly-git-commit.sh           ← Auto-commit profiles
+├── scripts/
+│   ├── bootstrap-uberspace.sh        ← Uberspace setup
+│   └── nightly-git-commit.sh         ← Auto-commit profiles
+│
+└── librechat-uberspace/              ← LibreChat Lite deployment package
+    ├── README.md
+    ├── config/
+    │   └── librechat.yaml
+    └── scripts/
+        ├── bootstrap.sh
+        ├── lc.sh
+        ├── setup.sh
+        └── setup-data-repo.sh
 ```
 
 ## Data Coverage (75+ sources, 12 domains)
@@ -119,7 +130,7 @@ python src/servers/weather_server.py
 | 🔥 Disasters | 6 | Mostly none | USGS, GDACS, NASA FIRMS/EONET |
 | 🗳️ Elections | 6 | Mixed | IFES, V-Dem, Google Civic |
 | 📊 Macro | 8 | Mostly none | FRED, World Bank, IMF, ECB |
-| 🌧️ Weather | 5 | Mostly none | Open-Meteo ⭐, NOAA SWPC |
+| 🌧️ Weather | 5 | Mostly none | Open-Meteo, NOAA SWPC |
 | ⛏️ Commodities | 5 | Mixed | UN Comtrade, EIA |
 | ⚔️ Military | 7 | Mixed | UCDP, ACLED, OpenSanctions |
 | 🏥 Medical | 9 | Mostly none | WHO, disease.sh, OpenFDA |
@@ -143,7 +154,7 @@ Designed for **Uberspace.de** shared hosting (€1+/mo). No Docker, no root, no 
 
 Available: Node.js, Python, supervisord, ~1.5 GB RAM, outbound HTTP.
 
-See `docs/uberspace-deployment.md` for full guide.
+See `docs/uberspace-deployment.md` for the signals stack guide, and `docs/librechat-uberspace-setup.md` for the LibreChat Lite deployment guide.
 
 ## License
 

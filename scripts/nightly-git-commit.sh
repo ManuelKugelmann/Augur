@@ -5,7 +5,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-git add profiles/ -A
+git add -A profiles/
 if ! git diff --cached --quiet; then
   git commit -m "auto: $(date +%Y-%m-%d) profile updates"
   echo "✅ Committed profile changes"
