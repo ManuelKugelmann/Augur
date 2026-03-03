@@ -1,0 +1,61 @@
+"""Weather & Climate — Open-Meteo (zero auth) + NOAA SWPC space weather."""
+from fastmcp import FastMCP
+import httpx
+
+mcp = FastMCP("weather", description="Global weather, climate, and space weather")
+
+
+@mcp.tool()
+async def forecast(lat: float, lon: float, days: int = 7) -> dict:
+    """Weather forecast. Returns daily temp, precip, wind."""
+    async with httpx.AsyncClient() as c:
+        r = await c.get("https://api.open-meteo.com/v1/forecast", params={
+            "latitude": lat, "longitude": lon, "forecast_days": days,
+            "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max",
+            "timezone": "auto"})
+        r.raise_for_status()
+        return r.json()
+
+
+@mcp.tool()
+async def historical_weather(lat: float, lon: float,
+                              start: str = "2024-01-01",
+                              end: str = "2024-12-31") -> dict:
+    """Historical weather data since 1940. Daily resolution."""
+    async with httpx.AsyncClient() as c:
+        r = await c.get("https://archive-api.open-meteo.com/v1/archive", params={
+            "latitude": lat, "longitude": lon,
+            "start_date": start, "end_date": end,
+            "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum",
+            "timezone": "auto"})
+        r.raise_for_status()
+        return r.json()
+
+
+@mcp.tool()
+async def flood_forecast(lat: float, lon: float, days: int = 7) -> dict:
+    """River discharge forecast (flood risk)."""
+    async with httpx.AsyncClient() as c:
+        r = await c.get("https://flood-api.open-meteo.com/v1/flood", params={
+            "latitude": lat, "longitude": lon, "forecast_days": days,
+            "daily": "river_discharge"})
+        r.raise_for_status()
+        return r.json()
+
+
+@mcp.tool()
+async def space_weather() -> dict:
+    """Current space weather: Kp index, solar wind, geomagnetic storms."""
+    async with httpx.AsyncClient() as c:
+        kp = await c.get("https://services.swpc.noaa.gov/json/planetary_k_index_1m.json")
+        solar = await c.get("https://services.swpc.noaa.gov/json/solar_wind/plasma-7-day.json")
+        alerts = await c.get("https://services.swpc.noaa.gov/json/alerts.json")
+        return {
+            "kp_index": kp.json()[-5:] if kp.status_code == 200 else [],
+            "solar_wind": solar.json()[-5:] if solar.status_code == 200 else [],
+            "alerts": alerts.json()[:10] if alerts.status_code == 200 else [],
+        }
+
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

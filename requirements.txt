@@ -1,0 +1,4 @@
+fastmcp>=2.0
+httpx>=0.27
+pymongo>=4.7
+python-dotenv>=1.0
