@@ -31,7 +31,6 @@ TradingAssistant/
 ├── README.md                          ← project overview
 ├── TODO.md                            ← roadmap (P0–P5)
 ├── deploy.conf                        ← central config, sourced by all scripts
-├── install.sh                         ← thin shim, delegates to TradeAssistant.sh
 ├── requirements.txt                   ← Python deps: fastmcp, httpx, pymongo, python-dotenv
 ├── .env.example                       ← signals stack env vars template
 │
@@ -160,10 +159,7 @@ python-dotenv>=1.0
 
 ### First Deploy (one-liner)
 ```bash
-# Direct (preferred):
 curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
-# Via shim (also works):
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/install.sh | bash
 # Private repos:
 curl -sL ... | GH_TOKEN=ghp_xxx bash
 ```
