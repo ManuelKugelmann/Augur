@@ -35,11 +35,22 @@
 | ☁️ Atlas M0 | Time-series snapshots, events | Documents with TTL auto-prune | Hourly → quarterly |
 | 🔌 MCP sources | Live current data | API queries on demand | Real-time |
 
-## Deploy to Uberspace (one-liner)
+## Deploy to Uberspace
+
+SSH into your Uberspace host, then run the one-liner:
 
 ```bash
 ssh assist@assist.uber.space
+```
+
+```bash
 curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+```
+
+For private repos:
+
+```bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | GH_TOKEN=ghp_xxx bash
 ```
 
 Then configure: `nano ~/mcps/.env` and `nano ~/LibreChat/.env`, then `supervisorctl start librechat`.
