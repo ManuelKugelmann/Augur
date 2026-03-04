@@ -23,11 +23,14 @@ NODE_VERSION="${NODE_VERSION:-22}"
 BRANCH="${BRANCH:-main}"
 
 # ── Load central config if available ──
-for _conf in "$STACK_DIR/deploy.conf" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]:-/dev/null}")/../.." 2>/dev/null && pwd)/deploy.conf" 2>/dev/null; do
-    [[ -f "$_conf" ]] && { source "$_conf"; break; }
+_script_conf=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    _script_conf="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/deploy.conf"
+fi
+for _conf in "$STACK_DIR/deploy.conf" "$_script_conf"; do
+    [[ -n "$_conf" ]] && [[ -f "$_conf" ]] && { source "$_conf"; break; }
 done
-unset _conf
+unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
 DATA="${DATA_DIR:-$HOME/TradeAssistant_Data}"

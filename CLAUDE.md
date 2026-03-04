@@ -231,3 +231,4 @@ Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_requ
 - Git tags: `vMAJOR.MINOR.PATCH` (triggers CI release)
 - Cron sync logger tag: `ta-data-sync`
 - `__HOME__` placeholder in `librechat.yaml` is replaced by `setup.sh` with actual `$HOME`
+- After editing any `.sh` file, always run `bash -n <file>` to verify syntax — especially for `TradeAssistant.sh` which must work when piped via `curl | bash` (avoid complex nested quoting in that context)
