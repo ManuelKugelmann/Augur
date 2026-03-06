@@ -127,16 +127,72 @@ def put_profile(kind: str, id: str, data: dict) -> dict:
     existing.update(data)
     existing["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     p.write_text(json.dumps(existing, indent=2, ensure_ascii=False))
+    _rebuild_index()
     return {"path": str(p), "status": "ok"}
 
 
+def _rebuild_index():
+    """Rebuild profiles/INDEX.json -- lightweight id/name/kind map."""
+    index = []
+    for kind, sub in KIND_PATHS.items():
+        d = PROFILES / sub
+        if not d.exists():
+            continue
+        for f in sorted(d.glob("*.json")):
+            if f.stem.startswith("_"):
+                continue
+            try:
+                data = json.loads(f.read_text())
+                entry = {"id": f.stem, "kind": kind, "name": data.get("name", f.stem)}
+                if "tags" in data:
+                    entry["tags"] = data["tags"]
+                if "sector" in data:
+                    entry["sector"] = data["sector"]
+                if "region" in data:
+                    entry["region"] = data["region"]
+                index.append(entry)
+            except Exception:
+                pass
+    (PROFILES / "INDEX.json").write_text(
+        json.dumps(index, indent=2, ensure_ascii=False))
+
+
 @mcp.tool()
-def list_profiles(kind: str) -> list[str]:
-    """List all profile IDs for a kind."""
+def list_profiles(kind: str) -> list[dict]:
+    """List all profiles for a kind. Returns [{id, name}, ...] for quick lookup."""
     d = _profile_dir(kind)
     if not d or not d.exists():
         return []
-    return sorted(p.stem for p in d.glob("*.json") if not p.stem.startswith("_"))
+    result = []
+    for f in sorted(d.glob("*.json")):
+        if f.stem.startswith("_"):
+            continue
+        try:
+            data = json.loads(f.read_text())
+            result.append({"id": f.stem, "name": data.get("name", f.stem)})
+        except Exception:
+            result.append({"id": f.stem, "name": f.stem})
+    return result
+
+
+@mcp.tool()
+def find_profile(query: str) -> list[dict]:
+    """Find profiles by name, ID, or tag across all kinds.
+    Case-insensitive partial match. Returns [{id, kind, name}, ...]."""
+    q = query.lower()
+    idx_path = PROFILES / "INDEX.json"
+    if idx_path.exists():
+        index = json.loads(idx_path.read_text())
+    else:
+        _rebuild_index()
+        index = json.loads(idx_path.read_text()) if idx_path.exists() else []
+    matches = []
+    for entry in index:
+        if (q in entry["id"].lower()
+                or q in entry.get("name", "").lower()
+                or any(q in t.lower() for t in entry.get("tags", []))):
+            matches.append(entry)
+    return matches
 
 
 @mcp.tool()
@@ -144,8 +200,8 @@ def search_profiles(kind: str, field: str, value: str) -> list[dict]:
     """Search profiles by dot-path field (e.g. 'exposure.countries', 'tags', 'sector').
     Checks if value is in list/string or equals field."""
     results = []
-    for pid in list_profiles(kind):
-        prof = get_profile(kind, pid)
+    for entry in list_profiles(kind):
+        prof = get_profile(kind, entry["id"])
         if "error" in prof:
             continue
         obj = prof
