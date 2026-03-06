@@ -35,7 +35,7 @@ localhost:8070  (FastMCP HTTP proxy — ~60 lines of Python)
     |
     |  stdio subprocess via create_proxy({mcpServers: ...})
     v
-claude mcp serve  (Claude Code as MCP server — NO API key needed)
+claude mcp serve  (Claude Code as MCP server)
     |
     +-- Bash          (shell commands: supervisorctl, ta, git, ...)
     +-- Read/Write    (file access: logs, profiles, configs, ...)
@@ -50,7 +50,7 @@ claude mcp serve  (Claude Code as MCP server — NO API key needed)
 ### How `claude mcp serve` works
 
 - Exposes Claude Code's **native tools only** as MCP tools over stdio
-- Tools are direct execution — **no LLM calls**, no API key required
+- Tools are direct execution — **no LLM calls**, no Anthropic API key required
 - Bash runs bash, Read reads files, Write writes files — zero overhead
 - Claude.ai provides all the reasoning; the server just executes
 - Does NOT proxy other configured MCP servers (only built-in tools)
@@ -59,6 +59,58 @@ claude mcp serve  (Claude Code as MCP server — NO API key needed)
 
 Previous plan had ~800 lines of custom Python tools. All unnecessary —
 Claude Code's native tools cover every use case.
+
+---
+
+## Auth: Unattended Headless Mode
+
+`claude mcp serve` runs headless — it needs a persistent auth token, not a
+browser-based OAuth session.
+
+### Auth Options
+
+| Method | TTL | Headless | Billing |
+|--------|-----|----------|---------|
+| `claude login` (browser) | ~8-12 h | No | Subscription |
+| Copy `credentials.json` | ~6 h | Refresh bug | Subscription |
+| `claude setup-token` | 1 year | Yes | Subscription |
+| `ANTHROPIC_API_KEY` | Unlimited | Yes | Pay-per-token |
+
+**Use `setup-token`.** Avoids all known refresh bugs and race conditions.
+
+### Known Auth Bugs (avoided by setup-token)
+
+| Bug | Status |
+|-----|--------|
+| `-p` headless mode doesn't refresh short-lived tokens -> 401 after ~15 min | open |
+| Concurrent sessions cause refresh token race condition | open |
+| Copying `credentials.json` to remote ignores `refreshToken` | open |
+
+### Setup (one-time, on a machine with a browser)
+
+```bash
+claude setup-token   # -> sk-ant-oat01-...   <- shown once, save it immediately
+```
+
+**Never set both `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY`** — auth conflict.
+
+### Onboarding Bypass (headless machines)
+
+Write `~/.claude.json` to skip the interactive wizard:
+
+```json
+{
+  "hasCompletedOnboarding": true,
+  "lastOnboardingVersion": "2.1.29",
+  "oauthAccount": {
+    "accountUuid": "...",
+    "emailAddress": "...",
+    "organizationUuid": "..."
+  }
+}
+```
+
+Get values from `cat ~/.claude.json` after initial local login.
 
 ---
 
@@ -81,7 +133,7 @@ for implementing user confirmation for individual tool calls).
 
 ## Step 1: Create GitHub OAuth App
 
-1. Go to https://github.com/settings/developers → **New OAuth App**
+1. Go to https://github.com/settings/developers -> **New OAuth App**
 2. Fill in:
    - **Application name**: `TradingAssistant MCP Gateway`
    - **Homepage URL**: `https://mcp.assist.uber.space`
@@ -94,8 +146,8 @@ for implementing user confirmation for individual tool calls).
 > **Important**: The callback URL points to **our server**, NOT to Claude.ai.
 > FastMCP's OAuthProxy handles the full redirect chain:
 >
-> 1. Claude.ai registers via DCR → gets our GitHub app credentials
-> 2. User clicks Connect → redirected to our `/authorize` endpoint
+> 1. Claude.ai registers via DCR -> gets our GitHub app credentials
+> 2. User clicks Connect -> redirected to our `/authorize` endpoint
 > 3. We redirect to GitHub login (callback = our `/auth/callback`)
 > 4. GitHub redirects back to us with auth code
 > 5. We exchange code for token, mint a FastMCP JWT
@@ -121,7 +173,7 @@ TLS certificate is provisioned automatically via Let's Encrypt.
 
 ---
 
-## Step 3: Install Claude Code CLI
+## Step 3: Install Claude Code CLI + Auth Token
 
 ```bash
 npm install -g @anthropic-ai/claude-code
@@ -131,10 +183,14 @@ claude --version
 ### Verify serve mode works
 
 ```bash
+# Verify with auth token (must work without ANTHROPIC_API_KEY)
 echo '{"jsonrpc":"2.0","method":"initialize","id":1,"params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' \
-  | claude mcp serve
-# Should return JSON with server capabilities and tool list
+  | CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-... claude mcp serve
+# Expected: JSON with server capabilities and tool list
 ```
+
+Verify this works **before** continuing. If `claude mcp serve` fails without
+`ANTHROPIC_API_KEY`, the gateway won't start.
 
 ---
 
@@ -155,16 +211,39 @@ venv/bin/pip install -U 'fastmcp>=3.0' httpx python-dotenv
 ```python
 """MCP Gateway — wraps `claude mcp serve` with GitHub OAuth + HTTP transport.
 
-Bridges:  claude mcp serve (stdio) → FastMCP proxy (Streamable HTTP + OAuth)
+Bridges:  claude mcp serve (stdio) -> FastMCP proxy (Streamable HTTP + OAuth)
 Result:   Claude.ai gets direct Bash/Read/Write/Edit/Grep on the server.
 """
 import os
+import warnings
 
+import httpx
 from dotenv import load_dotenv
 from fastmcp.server import create_proxy
 from fastmcp.server.auth.providers.github import GitHubProvider
+from fastmcp.server.auth import TokenVerifier
 
 load_dotenv()
+
+
+class GitHubUserFilter(TokenVerifier):
+    """Restrict access to specific GitHub usernames."""
+
+    def __init__(self, allowed_users: list[str]):
+        super().__init__()
+        self.allowed = {u.lower() for u in allowed_users}
+
+    async def verify_token(self, token: str) -> dict:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                "https://api.github.com/user",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            resp.raise_for_status()
+            user = resp.json()
+        if user["login"].lower() not in self.allowed:
+            raise ValueError(f"User {user['login']} not in allowlist")
+        return {"sub": user["login"], "name": user.get("name", "")}
 
 
 def _get_auth():
@@ -172,21 +251,34 @@ def _get_auth():
     client_id = os.environ.get("GH_OAUTH_CLIENT_ID")
     client_secret = os.environ.get("GH_OAUTH_CLIENT_SECRET")
     if not client_id or not client_secret:
-        import warnings
         warnings.warn("No OAuth credentials — running WITHOUT auth", stacklevel=2)
         return None
 
-    return GitHubProvider(
+    allowed = [
+        u.strip()
+        for u in os.environ.get("ALLOWED_GITHUB_USERS", "").split(",")
+        if u.strip()
+    ]
+
+    provider = GitHubProvider(
         client_id=client_id,
         client_secret=client_secret,
         base_url=os.environ.get(
             "GATEWAY_BASE_URL", "https://mcp.assist.uber.space"
         ),
+        token_verifier=GitHubUserFilter(allowed) if allowed else None,
     )
+    if not allowed:
+        warnings.warn(
+            "ALLOWED_GITHUB_USERS not set — any GitHub user can connect",
+            stacklevel=2,
+        )
+    return provider
 
 
 # Wrap claude mcp serve (stdio) as an HTTP proxy with OAuth.
 # NOTE: create_proxy() does NOT accept plain command strings — use a config dict.
+# A string like "claude mcp serve" would fail infer_transport() with ValueError.
 proxy = create_proxy(
     {
         "mcpServers": {
@@ -206,38 +298,6 @@ if __name__ == "__main__":
     proxy.run(transport="streamable-http", host="0.0.0.0", port=port)
 ```
 
-### User access control
-
-FastMCP's `GitHubProvider` handles OAuth but doesn't filter by GitHub username.
-Two options for restricting access:
-
-**Option A** — Rely on OAuth App privacy. Only people you explicitly share the
-connection URL with can discover it. The OAuth App is yours, the URL is unlisted.
-For a single-user dev tool, this is usually sufficient.
-
-**Option B** — Subclass `GitHubTokenVerifier` to check the GitHub username.
-
-`GitHubTokenVerifier.verify_token()` receives the **upstream GitHub token** (not the
-FastMCP JWT), so it can call the GitHub API. Subclass and filter after validation:
-
-```python
-from fastmcp.server.auth.providers.github import GitHubTokenVerifier
-
-class RestrictedGitHubTokenVerifier(GitHubTokenVerifier):
-    def __init__(self, allowed_users: set[str], **kwargs):
-        super().__init__(**kwargs)
-        self.allowed_users = {u.lower() for u in allowed_users}
-
-    async def verify_token(self, token: str):
-        result = await super().verify_token(token)
-        if result and result.claims.get("login", "").lower() not in self.allowed_users:
-            return None  # deny access
-        return result
-```
-
-Then subclass `GitHubProvider` to inject your custom verifier, or construct
-`OAuthProxy` directly with `token_verifier=RestrictedGitHubTokenVerifier({"ManuelKugelmann"})`.
-
 ### Create the files
 
 ```bash
@@ -253,15 +313,24 @@ touch ~/mcps/src/gateway/__init__.py
 ```bash
 cat >> ~/mcps/.env << 'EOF'
 
-# ── MCP Gateway ──────────────────────────────
+# -- MCP Gateway -----------------------------------------------
 GH_OAUTH_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxx
 GH_OAUTH_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 GATEWAY_PORT=8070
 GATEWAY_BASE_URL=https://mcp.assist.uber.space
+ALLOWED_GITHUB_USERS=ManuelKugelmann
+
+# -- Claude Code Auth ------------------------------------------
+CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+
+# -- Notifications ---------------------------------------------
+NOTIFY_URL=https://ntfy.sh/your-topic
 EOF
+
+chmod 600 ~/mcps/.env
 ```
 
-Replace the `GH_OAUTH_*` values with the ones from Step 1.
+Replace the placeholder values with real credentials from Steps 1 and 3.
 
 ---
 
@@ -274,15 +343,20 @@ directory=%(ENV_HOME)s/mcps
 command=%(ENV_HOME)s/mcps/venv/bin/python -m src.gateway.server
 autostart=true
 autorestart=true
+environment=
+    PATH="%(ENV_HOME)s/.npm-global/bin:%(ENV_PATH)s",
+    CLAUDE_CODE_OAUTH_TOKEN="%(ENV_CLAUDE_CODE_OAUTH_TOKEN)s"
 stderr_logfile=%(ENV_HOME)s/logs/mcp-gateway.err.log
 stdout_logfile=%(ENV_HOME)s/logs/mcp-gateway.out.log
 EOF
 
 mkdir -p ~/logs
-supervisorctl reread
-supervisorctl add mcp-gateway
-supervisorctl start mcp-gateway
+supervisorctl update      # reread + add + start in one step
+supervisorctl status mcp-gateway
 ```
+
+The `PATH` environment line is required — supervisord inherits a minimal PATH
+that won't find `claude` in `~/.npm-global/bin`.
 
 ---
 
@@ -300,17 +374,94 @@ Verify:
 supervisorctl status mcp-gateway
 curl -s -o /dev/null -w "%{http_code}" https://mcp.assist.uber.space/mcp
 # Expected: 401 (OAuth required) or 405 (method not allowed for GET)
+curl -s https://mcp.assist.uber.space/.well-known/oauth-protected-resource
 ```
 
 ---
 
-## Step 9: Connect Clients
+## Step 9: Auth Monitoring Daemon
+
+Monitors token health passively (expiry check from `credentials.json`) and
+actively (live `claude -p` probe). Sends ntfy notification on any failure.
+
+### `~/bin/claude-auth-daemon.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+source ~/mcps/.env
+
+WARN_DAYS=${CLAUDE_WARN_DAYS:-30}
+CREDS=~/.claude/.credentials.json
+
+check_expiry() {
+    [[ -f "$CREDS" ]] || return 0
+    exp=$(python3 -c "import json,sys; d=json.load(open('$CREDS')); print(d.get('expiresAt',''))" 2>/dev/null) || return 0
+    [[ -z "$exp" ]] && return 0
+    now=$(date +%s); exp_s=$(date -d "$exp" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$exp" +%s)
+    days_left=$(( (exp_s - now) / 86400 ))
+    if (( days_left < 0 )); then
+        curl -sd "Claude token EXPIRED on $(hostname)" "$NOTIFY_URL"; exit 1
+    elif (( days_left < WARN_DAYS )); then
+        curl -sd "Claude token expires in ${days_left}d on $(hostname)" "$NOTIFY_URL"
+    fi
+}
+
+check_live() {
+    output=$(CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" claude -p "echo ok" 2>&1) || true
+    if echo "$output" | grep -qiE "authentication_error|401|token has expired|unauthorized"; then
+        curl -sd "Claude auth failure on $(hostname): $output" "$NOTIFY_URL"; exit 1
+    fi
+}
+
+check_expiry
+[[ "${1:-}" == "--once" ]] && check_live || while true; do check_live; sleep 1800; done
+```
+
+```bash
+chmod +x ~/bin/claude-auth-daemon.sh
+```
+
+### Cron setup
+
+```bash
+# Check every 30 minutes
+*/30 * * * *  bash -c 'source ~/mcps/.env && ~/bin/claude-auth-daemon.sh --once'
+
+# Renewal reminder at month 11
+0 9 1 */11 * curl -sd "Claude token renewal due on $(hostname)" "$NOTIFY_URL"
+```
+
+### 401 detection in automation scripts
+
+```bash
+source ~/mcps/.env
+output=$(CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" claude -p "your task" 2>&1) && rc=$? || rc=$?
+if echo "$output" | grep -qiE "authentication_error|401|token has expired"; then
+    curl -sd "Claude reauth needed on $(hostname)" "$NOTIFY_URL"
+    exit 1
+fi
+```
+
+### Token renewal (once a year)
+
+```bash
+claude setup-token          # run on a machine with a browser
+# Update CLAUDE_CODE_OAUTH_TOKEN in ~/mcps/.env
+supervisorctl restart mcp-gateway
+```
+
+Renew ~1 month before expiry. The cron line above sends a reminder at month 11.
+
+---
+
+## Step 10: Connect Clients
 
 ### Claude.ai (web)
 
-1. Go to https://claude.ai → Settings → Connectors → **Add custom connector**
+1. Go to https://claude.ai -> Settings -> Connectors -> **Add custom connector**
 2. Enter URL: `https://mcp.assist.uber.space/mcp`
-3. Click **Connect** → GitHub OAuth flow opens automatically
+3. Click **Connect** -> GitHub OAuth flow opens automatically
 4. Authorize with your GitHub account
 5. The connector appears as active — tools are now available in conversations
 
@@ -352,7 +503,7 @@ Claude uses the Bash tool to run `supervisorctl status` directly on the server.
 
 ---
 
-## Step 10: Verify End-to-End
+## Step 11: Verify End-to-End
 
 ```bash
 # Gateway running
@@ -383,7 +534,7 @@ tail -5 ~/logs/mcp-gateway.err.log
 | Search codebase | `GrepTool: pattern in ~/mcps/src/` |
 | Browse profiles | `Read: ~/mcps/profiles/europe/countries/DEU.json` |
 | Git operations | `Bash: cd ~/mcps && git log --oneline -10` |
-| Debug a crash | Read logs → grep errors → inspect code → fix → restart |
+| Debug a crash | Read logs -> grep errors -> inspect code -> fix -> restart |
 | Disk usage | `Bash: df -h && du -sh ~/mcps ~/LibreChat ~/logs` |
 | Check MongoDB | `Bash: ~/mcps/venv/bin/python -c "from pymongo import ..."` |
 
@@ -396,13 +547,21 @@ No custom tools. Claude.ai reasons about what to do, executes via native tools.
 | Layer | Mechanism |
 |-------|-----------|
 | Authentication | GitHub OAuth 2.1 via FastMCP GitHubProvider + DCR |
+| Authorization | `ALLOWED_GITHUB_USERS` allowlist (default: on) |
 | Token isolation | FastMCP issues its own JWTs — upstream GitHub tokens never exposed to clients |
-| Authorization | OAuth App scope + optional user allowlist (see Step 5) |
 | Transport | HTTPS only (Uberspace auto-TLS via Let's Encrypt) |
 | Execution | Claude Code's built-in safety model |
 | Origin | FastMCP validates Origin header per MCP spec |
 | Consent | FastMCP shows consent screen before granting access |
+| Auth token | `CLAUDE_CODE_OAUTH_TOKEN` at mode 600, never in `ANTHROPIC_API_KEY` |
 | Client support | Web, iOS, Android, CLI, Desktop — all via same OAuth App |
+
+### Auth rules
+
+- **Never** set both `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` — auth conflict
+- `~/mcps/.env` must stay at mode 600
+- Do **not** use Claude subscription OAuth for LibreChat or third-party tools (ToS)
+- Renew `setup-token` ~1 month before 1-year expiry
 
 ---
 
@@ -431,9 +590,22 @@ cd ~/mcps && venv/bin/python -m src.gateway.server  # run interactively
 ```
 
 Common issues:
-- `fastmcp` too old → `venv/bin/pip install -U 'fastmcp>=3.0'`
-- `claude` not in PATH → `which claude` (npm global bin must be in PATH)
-- Port conflict → `ss -tlnp | grep 8070`
+- `fastmcp` too old -> `venv/bin/pip install -U 'fastmcp>=3.0'`
+- `claude` not in PATH -> `which claude` (npm global bin must be in PATH)
+- Port conflict -> `ss -tlnp | grep 8070`
+
+### Auth failures / 401s
+
+```bash
+# Verify token works directly
+CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-... claude -p "echo ok"
+
+# Check expiry
+cat ~/.claude/.credentials.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('expiresAt'))"
+
+# Re-run setup if expired
+claude setup-token
+```
 
 ### OAuth flow fails
 
@@ -457,7 +629,7 @@ uberspace web backend list  # verify routing to port 8070
 ```bash
 supervisorctl stop mcp-gateway
 rm ~/etc/services.d/mcp-gateway.ini
-supervisorctl reread
+supervisorctl update
 uberspace web backend del mcp.assist.uber.space
 uberspace web domain del mcp.assist.uber.space
 rm -rf ~/mcps/src/gateway
@@ -472,6 +644,8 @@ rm -rf ~/mcps/src/gateway
 | `src/gateway/__init__.py` | Package marker |
 | `src/gateway/server.py` | FastMCP proxy (~60 lines) |
 | `~/etc/services.d/mcp-gateway.ini` | Supervisord service config |
+| `~/bin/claude-auth-daemon.sh` | Auth health monitor |
+| `~/mcps/.env` | Secrets + config (mode 600) |
 
 ---
 
