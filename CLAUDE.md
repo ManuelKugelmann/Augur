@@ -51,14 +51,23 @@ TradingAssistant/
 │       ├── water_server.py            ← USGS Water, US Drought Monitor, GloFAS
 │       └── weather_server.py          ← Open-Meteo, NOAA SWPC
 │
-├── profiles/
-│   ├── countries/                     ← DEU.json, USA.json, _schema.json
-│   ├── entities/
-│   │   ├── stocks/                    ← AAPL.json, NVDA.json
-│   │   ├── etfs/                      ← VWO.json
-│   │   ├── crypto/                    ← (empty, .gitkeep)
-│   │   └── indices/                   ← (empty, .gitkeep)
-│   └── sources/                       ← faostat.json, open-meteo.json, usgs.json
+├── profiles/                            ← organized by region, then kind
+│   ├── INFO.md                        ← structure reference
+│   ├── INDEX_{kind}.json              ← per-kind indexes (auto-generated)
+│   ├── SCHEMAS/                       ← descriptive schemas per kind
+│   ├── europe/                        ← economic regions
+│   │   ├── countries/DEU.json
+│   │   └── stocks/SAP.json
+│   ├── north_america/
+│   │   ├── countries/USA.json
+│   │   └── stocks/AAPL.json
+│   ├── global/                        ← non-geographic kinds
+│   │   ├── etfs/VWO.json
+│   │   ├── commodities/
+│   │   ├── crops/
+│   │   ├── materials/
+│   │   └── sources/faostat.json
+│   └── ... (mena, east_asia, arctic, antarctic, etc.)
 │
 ├── librechat-uberspace/
 │   ├── README.md                      ← deployment docs with QuickStart
@@ -117,11 +126,14 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 
 ### Signals Store (`src/store/server.py`)
 - **Framework**: FastMCP
-- **Profiles**: JSON files on disk (`profiles/`), git-tracked, human-editable
-- **Snapshots**: MongoDB Atlas M0 (volatile, TTL auto-prune)
-- **Profile tools**: `get_profile`, `put_profile`, `list_profiles`, `search_profiles`
-- **Snapshot tools**: `snapshot`, `event`, `history`, `recent_events`, `trend`, `aggregate`
-- **Profile kinds**: countries, stocks, etfs, crypto, indices, sources
+- **Profiles**: JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
+- **MongoDB**: Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`)
+- **Geo support**: Optional GeoJSON `location` field, 2dsphere indexes, `nearby()` tool
+- **Profile tools**: `get_profile`, `put_profile`, `list_profiles`, `find_profile`, `search_profiles`, `list_regions`, `rebuild_index`, `lint_profiles`
+- **Snapshot tools**: `snapshot`, `history`, `trend`, `nearby`, `event`, `recent_events`, `archive_snapshot`, `archive_history`, `compact`, `aggregate`, `chart`
+- **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
+- **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
+- **Regions**: north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
 
 ### Domain Servers (`src/servers/*.py`)
 - All use FastMCP framework
@@ -187,39 +199,74 @@ ta conf        edit deploy.conf
 ## Profiles
 
 **Target scale: 1000+ profiles** (current seed data is ~8 placeholders).
-Expected: ~200 countries, ~500 stocks, ~100 ETFs, crypto, indices, ~75 sources.
+Profiles describe anything tradeable or trade-relevant. Organized by geographic region then kind.
+See `profiles/INFO.md` for full reference.
 
-### Schema
+### Layout
 
-#### Countries (`profiles/countries/*.json`)
-Key fields: `id`, `name`, `region`, `currency`, `gdp`, `trade_partners`, `commodities`, `risk_factors`, `exposure`
+`profiles/{region}/{kind}/{id}.json`
 
-#### Entities (`profiles/entities/{stocks,etfs,crypto,indices}/*.json`)
-Key fields: `id`, `name`, `type`, `sector`, `exchange`, `currency`, `exposure.countries`, `supply_chain`, `risk_factors`
+### Regions
 
-#### Sources (`profiles/sources/*.json`)
-Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_required`, `signal.indicators`, `signal.thresholds`
+north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
 
-### INDEX.json
+### Kinds
 
-`profiles/INDEX.json` — flat array of `{id, kind, name, tags?, sector?, region?}` for all profiles. Used by `find_profile()` for fast cross-kind name/tag search.
+| Kind | ID convention | Example |
+|------|---------------|---------|
+| `countries` | ISO3 uppercase | `DEU`, `USA` |
+| `stocks` | Ticker uppercase | `AAPL`, `NVDA` |
+| `etfs` | Ticker uppercase | `VWO`, `SPY` |
+| `crypto` | Symbol uppercase | `BTC`, `ETH` |
+| `indices` | Symbol uppercase | `SPX`, `NDX` |
+| `commodities` | lowercase slug | `crude_oil`, `gold` |
+| `crops` | lowercase slug | `corn`, `soybeans` |
+| `materials` | lowercase slug | `lithium`, `copper` |
+| `products` | lowercase slug | `semiconductors`, `ev_batteries` |
+| `companies` | lowercase slug | `tsmc`, `aramco` |
+| `sources` | lowercase slug | `faostat`, `open-meteo` |
 
-- **Updated incrementally** on every `put_profile()` call (patches single entry, O(1) reads)
-- **Full rebuild** via `rebuild_index()` tool, or automatically when INDEX.json is missing/corrupted
-- Designed for 1000+ profiles — no full scan on writes
-- Git-tracked, human-readable
+### Schemas
+
+`profiles/SCHEMAS/{kind}.schema.json` — descriptive schema per kind.
+
+### Indexes
+
+`profiles/INDEX_{kind}.json` — top-level, auto-generated.
+Each entry: `{id, kind, name, region, tags?, sector?}`.
+
+- Updated incrementally on `put_profile()`
+- Full rebuild via `rebuild_index(kind?)`
+- `find_profile(query, region?)` merges all for cross-kind search
 
 ### Profile tools
 
-| Tool | Purpose | Reads INDEX? |
-|------|---------|-------------|
-| `find_profile(query)` | Search by name/ID/tag across all kinds | Yes |
-| `list_profiles(kind)` | List `{id, name}` for one kind | No (reads files) |
-| `search_profiles(kind, field, value)` | Field-level search within a kind | No (reads files) |
-| `get_profile(kind, id)` | Read one profile | No |
-| `put_profile(kind, id, data)` | Create/merge profile, updates INDEX | Writes INDEX |
-| `rebuild_index()` | Force full INDEX.json rebuild from disk | Writes INDEX |
-| `lint_profiles(kind?, id?)` | Validate profiles against schema (required fields, types) | No |
+| Tool | Purpose |
+|------|---------|
+| `get_profile(kind, id, region?)` | Read a profile (scans all regions if omitted) |
+| `put_profile(kind, id, data, region?)` | Create/merge (default: global) |
+| `list_profiles(kind, region?)` | List profiles, optionally by region |
+| `find_profile(query, region?)` | Cross-kind search by name/ID/tag |
+| `search_profiles(kind, field, value, region?)` | Field-level search |
+| `list_regions()` | List regions and their kinds |
+| `rebuild_index(kind?)` | Rebuild indexes from disk |
+| `lint_profiles(kind?, id?)` | Validate against schema |
+
+### Snapshot tools (same API + time fields)
+
+| Tool | Purpose |
+|------|---------|
+| `snapshot(kind, entity, type, data, region?, ...)` | Store timestamped data in snap_{kind} |
+| `history(kind, entity, type?, region?, after?, before?)` | Query snapshot history |
+| `trend(kind, entity, type, field, periods?)` | Extract field trend |
+| `nearby(kind, lon, lat, max_km?, type?)` | Geo proximity search |
+| `event(subtype, summary, data, region?, ...)` | Log signal event |
+| `recent_events(subtype?, severity?, region?, ...)` | Query recent events |
+| `archive_snapshot(kind, entity, type, data, region?)` | Long-term storage in arch_{kind} |
+| `archive_history(kind, entity, type?, region?, ...)` | Query archive |
+| `compact(kind, entity, type, older_than_days?)` | Downsample to archive |
+| `aggregate(kind, pipeline, archive?)` | Raw aggregation pipeline |
+| `chart(kind, entity, type, fields, ...)` | Generate Plotly chart |
 
 ## Environment Variables
 
