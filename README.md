@@ -9,24 +9,24 @@
 ## Data Sources and Storage
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  profiles/                 (JSON files, git-tracked)        │
-│  ├── countries/DEU.json    ← stable identity & exposure     │
-│  ├── entities/stocks/      ← sector, supply chain, risk     │
-│  └── sources/usgs.json     ← MCP source metadata            │
-│                                                             │
-│  Atlas M0  signals.snapshots   (volatile, TTL)              │
-│  ├── indicators  (GDP, CPI, unemployment — monthly)         │
-│  ├── price       (OHLCV — weekly)                           │
-│  ├── fundamentals (earnings — quarterly)                    │
-│  └── event       (earthquakes, outbreaks, sanctions)        │
-│                                                             │
-│  75+ MCP data sources   (live query, no duplication)        │
-│  ├── 12 custom data-source adapters (FastMCP)               │
-│  └── 3 community MCPs (filesystem, memory, sqlite)          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                                                                          │
+│  profiles/                 JSON files, git-tracked, ~5 MB                │
+│  ├── countries/DEU.json    identity, exposure, risk       manual/monthly │
+│  ├── entities/stocks/      sector, supply chain           manual/monthly │
+│  └── sources/usgs.json     MCP source metadata            manual/monthly │
+│                                                                          │
+│  Atlas M0  snapshots       MongoDB docs, TTL auto-prune, ~60 MB/year    │
+│  ├── indicators            GDP, CPI, unemployment         monthly        │
+│  ├── price                 OHLCV                          weekly         │
+│  ├── fundamentals          earnings                       quarterly      │
+│  └── event                 earthquakes, outbreaks         as they happen │
+│                                                                          │
+│  75+ data sources          live API queries, on-demand, no storage       │
+│  ├── 12 custom adapters    FastMCP wrappers for REST APIs                │
+│  └── 3 community MCPs     filesystem, memory, sqlite                    │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 Profile = what it **is**. Snapshot = what was measured **when**. MCP = current **live** state.
