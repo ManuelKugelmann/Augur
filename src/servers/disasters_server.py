@@ -23,8 +23,8 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
                 "earthquakes": [{"mag": f["properties"]["mag"],
                     "place": f["properties"]["place"],
                     "time": f["properties"]["time"],
-                    "tsunami": f["properties"]["tsunami"],
-                    "alert": f["properties"]["alert"],
+                    "tsunami": f["properties"].get("tsunami"),
+                    "alert": f["properties"].get("alert"),
                     "coords": f["geometry"]["coordinates"]}
                     for f in data["features"]]}
 
