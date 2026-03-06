@@ -73,8 +73,8 @@ _do_install() {
     if [[ -d "$STACK/.git" ]]; then
         log "Repo exists at $STACK, pulling latest..."
         git -C "$STACK" pull --ff-only origin "$BRANCH" 2>/dev/null || \
-            git -C "$STACK" fetch origin "$BRANCH" && \
-            git -C "$STACK" reset --hard "origin/$BRANCH"
+            { git -C "$STACK" fetch origin "$BRANCH" && \
+              git -C "$STACK" reset --hard "origin/$BRANCH"; }
         log "Repo updated"
     else
         log "Cloning repo..."
@@ -155,7 +155,7 @@ SVCEOF
         NEED_APP_ENV=true
         local TMP
         TMP=$(mktemp -d)
-        trap "rm -rf $TMP" EXIT
+        trap 'rm -rf "$TMP"' EXIT
 
         # Try GitHub release first
         local RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"

@@ -16,6 +16,7 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 import json
 import os
+import re
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -80,9 +81,25 @@ def _archive_col():
     return _db().archive
 
 
+_SAFE_ID = re.compile(r'^[A-Za-z0-9_-]+$')
+
+
 def _profile_dir(kind: str) -> Path | None:
     sub = KIND_PATHS.get(kind)
     return PROFILES / sub if sub else None
+
+
+def _safe_profile_path(kind: str, id: str) -> tuple[Path, dict | None]:
+    """Validate kind+id and return (path, None) or (_, error_dict)."""
+    if not _SAFE_ID.match(id):
+        return Path(), {"error": f"invalid id: {id} (only A-Z, a-z, 0-9, _, -)"}
+    d = _profile_dir(kind)
+    if not d:
+        return Path(), {"error": f"unknown kind: {kind}"}
+    p = (d / f"{id}.json").resolve()
+    if not str(p).startswith(str(PROFILES.resolve())):
+        return Path(), {"error": f"path traversal blocked: {id}"}
+    return p, None
 
 
 # ── File profiles ──────────────────────────────────
@@ -91,10 +108,9 @@ def _profile_dir(kind: str) -> Path | None:
 @mcp.tool()
 def get_profile(kind: str, id: str) -> dict:
     """Read a profile. kind: countries, stocks, etfs, crypto, indices, sources."""
-    d = _profile_dir(kind)
-    if not d:
-        return {"error": f"unknown kind: {kind}"}
-    p = d / f"{id}.json"
+    p, err = _safe_profile_path(kind, id)
+    if err:
+        return err
     if not p.exists():
         return {"error": f"not found: {kind}/{id}"}
     return json.loads(p.read_text())
@@ -103,11 +119,10 @@ def get_profile(kind: str, id: str) -> dict:
 @mcp.tool()
 def put_profile(kind: str, id: str, data: dict) -> dict:
     """Create or merge a profile. Shallow-merges with existing."""
-    d = _profile_dir(kind)
-    if not d:
-        return {"error": f"unknown kind: {kind}"}
-    d.mkdir(parents=True, exist_ok=True)
-    p = d / f"{id}.json"
+    p, err = _safe_profile_path(kind, id)
+    if err:
+        return err
+    p.parent.mkdir(parents=True, exist_ok=True)
     existing = json.loads(p.read_text()) if p.exists() else {}
     existing.update(data)
     existing["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -170,8 +185,8 @@ def snapshot(entity: str, type: str, data: dict,
 
 @mcp.tool()
 def event(subtype: str, summary: str, data: dict,
-          severity: str = "medium", countries: list[str] = [],
-          entities: list[str] = [], source: str = "",
+          severity: str = "medium", countries: list[str] | None = None,
+          entities: list[str] | None = None, source: str = "",
           ts: str = "") -> dict:
     """Log a signal event. severity: low, medium, high, critical.
     TTL is managed at the collection level (365 days from ts)."""
@@ -182,8 +197,8 @@ def event(subtype: str, summary: str, data: dict,
             "type": "event",
             "subtype": subtype,
             "severity": severity,
-            "countries": countries,
-            "entities": entities,
+            "countries": countries or [],
+            "entities": entities or [],
             "source": source,
         },
         "summary": summary,
@@ -214,7 +229,7 @@ def history(entity: str, type: str = "",
 
 @mcp.tool()
 def recent_events(subtype: str = "", severity: str = "",
-                  countries: list[str] = [], days: int = 30,
+                  countries: list[str] | None = None, days: int = 30,
                   limit: int = 50) -> list[dict]:
     """Query recent events. Filters on meta.type='event' and meta sub-fields."""
     q: dict = {
@@ -246,13 +261,23 @@ def trend(entity: str, type: str, field: str,
     return list(_col().aggregate(pipeline))
 
 
+_BLOCKED_STAGES = frozenset({
+    "$out", "$merge", "$unionWith", "$collStats", "$currentOp",
+    "$listSessions", "$planCacheStats",
+})
+
+
 @mcp.tool()
 def aggregate(pipeline: list[dict], collection: str = "snapshots") -> list[dict]:
-    """Run a raw MongoDB aggregation pipeline.
+    """Run a read-only MongoDB aggregation pipeline.
     collection: 'snapshots' (default) or 'archive'.
     Note: filter fields are under 'meta' (meta.entity, meta.type, meta.source, etc.).
     Example: [{"$match": {"meta.type": "event", "meta.subtype": "earthquake"}},
               {"$group": {"_id": "$data.country", "count": {"$sum": 1}}}]"""
+    for stage in pipeline:
+        for key in stage:
+            if key in _BLOCKED_STAGES:
+                return [{"error": f"stage {key} is not allowed"}]
     col = _archive_col() if collection == "archive" else _col()
     return [_ser(r) for r in col.aggregate(pipeline)]
 
