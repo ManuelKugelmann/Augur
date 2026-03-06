@@ -25,5 +25,7 @@
   },
   "tags": ["G7", "NATO", "USMCA", "reserve_currency"],
   "_updated": "2026-03-03",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"]
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

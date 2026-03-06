@@ -17,5 +17,7 @@
   },
   "tags": ["emerging_markets", "diversified", "passive"],
   "_updated": "2026-03-03",
-  "_sources": ["Vanguard", "Yahoo Finance"]
+  "_sources": ["Vanguard", "Yahoo Finance"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

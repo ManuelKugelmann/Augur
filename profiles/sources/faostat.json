@@ -11,5 +11,7 @@
     "default_params": {"domain": "QCL"}
   },
   "ttl_days": 365,
-  "_updated": "2026-03-03"
+  "_updated": "2026-03-03",
+  "_placeholder": true,
+  "_note": "Seed data for development. Config values will be refined once MCP servers are validated."
 }

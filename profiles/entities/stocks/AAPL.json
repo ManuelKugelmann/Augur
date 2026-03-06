@@ -18,5 +18,7 @@
   },
   "tags": ["consumer_electronics", "services", "mega_cap"],
   "_updated": "2026-03-03",
-  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+  "_sources": ["SEC EDGAR", "Yahoo Finance"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }
