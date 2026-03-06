@@ -9,27 +9,27 @@
 ## Data Sources and Storage
 
 ```
-LibreChat :3080
- ├─ filesystem · memory · sqlite     (community MCPs)
- ├─ signals-store                     (custom MCP)
- │   ├─ profiles/    JSON on disk, git-tracked
- │   └─ snapshots    MongoDB Atlas M0, TTL auto-prune
- └─ 12 data-source adapters          (custom MCPs)
-     └─ 75+ free REST APIs
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│  profiles/                 (JSON files, git-tracked)        │
+│  ├── countries/DEU.json    ← stable identity & exposure     │
+│  ├── entities/stocks/      ← sector, supply chain, risk     │
+│  └── sources/usgs.json     ← MCP source metadata            │
+│                                                             │
+│  Atlas M0  signals.snapshots   (volatile, TTL)              │
+│  ├── indicators  (GDP, CPI, unemployment — monthly)         │
+│  ├── price       (OHLCV — weekly)                           │
+│  ├── fundamentals (earnings — quarterly)                    │
+│  └── event       (earthquakes, outbreaks, sanctions)        │
+│                                                             │
+│  75+ MCP data sources   (live query, no duplication)        │
+│  ├── 12 custom data-source adapters (FastMCP)               │
+│  └── 3 community MCPs (filesystem, memory, sqlite)          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-| Layer | What | Format | Update Freq |
-|-------|------|--------|-------------|
-| JSON profiles | Identity, exposure, risk factors | 1 file per entity, git-tracked | Manual / monthly |
-| Atlas M0 snapshots | Time-series indicators, events | Documents with TTL auto-prune | Hourly → quarterly |
-| MCP live queries | Current data from 75+ APIs | On-demand | Real-time |
-
 Profile = what it **is**. Snapshot = what was measured **when**. MCP = current **live** state.
-
-| Store | Size | Growth |
-|-------|------|--------|
-| Profiles | ~5 MB | Negligible |
-| Atlas snapshots | ~60 MB/year | 512 MB = ~8 years free |
 
 ## Data Coverage (75+ sources, 12 domains)
 
