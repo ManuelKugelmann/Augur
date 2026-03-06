@@ -184,23 +184,48 @@ ta yaml        edit librechat.yaml
 ta conf        edit deploy.conf
 ```
 
-## Profile Schema
+## Profiles
 
-### Countries (`profiles/countries/*.json`)
+**Target scale: 1000+ profiles** (current seed data is ~8 placeholders).
+Expected: ~200 countries, ~500 stocks, ~100 ETFs, crypto, indices, ~75 sources.
+
+### Schema
+
+#### Countries (`profiles/countries/*.json`)
 Key fields: `id`, `name`, `region`, `currency`, `gdp`, `trade_partners`, `commodities`, `risk_factors`, `exposure`
 
-### Entities (`profiles/entities/{stocks,etfs,crypto,indices}/*.json`)
+#### Entities (`profiles/entities/{stocks,etfs,crypto,indices}/*.json`)
 Key fields: `id`, `name`, `type`, `sector`, `exchange`, `currency`, `exposure.countries`, `supply_chain`, `risk_factors`
 
-### Sources (`profiles/sources/*.json`)
+#### Sources (`profiles/sources/*.json`)
 Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_required`, `signal.indicators`, `signal.thresholds`
+
+### INDEX.json
+
+`profiles/INDEX.json` — flat array of `{id, kind, name, tags?, sector?, region?}` for all profiles. Used by `find_profile()` for fast cross-kind name/tag search.
+
+- **Updated incrementally** on every `put_profile()` call (patches single entry, O(1) reads)
+- **Full rebuild** via `_rebuild_index()` when INDEX.json is missing or corrupted
+- Designed for 1000+ profiles — no full scan on writes
+- Git-tracked, human-readable
+
+### Profile tools
+
+| Tool | Purpose | Reads INDEX? |
+|------|---------|-------------|
+| `find_profile(query)` | Search by name/ID/tag across all kinds | Yes |
+| `list_profiles(kind)` | List `{id, name}` for one kind | No (reads files) |
+| `search_profiles(kind, field, value)` | Field-level search within a kind | No (reads files) |
+| `get_profile(kind, id)` | Read one profile | No |
+| `put_profile(kind, id, data)` | Create/merge profile, updates INDEX | Writes INDEX |
 
 ## Environment Variables
 
 ### Signals Stack (`.env`)
 - `MONGO_URI` — MongoDB Atlas connection string (database: `signals`)
 - `PROFILES_DIR` — path to profiles directory (default: `./profiles`)
-- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `CLOUDFLARE_API_TOKEN`, etc.
+- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`
+- Full reference: `docs/api-keys.md`
 
 ### LibreChat (`~/LibreChat/.env`)
 - `MONGO_URI` — MongoDB Atlas connection string (database: `LibreChat`)
@@ -210,13 +235,12 @@ Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_requ
 
 ## Current Status (see TODO.md)
 
-**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation
+**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation, code review fixes (security + correctness), chart tool + HTTP endpoint, profile INDEX.json, API keys doc, setup doc
 
 **Next priorities (P0)**:
 - Validate all 12 domain servers run without errors
 - Test signals store against live Atlas M0
-- Populate seed profiles (~20 countries, ~20 stocks, ~5 ETFs)
-- Add source profiles for top data sources
+- Populate profiles at scale (~200 countries, ~500 stocks, ~100 ETFs, ~75 sources)
 
 **Not yet done**: End-to-end Uberspace deployment test (P4), periodic ingest scheduler (P1), alert/threshold system (P1)
 

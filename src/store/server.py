@@ -127,12 +127,31 @@ def put_profile(kind: str, id: str, data: dict) -> dict:
     existing.update(data)
     existing["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     p.write_text(json.dumps(existing, indent=2, ensure_ascii=False))
-    _rebuild_index()
+    _update_index(kind, id, existing)
     return {"path": str(p), "status": "ok"}
 
 
+def _index_entry(kind: str, id: str, data: dict) -> dict:
+    """Build a single index entry from profile data."""
+    entry: dict = {"id": id, "kind": kind, "name": data.get("name", id)}
+    for key in ("tags", "sector", "region"):
+        if key in data:
+            entry[key] = data[key]
+    return entry
+
+
+def _update_index(kind: str, id: str, data: dict):
+    """Incrementally update a single entry in INDEX.json."""
+    idx_path = PROFILES / "INDEX.json"
+    index = json.loads(idx_path.read_text()) if idx_path.exists() else []
+    index = [e for e in index if not (e["id"] == id and e["kind"] == kind)]
+    index.append(_index_entry(kind, id, data))
+    index.sort(key=lambda e: (e["kind"], e["id"]))
+    idx_path.write_text(json.dumps(index, indent=2, ensure_ascii=False))
+
+
 def _rebuild_index():
-    """Rebuild profiles/INDEX.json -- lightweight id/name/kind map."""
+    """Full rebuild of profiles/INDEX.json from all profile files."""
     index = []
     for kind, sub in KIND_PATHS.items():
         d = PROFILES / sub
@@ -143,14 +162,7 @@ def _rebuild_index():
                 continue
             try:
                 data = json.loads(f.read_text())
-                entry = {"id": f.stem, "kind": kind, "name": data.get("name", f.stem)}
-                if "tags" in data:
-                    entry["tags"] = data["tags"]
-                if "sector" in data:
-                    entry["sector"] = data["sector"]
-                if "region" in data:
-                    entry["region"] = data["region"]
-                index.append(entry)
+                index.append(_index_entry(kind, f.stem, data))
             except Exception:
                 pass
     (PROFILES / "INDEX.json").write_text(
