@@ -563,6 +563,21 @@ No custom tools. Claude.ai reasons about what to do, executes via native tools.
 - Do **not** use Claude subscription OAuth for LibreChat or third-party tools (ToS)
 - Renew `setup-token` ~1 month before 1-year expiry
 
+### Known FastMCP OAuth limitations (upstream, not our code)
+
+These are issues in FastMCP's OAuth implementation that may affect the gateway:
+
+| Issue | Impact | Workaround |
+|-------|--------|------------|
+| DCR registration may fail with Claude.ai remote connectors | Claude.ai can't complete OAuth flow | Test with `curl -X POST .../register`; if broken, wait for FastMCP fix or use Claude Code CLI instead |
+| Client secret exposed to MCP clients via DCR | OAuth App secret is returned in DCR response | Use a dedicated OAuth App with no sensitive repo scopes; rotate secret if compromised |
+| OAuth flow times out after 5 minutes | Slow users may fail to complete GitHub login in time | Retry the connection; no server-side fix available |
+| In-memory token storage | Tokens lost on restart; no horizontal scaling | Single-instance deployment (fine for dev gateway); FastMCP may add persistent storage later |
+
+These are upstream issues in FastMCP's `OAuthProxy` / `GitHubProvider`. Monitor
+the [FastMCP repo](https://github.com/jlowin/fastmcp) for fixes. None are
+blockers for a single-user dev gateway.
+
 ---
 
 ## Updating
