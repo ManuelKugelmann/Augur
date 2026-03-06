@@ -31,9 +31,9 @@ https://mcp.assist.uber.space/mcp
     |
     |  Uberspace nginx (auto TLS via Let's Encrypt)
     v
-localhost:8070  (FastMCP HTTP proxy — ~50 lines of Python)
+localhost:8070  (FastMCP HTTP proxy — ~60 lines of Python)
     |
-    |  stdio proxy via create_proxy()
+    |  stdio subprocess via create_proxy({mcpServers: ...})
     v
 claude mcp serve  (Claude Code as MCP server — NO API key needed)
     |
@@ -70,11 +70,12 @@ Claude Code's native tools cover every use case.
 | Node.js 22+ | For Claude Code CLI (already on Uberspace) |
 | Python 3.9+ | For FastMCP proxy (already on Uberspace) |
 | Claude Code CLI | `npm install -g @anthropic-ai/claude-code` |
-| `fastmcp>=2.11` | For OAuth + proxy support |
+| `fastmcp>=3.0` | For OAuth + proxy + config dict transport |
 | GitHub OAuth App | Created in Step 1 (free) |
 
-**Not needed**: Anthropic API key (serve mode doesn't use LLM), custom Python tools,
-`--dangerously-skip-permissions` (serve mode handles permissions via MCP protocol).
+**Not needed**: Anthropic API key (serve mode exposes tools directly, no LLM calls),
+custom Python tools, `--dangerously-skip-permissions` (the MCP client is responsible
+for implementing user confirmation for individual tool calls).
 
 ---
 
@@ -88,7 +89,7 @@ Claude Code's native tools cover every use case.
 3. Click **Register application**
 4. Copy the **Client ID**
 5. Click **Generate a new client secret**, copy it
-6. Save both for Step 4
+6. Save both for Step 6
 
 > **Important**: The callback URL points to **our server**, NOT to Claude.ai.
 > FastMCP's OAuthProxy handles the full redirect chain:
@@ -142,7 +143,7 @@ echo '{"jsonrpc":"2.0","method":"initialize","id":1,"params":{"protocolVersion":
 ```bash
 cd ~/mcps
 python3 -m venv venv 2>/dev/null || true
-venv/bin/pip install -U 'fastmcp>=2.11' httpx python-dotenv
+venv/bin/pip install -U 'fastmcp>=3.0' httpx python-dotenv
 ```
 
 ---
@@ -159,7 +160,6 @@ Result:   Claude.ai gets direct Bash/Read/Write/Edit/Grep on the server.
 """
 import os
 
-import httpx
 from dotenv import load_dotenv
 from fastmcp.server import create_proxy
 from fastmcp.server.auth.providers.github import GitHubProvider
@@ -185,9 +185,18 @@ def _get_auth():
     )
 
 
-# Wrap claude mcp serve (stdio) as an HTTP proxy with OAuth
+# Wrap claude mcp serve (stdio) as an HTTP proxy with OAuth.
+# NOTE: create_proxy() does NOT accept plain command strings — use a config dict.
 proxy = create_proxy(
-    "claude mcp serve",
+    {
+        "mcpServers": {
+            "claude-code": {
+                "command": "claude",
+                "args": ["mcp", "serve"],
+                "transport": "stdio",
+            }
+        }
+    },
     name="TradingAssistant Gateway",
     auth=_get_auth(),
 )
@@ -206,30 +215,28 @@ Two options for restricting access:
 connection URL with can discover it. The OAuth App is yours, the URL is unlisted.
 For a single-user dev tool, this is usually sufficient.
 
-**Option B** — Add a custom token verifier that checks the GitHub username:
+**Option B** — Subclass `GitHubTokenVerifier` to check the GitHub username.
+
+`GitHubTokenVerifier.verify_token()` receives the **upstream GitHub token** (not the
+FastMCP JWT), so it can call the GitHub API. Subclass and filter after validation:
 
 ```python
-# Add after GitHubProvider setup to restrict to specific users:
-from fastmcp.server.auth import TokenVerifier
+from fastmcp.server.auth.providers.github import GitHubTokenVerifier
 
-class GitHubUserFilter(TokenVerifier):
-    def __init__(self, allowed_users: list[str]):
-        self.allowed = {u.lower() for u in allowed_users}
+class RestrictedGitHubTokenVerifier(GitHubTokenVerifier):
+    def __init__(self, allowed_users: set[str], **kwargs):
+        super().__init__(**kwargs)
+        self.allowed_users = {u.lower() for u in allowed_users}
 
-    async def verify_token(self, token: str) -> dict:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                "https://api.github.com/user",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-            resp.raise_for_status()
-            user = resp.json()
-        if user["login"].lower() not in self.allowed:
-            raise ValueError(f"User {user['login']} not in allowlist")
-        return {"sub": user["login"], "name": user.get("name", "")}
+    async def verify_token(self, token: str):
+        result = await super().verify_token(token)
+        if result and result.claims.get("login", "").lower() not in self.allowed_users:
+            return None  # deny access
+        return result
 ```
 
-Then pass `token_verifier=GitHubUserFilter(["ManuelKugelmann"])` to the provider.
+Then subclass `GitHubProvider` to inject your custom verifier, or construct
+`OAuthProxy` directly with `token_verifier=RestrictedGitHubTokenVerifier({"ManuelKugelmann"})`.
 
 ### Create the files
 
@@ -409,7 +416,7 @@ ta pull && supervisorctl restart mcp-gateway
 npm update -g @anthropic-ai/claude-code
 
 # Update FastMCP
-~/mcps/venv/bin/pip install -U 'fastmcp>=2.11'
+~/mcps/venv/bin/pip install -U 'fastmcp>=3.0'
 ```
 
 ---
@@ -424,7 +431,7 @@ cd ~/mcps && venv/bin/python -m src.gateway.server  # run interactively
 ```
 
 Common issues:
-- `fastmcp` too old → `venv/bin/pip install -U 'fastmcp>=2.11'`
+- `fastmcp` too old → `venv/bin/pip install -U 'fastmcp>=3.0'`
 - `claude` not in PATH → `which claude` (npm global bin must be in PATH)
 - Port conflict → `ss -tlnp | grep 8070`
 
@@ -463,7 +470,7 @@ rm -rf ~/mcps/src/gateway
 | File | Purpose |
 |------|---------|
 | `src/gateway/__init__.py` | Package marker |
-| `src/gateway/server.py` | FastMCP proxy (~50 lines) |
+| `src/gateway/server.py` | FastMCP proxy (~60 lines) |
 | `~/etc/services.d/mcp-gateway.ini` | Supervisord service config |
 
 ---
