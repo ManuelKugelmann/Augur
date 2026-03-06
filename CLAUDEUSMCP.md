@@ -37,10 +37,22 @@ localhost:8070  (Python FastMCP gateway)
     +-- subprocess: supervisorctl     (service management)
     +-- subprocess: ~/bin/ta          (ops CLI)
     +-- subprocess: git               (repo operations)
+    +-- subprocess: claude --print    (Claude Code headless — complex tasks)
     +-- file reads: ~/logs/*          (log access)
     +-- file reads: ~/mcps/profiles/* (profile browsing)
     +-- httpx: localhost:3080         (LibreChat health check)
 ```
+
+### Two execution tiers
+
+| Simple ops | Complex tasks |
+|-----------|---------------|
+| `status()`, `restart()`, `logs()` | `claude_task("debug why mcp-weather keeps crashing")` |
+| Direct subprocess calls | Delegates to Claude Code headless on the server |
+| Instant, deterministic | Multi-step reasoning, file edits, test runs |
+| Our Python tools | Claude's native bash/edit/git capabilities |
+
+The gateway handles auth + routing. Claude Code headless handles thinking.
 
 ---
 
@@ -109,6 +121,58 @@ Verify the fastmcp version supports OAuth:
 
 ---
 
+## Step 2b: Install Claude Code Headless (optional but recommended)
+
+Claude Code headless runs on the server as an execution agent. The gateway's
+`claude_task()` tool delegates complex multi-step operations to it — debugging,
+code changes, investigation tasks that need reasoning + bash + file access.
+
+**Requires an Anthropic Max subscription** (or Team/Enterprise plan with headless access).
+
+### Install the CLI
+
+```bash
+# Install Claude Code CLI (npm-based)
+npm install -g @anthropic-ai/claude-code
+
+# Verify
+claude --version
+```
+
+### Authenticate with setup token
+
+1. Get a setup token from https://console.anthropic.com (or your org admin)
+2. Run:
+
+```bash
+# Non-interactive auth with setup token
+claude setup-token <your-token>
+
+# Verify authentication works
+claude --print "echo hello from Uberspace"
+```
+
+### Configure for the project
+
+```bash
+# Set the working directory default
+cd ~/mcps
+
+# Test headless mode — should return output without interactive prompts
+claude --print "ls src/servers/ | head -5"
+```
+
+### Resource usage
+
+Claude Code headless is lightweight when idle (no long-running process).
+Each `claude --print` invocation starts a process, runs the task, exits.
+API costs come from your Anthropic subscription, not from Uberspace resources.
+
+> **Without Claude Code headless**: The gateway still works — all Tier 1-3 tools
+> function normally. Only the `claude_task()` tool (Tier 5) requires it.
+
+---
+
 ## Step 3: Create the Gateway Server
 
 Create the directory structure:
@@ -150,7 +214,7 @@ mcp = FastMCP(
 )
 
 # Register all tool modules
-from src.gateway.tools import ops, deploy, diagnostics, data, config, shell  # noqa: F401,E402
+from src.gateway.tools import ops, deploy, diagnostics, data, config, shell, agent  # noqa: F401,E402
 
 # Each module registers tools on `mcp` via import-time decoration.
 # See individual modules for tool definitions.
@@ -755,6 +819,111 @@ def shell(command: str, timeout: int = 30) -> str:
     return f"```\n{out}```"
 ```
 
+### `src/gateway/tools/agent.py` — Claude Code headless delegation (Tier 5)
+
+```python
+"""Tier 5 tool: delegate complex tasks to Claude Code headless.
+
+Claude Code runs on the server with full bash/file/git access.
+The gateway acts as auth + routing layer; Claude Code does the thinking.
+"""
+import os
+import shutil
+import subprocess
+from src.gateway.server import mcp
+from src.gateway.security import audit
+
+_MAX_OUTPUT = 100_000  # 100KB output cap for agent responses
+
+
+def _claude_available() -> bool:
+    """Check if claude CLI is installed and authenticated."""
+    return shutil.which("claude") is not None
+
+
+@mcp.tool()
+def claude_task(task: str, timeout: int = 300, working_dir: str = "~/mcps") -> str:
+    """Delegate a complex task to Claude Code headless running on the server.
+
+    Use this for multi-step operations that need reasoning: debugging crashes,
+    investigating issues, making code changes, running tests, analyzing logs.
+
+    For simple operations (status, restart, logs), use the dedicated tools instead.
+
+    Args:
+        task: Natural language description of what to do
+        timeout: Max seconds (default 300, max 600)
+        working_dir: Working directory (default ~/mcps)
+    """
+    if not _claude_available():
+        return (
+            "Claude Code is not installed on this server.\n"
+            "Install: npm install -g @anthropic-ai/claude-code\n"
+            "Auth: claude setup-token <token>\n"
+            "See Step 2b in CLAUDEUSMCP.md"
+        )
+
+    timeout = min(max(timeout, 30), 600)
+    cwd = os.path.expanduser(working_dir)
+
+    audit("claude_task", {"task": task[:200], "timeout": timeout, "cwd": cwd}, "starting")
+
+    try:
+        r = subprocess.run(
+            ["claude", "--print", task],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=cwd,
+            env={**os.environ, "HOME": os.path.expanduser("~")},
+        )
+        out = r.stdout
+        if r.stderr:
+            out += f"\n\n--- stderr ---\n{r.stderr}"
+    except subprocess.TimeoutExpired:
+        out = f"Task timed out after {timeout}s. Consider breaking it into smaller steps."
+    except Exception as e:
+        out = f"Error running Claude Code: {e}"
+
+    # Cap output
+    if len(out) > _MAX_OUTPUT:
+        out = out[:_MAX_OUTPUT] + f"\n... (truncated, {len(out)} total chars)"
+
+    audit("claude_task", {"task": task[:200]}, f"exit={getattr(r, 'returncode', '?')} len={len(out)}")
+    return out
+
+
+@mcp.tool()
+def claude_status() -> str:
+    """Check if Claude Code headless is installed and working."""
+    if not _claude_available():
+        return "Claude Code CLI: NOT INSTALLED"
+
+    try:
+        r = subprocess.run(
+            ["claude", "--version"],
+            capture_output=True, text=True, timeout=10
+        )
+        version = r.stdout.strip()
+    except Exception as e:
+        version = f"error: {e}"
+
+    # Quick auth check
+    try:
+        r = subprocess.run(
+            ["claude", "--print", "echo ok"],
+            capture_output=True, text=True, timeout=30,
+            cwd=os.path.expanduser("~"),
+        )
+        auth_ok = "ok" in r.stdout
+    except Exception:
+        auth_ok = False
+
+    status = f"Claude Code CLI: {version}\nAuthenticated: {'yes' if auth_ok else 'NO — run: claude setup-token <token>'}"
+    audit("claude_status", {}, status)
+    return status
+```
+
 ### `src/gateway/tools/config.py` — Configuration (Tier 4, guarded)
 
 ```python
@@ -1084,6 +1253,12 @@ cd ~/mcps && git pull && supervisorctl restart mcp-gateway
 | `confirm_set_env(token)` | Execute confirmed env change |
 | `shell(command, timeout?)` | Guarded shell execution (blocked patterns, audit-logged) |
 
+### Tier 5 — Claude Code Headless (requires setup)
+| Tool | Description |
+|------|-------------|
+| `claude_task(task, timeout?)` | Delegate complex multi-step task to Claude Code |
+| `claude_status()` | Check if Claude Code is installed and authenticated |
+
 ---
 
 ## Security Model
@@ -1097,6 +1272,7 @@ cd ~/mcps && git pull && supervisorctl restart mcp-gateway
 | Secret protection | Automatic redaction in `get_config` for keys matching SECRET/KEY/PASSWORD/TOKEN/URI/MONGO/CREDS |
 | Audit trail | All tool calls logged to `~/logs/mcp-gateway.audit.log` |
 | Shell guard | `shell()` tool blocks destructive patterns (rm -rf, sudo, curl\|sh, etc.), caps output at 50KB, audit-logs every invocation |
+| Agent guard | `claude_task()` runs Claude Code with its own safety model (refuses destructive ops), 10min max timeout, 100KB output cap |
 | Origin validation | FastMCP validates Origin header per MCP spec |
 
 ---
@@ -1195,6 +1371,7 @@ rm ~/logs/mcp-gateway.audit.log
 | `src/gateway/tools/diagnostics.py` | disk, memory, health, cron, errors |
 | `src/gateway/tools/data.py` | profiles, sync, db_stats |
 | `src/gateway/tools/shell.py` | guarded shell execution |
+| `src/gateway/tools/agent.py` | Claude Code headless delegation |
 | `src/gateway/tools/config.py` | get_config, set_env |
 | `~/etc/services.d/mcp-gateway.ini` | Supervisord service definition |
 | `~/logs/mcp-gateway.audit.log` | Audit trail (created at runtime) |
