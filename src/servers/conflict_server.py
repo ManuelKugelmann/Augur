@@ -8,6 +8,7 @@ load_dotenv()
 mcp = FastMCP("conflict", instructions="Armed conflict, military, and sanctions data")
 ACLED_KEY = os.environ.get("ACLED_API_KEY", "")
 ACLED_EMAIL = os.environ.get("ACLED_EMAIL", "")
+OPENSANCTIONS_KEY = os.environ.get("OPENSANCTIONS_API_KEY", "")
 
 
 @mcp.tool()
@@ -42,12 +43,17 @@ async def acled_events(country: str = "", event_type: str = "",
 
 @mcp.tool()
 async def search_sanctions(query: str, schema: str = "") -> dict:
-    """OpenSanctions search. schema: Person, Company, Vessel, Aircraft, Organization."""
+    """OpenSanctions search. schema: Person, Company, Vessel, Aircraft, Organization.
+    Requires OPENSANCTIONS_API_KEY (free tier available at opensanctions.org)."""
+    if not OPENSANCTIONS_KEY:
+        return {"error": "OPENSANCTIONS_API_KEY not set"}
     params = {"q": query, "limit": 20}
     if schema:
         params["schema"] = schema
+    headers = {"Authorization": f"ApiKey {OPENSANCTIONS_KEY}"}
     async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.opensanctions.org/search/default", params=params)
+        r = await c.get("https://api.opensanctions.org/search/default",
+                        params=params, headers=headers)
         r.raise_for_status()
         return r.json()
 

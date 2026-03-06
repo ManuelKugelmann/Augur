@@ -369,13 +369,29 @@ class TestConflictServer:
 
     @respx.mock
     @pytest.mark.asyncio
+    async def test_search_sanctions_no_key(self):
+        orig = conflict_mod.OPENSANCTIONS_KEY
+        conflict_mod.OPENSANCTIONS_KEY = ""
+        try:
+            result = await _search_sanctions("test")
+            assert result == {"error": "OPENSANCTIONS_API_KEY not set"}
+        finally:
+            conflict_mod.OPENSANCTIONS_KEY = orig
+
+    @respx.mock
+    @pytest.mark.asyncio
     async def test_search_sanctions(self):
-        mock_data = {"results": [{"id": "1", "caption": "Test Entity"}]}
-        respx.get("https://api.opensanctions.org/search/default").mock(
-            return_value=httpx.Response(200, json=mock_data)
-        )
-        result = await _search_sanctions("test")
-        assert "results" in result
+        orig = conflict_mod.OPENSANCTIONS_KEY
+        conflict_mod.OPENSANCTIONS_KEY = "test_key"
+        try:
+            mock_data = {"results": [{"id": "1", "caption": "Test Entity"}]}
+            respx.get("https://api.opensanctions.org/search/default").mock(
+                return_value=httpx.Response(200, json=mock_data)
+            )
+            result = await _search_sanctions("test")
+            assert "results" in result
+        finally:
+            conflict_mod.OPENSANCTIONS_KEY = orig
 
     @respx.mock
     @pytest.mark.asyncio
