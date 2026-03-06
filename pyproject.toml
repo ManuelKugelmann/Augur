@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+markers = [
+    "integration: hits real APIs or databases (deselect with '-m not integration')",
+]
+addopts = "-m 'not integration'"
