@@ -358,15 +358,16 @@ case "$CMD" in
         fi
         ;;
     cron)
-        # ── Unified hourly cron hook ──────────────────────────────
-        # Install: crontab -e → 0 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
-        # Internally gates tasks by hour/day so only one cron entry is needed.
+        # ── Unified cron hook (every 15 min) ─────────────────────
+        # Install: crontab -e → */15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
+        # Internally gates tasks by interval so only one cron entry is needed.
         HOUR=$(date +%H)
+        MIN=$(date +%M)
         DOW=$(date +%u)   # 1=Mon .. 7=Sun
 
         _cron_log() { echo "[ta-cron] $1"; }
 
-        # ── Every hour: data sync ──
+        # ── Every 15 min: data sync ──
         if [[ -d "$DATA/.git" ]]; then
             cd "$DATA"
             git add -A
@@ -377,7 +378,7 @@ case "$CMD" in
             cd - >/dev/null
         fi
 
-        # ── Every hour: profile auto-commit ──
+        # ── Every 15 min: profile auto-commit ──
         if [[ -d "$STACK/.git" ]]; then
             cd "$STACK"
             git add -A profiles/
@@ -454,7 +455,7 @@ PYEOF
         echo "  ta rb|rollback  Rollback to previous version"
         echo ""
         echo "  ta sync         Force git sync of data dir"
-        echo "  ta cron         Run hourly cron hook (sync + compact + maintenance)"
+        echo "  ta cron         Run cron hook (every 15min; sync + profiles + daily compact)"
         echo "  ta env          Edit .env"
         echo "  ta yaml         Edit librechat.yaml"
         echo "  ta conf         Edit deploy.conf"
