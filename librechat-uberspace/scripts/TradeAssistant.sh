@@ -357,6 +357,79 @@ case "$CMD" in
             echo -e "${RED}✗${NC} Data repo not initialized. Run: bash $APP/scripts/setup-data-repo.sh"
         fi
         ;;
+    cron)
+        # ── Unified hourly cron hook ──────────────────────────────
+        # Install: crontab -e → 0 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
+        # Internally gates tasks by hour/day so only one cron entry is needed.
+        HOUR=$(date +%H)
+        DOW=$(date +%u)   # 1=Mon .. 7=Sun
+
+        _cron_log() { echo "[ta-cron] $1"; }
+
+        # ── Every hour: data sync ──
+        if [[ -d "$DATA/.git" ]]; then
+            cd "$DATA"
+            git add -A
+            if ! git diff --cached --quiet; then
+                git commit -m "sync $(date -Is)"
+                git push && _cron_log "data synced" || _cron_log "data sync push failed"
+            fi
+            cd - >/dev/null
+        fi
+
+        # ── Every hour: profile auto-commit ──
+        if [[ -d "$STACK/.git" ]]; then
+            cd "$STACK"
+            git add -A profiles/
+            if ! git diff --cached --quiet; then
+                git commit -m "auto: $(date +%Y-%m-%d) profile updates"
+                _cron_log "profiles committed"
+            fi
+            cd - >/dev/null
+        fi
+
+        # ── Daily at 02:00 UTC: compact old snapshots to archive ──
+        if [[ "$HOUR" == "02" ]]; then
+            _cron_log "running daily compact"
+            if [[ -f "$STACK/venv/bin/python" ]]; then
+                "$STACK/venv/bin/python" - <<'PYEOF'
+import os, sys
+sys.path.insert(0, os.environ.get("STACK", os.path.expanduser("~/mcps")))
+from src.store.server import compact, _col
+
+# Find all distinct entity+type combos and compact each
+pipeline = [
+    {"$match": {"meta.type": {"$ne": "event"}}},
+    {"$group": {"_id": {"entity": "$meta.entity", "type": "$meta.type"}}},
+]
+try:
+    combos = list(_col().aggregate(pipeline))
+except Exception as e:
+    print(f"[ta-cron] compact skip: {e}")
+    sys.exit(0)
+
+for c in combos:
+    eid = c["_id"]["entity"]
+    etype = c["_id"]["type"]
+    result = compact(eid, etype, older_than_days=90, bucket="month")
+    status = result.get("status", "error")
+    if status == "ok":
+        print(f"[ta-cron] compacted {eid}/{etype}: {result['buckets_created']} buckets, {result['snapshots_deleted']} removed")
+    elif status != "nothing_to_compact":
+        print(f"[ta-cron] compact {eid}/{etype}: {status}")
+PYEOF
+            else
+                _cron_log "python venv not found, skipping compact"
+            fi
+        fi
+
+        # ── Weekly on Sunday at 03:00 UTC: placeholder for future tasks ──
+        # if [[ "$HOUR" == "03" ]] && [[ "$DOW" == "7" ]]; then
+        #     _cron_log "weekly maintenance"
+        # fi
+
+        _cron_log "done (hour=$HOUR dow=$DOW)"
+        ;;
     env)
         ${EDITOR:-nano} "$APP/.env"
         ;;
@@ -381,6 +454,7 @@ case "$CMD" in
         echo "  ta rb|rollback  Rollback to previous version"
         echo ""
         echo "  ta sync         Force git sync of data dir"
+        echo "  ta cron         Run hourly cron hook (sync + compact + maintenance)"
         echo "  ta env          Edit .env"
         echo "  ta yaml         Edit librechat.yaml"
         echo "  ta conf         Edit deploy.conf"
