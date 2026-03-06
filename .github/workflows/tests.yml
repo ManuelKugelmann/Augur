@@ -28,6 +28,23 @@ jobs:
       - name: Run bats tests
         run: bats tests/*.bats
 
+  python-tests:
+    name: Python tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pytest
+
+      - name: Run pytest
+        run: python -m pytest tests/test_store.py -v
+
   shellcheck:
     name: ShellCheck lint
     runs-on: ubuntu-latest
