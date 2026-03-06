@@ -219,6 +219,7 @@ Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_requ
 | `get_profile(kind, id)` | Read one profile | No |
 | `put_profile(kind, id, data)` | Create/merge profile, updates INDEX | Writes INDEX |
 | `rebuild_index()` | Force full INDEX.json rebuild from disk | Writes INDEX |
+| `lint_profiles(kind?, id?)` | Validate profiles against schema (required fields, types) | No |
 
 ## Environment Variables
 

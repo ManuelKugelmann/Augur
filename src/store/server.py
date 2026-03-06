@@ -179,6 +179,83 @@ def rebuild_index() -> dict:
     return {"status": "ok", "entries": len(index)}
 
 
+_SCHEMA_MAP = {
+    "countries": "countries/_schema.json",
+    "stocks": "entities/_schema.json",
+    "etfs": "entities/_schema.json",
+    "crypto": "entities/_schema.json",
+    "indices": "entities/_schema.json",
+    "sources": "sources/_schema.json",
+}
+
+
+def _load_schema(kind: str) -> dict | None:
+    """Load the descriptive schema for a kind, if it exists."""
+    rel = _SCHEMA_MAP.get(kind)
+    if not rel:
+        return None
+    p = PROFILES / rel
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return None
+
+
+def _lint_one(kind: str, id: str, data: dict, schema: dict | None) -> list[str]:
+    """Lint a single profile. Returns list of issue strings."""
+    issues = []
+    if not schema:
+        return issues
+    required = schema.get("required", [])
+    props = schema.get("properties", {})
+    for field in required:
+        if field not in data:
+            issues.append(f"missing required field: {field}")
+    # Check top-level fields that should be objects
+    for field, desc in props.items():
+        if field not in data:
+            continue
+        val = data[field]
+        if isinstance(desc, dict) and not isinstance(val, dict):
+            issues.append(f"{field}: expected object, got {type(val).__name__}")
+        if isinstance(desc, str) and "array" in desc.lower() and not isinstance(val, list):
+            issues.append(f"{field}: expected array, got {type(val).__name__}")
+    return issues
+
+
+@mcp.tool()
+def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
+    """Validate profiles against their schema. Check required fields and types.
+    If kind+id given, lint one profile. If only kind, lint all of that kind.
+    If neither, lint everything. Returns {ok: [...], issues: {id: [...]}}."""
+    results: dict = {"ok": [], "issues": {}}
+    targets: list[tuple[str, str]] = []
+    if kind and id:
+        targets.append((kind, id))
+    elif kind:
+        for entry in list_profiles(kind):
+            targets.append((kind, entry["id"]))
+    else:
+        for k in KIND_PATHS:
+            for entry in list_profiles(k):
+                targets.append((k, entry["id"]))
+    for k, pid in targets:
+        schema = _load_schema(k)
+        prof = get_profile(k, pid)
+        if "error" in prof:
+            results["issues"][f"{k}/{pid}"] = [prof["error"]]
+            continue
+        issues = _lint_one(k, pid, prof, schema)
+        key = f"{k}/{pid}"
+        if issues:
+            results["issues"][key] = issues
+        else:
+            results["ok"].append(key)
+    return results
+
+
 @mcp.tool()
 def list_profiles(kind: str) -> list[dict]:
     """List all profiles for a kind. Returns [{id, name}, ...] for quick lookup."""
