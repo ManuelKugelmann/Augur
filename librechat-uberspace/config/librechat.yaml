@@ -67,7 +67,9 @@ mcpServers:
       Profiles: get_profile, put_profile, list_profiles, search_profiles
         — for countries (DEU, USA), stocks (AAPL), ETFs, crypto, indices, sources.
       Snapshots: snapshot, event, history, recent_events, trend, aggregate
-        — time-series data stored in MongoDB Atlas with TTL auto-prune.
+        — timeseries data in MongoDB Atlas (1yr TTL). Archive for long-term (no TTL).
+      Charts: chart(entity, type, fields, ...) returns complete Plotly HTML.
+        Output the returned HTML directly as an artifact for interactive visualization.
       Use profiles for identity/exposure data. Use snapshots for measurements over time.
 
   # ── Domain Servers (12 domains, 75+ sources) ──

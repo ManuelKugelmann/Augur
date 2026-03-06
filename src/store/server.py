@@ -257,6 +257,64 @@ def aggregate(pipeline: list[dict], collection: str = "snapshots") -> list[dict]
     return [_ser(r) for r in col.aggregate(pipeline)]
 
 
+# ── Charts ────────────────────────────────────────
+
+_CHART_HTML = """<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>body{{margin:0;font-family:system-ui}}#c{{width:100%;height:100vh}}</style>
+</head><body><div id="c"></div><script>
+Plotly.newPlot('c',{traces},{layout},{{responsive:true}});
+</script></body></html>"""
+
+
+@mcp.tool()
+def chart(entity: str, type: str, fields: list[str],
+          periods: int = 24, collection: str = "snapshots",
+          chart_type: str = "line", title: str = "") -> str:
+    """Generate an interactive Plotly HTML chart from timeseries data.
+    Returns complete HTML — output directly as an artifact.
+    entity: e.g. 'DEU', 'AAPL'. type: e.g. 'indicators', 'price'.
+    fields: data keys to plot, e.g. ['gdp_growth_pct'] or ['open','close'].
+    chart_type: 'line', 'bar', 'scatter'. collection: 'snapshots' or 'archive'."""
+    col = _archive_col() if collection == "archive" else _col()
+
+    traces = []
+    for field in fields:
+        pipeline = [
+            {"$match": {"meta.entity": entity, "meta.type": type}},
+            {"$sort": {"ts": -1}},
+            {"$limit": periods},
+            {"$project": {"ts": 1, "value": f"$data.{field}", "_id": 0}},
+            {"$sort": {"ts": 1}},
+        ]
+        points = list(col.aggregate(pipeline))
+        if not points:
+            continue
+        x = [p["ts"].isoformat() if isinstance(p["ts"], datetime) else p["ts"] for p in points]
+        y = [p.get("value") for p in points]
+        mode = "lines+markers" if chart_type == "line" else "markers" if chart_type == "scatter" else ""
+        trace: dict = {"x": x, "y": y, "name": field}
+        if chart_type in ("line", "scatter"):
+            trace["type"] = "scatter"
+            trace["mode"] = mode
+        else:
+            trace["type"] = "bar"
+        traces.append(trace)
+
+    if not traces:
+        return f"No data found for {entity}/{type} fields={fields}"
+
+    chart_title = title or f"{entity} — {type}"
+    layout = json.dumps({
+        "title": chart_title,
+        "xaxis": {"title": "Date"},
+        "template": "plotly_white",
+        "margin": {"t": 40, "r": 20, "b": 40, "l": 60},
+    })
+    return _CHART_HTML.format(traces=json.dumps(traces), layout=layout)
+
+
 # ── Archive (long-term history) ───────────────────
 
 
