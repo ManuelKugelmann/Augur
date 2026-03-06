@@ -8,26 +8,11 @@
 
 ## Data Sources and Storage
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                                                                          │
-│  profiles/                 JSON files, git-tracked, ~5 MB                │
-│  ├── countries/DEU.json    identity, exposure, risk       manual/monthly │
-│  ├── entities/stocks/      sector, supply chain           manual/monthly │
-│  └── sources/usgs.json     MCP source metadata            manual/monthly │
-│                                                                          │
-│  Atlas M0  snapshots       MongoDB docs, TTL auto-prune, ~60 MB/year    │
-│  ├── indicators            GDP, CPI, unemployment         monthly        │
-│  ├── price                 OHLCV                          weekly         │
-│  ├── fundamentals          earnings                       quarterly      │
-│  └── event                 earthquakes, outbreaks         as they happen │
-│                                                                          │
-│  75+ data sources          live API queries, on-demand, no storage       │
-│  ├── 12 custom adapters    FastMCP wrappers for REST APIs                │
-│  └── 3 community MCPs     filesystem, memory, sqlite                    │
-│                                                                          │
-└──────────────────────────────────────────────────────────────────────────┘
-```
+| | Layer | What | Format | Update | Size |
+|---|-------|------|--------|--------|------|
+| 📁 | **Profiles** | Identity, exposure, risk | JSON on disk, git-tracked | Manual / monthly | ~5 MB |
+| ☁️ | **Snapshots** | Indicators, prices, events | MongoDB Atlas M0, TTL | Hourly → quarterly | ~60 MB/yr |
+| 🔌 | **Live queries** | Current data from 75+ APIs | On-demand, no storage | Real-time | — |
 
 Profile = what it **is**. Snapshot = what was measured **when**. MCP = current **live** state.
 
