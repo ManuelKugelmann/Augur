@@ -1,10 +1,8 @@
 ### TradingAssistant
 
-- 13 custom MCP servers: 12 data-source adapters wrapping 75+ free APIs + 1 signals store
-- 3 community MCP servers: filesystem, memory, sqlite
-- Hybrid store: JSON profiles (git-tracked) + MongoDB snapshots (TTL)
-- Deployed via LibreChat on Uberspace, no Docker needed
-- CI release workflow with one-liner install and `ta` ops CLI
+- Chat-based access to 75+ free data sources across 12 domains
+- Covers macro, weather, disasters, commodities, health, conflict, and more
+- Hybrid storage: structured profiles + time-series snapshots
 
 ## Data Sources and Storage
 
