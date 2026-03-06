@@ -5,9 +5,10 @@
 It deploys a lightweight MCP gateway on Uberspace so that Claude.ai and Claude Code (web)
 can manage the server remotely. Think of it as SSH-over-MCP for our dev workflow.
 
-The gateway is **fully independent** — it has its own venv, its own supervisord service,
-its own subdomain, and zero imports from the main TradingAssistant codebase. It only
-interacts with the stack via subprocess calls (`ta`, `supervisorctl`, file reads).
+The gateway is **operationally independent** — its own supervisord service, its own
+subdomain, and zero Python imports from the main TradingAssistant codebase. It shares
+the project's Python venv (`~/mcps/venv/`) but only interacts with the stack via
+subprocess calls (`ta`, `supervisorctl`, file reads).
 
 ---
 
@@ -55,22 +56,14 @@ localhost:8070  (Python FastMCP gateway)
 
 ## Step 0: Deploy the Gateway
 
-The gateway lives at **`~/mcp-gateway/`** — a separate directory from the main stack.
-It has its own venv, its own git checkout, and no Python imports from `~/mcps/`.
+The gateway code lives inside the main repo at `~/mcps/src/gateway/` and shares the
+project venv at `~/mcps/venv/`. No separate clone needed — it's already there after
+`ta install` or `git clone`.
 
-```bash
-# Fresh checkout — gateway code only
-mkdir -p ~/mcp-gateway && cd ~/mcp-gateway
-git clone --depth 1 --filter=blob:none --sparse \
-  https://github.com/ManuelKugelmann/TradingAssistant.git .
-git sparse-checkout set src/gateway CLAUDEUSMCP.md
-```
-
-> The gateway interacts with the main stack only via subprocess (`~/bin/ta`, `supervisorctl`)
-> and file reads (`~/mcps/profiles/`, `~/logs/`). If `~/mcps/` doesn't exist, the profile
-> and deploy tools gracefully return "not found" messages.
-
-For the rest of this guide, `$GW_DIR` = `~/mcp-gateway`.
+> The gateway has **zero Python imports** from the rest of the codebase. It interacts
+> with the main stack only via subprocess (`~/bin/ta`, `supervisorctl`) and file reads
+> (`~/mcps/profiles/`, `~/logs/`). If `~/mcps/` isn't fully set up, profile and deploy
+> tools gracefully return "not found" messages while status/logs/diagnostics still work.
 
 ---
 
@@ -94,26 +87,25 @@ For the rest of this guide, `$GW_DIR` = `~/mcp-gateway`.
 
 ---
 
-## Step 2: Set Up Python Environment
+## Step 2: Verify Python Environment
 
-The gateway has its **own venv** at `~/mcp-gateway/venv/`, independent from `~/mcps/venv/`.
+The gateway uses the **shared project venv** at `~/mcps/venv/`. The project's
+`requirements.txt` already includes `fastmcp>=2.11` (needed for OAuth support).
 
 ```bash
-cd ~/mcp-gateway
-
-# Create dedicated venv
-python3 -m venv venv
-
-# Install gateway dependencies (minimal — no pymongo required for core tools)
-venv/bin/pip install -q 'fastmcp>=2.11' 'httpx>=0.27' 'python-dotenv>=1.0'
-
-# Optional: pymongo for db_stats tool
-venv/bin/pip install -q 'pymongo>=4.7'
+# If the stack is already installed via `ta install`, the venv exists.
+# Otherwise, create it:
+cd ~/mcps
+python3 -m venv venv 2>/dev/null || true
+venv/bin/pip install -q -r requirements.txt
 ```
 
-> `fastmcp>=2.11` is required for OAuth support (`OAuthProxy` / `RemoteAuthProvider`).
-> This is intentionally separate from the main stack's `requirements.txt` to avoid
-> version coupling.
+Verify the fastmcp version supports OAuth:
+
+```bash
+~/mcps/venv/bin/pip show fastmcp | grep Version
+# Must be >= 2.11
+```
 
 ---
 
@@ -122,9 +114,9 @@ venv/bin/pip install -q 'pymongo>=4.7'
 Create the directory structure:
 
 ```bash
-mkdir -p ~/mcp-gateway/src/gateway/tools
-touch ~/mcp-gateway/src/gateway/__init__.py
-touch ~/mcp-gateway/src/gateway/tools/__init__.py
+mkdir -p ~/mcps/src/gateway/tools
+touch ~/mcps/src/gateway/__init__.py
+touch ~/mcps/src/gateway/tools/__init__.py
 ```
 
 ### `src/gateway/server.py` — Main entry point
@@ -158,7 +150,7 @@ mcp = FastMCP(
 )
 
 # Register all tool modules
-from src.gateway.tools import ops, deploy, diagnostics, data, config  # noqa: F401,E402
+from src.gateway.tools import ops, deploy, diagnostics, data, config, shell  # noqa: F401,E402
 
 # Each module registers tools on `mcp` via import-time decoration.
 # See individual modules for tool definitions.
@@ -682,6 +674,87 @@ def db_stats() -> str:
         return f"MongoDB error: {e}"
 ```
 
+### `src/gateway/tools/shell.py` — Guarded shell access (Tier 4)
+
+```python
+"""Tier 4 tool: guarded shell command execution.
+
+Runs commands in a restricted sandbox:
+- Working directory is always ~/mcps
+- Commands are run with a timeout
+- All invocations are audit-logged
+- Blocked patterns prevent destructive operations
+"""
+import os
+import re
+from src.gateway.server import mcp
+from src.gateway.security import audit
+from src.gateway.tools.ops import _run
+
+# Commands/patterns that are never allowed
+_BLOCKED_PATTERNS = [
+    r'\brm\s+(-[a-zA-Z]*f|-[a-zA-Z]*r|--force|--recursive)',  # rm -rf, rm -f
+    r'\bmkfs\b', r'\bdd\b', r'\bformat\b',
+    r'\bshutdown\b', r'\breboot\b', r'\bhalt\b',
+    r'\bchmod\s+777\b', r'\bchown\b',
+    r'\bcurl\b.*\|\s*(ba)?sh',  # curl | sh
+    r'\bwget\b.*\|\s*(ba)?sh',
+    r'\b(sudo|su)\b',
+    r'>\s*/etc/', r'>\s*/dev/',
+    r'\bssh-keygen\b', r'\bssh\b',
+    r'\bpasswd\b',
+    r'\bnc\s+-[el]',  # netcat listeners
+    r'&\s*$',  # backgrounding
+]
+
+_MAX_OUTPUT = 50_000  # 50KB output cap
+
+
+@mcp.tool()
+def shell(command: str, timeout: int = 30) -> str:
+    """Run a shell command on the Uberspace server.
+
+    Commands run in ~/mcps with a timeout. Destructive patterns are blocked.
+    All commands are audit-logged.
+
+    Args:
+        command: Shell command to execute
+        timeout: Max seconds (default 30, max 120)
+    """
+    timeout = min(max(timeout, 1), 120)
+
+    # Check blocked patterns
+    for pattern in _BLOCKED_PATTERNS:
+        if re.search(pattern, command, re.IGNORECASE):
+            audit("shell", {"command": command}, "BLOCKED")
+            return f"Blocked: command matches restricted pattern."
+
+    audit("shell", {"command": command, "timeout": timeout}, "executing")
+
+    import subprocess
+    try:
+        r = subprocess.run(
+            ["bash", "-c", command],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=os.path.expanduser("~/mcps"),
+            env={**os.environ, "HOME": os.path.expanduser("~")},
+        )
+        out = r.stdout + r.stderr
+    except subprocess.TimeoutExpired:
+        out = f"ERROR: command timed out after {timeout}s"
+    except Exception as e:
+        out = f"ERROR: {e}"
+
+    # Cap output size
+    if len(out) > _MAX_OUTPUT:
+        out = out[:_MAX_OUTPUT] + f"\n... (truncated, {len(out)} total chars)"
+
+    audit("shell", {"command": command}, f"exit={getattr(r, 'returncode', '?')} len={len(out)}")
+    return f"```\n{out}```"
+```
+
 ### `src/gateway/tools/config.py` — Configuration (Tier 4, guarded)
 
 ```python
@@ -798,10 +871,10 @@ def confirm_set_env(token: str) -> str:
 
 ## Step 4: Configure Environment
 
-Create the gateway's own `.env`:
+Append gateway config to the shared `.env`:
 
 ```bash
-cat > ~/mcp-gateway/.env << 'EOF'
+cat >> ~/mcps/.env << 'EOF'
 
 # ── MCP Gateway ──────────────────────────────
 GH_OAUTH_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxx
@@ -846,8 +919,8 @@ Uberspace handles TLS via Let's Encrypt once the domain resolves.
 ```bash
 cat > ~/etc/services.d/mcp-gateway.ini << 'EOF'
 [program:mcp-gateway]
-directory=%(ENV_HOME)s/mcp-gateway
-command=%(ENV_HOME)s/mcp-gateway/venv/bin/python -m src.gateway.server
+directory=%(ENV_HOME)s/mcps
+command=%(ENV_HOME)s/mcps/venv/bin/python -m src.gateway.server
 environment=PORT=8070
 autostart=true
 autorestart=true
@@ -960,13 +1033,15 @@ cat ~/logs/mcp-gateway.audit.log
 
 ## Updating the Gateway
 
-The gateway updates independently from the main stack.
+The gateway updates with the rest of the repo, but needs its own restart:
 
 ```bash
-cd ~/mcp-gateway && git pull && supervisorctl restart mcp-gateway
-```
+# Via ta (pulls everything, restarts LibreChat — gateway needs separate restart)
+ta pull && supervisorctl restart mcp-gateway
 
-This does NOT affect the main TradingAssistant stack or LibreChat.
+# Or manually
+cd ~/mcps && git pull && supervisorctl restart mcp-gateway
+```
 
 ---
 
@@ -1007,6 +1082,7 @@ This does NOT affect the main TradingAssistant stack or LibreChat.
 | `get_config(file)` | Read config (secrets redacted) |
 | `set_env(key, value, file?)` | Update env var (needs confirmation) |
 | `confirm_set_env(token)` | Execute confirmed env change |
+| `shell(command, timeout?)` | Guarded shell execution (blocked patterns, audit-logged) |
 
 ---
 
@@ -1020,7 +1096,7 @@ This does NOT affect the main TradingAssistant stack or LibreChat.
 | Dangerous ops | Confirmation tokens (deploy, rollback, set_env) with 5-min TTL |
 | Secret protection | Automatic redaction in `get_config` for keys matching SECRET/KEY/PASSWORD/TOKEN/URI/MONGO/CREDS |
 | Audit trail | All tool calls logged to `~/logs/mcp-gateway.audit.log` |
-| No arbitrary exec | No shell/eval tool. All commands are hardcoded subprocess calls |
+| Shell guard | `shell()` tool blocks destructive patterns (rm -rf, sudo, curl\|sh, etc.), caps output at 50KB, audit-logs every invocation |
 | Origin validation | FastMCP validates Origin header per MCP spec |
 
 ---
@@ -1034,7 +1110,7 @@ This does NOT affect the main TradingAssistant stack or LibreChat.
 tail -50 ~/logs/mcp-gateway.err.log
 
 # Test manually
-cd ~/mcp-gateway && venv/bin/python -m src.gateway.server
+cd ~/mcps && venv/bin/python -m src.gateway.server
 # Look for import errors, missing deps, port conflicts
 ```
 
@@ -1069,10 +1145,10 @@ uberspace web backend set mcp.assist.uber.space --http --port NEW_PORT
 
 ```bash
 # Ensure fastmcp >= 2.11
-~/mcp-gateway/venv/bin/pip show fastmcp | grep Version
+~/mcps/venv/bin/pip show fastmcp | grep Version
 
 # Upgrade if needed
-~/mcp-gateway/venv/bin/pip install -U 'fastmcp>=2.11'
+~/mcps/venv/bin/pip install -U 'fastmcp>=2.11'
 ```
 
 ### Gateway tools show "command timed out"
@@ -1096,8 +1172,8 @@ uberspace web backend del mcp.assist.uber.space
 # Remove subdomain (optional)
 uberspace web domain del mcp.assist.uber.space
 
-# Remove gateway code and venv
-rm -rf ~/mcp-gateway
+# Remove gateway code (lives inside ~/mcps, so just delete the directory)
+rm -rf ~/mcps/src/gateway
 
 # Remove audit log
 rm ~/logs/mcp-gateway.audit.log
@@ -1118,6 +1194,7 @@ rm ~/logs/mcp-gateway.audit.log
 | `src/gateway/tools/deploy.py` | deploy_pull, deploy_update, deploy_rollback |
 | `src/gateway/tools/diagnostics.py` | disk, memory, health, cron, errors |
 | `src/gateway/tools/data.py` | profiles, sync, db_stats |
+| `src/gateway/tools/shell.py` | guarded shell execution |
 | `src/gateway/tools/config.py` | get_config, set_env |
 | `~/etc/services.d/mcp-gateway.ini` | Supervisord service definition |
 | `~/logs/mcp-gateway.audit.log` | Audit trail (created at runtime) |
