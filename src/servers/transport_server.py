@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-mcp = FastMCP("transport", description="Flight tracking and vessel positions")
+mcp = FastMCP("transport", instructions="Flight tracking and vessel positions")
 AIS_KEY = os.environ.get("AISSTREAM_API_KEY", "")
 
 
@@ -18,7 +18,8 @@ async def flights_in_area(lat_min: float, lat_max: float,
             "lamin": lat_min, "lamax": lat_max, "lomin": lon_min, "lomax": lon_max})
         r.raise_for_status()
         data = r.json()
-        return {"count": len(data.get("states", [])), "states": data.get("states", [])[:50]}
+        states = data.get("states") or []
+        return {"count": len(states), "states": states[:50]}
 
 
 @mcp.tool()

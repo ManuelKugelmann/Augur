@@ -20,7 +20,7 @@ import re
 from dotenv import load_dotenv
 load_dotenv()
 
-mcp = FastMCP("signals-store", description="Hybrid profile/snapshot store")
+mcp = FastMCP("signals-store", instructions="Hybrid profile/snapshot store")
 
 PROFILES = Path(os.environ.get("PROFILES_DIR", "./profiles"))
 _client = None
@@ -259,11 +259,8 @@ def _lint_one(kind: str, id: str, data: dict, schema: dict | None) -> list[str]:
 # Mongo snapshot tools mirror the same (kind, id, region) parameters + time fields.
 
 
-@mcp.tool()
-def get_profile(kind: str, id: str, region: str = "") -> dict:
-    """Read a profile. If region omitted, searches all regions.
-    kind: countries, stocks, etfs, crypto, indices, sources,
-    commodities, crops, materials, products, companies."""
+def _get_profile(kind: str, id: str, region: str = "") -> dict:
+    """Read a profile. If region omitted, searches all regions."""
     if not _SAFE_ID.match(id):
         return {"error": f"invalid id: {id}"}
     if kind not in VALID_KINDS:
@@ -277,6 +274,14 @@ def get_profile(kind: str, id: str, region: str = "") -> dict:
     if not p or not p.exists():
         return {"error": f"not found: {kind}/{id}"}
     return json.loads(p.read_text())
+
+
+@mcp.tool()
+def get_profile(kind: str, id: str, region: str = "") -> dict:
+    """Read a profile. If region omitted, searches all regions.
+    kind: countries, stocks, etfs, crypto, indices, sources,
+    commodities, crops, materials, products, companies."""
+    return _get_profile(kind, id, region)
 
 
 @mcp.tool()
@@ -307,10 +312,8 @@ def put_profile(kind: str, id: str, data: dict,
     return {"path": str(p), "region": actual_region, "status": "ok"}
 
 
-@mcp.tool()
-def list_profiles(kind: str, region: str = "") -> list[dict]:
-    """List all profiles for a kind. Optionally filter by region.
-    Returns [{id, name, region}, ...]."""
+def _list_profiles(kind: str, region: str = "") -> list[dict]:
+    """List all profiles for a kind. Optionally filter by region."""
     if kind not in VALID_KINDS:
         return []
     regions_to_scan = [region] if region else _regions()
@@ -329,6 +332,13 @@ def list_profiles(kind: str, region: str = "") -> list[dict]:
             except Exception:
                 result.append({"id": f.stem, "name": f.stem, "region": r})
     return result
+
+
+@mcp.tool()
+def list_profiles(kind: str, region: str = "") -> list[dict]:
+    """List all profiles for a kind. Optionally filter by region.
+    Returns [{id, name, region}, ...]."""
+    return _list_profiles(kind, region)
 
 
 @mcp.tool()
@@ -358,8 +368,8 @@ def search_profiles(kind: str, field: str, value: str,
     """Search profiles by dot-path field (e.g. 'exposure.countries', 'tags').
     Optionally filter by region."""
     results = []
-    for entry in list_profiles(kind, region):
-        prof = get_profile(kind, entry["id"])
+    for entry in _list_profiles(kind, region):
+        prof = _get_profile(kind, entry["id"])
         if "error" in prof:
             continue
         obj = prof
@@ -413,15 +423,15 @@ def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
     if kind and id:
         targets.append((kind, id))
     elif kind:
-        for entry in list_profiles(kind):
+        for entry in _list_profiles(kind):
             targets.append((kind, entry["id"]))
     else:
         for k in VALID_KINDS:
-            for entry in list_profiles(k):
+            for entry in _list_profiles(k):
                 targets.append((k, entry["id"]))
     for k, pid in targets:
         schema = _load_schema(k)
-        prof = get_profile(k, pid)
+        prof = _get_profile(k, pid)
         if "error" in prof:
             results["issues"][f"{k}/{pid}"] = [prof["error"]]
             continue
