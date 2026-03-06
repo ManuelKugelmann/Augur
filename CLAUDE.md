@@ -71,6 +71,18 @@ TradingAssistant/
 │       ├── setup.sh                   ← install/update with atomic swap
 │       └── setup-data-repo.sh         ← data repo init + cron sync
 │
+├── tests/
+│   ├── helpers/
+│   │   └── setup.bash                 ← shared test helpers (sandbox, stubs)
+│   ├── test_bootstrap.bats            ← syntax validation for all scripts
+│   ├── test_deploy_conf.bats          ← config loading, env overrides
+│   ├── test_nightly_commit.bats       ← profile staging, no-op when clean
+│   ├── test_setup.bats                ← install/update modes, .env generation
+│   ├── test_setup_data_repo.bats      ← data repo init, cron setup, idempotency
+│   ├── test_ta_cron.bats              ← data sync, profile auto-commit
+│   ├── test_ta_dispatch.bats          ← help, status, version, restart, rollback
+│   └── test_ta_sync.bats             ← sync commit/push logic
+│
 ├── scripts/
 │   ├── bootstrap-uberspace.sh         ← legacy bootstrap
 │   └── nightly-git-commit.sh          ← nightly profile commit
@@ -84,7 +96,8 @@ TradingAssistant/
 │   └── uberspace-deployment.md        ← deployment notes
 │
 └── .github/workflows/
-    └── release.yml                    ← CI: tag push → build bundle → GitHub Release
+    ├── release.yml                    ← CI: tag push → build bundle → GitHub Release
+    └── tests.yml                      ← CI: bats tests + ShellCheck on push/PR
 ```
 
 ## Architecture
@@ -210,7 +223,7 @@ Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_requ
 
 ## Current Status (see TODO.md)
 
-**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation
+**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation, bats test suite (45 tests) + CI
 
 **Next priorities (P0)**:
 - Validate all 12 domain servers run without errors
@@ -219,6 +232,59 @@ Key fields: `id`, `name`, `url`, `type`, `domains`, `update_freq`, `api_key_requ
 - Add source profiles for top data sources
 
 **Not yet done**: End-to-end Uberspace deployment test (P4), periodic ingest scheduler (P1), alert/threshold system (P1)
+
+## Testing
+
+### Framework
+Shell script tests use [bats-core](https://github.com/bats-core/bats-core) (Bash Automated Testing System). 45 tests across 8 test files in `tests/`.
+
+### Running Tests
+```bash
+# Run all tests
+bats tests/*.bats
+
+# Run a specific test file
+bats tests/test_ta_cron.bats
+
+# Verbose output
+bats --verbose-run tests/*.bats
+
+# Syntax check only (fast)
+bash -n librechat-uberspace/scripts/TradeAssistant.sh
+```
+
+### Test Architecture
+- Each test gets a **sandboxed `$HOME`** via `mktemp -d` — no side effects on the real system
+- External commands (`supervisorctl`, `uberspace`, `hostname`, `crontab`) are **stubbed** with scripts prepended to `$PATH`
+- Git operations use **local bare repos** as fake remotes (no network needed)
+- SSH keys are pre-created to skip interactive prompts in `setup-data-repo.sh`
+- `$REAL_GIT` is saved before stubbing so git stubs can delegate non-intercepted calls
+
+### Test Coverage
+
+| File | Tests | Covers |
+|------|-------|--------|
+| `test_deploy_conf.bats` | 5 | Config loading, env overrides, variable defaults |
+| `test_ta_dispatch.bats` | 10 | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
+| `test_ta_cron.bats` | 6 | Data sync commits, profile auto-commit, schedule gating |
+| `test_ta_sync.bats` | 3 | Sync with/without git repo, commit + push behavior |
+| `test_setup.bats` | 9 | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
+| `test_setup_data_repo.bats` | 6 | Directory structure, `.gitignore`, cron setup, idempotency |
+| `test_nightly_commit.bats` | 3 | Profile staging, no-op when clean, selective `git add` |
+| `test_bootstrap.bats` | 2 | Syntax validation for all `.sh` files |
+
+### CI Integration (`.github/workflows/tests.yml`)
+Runs on every push to `main` and on PRs:
+- **shell-tests** job: installs bats from git, runs `bash -n` on all `.sh` files, then `bats tests/*.bats`
+- **shellcheck** job: runs ShellCheck at error severity on all scripts
+
+### Writing New Tests
+1. Create `tests/test_<name>.bats`
+2. Load helpers: `load helpers/setup`
+3. Use `setup()` / `teardown()` with `setup_sandbox` / `teardown_sandbox`
+4. Stub external commands with `stub_command "name" "body"` or write to `$STUBS_DIR/`
+5. Use `init_mock_git_repo "$dir"` to create test git repos
+6. Run `bats tests/test_<name>.bats` to verify
 
 ## Conventions
 
