@@ -55,6 +55,8 @@ Then configure `nano ~/mcps/.env` and `nano ~/LibreChat/.env`, then `supervisorc
 6. **Configure the project** — paste the URI into your `.env` files:
 
 ```bash
+# Placeholder values — replace user, pass, and cluster0.xxxxx with your actual Atlas credentials
+
 # Signals store (~/.env or ~/mcps/.env)
 MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals?retryWrites=true&w=majority
 
