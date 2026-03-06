@@ -1,6 +1,4 @@
-# MCP Signals Stack
-
-> Hybrid intelligence platform: 75+ data sources, structured storage, Uberspace-deployable.
+MCP-based trading signals platform: 12 domain servers querying 75+ free data sources, a hybrid store (JSON profiles + MongoDB snapshots), deployed via LibreChat on Uberspace.
 
 ## Architecture
 
