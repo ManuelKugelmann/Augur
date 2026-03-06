@@ -26,7 +26,7 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
                     "tsunami": f["properties"]["tsunami"],
                     "alert": f["properties"]["alert"],
                     "coords": f["geometry"]["coordinates"]}
-                    for f in data["features"][:50]]}
+                    for f in data["features"]]}
 
 
 @mcp.tool()
