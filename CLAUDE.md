@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 16 MCP servers total: 3 utility (filesystem, memory, sqlite) + 1 signals store + 12 trading domain servers covering 75+ data sources.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 16 MCP servers (each a single process exposing multiple tools) with 63+ tools total: 3 utility (filesystem, memory, sqlite) + 1 signals store (20 tools) + 12 trading domain servers (43 tools across 75+ data sources).
 
 ## Naming Conventions
 
@@ -139,8 +139,8 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 
 ## Key Technical Details
 
-### Signals Store (`src/store/server.py`)
-- **Framework**: FastMCP
+### Signals Store (`src/store/server.py`) — one MCP server, 20 tools
+- **Framework**: FastMCP (single server process exposing all tools below)
 - **Profiles**: JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
 - **MongoDB**: Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`)
 - **Geo support**: Optional GeoJSON `location` field, 2dsphere indexes, `nearby()` tool

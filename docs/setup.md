@@ -244,7 +244,7 @@ uberspace web backend set / --http --port 3080
 | Node.js | 18, 20, 22 | Requires >=20 |
 | Docker | Not available | Not needed |
 
-Running all 12 domain servers simultaneously may approach the RAM limit. Start with just the ones you need — `weather`, `macro`, `disasters` are good defaults. The signals store is lightweight and should always run.
+Running all 12 domain servers simultaneously may approach the RAM limit. Start with just the ones you need — `weather`, `macro`, `disasters` are good defaults. The signals store is lightweight (~50 MB) and should always run — it is a single MCP server process that exposes 20 tools (profile CRUD, snapshots, charting, archival, geo queries).
 
 ## Cost
 

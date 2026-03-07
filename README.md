@@ -1,6 +1,7 @@
 ### TradingAssistant
 
-- Chat-based access to 75+ free data sources across 12 domains
+- 16 MCP servers, each a single process exposing multiple tools (63+ tools total)
+- 1 signals store (20 tools: profile CRUD, snapshots, charting, geo, archival) + 12 domain servers (43 tools across 75+ free data sources) + 3 utility servers
 - Covers macro, weather, disasters, commodities, health, conflict, and more
 - Hybrid storage: structured profiles + time-series snapshots
 

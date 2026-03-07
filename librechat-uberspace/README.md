@@ -1,4 +1,4 @@
-LibreChat deployment with 16 MCP servers: 3 utility (filesystem, memory, sqlite) + 1 signals store + 12 trading domain servers covering 75+ data sources. No Docker, no Meilisearch, no RAG, no Redis.
+LibreChat deployment with 16 MCP servers exposing 63+ tools: 3 utility (filesystem, memory, sqlite) + 1 signals store (20 tools) + 12 trading domain servers (43 tools across 75+ data sources). Each server is a single process with many tools — not one tool per server. No Docker, no Meilisearch, no RAG, no Redis.
 
 All scripts read from `deploy.conf` — edit once, applies everywhere.
 
@@ -139,21 +139,23 @@ bash ~/LibreChat/scripts/setup-data-repo.sh
 
 ### Trading Signals Stack (requires `~/mcps/`)
 
-| MCP Server | Domain | Key Sources |
-|---|---|---|
-| `signals-store` | Central store | Profiles + MongoDB snapshots |
-| `weather` | Weather | Open-Meteo, NOAA SWPC |
-| `disasters` | Disasters | USGS, GDACS, NASA EONET |
-| `macro` | Economics | FRED, World Bank, IMF |
-| `agri` | Agriculture | FAOSTAT, USDA |
-| `conflict` | Security | UCDP, ACLED, OpenSanctions |
-| `commodities` | Commodities | UN Comtrade, EIA |
-| `health` | Health | WHO, disease.sh, OpenFDA |
-| `elections` | Politics | IFES, V-Dem, Google Civic |
-| `humanitarian` | Humanitarian | UNHCR, OCHA HDX |
-| `transport` | Transport | OpenSky, AIS Stream |
-| `water` | Water | USGS Water, Drought Monitor |
-| `infra` | Internet | Cloudflare Radar, RIPE |
+Each entry below is **one MCP server process** exposing multiple tools. The signals store alone has 20 tools (profile CRUD, snapshots, charting, archival). Domain servers each expose 2-7 tools.
+
+| MCP Server | Tools | Domain | Key Sources |
+|---|---|---|---|
+| `signals-store` | 20 | Central store | Profiles + MongoDB snapshots |
+| `weather` | 4 | Weather | Open-Meteo, NOAA SWPC |
+| `disasters` | 3 | Disasters | USGS, GDACS, NASA EONET |
+| `macro` | 5 | Economics | FRED, World Bank, IMF |
+| `agri` | 4 | Agriculture | FAOSTAT, USDA |
+| `conflict` | 4 | Security | UCDP, ACLED, OpenSanctions |
+| `commodities` | 2 | Commodities | UN Comtrade, EIA |
+| `health` | 4 | Health | WHO, disease.sh, OpenFDA |
+| `elections` | 7 | Politics | IFES, V-Dem, Google Civic |
+| `humanitarian` | 3 | Humanitarian | UNHCR, OCHA HDX |
+| `transport` | 3 | Transport | OpenSky, AIS Stream |
+| `water` | 2 | Water | USGS Water, Drought Monitor |
+| `infra` | 2 | Internet | Cloudflare Radar, RIPE |
 
 ## Day-to-Day Operations
 
