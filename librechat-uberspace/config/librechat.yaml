@@ -281,7 +281,7 @@ mcpServers:
 #       titleModel: "mistral-small-latest"
 #       modelDisplayLabel: "Mistral"
 #
-#     # ── Cerebras (free tier, fast inference) ──
+#     # ── Cerebras (free, 30 RPM / 14.4K RPD, fast inference) ──
 #     # Key: https://cloud.cerebras.ai
 #     - name: "Cerebras"
 #       apiKey: "${CEREBRAS_API_KEY}"
@@ -290,10 +290,41 @@ mcpServers:
 #         default:
 #           - llama-3.3-70b
 #           - llama-3.1-8b
+#           - qwen-3-235b
 #         fetch: true
 #       titleConvo: true
 #       titleModel: "llama-3.1-8b"
 #       modelDisplayLabel: "Cerebras"
+#
+#     # ── Cohere (free, 20 RPM / 1K req/month) ──
+#     # Key: https://dashboard.cohere.com/api-keys
+#     - name: "Cohere"
+#       apiKey: "${COHERE_API_KEY}"
+#       baseURL: "https://api.cohere.com/compatibility/v1"
+#       models:
+#         default:
+#           - command-a-03-2025
+#           - command-r-plus-08-2024
+#           - command-r-08-2024
+#         fetch: true
+#       titleConvo: true
+#       titleModel: "command-r-08-2024"
+#       modelDisplayLabel: "Cohere"
+#
+#     # ── SambaNova (free $5 trial credits, fast inference) ──
+#     # Key: https://cloud.sambanova.ai
+#     - name: "SambaNova"
+#       apiKey: "${SAMBANOVA_API_KEY}"
+#       baseURL: "https://api.sambanova.ai/v1"
+#       models:
+#         default:
+#           - DeepSeek-V3-0324
+#           - Meta-Llama-3.3-70B-Instruct
+#           - Qwen2.5-72B-Instruct
+#         fetch: true
+#       titleConvo: true
+#       titleModel: "Meta-Llama-3.3-70B-Instruct"
+#       modelDisplayLabel: "SambaNova"
 #
 #     # ── HuggingFace Inference (free tier) ──
 #     # Key: https://huggingface.co/settings/tokens
