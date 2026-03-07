@@ -52,17 +52,6 @@ async def search_sanctions(query: str, schema: str = "") -> dict:
         return r.json()
 
 
-@mcp.tool()
-async def military_spending(country: str = "all", date: str = "2015:2024") -> dict:
-    """SIPRI military expenditure (% GDP) via World Bank."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get(
-            f"https://api.worldbank.org/v2/country/{country}/indicator/MS.MIL.XPND.GD.ZS",
-            params={"format": "json", "date": date, "per_page": 300})
-        r.raise_for_status()
-        return r.json()
-
-
 # ── Humanitarian (formerly humanitarian_server.py) ──────────
 
 
