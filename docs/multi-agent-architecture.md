@@ -29,19 +29,20 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 │       Detects cross-domain patterns (disaster → supply chain)   │
 ├───────────────────────┬─────────────────────────────────────────┤
 │  L2  DOMAIN ANALYSTS  │  Per-domain reasoning, summary,        │
-│                       │  prediction. Read domain data from      │
-│  market-analyst       │  storage, write analysis back.          │
+│                       │  prediction. Hand off to data agents    │
+│  market-analyst       │  for reads, write NOTES back.           │
 │  osint-analyst        │                                         │
 │  signals-analyst      │  Each analyst owns one domain.          │
 ├───────────────────────┼─────────────────────────────────────────┤
-│  L1  DATA SCRAPERS    │  Thematic data collection. Fetch from   │
-│                       │  APIs, write raw data to storage.       │
-│  market-scraper       │                                         │
-│  osint-scraper        │  No reasoning — just fetch and store.   │
-│  signals-scraper      │                                         │
+│  L1  DATA AGENTS      │  Thematic data collection. Scrape MCPs, │
+│                       │  own profiles, snapshots, events.       │
+│  market-data          │  Also read from storage on request.     │
+│  osint-data           │  + filesystem, memory, sqlite           │
+│  signals-data         │                                         │
 ├───────────────────────┴─────────────────────────────────────────┤
 │  STORAGE              │  Profiles (JSON/git), Snapshots (Mongo), │
-│                       │  Notes (Mongo), Files, Memory, SQLite    │
+│                       │  Notes (Mongo), Plans (Mongo),           │
+│                       │  Files, Memory, SQLite                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -49,69 +50,111 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 
 ## Layer Definitions
 
-### L1 — Data Scrapers (fetch → store)
+### L1 — Data Agents (scrape → store profiles/snapshots/events → return)
 
-Headless agents that collect raw data from MCP tools and write to storage.
-No reasoning, no summarization. Pure ETL.
+Thematic agents that own **all raw data**: profiles, snapshots, and events.
+They scrape MCP data sources, write to storage, AND return results to callers.
+They also read from storage when asked (history, profiles, events).
 
-| Agent | MCP Tools | Writes To | Cron Trigger |
-|-------|-----------|-----------|-------------|
-| **market-scraper** | `econ_indicator`, `econ_fred_series`, `econ_worldbank_indicator`, `econ_imf_data`, `commodity_trade_flows`, `commodity_energy_series`, yahoo-finance, prediction-markets | `store_snapshot(kind=stocks/commodities/indices/crypto, ...)` | Hourly (prices), daily (indicators) |
-| **osint-scraper** | `disaster_hazard_alerts`, `conflict_acled_events`, `conflict_ucdp_conflicts`, `conflict_reliefweb_reports`, `weather_forecast`, `health_disease_outbreaks`, `transport_flights_in_area`, `transport_vessels_in_area`, `agri_fao_data`, `agri_usda_crop`, GDELT Cloud | `store_snapshot(kind=countries, ...)`, `store_event(...)` | Every 6h (disasters, conflicts), daily (weather, agri) |
-| **signals-scraper** | rss, reddit, hn, crypto-feargreed | `store_snapshot(kind=sources, type=signal, ...)`, `store_event(subtype=signal, ...)` | Every 2h (RSS/Reddit), every 6h (HN) |
+Dual behavior is critical:
+- On **cron**: scraper stores data, return value is ignored.
+- On **interactive handoff**: scraper stores data AND returns it, so the
+  calling agent doesn't need to re-read storage (avoids double search).
+
+| Agent | MCP Data Tools | Storage Tools (read + write) | Cron Trigger |
+|-------|---------------|------------------------------|-------------|
+| **market-data** | `econ_indicator`, `econ_fred_series`, `econ_worldbank_indicator`, `econ_imf_data`, `commodity_trade_flows`, `commodity_energy_series`, yahoo-finance, prediction-markets | `store_snapshot`, `store_event`, `store_history`, `store_trend`, `store_get_profile`, `store_put_profile`, `store_find_profile`, `store_search_profiles`, `store_list_profiles`, `store_chart` | Hourly (prices), daily (indicators) |
+| **osint-data** | `disaster_hazard_alerts`, `conflict_acled_events`, `conflict_ucdp_conflicts`, `conflict_reliefweb_reports`, `weather_*`, `health_*`, `politics_*`, `transport_*`, `agri_*`, GDELT Cloud | Same store tools as market-data | Every 6h (disasters, conflicts), daily (weather, agri) |
+| **signals-data** | rss, reddit, hn, crypto-feargreed | Same store tools as market-data | Every 2h (RSS/Reddit), every 6h (HN) |
+
+**Owns**: `store_snapshot`, `store_event`, `store_history`, `store_trend`,
+`store_get_profile`, `store_put_profile`, `store_find_profile`,
+`store_search_profiles`, `store_list_profiles`, `store_nearby`,
+`store_recent_events`, `store_archive_snapshot`, `store_archive_history`,
+`store_compact`, `store_aggregate`, `store_chart`.
 
 **System prompt pattern** (all L1 agents):
 
-> You are a data scraper. Your ONLY job is to fetch data and store it.
+> You are the {domain} data agent. You fetch data, manage profiles/snapshots/events,
+> and return results.
+>
+> **Scraping** (when triggered by cron or handoff):
 > 1. Call the data tools listed in your instructions.
 > 2. For each result, call `store_snapshot()` or `store_event()` with structured data.
-> 3. Never summarize, analyze, or interpret. Store raw facts.
-> 4. If an API fails, store an event with `severity: "low"` noting the failure.
-> 5. Return a count: {fetched: N, stored: N, errors: N}.
+> 3. Update profiles via `store_put_profile()` when entity metadata changes.
+> 4. ALSO return the fetched data so the caller can use it immediately.
+> 5. If an API fails, store an event with `severity: "low"` noting the failure.
+> 6. Return: {fetched: N, stored: N, errors: N, data: [{kind, entity, values...}, ...]}.
+>
+> **Reading** (when asked for data):
+> 1. Use `store_history()`, `store_trend()`, `store_recent_events()` for time series.
+> 2. Use `store_get_profile()`, `store_find_profile()` for entity info.
+> 3. Use `store_chart()` for visualizations.
+> 4. Return the actual data, not just confirmation.
+>
+> Never analyze or interpret. Store and return raw facts.
 
 **Model**: Haiku (cheapest — no reasoning needed).
 
 ---
 
-### L2 — Domain Analysts (read storage → reason → write back)
+### L2 — Domain Analysts (read via data agents → reason → write notes)
 
-Per-domain agents that read raw data from storage, apply domain expertise,
-and write analysis back to storage. Each analyst owns exactly one domain.
+Per-domain agents that hand off to data agents to read raw data, apply domain
+expertise, and write **notes** (analysis, assessments, journal entries) back to storage.
+Each analyst owns exactly one domain.
 
-| Agent | Reads From Storage | Writes To Storage | Reasoning Tasks |
-|-------|-------------------|-------------------|-----------------|
-| **market-analyst** | `store_history(kind=stocks/commodities/indices/crypto)`, `store_trend(...)`, profiles | `store_snapshot(type=analysis, ...)`, `store_save_note(kind=plan)` | Price trends, indicator divergences, sector rotation, prediction market shifts |
-| **osint-analyst** | `store_recent_events(...)`, `store_history(kind=countries)`, profiles | `store_event(subtype=assessment, ...)`, `store_save_note(kind=note)` | Threat assessment, impact scoring, country risk updates, supply chain exposure |
-| **signals-analyst** | `store_history(kind=sources, type=signal)`, `store_recent_events(subtype=signal)` | `store_event(subtype=signal_summary, ...)`, `store_save_note(kind=note)` | Sentiment aggregation, narrative detection, filing significance, social momentum |
+| Agent | Reads Via | Writes (notes) | Reasoning Tasks |
+|-------|----------|----------------|-----------------|
+| **market-analyst** | Hands off to market-data for history, trends, profiles | `store_save_note(kind=note)`, `store_get_notes`, `store_update_note`, `store_delete_note` | Price trends, indicator divergences, sector rotation, prediction market shifts |
+| **osint-analyst** | Hands off to osint-data for events, country snapshots, profiles | Same note tools | Threat assessment, impact scoring, country risk updates, supply chain exposure |
+| **signals-analyst** | Hands off to signals-data for signal history, events | Same note tools | Sentiment aggregation, narrative detection, filing significance, social momentum |
+
+**Owns**: `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`.
 
 **System prompt pattern** (all L2 agents):
 
-> You are the {domain} analyst. You read data from storage and produce analysis.
-> 1. Use `store_history()` and `store_recent_events()` to read raw data.
-> 2. Use `store_get_profile()` to understand entity context (exposures, risk factors).
-> 3. Apply domain expertise: identify trends, anomalies, risk signals.
-> 4. Write analysis back via `store_snapshot(type="analysis", ...)` or `store_event(subtype="assessment", ...)`.
-> 5. Return structured output: {domain, key_findings: [...], risk_level, confidence}.
+> You are the {domain} analyst. You analyze data and produce notes.
 >
-> You do NOT fetch live data. You only analyze what scrapers have already stored.
+> **Reading data**: Hand off to your data agent ({domain}-data) to fetch
+> history, trends, profiles, and events. The data agent returns the actual data.
+>
+> **Writing analysis**:
+> 1. Apply domain expertise: identify trends, anomalies, risk signals.
+> 2. Write analysis as notes via `store_save_note(kind="note", tags=["{domain}", ...])`.
+> 3. Use `store_get_notes()` to read your own previous analysis for context.
+> 4. Return structured output: {domain, key_findings: [...], risk_level, confidence}.
+>
+> You do NOT call data MCP tools directly. You hand off to the data agent.
+> You do NOT fetch live data. You only analyze what data agents have stored.
 
 **Model**: Sonnet (needs reasoning, pattern detection, judgment).
 
+**Handoff edges**: → {domain}-data (for reading storage).
+
 ---
 
-### L3 — Cross-Cutting Reasoning (multi-domain → synthesize → write)
+### L3 — Cross-Cutting Reasoning (multi-domain → synthesize → write notes)
 
-Reads across ALL domain data in storage. Detects cross-domain patterns
-that no single analyst can see. Writes composite assessments.
+Reads across ALL domains by handing off to data agents and reading analyst notes.
+Detects cross-domain patterns that no single analyst can see. Writes composite
+notes (briefings, predictions, assessments).
 
-| Agent | Reads | Writes | Cross-Domain Tasks |
-|-------|-------|--------|-------------------|
-| **synthesizer** | All `store_history(...)`, all `store_recent_events(...)`, all profiles, all L2 analysis snapshots | `store_event(subtype=briefing/prediction/alert)`, `store_save_note(kind=plan)` | Morning briefings, cross-domain correlations (earthquake → supply chain → stock impact), composite risk scores, forward-looking predictions |
+| Agent | Reads Via | Writes (notes) | Cross-Domain Tasks |
+|-------|----------|----------------|-------------------|
+| **synthesizer** | Hands off to all 3 data agents for raw data; reads all analyst notes via `store_get_notes` | `store_save_note(kind=note, tags=["briefing"/"prediction"/"alert", ...])` | Morning briefings, cross-domain correlations (earthquake → supply chain → stock impact), composite risk scores, forward-looking predictions |
+
+**Owns**: Same note tools as L2 (`store_save_note`, `store_get_notes`,
+`store_update_note`, `store_delete_note`).
 
 **System prompt**:
 
-> You are the Cross-Domain Synthesizer. You read analysis from ALL domain analysts
-> and detect patterns that span domains.
+> You are the Cross-Domain Synthesizer. You read analysis notes from ALL domain
+> analysts and raw data from ALL data agents, then detect patterns that span domains.
+>
+> **Reading**:
+> - Hand off to market-data, osint-data, signals-data for raw data as needed.
+> - Read analyst notes via `store_get_notes(tag="market"/"osint"/"signals")`.
 >
 > Examples of cross-domain signals:
 > - Earthquake in Taiwan (osint) → TSMC supply risk (market) → semiconductor price impact
@@ -119,49 +162,57 @@ that no single analyst can see. Writes composite assessments.
 > - Reddit momentum on ticker (signals) + positive earnings (market) → high-conviction signal
 > - Conflict escalation (osint) → oil price spike (market) → energy sector rotation
 >
-> Tasks:
-> 1. Read recent analysis from market-analyst, osint-analyst, signals-analyst.
-> 2. Identify cross-domain correlations and causal chains.
-> 3. Score composite risk/opportunity for tracked entities.
-> 4. Write briefings via `store_event(subtype="briefing", ...)`.
-> 5. Write predictions via `store_event(subtype="prediction", severity=..., ...)`.
-> 6. Return: {briefing_type, key_signals: [...], predictions: [...], confidence}.
+> **Writing**:
+> 1. Identify cross-domain correlations and causal chains.
+> 2. Score composite risk/opportunity for tracked entities.
+> 3. Write briefings via `store_save_note(kind="note", tags=["briefing", ...])`.
+> 4. Write predictions via `store_save_note(kind="note", tags=["prediction", ...])`.
+> 5. Return: {briefing_type, key_signals: [...], predictions: [...], confidence}.
 
 **Model**: Sonnet or Opus (highest reasoning quality needed).
 
-**MCP tools**: `trading` (store_* namespace only — history, events, profiles, notes, chart).
+**Handoff edges**: → market-data, osint-data, signals-data (for reading raw storage).
 
 ---
 
-### L4 — Cron Planner + Executor (autonomous operations)
+### L4 — Cron Planner + Executor (autonomous operations, own plans)
 
-Two roles, can be one or two agents:
+Two roles, can be one or two agents. L4 **owns plans**: it reads and writes
+`store_save_note(kind=plan)` and `store_get_notes(kind=plan)`. Plans are the
+operational layer — what to research, what to trade, when, and why.
 
 #### Research Organizer
 
 Decides **what** to scrape and analyze, **when**, and **at what depth**.
-Reads the plan and schedules L1/L2/L3 agents accordingly.
+Reads plans and schedules L1/L2/L3 agents accordingly.
 
 | Capability | How |
 |-----------|-----|
-| Schedule scraper runs | Hands off to market-scraper, osint-scraper, signals-scraper |
+| Read/write plans | `store_save_note(kind=plan)`, `store_get_notes(kind=plan)` |
+| Schedule scraper runs | Hands off to market-data, osint-data, signals-data |
 | Trigger analysis | Hands off to market-analyst, osint-analyst, signals-analyst |
 | Request synthesis | Hands off to synthesizer |
 | Adjust frequency | Increase scraping frequency for entities with active signals |
-| Manage watchlists | Read/write `store_get_notes(kind=watchlist)` |
+| Manage watchlists | Read/write `store_save_note(kind=plan, tags=["watchlist"])` |
+
+**Owns**: `store_save_note(kind=plan)`, `store_get_notes(kind=plan)`,
+`store_update_note`, `store_delete_note` (for plan management),
+`store_risk_status`.
 
 **System prompt**:
 
 > You are the Research Organizer. You run autonomously on a schedule.
 > Your job: ensure data is fresh, analysis is current, and nothing is missed.
 >
+> You own **plans** — research plans, watchlists, schedules.
+>
 > Routine:
-> 1. Check what's in the user's watchlists (`store_get_notes(kind="watchlist")`).
-> 2. For each watched entity, ensure scrapers have recent data (< 24h for prices, < 6h for events).
-> 3. If data is stale, hand off to the appropriate scraper.
-> 4. After scraping, hand off to the appropriate analyst.
+> 1. Read current plans and watchlists (`store_get_notes(kind="plan")`).
+> 2. For each watched entity, hand off to the appropriate data agent to check freshness.
+> 3. If data is stale, the data agent will scrape fresh data.
+> 4. After scraping, hand off to the appropriate analyst for analysis.
 > 5. After analysis, hand off to the synthesizer for cross-domain patterns.
-> 6. Write a daily research log via `store_save_note(kind="journal")`.
+> 6. Update plans with results and next scheduled actions.
 >
 > Priority: user watchlist entities > high-severity events > routine coverage.
 
@@ -172,10 +223,10 @@ Reads plans and predictions from storage. Executes trading actions through the r
 | Capability | How |
 |-----------|-----|
 | Read plans | `store_get_notes(kind=plan)` |
-| Read predictions | `store_recent_events(subtype=prediction)` |
+| Read analyst/synthesizer notes | `store_get_notes(tag=prediction)` |
 | Check risk budget | `store_risk_status()` |
 | Execute trades | Broker tools via trading MCP (risk-gated, per-user keys) |
-| Log actions | `store_save_note(kind=journal)`, `store_event(subtype=trade)` |
+| Log actions | `store_save_note(kind=plan, tags=["trade_log"])` |
 
 **System prompt**:
 
@@ -186,48 +237,58 @@ Reads plans and predictions from storage. Executes trading actions through the r
 > 1. ALWAYS check `store_risk_status()` before any action.
 > 2. NEVER exceed the daily action limit.
 > 3. Default to dry-run mode. Only execute live if user has enabled live trading.
-> 4. For each action, log via `store_event(subtype="trade", ...)` with full rationale.
+> 4. For each action, log via `store_save_note(kind="plan", tags=["trade_log"])`.
 > 5. If risk budget is low, skip lower-confidence predictions.
 > 6. Return: {actions_taken: N, actions_skipped: N, risk_remaining: N}.
 
 **Model**: Sonnet (needs judgment for risk decisions).
 
-**MCP tools**: `trading` (all store_* tools + future broker tools).
+**Handoff edges**: → all L1 data agents, all L2 analysts, L3 synthesizer.
 
 ---
 
-### L5 — Live Chat Assistant (user-facing)
+### L5 — Live Chat Assistant (user-facing, owns plans)
 
 The only agent the user talks to directly. Can hand off to ANY agent at any layer.
-Conversational, explains reasoning, takes user input.
+Conversational, explains reasoning, takes user input. Like L4, the chat agent
+**reads and writes plans** — the user creates/modifies plans interactively,
+while L4 cron executes them autonomously.
 
 | Capability | How |
 |-----------|-----|
-| Answer questions | Hands off to appropriate scraper/analyst/synthesizer |
-| Show data | Hands off to market-scraper or reads storage directly |
-| Modify plans | Hands off to notes or writes directly |
+| Answer questions | Hands off to appropriate data agent/analyst/synthesizer |
+| Show data | Hands off to market-data (returns data directly) |
+| Read/write plans | `store_save_note(kind=plan)`, `store_get_notes(kind=plan)` |
+| Read analyst notes | `store_get_notes(kind=note)` |
 | Trigger research | Hands off to research organizer |
 | Execute trades | Hands off to plan executor |
-| Show briefings | Reads synthesizer output from storage |
-| Explain analysis | Reads analyst output, adds conversational explanation |
+| Show briefings | Reads synthesizer notes from storage |
+| Explain analysis | Reads analyst notes, adds conversational explanation |
 
-**Handoff edges**: ALL agents (market-scraper, osint-scraper, signals-scraper,
+**Owns**: Same plan tools as L4 (`store_save_note`, `store_get_notes`,
+`store_update_note`, `store_delete_note` for plans). Also reads notes
+(analyst output) directly.
+
+**Handoff edges**: ALL agents (market-data, osint-data, signals-data,
 market-analyst, osint-analyst, signals-analyst, synthesizer, research-organizer,
-plan-executor, data, notes).
+plan-executor).
 
 **System prompt**:
 
 > You are the Trading Assistant. You are the user's primary interface.
 > You can delegate to any specialist agent but you are the one who talks to the user.
 >
+> You own **plans** alongside the cron organizer. The user creates plans through you;
+> the cron organizer executes them. You also read analyst/synthesizer notes directly.
+>
 > Available agents (hand off when needed):
 >
-> **Data collection** (L1 — use when user asks for fresh data):
-> - market-scraper: fetch stock prices, indicators, commodities, predictions
-> - osint-scraper: fetch disasters, conflicts, weather, health, elections, transport
-> - signals-scraper: fetch RSS/SEC filings, Reddit, HN, crypto sentiment
+> **Data agents** (L1 — use when user asks for data, fresh or stored):
+> - market-data: stock prices, indicators, commodities, profiles, snapshots
+> - osint-data: disasters, conflicts, weather, health, elections, transport
+> - signals-data: RSS/SEC filings, Reddit, HN, crypto sentiment
 >
-> **Analysis** (L2 — use when user asks "what does this mean?"):
+> **Analysts** (L2 — use when user asks "what does this mean?"):
 > - market-analyst: price trends, indicator analysis, sector rotation
 > - osint-analyst: threat assessment, country risk, supply chain exposure
 > - signals-analyst: sentiment analysis, narrative detection, filing significance
@@ -239,12 +300,8 @@ plan-executor, data, notes).
 > - research-organizer: schedule research, manage watchlists
 > - plan-executor: execute trading plans through risk gate
 >
-> **Storage** (direct access):
-> - data: files, knowledge graph, SQL
-> - notes: personal notes, plans, watchlists, journal
->
 > Rules:
-> 1. For simple data lookups, hand off to a scraper directly.
+> 1. For data lookups, hand off to a data agent (it returns data directly).
 > 2. For "what should I do?" questions, hand off to synthesizer then explain.
 > 3. For trade execution, ALWAYS confirm with user before handing off to executor.
 > 4. Keep responses conversational. Translate technical output into plain language.
@@ -258,76 +315,101 @@ plan-executor, data, notes).
 
 ```
                     L5 Live Chat ◄──── User
+                    (reads/writes PLANS)
                          │
             ┌────────────┼────────────────┐
             ▼            ▼                ▼
      L4 Research    L4 Plan          L3 Synthesizer
-     Organizer      Executor              │
+     Organizer      Executor         (writes NOTES)
+   (writes PLANS)  (writes PLANS)        │
          │              │          ┌──────┼──────┐
          ▼              ▼          ▼      ▼      ▼
     ┌────┴────┐    Risk Gate    L2 Mkt  L2 OSINT  L2 Sig
     │ Schedule │                Analyst  Analyst   Analyst
-    │ scrapers │                  │        │        │
-    │ + analysts│                 ▼        ▼        ▼
-    └────┬────┘            ┌─────┴────────┴────────┴─────┐
-         │                 │         STORAGE              │
-         ▼                 │  Profiles │ Snapshots │ Notes│
-    ┌────┴────┐            │  Events   │ Files     │ SQL  │
-    │ L1 Mkt  │            └─────▲────────▲────────▲─────┘
-    │ L1 OSINT│──── write ───────┘        │        │
-    │ L1 Sig  │                           │        │
-    └─────────┘            L2 analysts ───┘        │
-                           L3 synthesizer ─────────┘
+    │ data     │              (write NOTES)
+    │ + analysts│                 │        │        │
+    └────┬────┘                   ▼        ▼        ▼
+         │                   handoff to data agents
+         ▼                        │        │        │
+    ┌────┴──────────────────┐     ▼        ▼        ▼
+    │  L1 Data Agents       │─────────────────────────
+    │  market-data          │  own: PROFILES, SNAPSHOTS, EVENTS
+    │  osint-data           │  + filesystem, memory, sqlite
+    │  signals-data         │
+    └───────┬───────────────┘
+            ▼
+    ┌───────────────────────────────────────────────┐
+    │                   STORAGE                     │
+    │  Profiles │ Snapshots │ Events │ Notes │ Plans│
+    │  Files    │ Memory    │ SQLite                │
+    └───────────────────────────────────────────────┘
 ```
 
-**Key principle**: Data flows DOWN through scrapers into storage, then UP through
-analysts and synthesizer. L4/L5 orchestrate the flow. Storage is the shared bus.
+**Key principle**: Each layer owns specific storage types:
+- L1 data agents → profiles, snapshots, events (raw data)
+- L2/L3 analysts → notes (analysis, assessments, predictions)
+- L4/L5 chat/cron → plans (watchlists, trade plans, journals)
+
+Storage is the shared bus. Analysts read raw data by handing off to data agents.
 
 ---
 
 ## Agent × MCP Tool Matrix
 
-### L1 Scrapers — Data Tools + Store Write
+### Storage Ownership Summary
+
+| Layer | Owns | Storage Tools |
+|-------|------|---------------|
+| **L1 Data Agents** | Profiles, snapshots, events | `store_snapshot`, `store_event`, `store_history`, `store_trend`, `store_get_profile`, `store_put_profile`, `store_find_profile`, `store_search_profiles`, `store_list_profiles`, `store_nearby`, `store_recent_events`, `store_archive_*`, `store_compact`, `store_aggregate`, `store_chart` |
+| **L2/L3 Analysts** | Notes (analysis, assessments) | `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note` |
+| **L4/L5 Chat+Cron** | Plans (watchlists, trade plans, journals) | `store_save_note(kind=plan)`, `store_get_notes(kind=plan)`, `store_update_note`, `store_delete_note`, `store_risk_status` |
+
+### L1 Data Agents — MCP Data Tools + Store Read/Write
 
 | Agent | trading MCP tools | External MCPs |
 |-------|------------------|---------------|
-| **market-scraper** | `econ_indicator`, `econ_fred_series`, `econ_fred_search`, `econ_worldbank_indicator`, `econ_worldbank_search`, `econ_imf_data`, `commodity_trade_flows`, `commodity_energy_series`, `store_snapshot`, `store_event` | yahoo-finance, prediction-markets |
-| **osint-scraper** | `disaster_hazard_alerts`, `disaster_get_earthquakes`, `disaster_get_disasters`, `disaster_get_natural_events`, `conflict_*` (all 6), `weather_*` (all 6), `health_*` (all 4), `politics_*` (all 6), `transport_*` (all 5), `agri_*` (all 4), `store_snapshot`, `store_event` | gdelt-cloud |
-| **signals-scraper** | `store_snapshot`, `store_event` | rss, reddit, hn, crypto-feargreed |
+| **market-data** | `econ_indicator`, `econ_fred_*`, `econ_worldbank_*`, `econ_imf_data`, `commodity_*`, all store profile/snapshot/event tools | yahoo-finance, prediction-markets |
+| **osint-data** | `disaster_*`, `conflict_*`, `weather_*`, `health_*`, `politics_*`, `transport_*`, `agri_*`, all store profile/snapshot/event tools | gdelt-cloud |
+| **signals-data** | All store profile/snapshot/event tools | rss, reddit, hn, crypto-feargreed |
 
-### L2 Analysts — Store Read/Write Only
-
-| Agent | trading MCP tools |
-|-------|------------------|
-| **market-analyst** | `store_history`, `store_trend`, `store_recent_events`, `store_get_profile`, `store_find_profile`, `store_search_profiles`, `store_chart`, `store_snapshot` (type=analysis), `store_event` (subtype=assessment), `store_save_note` |
-| **osint-analyst** | Same store_* tools as market-analyst |
-| **signals-analyst** | Same store_* tools as market-analyst |
-
-### L3 Synthesizer — Store Read/Write Only
-
-| Agent | trading MCP tools |
-|-------|------------------|
-| **synthesizer** | Same store_* tools as L2 analysts + `store_aggregate` |
-
-### L4 Orchestrators — Store + Handoff Edges
+### L2 Analysts — Notes + Handoff to Data Agents
 
 | Agent | trading MCP tools | Handoff edges |
 |-------|------------------|---------------|
-| **research-organizer** | `store_get_notes`, `store_save_note`, `store_recent_events`, `store_history` | → all L1 scrapers, all L2 analysts, L3 synthesizer |
-| **plan-executor** | `store_get_notes`, `store_save_note`, `store_recent_events`, `store_risk_status`, `store_event` (+ future broker tools) | → notes |
+| **market-analyst** | `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note` | → market-data |
+| **osint-analyst** | Same note tools | → osint-data |
+| **signals-analyst** | Same note tools | → signals-data |
 
-### L5 Live Chat — Handoff Edges to Everything
+### L3 Synthesizer — Notes + Handoff to All Data Agents
 
 | Agent | trading MCP tools | Handoff edges |
 |-------|------------------|---------------|
-| **live-chat** | `store_get_notes`, `store_save_note`, `store_history`, `store_recent_events`, `store_chart`, `store_risk_status` | → ALL agents (L1, L2, L3, L4, data, notes) |
+| **synthesizer** | Same note tools as L2 | → market-data, osint-data, signals-data |
 
-### Utility Agents — Same as Before
+### L4 Orchestrators — Plans + Handoff to All
 
-| Agent | MCP servers |
-|-------|------------|
-| **data** | filesystem, memory, sqlite |
-| **notes** | trading (store_save_note, store_get_notes, store_update_note, store_delete_note, store_risk_status) |
+| Agent | trading MCP tools | Handoff edges |
+|-------|------------------|---------------|
+| **research-organizer** | `store_save_note(kind=plan)`, `store_get_notes`, `store_update_note`, `store_delete_note`, `store_risk_status` | → all L1, all L2, L3 |
+| **plan-executor** | Same plan tools + `store_risk_status` (+ future broker tools) | → all L1, all L2, L3 |
+
+### L5 Live Chat — Plans + Notes Read + Handoff to Everything
+
+| Agent | trading MCP tools | Handoff edges |
+|-------|------------------|---------------|
+| **live-chat** | `store_save_note(kind=plan)`, `store_get_notes`, `store_update_note`, `store_delete_note`, `store_risk_status` | → ALL agents (L1, L2, L3, L4) |
+
+### Utility MCPs — Attached to Data Agents
+
+The utility MCPs (filesystem, memory, sqlite) are attached to the L1 data agents
+rather than having a separate utility agent. Data agents are already the storage
+experts.
+
+| MCP | Attached To | Purpose |
+|-----|------------|---------|
+| filesystem | All L1 data agents | Git-synced file exports, reports |
+| memory | All L1 data agents | Knowledge graph across conversations |
+| sqlite | All L1 data agents | Ad-hoc structured queries, analytics |
 
 ---
 
@@ -425,6 +507,58 @@ endpoints:
 
 ---
 
+## Predefined Agents via Config (modelSpecs)
+
+Agents are created in the Agent Builder UI (stored in MongoDB), but can be
+surfaced as preset options in the UI via `modelSpecs` in `librechat.yaml`.
+This makes key agents discoverable without users searching the agent list.
+
+```yaml
+modelSpecs:
+  enforce: false    # false = users can still pick other agents/models
+  prioritize: true  # true = these appear first in the model dropdown
+  list:
+    # L5 — Primary user-facing agent
+    - name: "trading-assistant"
+      label: "Trading Assistant"
+      description: "Your AI trading assistant. Manages plans, delegates to specialist agents."
+      default: true
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_LIVE_CHAT_ID"    # ← replace with actual ID from Agent Builder
+
+    # L3 — Cross-domain synthesis
+    - name: "synthesizer"
+      label: "Market Synthesizer"
+      description: "Cross-domain analysis: correlates disasters, markets, signals."
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_SYNTHESIZER_ID"
+
+    # L1 — Direct data access (power users)
+    - name: "market-data"
+      label: "Market Data"
+      description: "Direct access to market data: prices, indicators, profiles."
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_MARKET_DATA_ID"
+
+    - name: "osint-data"
+      label: "OSINT Data"
+      description: "Direct access to OSINT: disasters, conflicts, weather, health."
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_OSINT_DATA_ID"
+```
+
+**Setup**: Create agents in Agent Builder UI → note their IDs → add to
+`modelSpecs` in `librechat.yaml`. Agent IDs look like `agent_abc123def456`.
+
+**Tip**: Only surface L5 (live chat) and maybe L1 data agents as modelSpecs.
+L2/L3/L4 agents are used via handoff, not directly by users.
+
+---
+
 ## Cron Schedule (L4 Research Organizer)
 
 The research organizer runs on cron, triggering scraper → analyst → synthesizer pipelines.
@@ -464,45 +598,36 @@ Use Handoff Edges only where dynamic routing is needed (L4 planner, L5 live chat
 
 | Layer | Agents | Model | Calls/Day (est.) | Purpose |
 |-------|--------|-------|------------------|---------|
-| L1 | 3 scrapers | Haiku | ~30 | Fetch + store |
-| L2 | 3 analysts | Sonnet | ~10 | Reason + write |
-| L3 | 1 synthesizer | Sonnet/Opus | ~3 | Cross-domain |
+| L1 | 3 data agents | Haiku | ~30 | Scrape + store profiles/snapshots/events |
+| L2 | 3 analysts | Sonnet | ~10 | Reason + write notes |
+| L3 | 1 synthesizer | Sonnet/Opus | ~3 | Cross-domain notes |
 | L4 | 2 orchestrators | Sonnet | ~5 | Plan + execute |
-| L5 | 1 live chat | Opus/Sonnet | ~20 (user-driven) | Conversation |
-| Util | 2 (data, notes) | Haiku | ~10 | Storage ops |
-| **Total** | **12 agents** | | **~78 calls/day** | |
+| L5 | 1 live chat | Opus/Sonnet | ~20 (user-driven) | Plans + conversation |
+| **Total** | **10 agents** | | **~68 calls/day** | |
 
 ---
 
 ## Migration Path
 
-### Phase 1: Flat (current plan, no code changes)
+### Phase 1: Data agents + chat (4 agents)
 
-Deploy the 5-agent flat architecture first:
-- 3 scrapers (market, osint, signals) with direct MCP access
-- 1 data agent, 1 notes agent
-- 1 main chat agent with handoff edges to all 5
+- 3 data agents (market-data, osint-data, signals-data) with MCP + store access
+- 1 live chat agent with handoff edges to all 3
+- Validates: MCP tool filtering, handoff reliability, storage read/write
 
-This validates MCP tool filtering, handoff reliability, and basic multi-agent flow.
+### Phase 2: Add analysts (7 agents)
 
-### Phase 2: Add analyst layer
+- 3 analysts (market-analyst, osint-analyst, signals-analyst) with note tools
+- Each analyst has handoff edge to its data agent
+- Wire as Agent Chains: data agent → analyst
+- Chat gets handoff edges to analysts too
 
-Split each scraper into scraper + analyst:
-- Scrapers lose reasoning, gain `store_snapshot`/`store_event` write focus
-- Analysts gain `store_history`/`store_trend` read focus + analysis writing
-- Wire as Agent Chains: scraper → analyst
+### Phase 3: Add synthesizer + cron (10 agents)
 
-### Phase 3: Add synthesizer + cron
-
-- Add L3 synthesizer agent
-- Add L4 research organizer with cron schedule
-- Wire morning briefing chain: scrapers → analysts → synthesizer
-
-### Phase 4: Add plan executor
-
-- Add L4 plan executor with risk gate
-- Wire to broker tools (when available)
-- Add L5 live chat as the new top-level agent
+- L3 synthesizer with note tools + handoff edges to all data agents
+- L4 research organizer with plan tools + handoff edges to all
+- L4 plan executor with plan tools + risk gate
+- Wire morning briefing chain: data agents → analysts → synthesizer
 
 ---
 
@@ -510,12 +635,12 @@ Split each scraper into scraper + analyst:
 
 | Flat (previous) | Layered (this doc) | Why |
 |----------------|-------------------|-----|
-| 5 agents, all peer-level | 12 agents across 5 layers | Separation of concerns: fetch vs. reason vs. synthesize |
+| 5 agents, all peer-level | 10 agents across 5 layers | Separation of concerns: fetch vs. reason vs. synthesize |
 | Main agent delegates everything | L5 chat + L4 cron both orchestrate | Autonomous ops (cron) + interactive (chat) |
-| Scrapers also analyze | Scrapers are headless ETL; analysts reason | Cheaper scraping (Haiku), better analysis (Sonnet) |
+| Scrapers also analyze | Data agents fetch+store; analysts reason+note | Cheaper scraping (Haiku), better analysis (Sonnet) |
 | No cross-domain reasoning | L3 synthesizer sees all domains | Catches disaster→supply chain→stock correlations |
 | No autonomous operations | L4 cron planner runs daily pipelines | Data stays fresh without user prompting |
-| Storage is incidental | Storage is the shared bus between layers | All agents read/write same store → data compounds |
+| Storage is incidental | Clear ownership: data→profiles/snapshots, analysts→notes, chat/cron→plans | No ambiguity about who writes what |
 
 ---
 
@@ -549,14 +674,16 @@ Better for deterministic pipelines (scrape → analyze → synthesize).
 
 ## Key Design Principles
 
-1. **Storage is the bus** — agents communicate through `store_snapshot`, `store_event`, `store_save_note`, not through direct handoff context. This decouples layers.
+1. **Clear ownership** — data agents own profiles/snapshots/events, analysts own notes, chat/cron own plans. No ambiguity about who writes what.
 
-2. **Scrapers are dumb** — L1 agents fetch and store. No reasoning = Haiku = cheap. Run them often.
+2. **Data agents are dumb** — L1 agents scrape, store, and read. No reasoning = Haiku = cheap. Run them often. They also serve as the read layer for analysts.
 
-3. **Analysts are stateless** — L2 agents read from storage, reason, write back. They don't remember previous runs. State lives in storage.
+3. **Analysts are stateless** — L2 agents hand off to data agents for reads, reason, write notes back. They don't remember previous runs. State lives in storage.
 
-4. **Synthesizer sees everything** — L3 is the only agent that reads across all domains. This is where cross-domain alpha lives.
+4. **Synthesizer sees everything** — L3 is the only agent that reads across all domains (via all data agents + all analyst notes). This is where cross-domain alpha lives.
 
-5. **Two top-level orchestrators** — cron (autonomous, scheduled) and chat (interactive, user-driven). Both can use all agents below them. Neither talks to the other.
+5. **Two top-level orchestrators** — cron (autonomous, scheduled) and chat (interactive, user-driven). Both own plans. Neither talks to the other.
 
-6. **Data compounds** — every scraper run adds to the time series. Every analyst run adds assessments. The synthesizer gets smarter as more data accumulates. This is the moat.
+6. **Data compounds** — every data agent run adds to the time series. Every analyst run adds notes. The synthesizer gets smarter as more data accumulates. This is the moat.
+
+7. **Return on handoff** — when a data agent is called interactively (via handoff from analyst or chat), it returns the data directly so the caller doesn't need a second read.
