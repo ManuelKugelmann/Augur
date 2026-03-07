@@ -2,6 +2,9 @@
 
 These hit real public APIs. Marked with pytest.mark.integration so they
 are skipped in normal CI and only run in the integration job.
+
+External API failures (timeouts, 503s, etc.) are treated as xfail so
+that flaky services don't break CI.
 """
 import asyncio
 import sys
@@ -20,7 +23,11 @@ pytestmark = pytest.mark.integration
 
 def run(coro):
     """Run an async tool function synchronously."""
-    return asyncio.get_event_loop().run_until_complete(coro)
+    try:
+        return asyncio.get_event_loop().run_until_complete(coro)
+    except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ProxyError,
+            httpx.ConnectError) as exc:
+        pytest.xfail(f"External API unavailable: {exc}")
 
 
 # ── weather_server (Open-Meteo, NOAA) ───────────────────
@@ -162,7 +169,7 @@ class TestConflictFree:
         assert isinstance(result, list)
 
 
-# ── elections_server (ReliefWeb) ─────────────────────────
+# ── elections_server (Wikidata, EU Parliament, ReliefWeb) ─
 
 
 class TestElectionsFree:
@@ -170,6 +177,26 @@ class TestElectionsFree:
     def _load(self):
         import elections_server as mod
         self.m = mod
+
+    def test_global_elections_germany(self):
+        result = run(self.m.global_elections(country="Germany", limit=5))
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert "election" in result[0]
+
+    def test_global_elections_recent(self):
+        result = run(self.m.global_elections(limit=10))
+        assert isinstance(result, list)
+
+    def test_heads_of_state_germany(self):
+        result = run(self.m.heads_of_state(country="Germany", limit=5))
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_eu_parliament_meps_germany(self):
+        result = run(self.m.eu_parliament_meps(country="DE", limit=10))
+        assert "count" in result
+        assert "meps" in result
 
     def test_election_reports(self):
         result = run(self.m.election_reports(query="election", limit=3))

@@ -149,8 +149,9 @@ mcpServers:
     env:
       GOOGLE_API_KEY: "${GOOGLE_API_KEY}"
     serverInstructions: |
-      Elections and political data. Sources: IFES election guide,
-      V-Dem (democracy indices), Google Civic, ReliefWeb situation reports.
+      Global elections and political data. Sources: Wikidata (global elections,
+      heads of state), EU Parliament (MEPs, votes), Google Civic (US reps),
+      ReliefWeb (election crisis reports). Covers all countries.
 
   humanitarian:
     command: __HOME__/mcps/venv/bin/python

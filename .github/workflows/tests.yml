@@ -76,7 +76,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest httpx python-dotenv
+        run: pip install pytest pytest-timeout httpx python-dotenv
 
       - name: Run free API integration tests
         run: python -m pytest tests/test_integration_free.py -v -m integration --timeout=60
@@ -95,7 +95,29 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest httpx python-dotenv
+        run: pip install pytest pytest-timeout httpx python-dotenv
+
+      - name: Check available API keys
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+          COMTRADE_API_KEY: ${{ secrets.COMTRADE_API_KEY }}
+          ACLED_API_KEY: ${{ secrets.ACLED_API_KEY }}
+          ACLED_EMAIL: ${{ secrets.ACLED_EMAIL }}
+          USDA_NASS_API_KEY: ${{ secrets.USDA_NASS_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+        run: |
+          echo "=== API Key Availability ==="
+          for key in FRED_API_KEY EIA_API_KEY COMTRADE_API_KEY ACLED_API_KEY ACLED_EMAIL USDA_NASS_API_KEY GOOGLE_API_KEY CF_API_TOKEN AISSTREAM_API_KEY; do
+            val=$(printenv "$key" 2>/dev/null || true)
+            if [ -n "$val" ]; then
+              echo "  $key: SET (${#val} chars)"
+            else
+              echo "  $key: MISSING"
+            fi
+          done
 
       - name: Run keyed API integration tests
         env:
@@ -124,7 +146,17 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest httpx python-dotenv pymongo
+        run: pip install pytest pytest-timeout httpx python-dotenv pymongo
+
+      - name: Check MongoDB connection
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: |
+          if [ -n "$MONGO_URI" ]; then
+            echo "MONGO_URI: SET (${#MONGO_URI} chars)"
+          else
+            echo "MONGO_URI: MISSING — store tests will be skipped"
+          fi
 
       - name: Run store integration tests
         env:
