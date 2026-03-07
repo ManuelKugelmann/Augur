@@ -76,7 +76,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest httpx python-dotenv
+        run: pip install pytest pytest-timeout httpx python-dotenv
 
       - name: Run free API integration tests
         run: python -m pytest tests/test_integration_free.py -v -m integration --timeout=60
@@ -95,7 +95,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest httpx python-dotenv
+        run: pip install pytest pytest-timeout httpx python-dotenv
 
       - name: Check available API keys
         env:
@@ -146,7 +146,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest httpx python-dotenv pymongo
+        run: pip install pytest pytest-timeout httpx python-dotenv pymongo
 
       - name: Check MongoDB connection
         env:
