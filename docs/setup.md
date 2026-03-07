@@ -67,12 +67,13 @@ cd TradingAssistant
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env    # edit: set MONGO_URI + optional API keys
-python src/store/server.py
+python src/servers/combined_server.py  # all 62 tools (store + 12 domains)
 ```
 
-Run individual domain servers:
+Run individual servers standalone for testing:
 
 ```bash
+python src/store/server.py             # signals store only (19 tools)
 python src/servers/weather_server.py   # no key needed
 python src/servers/macro_server.py     # needs FRED_API_KEY for FRED tools
 ```
@@ -347,12 +348,12 @@ uberspace web backend set / --http --port 3080
 
 | Resource | Limit | Usage |
 |----------|-------|-------|
-| RAM | 1.5 GB hard kill | ~500-800 MB (LibreChat) + ~50 MB per Python MCP |
+| RAM | 1.5 GB hard kill | ~500-800 MB (LibreChat) + ~80 MB (1 Python MCP) |
 | Storage | 10 GB (expandable) | ~2 GB installed |
 | Node.js | 18, 20, 22 | Requires >=20 |
 | Docker | Not available | Not needed |
 
-All 12 domain servers run in a single combined process (`trading-data`, ~50-80 MB) via FastMCP `mount()`, well within RAM limits. The signals store is a separate single process (~50 MB) exposing 20 tools. Total: 2 Python MCP servers, 63+ tools.
+Signals store + all 12 domain servers run in a single combined process (`trading`, ~80 MB) via FastMCP `mount()`, well within RAM limits. Total: 1 Python MCP server, 62 tools.
 
 ## Cost
 

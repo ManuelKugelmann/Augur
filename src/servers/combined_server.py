@@ -1,14 +1,25 @@
-"""Combined trading data server — all 12 domains in one process."""
+"""Combined trading server — signals store + 12 data domains in one process."""
+import sys
+from pathlib import Path
+
 from dotenv import load_dotenv
 load_dotenv()
 
+# Allow importing store/server.py
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "store"))
+
 from fastmcp import FastMCP
 
-mcp = FastMCP("trading-data",
-    instructions="75+ data sources across 12 domains: weather, disaster, econ, "
-                 "agri, conflict, commodity, health, politics, humanitarian, "
+mcp = FastMCP("trading",
+    instructions="Signals store (profiles + MongoDB snapshots, 19 tools) plus "
+                 "75+ data sources across 12 domains (43 tools): weather, disaster, "
+                 "econ, agri, conflict, commodity, health, politics, humanitarian, "
                  "transport, water, infra")
 
+# Signals store (profiles, snapshots, charts, archival)
+from server import mcp as store
+
+# 12 data domains
 from weather_server import mcp as weather
 from disasters_server import mcp as disaster
 from macro_server import mcp as econ
@@ -22,6 +33,7 @@ from transport_server import mcp as transport
 from water_server import mcp as water
 from infra_server import mcp as infra
 
+mcp.mount(store, namespace="store")
 mcp.mount(weather, namespace="weather")
 mcp.mount(disaster, namespace="disaster")
 mcp.mount(econ, namespace="econ")

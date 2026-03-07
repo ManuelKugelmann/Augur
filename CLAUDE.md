@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 5 MCP servers exposing 63+ tools: 3 utility (filesystem, memory, sqlite) + 1 signals store (20 tools) + 1 combined trading-data server (12 domains, 43 tools, 75+ data sources). Each server is a single process with many tools.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 4 MCP servers exposing 62 tools: 3 utility (filesystem, memory, sqlite) + 1 combined trading server (signals store + 12 data domains, 62 tools, 75+ data sources). Each server is a single process with many tools.
 
 ## Naming Conventions
 
@@ -126,8 +126,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                            │   ├─ MCP: filesystem  → ~/TradeAssistant_Data/files/
                            │   ├─ MCP: memory      → ~/TradeAssistant_Data/memory.jsonl
                            │   ├─ MCP: sqlite      → ~/TradeAssistant_Data/data.db
-                           │   ├─ MCP: signals-store (Python, profiles + snapshots)
-                           │   └─ MCP: trading-data (Python, 12 domains combined)
+                           │   └─ MCP: trading (Python, store + 12 domains, 62 tools)
                            │
                            └─ cron (every 15 min) ──push──▶ GitHub (TradeAssistant_Data, private)
                                   │
@@ -139,24 +138,26 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 
 ## Key Technical Details
 
-### Signals Store (`src/store/server.py`) — one MCP server, 20 tools
-- **Framework**: FastMCP (single server process exposing all tools below)
+### Combined Trading Server (`src/servers/combined_server.py`) — 62 tools in one process
+- **Architecture**: Signals store (19 tools) + 12 data domains (43 tools) combined via FastMCP `mount(namespace=)`
+- **Entry point**: `combined_server.py` mounts `store/server.py` as `store` namespace + 12 domain servers
+- **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, etc.
+- Spawned as single stdio child process by LibreChat
+- Individual servers (`store/server.py`, `weather_server.py`, etc.) still work standalone for testing
+
+#### Signals Store (store_* namespace, 19 tools)
 - **Profiles**: JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
 - **MongoDB**: Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`)
 - **Geo support**: Optional GeoJSON `location` field, 2dsphere indexes, `nearby()` tool
-- **Profile tools**: `get_profile`, `put_profile`, `list_profiles`, `find_profile`, `search_profiles`, `list_regions`, `rebuild_index`, `lint_profiles`
-- **Snapshot tools**: `snapshot`, `history`, `trend`, `nearby`, `event`, `recent_events`, `archive_snapshot`, `archive_history`, `compact`, `aggregate`, `chart`
+- **Profile tools**: `store_get_profile`, `store_put_profile`, `store_list_profiles`, `store_find_profile`, `store_search_profiles`, `store_list_regions`, `store_rebuild_index`, `store_lint_profiles`
+- **Snapshot tools**: `store_snapshot`, `store_history`, `store_trend`, `store_nearby`, `store_event`, `store_recent_events`, `store_archive_snapshot`, `store_archive_history`, `store_compact`, `store_aggregate`, `store_chart`
 - **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
 - **Regions**: north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
 
-### Domain Servers (`src/servers/*.py`)
-- 12 individual servers combined into one via `combined_server.py` using FastMCP `mount(namespace=)`
+#### Data Domains (12 namespaces, 43 tools)
 - All use FastMCP framework + `httpx` for HTTP calls
-- Tool names are namespaced: `weather_forecast`, `econ_fred_series`, `disaster_get_earthquakes`, etc.
 - Most APIs are free/no-key; some need optional API keys (FRED, ACLED, EIA, etc.)
-- Individual servers still work standalone for testing
-- Combined server spawned as single stdio child process by LibreChat
 
 ### deploy.conf (Central Config)
 All scripts source this file. Key variables:
@@ -304,7 +305,7 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 **Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation, code review fixes (security + correctness), chart tool + HTTP endpoint, profile INDEX.json, API keys doc, setup doc, test suite (87 tests: 45 bats + 42 pytest) + CI
 
 **Next priorities (P0)**:
-- Validate combined trading-data server runs without errors
+- Validate combined trading server runs without errors (store + 12 domains)
 - Test signals store against live Atlas M0
 - Populate profiles at scale (~200 countries, ~500 stocks, ~100 ETFs, ~75 sources)
 

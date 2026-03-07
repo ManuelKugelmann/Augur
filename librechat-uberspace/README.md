@@ -1,4 +1,4 @@
-LibreChat deployment with 5 MCP servers exposing 63+ tools: 3 utility (filesystem, memory, sqlite) + 1 signals store (20 tools) + 1 combined trading-data server (12 domains, 43 tools, 75+ data sources). Each server is a single process with many tools. No Docker, no Meilisearch, no RAG, no Redis.
+LibreChat deployment with 4 MCP servers exposing 62 tools: 3 utility (filesystem, memory, sqlite) + 1 combined trading server (signals store + 12 data domains, 62 tools, 75+ data sources). No Docker, no Meilisearch, no RAG, no Redis.
 
 All scripts read from `deploy.conf` — edit once, applies everywhere.
 
@@ -12,8 +12,7 @@ All scripts read from `deploy.conf` — edit once, applies everywhere.
                                                        │ ├─ MCP: filesystem          │
                                                        │ ├─ MCP: memory (JSONL)      │
                                                        │ ├─ MCP: sqlite              │
-                                                       │ ├─ MCP: signals-store (Py)  │
-                                                       │ └─ MCP: trading-data (Py)   │
+                                                       │ └─ MCP: trading (Py, 63t)   │
                                                        │                             │
                                                        │ git-sync cron ──push──▶ GitHub (private)
                                                        └─────────────────────────────┘
@@ -139,12 +138,11 @@ bash ~/LibreChat/scripts/setup-data-repo.sh
 
 ### Trading Signals Stack (requires `~/mcps/`)
 
-Each entry below is **one MCP server process** exposing multiple tools.
+One combined Python MCP server process exposing 62 tools via FastMCP `mount()`:
 
 | MCP Server | Tools | Purpose | Key Sources |
 |---|---|---|---|
-| `signals-store` | 20 | Central store | Profiles + MongoDB snapshots |
-| `trading-data` | 43 | 12 domains combined via `mount()` | Weather, disasters, econ, agri, conflict, commodity, health, politics, humanitarian, transport, water, infra |
+| `trading` | 62 | Signals store (19) + 12 data domains (43) | Profiles, MongoDB snapshots, weather, disasters, econ, agri, conflict, commodity, health, politics, humanitarian, transport, water, infra |
 
 ## Day-to-Day Operations
 
@@ -195,12 +193,12 @@ ta rb
 
 | Resource | Limit | Usage |
 |---|---|---|
-| RAM | 1.5 GB hard kill | ~500-800 MB (LibreChat) + ~100 MB (2 Python MCPs) |
+| RAM | 1.5 GB hard kill | ~500-800 MB (LibreChat) + ~80 MB (1 Python MCP) |
 | Storage | 10 GB (expandable) | ~2 GB installed |
 | Node.js | 18, 20, 22 | Requires >=20 |
 | Docker | Not available | Not needed |
 
-**Note:** All 12 domain servers run in a single combined process (~50-80 MB), well within RAM limits.
+**Note:** Signals store + all 12 domain servers run in a single combined process (~80 MB), well within RAM limits.
 
 ## Cost
 

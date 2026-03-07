@@ -121,18 +121,8 @@ _do_install() {
     log "Registering services..."
     mkdir -p ~/etc/services.d ~/logs
 
-    # Domain servers (12) are spawned by LibreChat as stdio child processes —
-    # no supervisord entries needed. Only standalone services need registration.
-
-    # signals-store: autostart=false, for standalone testing outside LibreChat
-    cat > ~/etc/services.d/mcp-store.ini << SVCEOF
-[program:mcp-store]
-directory=${STACK}
-command=${STACK}/venv/bin/python src/store/server.py
-autostart=false
-autorestart=true
-startsecs=60
-SVCEOF
+    # All MCP servers (store + 12 domains) are spawned by LibreChat as a single
+    # stdio child process — no supervisord entries needed for MCP.
 
     # charts: HTTP chart server, runs independently of LibreChat
     cat > ~/etc/services.d/charts.ini << SVCEOF
@@ -145,7 +135,7 @@ startsecs=60
 SVCEOF
     # Register /charts route to chart server port
     uberspace web backend set /charts --http --port 8066 2>/dev/null || true
-    log "Services registered (mcp-store, charts)"
+    log "Services registered (charts)"
 
     # ── 6. LibreChat — try release bundle, fall back to git clone + build ──
     local NEED_LC_SETUP=false
@@ -316,7 +306,6 @@ SVCEOF
 
     echo -e "  ${CYAN}Start:${NC}"
     echo "    supervisorctl start librechat"
-    echo "    supervisorctl start mcp-store"
     echo ""
     echo -e "  ${CYAN}Access:${NC}"
     echo "    https://${UBER}"
@@ -335,7 +324,7 @@ SVCEOF
 case "$CMD" in
     s|status)
         supervisorctl status librechat 2>/dev/null || echo "librechat: not registered"
-        supervisorctl status mcp-store 2>/dev/null || true
+        supervisorctl status charts 2>/dev/null || true
         echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
         ;;
@@ -729,7 +718,7 @@ SVCEOF
         echo ""
         echo -e "${CYAN}── Services ──${NC}"
         echo ""
-        for svc in librechat mcp-store charts cliproxyapi; do
+        for svc in librechat charts cliproxyapi; do
             SVC_STATUS="$(supervisorctl status "$svc" 2>/dev/null || true)"
             if [[ -z "$SVC_STATUS" ]]; then
                 _skip "$svc: not registered"

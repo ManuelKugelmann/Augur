@@ -54,32 +54,15 @@ mcpServers:
       Use for logs, research results, structured notes, transaction records.
       Supports full SQL: CREATE TABLE, INSERT, SELECT, UPDATE, DELETE.
 
-  # ── Signals Store ──────────────────────────
+  # ── Trading Server (signals store + 12 data domains, 62 tools, one process) ──
 
-  signals-store:
-    command: __HOME__/mcps/venv/bin/python
-    args:
-      - __HOME__/mcps/src/store/server.py
-    env:
-      PROFILES_DIR: __HOME__/mcps/profiles
-      MONGO_URI_SIGNALS: "${MONGO_URI_SIGNALS}"
-    serverInstructions: |
-      Hybrid profile/snapshot store for trading signals.
-      Profiles: get_profile, put_profile, list_profiles, search_profiles
-        — for countries (DEU, USA), stocks (AAPL), ETFs, crypto, indices, sources.
-      Snapshots: snapshot, event, history, recent_events, trend, aggregate
-        — timeseries data in MongoDB Atlas (1yr TTL). Archive for long-term (no TTL).
-      Charts: chart(entity, type, fields, ...) returns complete Plotly HTML.
-        Output the returned HTML directly as an artifact for interactive visualization.
-      Use profiles for identity/exposure data. Use snapshots for measurements over time.
-
-  # ── Domain Servers (12 domains, 75+ sources, combined into one process) ──
-
-  trading-data:
+  trading:
     command: __HOME__/mcps/venv/bin/python
     args:
       - __HOME__/mcps/src/servers/combined_server.py
     env:
+      PROFILES_DIR: __HOME__/mcps/profiles
+      MONGO_URI_SIGNALS: "${MONGO_URI_SIGNALS}"
       FRED_API_KEY: "${FRED_API_KEY}"
       USDA_NASS_API_KEY: "${USDA_NASS_API_KEY}"
       ACLED_API_KEY: "${ACLED_API_KEY}"
@@ -90,8 +73,16 @@ mcpServers:
       AISSTREAM_API_KEY: "${AISSTREAM_API_KEY}"
       CF_API_TOKEN: "${CF_API_TOKEN}"
     serverInstructions: |
-      Combined trading data server — 43 tools across 12 namespaced domains.
-      All tools are prefixed by domain: weather_*, disaster_*, econ_*, etc.
+      Combined trading server — 62 tools: signals store (19, store_* prefix) + 12 data domains (43 tools).
+      STORE (store_*): Profiles + MongoDB snapshots for trading signals.
+        Profiles: store_get_profile, store_put_profile, store_list_profiles, store_search_profiles
+          — for countries (DEU, USA), stocks (AAPL), ETFs, crypto, indices, sources.
+        Snapshots: store_snapshot, store_event, store_history, store_recent_events, store_trend, store_aggregate
+          — timeseries data in MongoDB Atlas (1yr TTL). Archive for long-term (no TTL).
+        Charts: store_chart(entity, type, fields, ...) returns complete Plotly HTML.
+          Output the returned HTML directly as an artifact for interactive visualization.
+        Use profiles for identity/exposure data. Use snapshots for measurements over time.
+      DATA DOMAINS — all tools prefixed by domain:
       Weather: weather_forecast, weather_historical_weather, weather_flood_forecast, weather_space_weather
       Disaster: disaster_get_earthquakes, disaster_get_disasters, disaster_get_natural_events
       Econ: econ_fred_series, econ_fred_search, econ_worldbank_indicator, econ_worldbank_search, econ_imf_data
