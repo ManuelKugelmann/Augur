@@ -321,6 +321,10 @@ SVCEOF
     echo "    https://${UBER}"
     echo "    (first user to register becomes admin)"
     echo ""
+    echo -e "  ${CYAN}Seed agents:${NC} (after first login)"
+    echo "    ta agents you@example.com yourpassword"
+    echo "    ta agents --dry-run        # preview only"
+    echo ""
     echo -e "  ${CYAN}Ops:${NC}"
     echo "    ta help                    # all commands"
     echo "    ta pull                    # quick git-pull update (dev)"
@@ -906,6 +910,38 @@ SVCEOF
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
         ;;
+    agents)
+        # ── Seed/update multi-agent architecture in LibreChat ──
+        # Creates all 11 agents (L1-L5 + utility) with correct tools, edges, models.
+        # Requires LibreChat running + user credentials.
+        #
+        # Usage:
+        #   ta agents                         # seed for default setup user
+        #   ta agents user@example.com pass   # seed for specific user
+        #   ta agents --dry-run               # preview without creating
+        AGENTS_EMAIL="${2:-${TA_SETUP_EMAIL:-}}"
+        AGENTS_PASS="${3:-${TA_SETUP_PASSWORD:-}}"
+
+        if [[ "${2:-}" == "--dry-run" ]]; then
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
+                --email "dummy@example.com" --password "dummy" --dry-run
+        elif [[ -z "$AGENTS_EMAIL" || -z "$AGENTS_PASS" ]]; then
+            echo -e "${YELLOW}Usage: ta agents <email> <password>${NC}"
+            echo ""
+            echo "  Seeds all 11 multi-agent architecture agents for the given user."
+            echo "  Or set TA_SETUP_EMAIL and TA_SETUP_PASSWORD env vars."
+            echo ""
+            echo "  ta agents admin@example.com mypassword"
+            echo "  ta agents --dry-run                      # preview only"
+        else
+            LC_URL="http://localhost:${LC_PORT:-3080}"
+            echo -e "${CYAN}Seeding agents at ${LC_URL} for ${AGENTS_EMAIL}...${NC}"
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
+                --email "$AGENTS_EMAIL" --password "$AGENTS_PASS" \
+                --base-url "$LC_URL"
+            echo -e "${GREEN}✓${NC} Agent seeding complete"
+        fi
+        ;;
     *)
         echo -e "${CYAN}TradeAssistant — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
@@ -923,6 +959,7 @@ SVCEOF
         echo ""
         echo "  ta sync         Force git sync of data dir"
         echo "  ta cron         Run cron hook (every 15min; sync + profiles + daily compact)"
+        echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"
         echo "  ta check -t     Health check + run test suite (bats + pytest)"
         echo "  ta proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
