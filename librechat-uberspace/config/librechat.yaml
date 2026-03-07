@@ -54,7 +54,7 @@ mcpServers:
       Use for logs, research results, structured notes, transaction records.
       Supports full SQL: CREATE TABLE, INSERT, SELECT, UPDATE, DELETE.
 
-  # ── Trading Server (signals store + 12 data domains, 62 tools, one process) ──
+  # ── Trading Server (signals store + 12 data domains, 68 tools, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.
   # Env vars + API keys are set in the supervisord service, not here.
 
@@ -86,7 +86,7 @@ mcpServers:
         title: "Enable Live Trading"
         description: "Set to 'yes' to allow real trades. Leave blank for dry-run only (paper trading)."
     serverInstructions: |
-      Combined trading server — 62 tools: signals store (19, store_* prefix) + 12 data domains (43 tools).
+      Combined trading server — 68 tools: signals store (25, store_* prefix) + 12 data domains (43 tools).
       STORE (store_*): Profiles + MongoDB snapshots for trading signals.
         Profiles: store_get_profile, store_put_profile, store_list_profiles, store_search_profiles
           — for countries (DEU, USA), stocks (AAPL), ETFs, crypto, indices, sources.
@@ -95,6 +95,11 @@ mcpServers:
         Charts: store_chart(entity, type, fields, ...) returns complete Plotly HTML.
           Output the returned HTML directly as an artifact for interactive visualization.
         Use profiles for identity/exposure data. Use snapshots for measurements over time.
+        Notes (per-user): store_save_note, store_get_notes, store_update_note, store_delete_note
+          — personal plans, watchlists, journals. Only visible to the note owner.
+        Risk gate: store_risk_status — shows live trading status, daily limit, broker config.
+          All external trading actions pass through _risk_check() (dry-run default).
+          Users enable live trading via Settings > Plugins.
       DATA DOMAINS — all tools prefixed by domain:
       Weather: weather_forecast, weather_historical_weather, weather_flood_forecast, weather_space_weather
       Disaster: disaster_get_earthquakes, disaster_get_disasters, disaster_get_natural_events
