@@ -16,11 +16,11 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 ┌─────────────────────────────────────────────────────────────────┐
 │  L5  LIVE CHAT ASSISTANT                          (user-facing) │
 │       Can hand off to ANY agent below                           │
-│       Interactive, conversational, explains reasoning           │
+│       Owns plans, executes trades, watches portfolio            │
 ├─────────────────────────────────────────────────────────────────┤
 │  L4  CRON PLANNER + EXECUTOR                     (autonomous)   │
 │       Research organizer: schedules what to scrape/analyze      │
-│       Plan executor / trader: acts on plans via risk gate       │
+│       Executes trades, watches portfolio via risk gate          │
 │       Can use ALL agents below                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  L3  CROSS-CUTTING REASONING                     (synthesis)    │
@@ -39,6 +39,11 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 │  market-data          │  Also read from storage on request.     │
 │  osint-data           │  + filesystem, memory                   │
 │  signals-data         │                                         │
+├───────────────────────┼─────────────────────────────────────────┤
+│  UTILITY AGENTS       │  Stateless helpers for specific tasks.  │
+│                       │  Called by L4/L5 (and others) via       │
+│  trader               │  handoff. No storage ownership.         │
+│  charter              │                                         │
 ├───────────────────────┴─────────────────────────────────────────┤
 │  STORAGE              │  Profiles (JSON/git), Snapshots (Mongo), │
 │                       │  Notes (Mongo), Plans (Mongo),           │
@@ -175,16 +180,10 @@ notes (briefings, predictions, assessments).
 
 ---
 
-### L4 — Cron Planner + Executor (autonomous operations, own plans)
+### L4 — Cron Planner + Executor (autonomous, owns plans, trades, portfolio)
 
-Two roles, can be one or two agents. L4 **owns plans**: it reads and writes
-`store_save_note(kind=plan)` and `store_get_notes(kind=plan)`. Plans are the
-operational layer — what to research, what to trade, when, and why.
-
-#### Research Organizer
-
-Decides **what** to scrape and analyze, **when**, and **at what depth**.
-Reads plans and schedules L1/L2/L3 agents accordingly.
+Runs autonomously on cron. **Owns plans**: research plans, watchlists, schedules.
+Also **executes trades** (via trader utility agent) and **watches portfolio**.
 
 | Capability | How |
 |-----------|-----|
@@ -192,8 +191,11 @@ Reads plans and schedules L1/L2/L3 agents accordingly.
 | Schedule scraper runs | Hands off to market-data, osint-data, signals-data |
 | Trigger analysis | Hands off to market-analyst, osint-analyst, signals-analyst |
 | Request synthesis | Hands off to synthesizer |
-| Adjust frequency | Increase scraping frequency for entities with active signals |
+| Execute trades | Hands off to **trader** utility agent (risk-gated) |
+| Watch portfolio | Hands off to **trader** for positions, P&L, fills |
+| Generate charts | Hands off to **charter** utility agent |
 | Manage watchlists | Read/write `store_save_note(kind=plan, tags=["watchlist"])` |
+| Check risk budget | `store_risk_status()` |
 
 **Owns**: `store_save_note(kind=plan)`, `store_get_notes(kind=plan)`,
 `store_update_note`, `store_delete_note` (for plan management),
@@ -201,10 +203,10 @@ Reads plans and schedules L1/L2/L3 agents accordingly.
 
 **System prompt**:
 
-> You are the Research Organizer. You run autonomously on a schedule.
-> Your job: ensure data is fresh, analysis is current, and nothing is missed.
+> You are the Cron Planner. You run autonomously on a schedule.
+> Your job: ensure data is fresh, analysis is current, plans are executed.
 >
-> You own **plans** — research plans, watchlists, schedules.
+> You own **plans** — research plans, watchlists, trade schedules.
 >
 > Routine:
 > 1. Read current plans and watchlists (`store_get_notes(kind="plan")`).
@@ -212,47 +214,30 @@ Reads plans and schedules L1/L2/L3 agents accordingly.
 > 3. If data is stale, the data agent will scrape fresh data.
 > 4. After scraping, hand off to the appropriate analyst for analysis.
 > 5. After analysis, hand off to the synthesizer for cross-domain patterns.
-> 6. Update plans with results and next scheduled actions.
+> 6. If plans call for trade execution, hand off to the **trader** agent.
+> 7. Check portfolio status via **trader** and log changes.
+> 8. Update plans with results and next scheduled actions.
+>
+> Trading rules:
+> - ALWAYS check `store_risk_status()` before handing off to trader.
+> - Default to dry-run mode. Only execute live if user has enabled live trading.
+> - If risk budget is low, skip lower-confidence predictions.
 >
 > Priority: user watchlist entities > high-severity events > routine coverage.
 
-#### Plan Executor / Trader
+**Model**: Sonnet (needs judgment for planning and risk decisions).
 
-Reads plans and predictions from storage. Executes trading actions through the risk gate.
-
-| Capability | How |
-|-----------|-----|
-| Read plans | `store_get_notes(kind=plan)` |
-| Read analyst/synthesizer notes | `store_get_notes(tag=prediction)` |
-| Check risk budget | `store_risk_status()` |
-| Execute trades | Broker tools via trading MCP (risk-gated, per-user keys) |
-| Log actions | `store_save_note(kind=plan, tags=["trade_log"])` |
-
-**System prompt**:
-
-> You are the Plan Executor. You read trading plans and predictions from storage
-> and execute them through the risk gate.
->
-> Rules:
-> 1. ALWAYS check `store_risk_status()` before any action.
-> 2. NEVER exceed the daily action limit.
-> 3. Default to dry-run mode. Only execute live if user has enabled live trading.
-> 4. For each action, log via `store_save_note(kind="plan", tags=["trade_log"])`.
-> 5. If risk budget is low, skip lower-confidence predictions.
-> 6. Return: {actions_taken: N, actions_skipped: N, risk_remaining: N}.
-
-**Model**: Sonnet (needs judgment for risk decisions).
-
-**Handoff edges**: → all L1 data agents, all L2 analysts, L3 synthesizer.
+**Handoff edges**: → all L1 data agents, all L2 analysts, L3 synthesizer,
+trader, charter.
 
 ---
 
-### L5 — Live Chat Assistant (user-facing, owns plans)
+### L5 — Live Chat Assistant (user-facing, owns plans, trades, portfolio)
 
 The only agent the user talks to directly. Can hand off to ANY agent at any layer.
 Conversational, explains reasoning, takes user input. Like L4, the chat agent
-**reads and writes plans** — the user creates/modifies plans interactively,
-while L4 cron executes them autonomously.
+**reads and writes plans**, **executes trades** (via trader utility), and
+**watches portfolio** interactively.
 
 | Capability | How |
 |-----------|-----|
@@ -260,8 +245,10 @@ while L4 cron executes them autonomously.
 | Show data | Hands off to market-data (returns data directly) |
 | Read/write plans | `store_save_note(kind=plan)`, `store_get_notes(kind=plan)` |
 | Read analyst notes | `store_get_notes(kind=note)` |
-| Trigger research | Hands off to research organizer |
-| Execute trades | Hands off to plan executor |
+| Execute trades | Hands off to **trader** utility agent (risk-gated) |
+| Watch portfolio | Hands off to **trader** for positions, P&L, fills |
+| Generate charts | Hands off to **charter** utility agent |
+| Trigger cron | Hands off to L4 cron planner |
 | Show briefings | Reads synthesizer notes from storage |
 | Explain analysis | Reads analyst notes, adds conversational explanation |
 
@@ -270,16 +257,17 @@ while L4 cron executes them autonomously.
 (analyst output) directly.
 
 **Handoff edges**: ALL agents (market-data, osint-data, signals-data,
-market-analyst, osint-analyst, signals-analyst, synthesizer, research-organizer,
-plan-executor).
+market-analyst, osint-analyst, signals-analyst, synthesizer, cron-planner,
+trader, charter).
 
 **System prompt**:
 
 > You are the Trading Assistant. You are the user's primary interface.
 > You can delegate to any specialist agent but you are the one who talks to the user.
 >
-> You own **plans** alongside the cron organizer. The user creates plans through you;
-> the cron organizer executes them. You also read analyst/synthesizer notes directly.
+> You own **plans** alongside the cron planner. The user creates plans through you;
+> the cron planner executes them autonomously. You also read analyst/synthesizer
+> notes directly.
 >
 > Available agents (hand off when needed):
 >
@@ -296,18 +284,86 @@ plan-executor).
 > **Synthesis** (L3 — use for cross-domain questions):
 > - synthesizer: cross-domain patterns, composite risk scores, predictions
 >
-> **Operations** (L4 — use for planning and execution):
-> - research-organizer: schedule research, manage watchlists
-> - plan-executor: execute trading plans through risk gate
+> **Operations** (L4):
+> - cron-planner: autonomous research scheduling, plan execution on cron
+>
+> **Utility agents** (stateless helpers):
+> - trader: execute trades, check portfolio, positions, P&L, fills
+> - charter: generate charts and visualizations from store data
 >
 > Rules:
 > 1. For data lookups, hand off to a data agent (it returns data directly).
 > 2. For "what should I do?" questions, hand off to synthesizer then explain.
-> 3. For trade execution, ALWAYS confirm with user before handing off to executor.
-> 4. Keep responses conversational. Translate technical output into plain language.
-> 5. Show your reasoning. Cite which agents/sources you used.
+> 3. For trade execution, ALWAYS confirm with user before handing off to trader.
+> 4. For portfolio/positions, hand off to trader (returns data directly).
+> 5. For charts, hand off to charter with the data query parameters.
+> 6. Keep responses conversational. Translate technical output into plain language.
+> 7. Show your reasoning. Cite which agents/sources you used.
 
 **Model**: Opus or Sonnet (needs best conversational + reasoning quality).
+
+---
+
+### Utility Agents — Stateless Helpers (trading + charts)
+
+Stateless agents that perform specific operations when called via handoff.
+No storage ownership — they use tools and return results. Called by L4/L5
+(and potentially others).
+
+#### Trader
+
+Handles all broker interactions: placing orders, checking positions, portfolio
+P&L, order fills, account status. All operations go through the risk gate.
+
+| Capability | Tools |
+|-----------|-------|
+| Place orders | Broker tools via trading MCP (risk-gated, per-user keys) |
+| Check positions | Broker portfolio/positions tools |
+| View P&L | Broker account tools |
+| View order fills | Broker order history tools |
+| Check risk budget | `store_risk_status()` |
+| Log trades | `store_event(subtype="trade", ...)` |
+
+**System prompt**:
+
+> You are the Trader agent. You execute trading operations through the broker API.
+>
+> Rules:
+> 1. ALWAYS check `store_risk_status()` before any action.
+> 2. NEVER exceed the daily action limit.
+> 3. Default to dry-run mode. Only execute live if user has enabled live trading.
+> 4. Log every action via `store_event(subtype="trade", ...)` with full rationale.
+> 5. When asked for portfolio/positions/P&L, return the actual data.
+> 6. Return: {action, result, risk_remaining} for trades,
+>    or {positions: [...], pnl, ...} for portfolio queries.
+
+**Model**: Haiku (stateless execution, no reasoning needed — decisions made by caller).
+
+**MCP tools**: `trading` (broker tools + `store_risk_status` + `store_event`).
+
+#### Charter
+
+Generates charts and visualizations from store data. Called when any agent
+needs a visual output.
+
+| Capability | Tools |
+|-----------|-------|
+| Time series charts | `store_chart(kind, entity, type, fields, ...)` |
+| Trend overlays | `store_trend(...)` → `store_chart(...)` |
+| Comparison charts | Multiple `store_history()` → `store_chart(...)` |
+
+**System prompt**:
+
+> You are the Charter agent. You generate charts and visualizations.
+>
+> 1. Use `store_chart()` to create Plotly charts from store data.
+> 2. Use `store_history()` and `store_trend()` to gather data for custom charts.
+> 3. Return the chart artifact (Plotly JSON or image URL).
+> 4. Accept parameters: kind, entity, type, fields, time range.
+
+**Model**: Haiku (stateless rendering, no reasoning needed).
+
+**MCP tools**: `trading` (`store_chart`, `store_history`, `store_trend`).
 
 ---
 
@@ -315,28 +371,27 @@ plan-executor).
 
 ```
                     L5 Live Chat ◄──── User
-                    (reads/writes PLANS)
+                    (PLANS + trades + portfolio)
                          │
-            ┌────────────┼────────────────┐
-            ▼            ▼                ▼
-     L4 Research    L4 Plan          L3 Synthesizer
-     Organizer      Executor         (writes NOTES)
-   (writes PLANS)  (writes PLANS)        │
-         │              │          ┌──────┼──────┐
-         ▼              ▼          ▼      ▼      ▼
-    ┌────┴────┐    Risk Gate    L2 Mkt  L2 OSINT  L2 Sig
-    │ Schedule │                Analyst  Analyst   Analyst
-    │ data     │              (write NOTES)
-    │ + analysts│                 │        │        │
-    └────┬────┘                   ▼        ▼        ▼
-         │                   handoff to data agents
-         ▼                        │        │        │
-    ┌────┴──────────────────┐     ▼        ▼        ▼
-    │  L1 Data Agents       │─────────────────────────
-    │  market-data          │  own: PROFILES, SNAPSHOTS, EVENTS
-    │  osint-data           │  + filesystem, memory
-    │  signals-data         │
-    └───────┬───────────────┘
+            ┌────────────┼───────────────────┐
+            ▼            ▼                   ▼
+     L4 Cron Planner  L3 Synthesizer    ┌─────────┐
+     (PLANS + trades) (writes NOTES)    │ UTILITY │
+         │                │             │ trader  │
+         │          ┌─────┼──────┐      │ charter │
+         ▼          ▼     ▼      ▼      └────▲────┘
+    ┌────┴────┐  L2 Mkt  OSINT  Sig       called by
+    │ Schedule │  Analyst Analyst Analyst   L4/L5 via
+    │ data     │  (write NOTES)            handoff
+    │ + analysts│    │      │      │
+    └────┬────┘     ▼      ▼      ▼
+         │     handoff to data agents
+         ▼          │      │      │
+    ┌────┴──────────┴──────┴──────┴──┐
+    │  L1 Data Agents                │
+    │  market-data │ osint-data      │  own: PROFILES, SNAPSHOTS, EVENTS
+    │  signals-data                  │  + filesystem, memory
+    └───────┬────────────────────────┘
             ▼
     ┌───────────────────────────────────────────────┐
     │                   STORAGE                     │
@@ -349,8 +404,10 @@ plan-executor).
 - L1 data agents → profiles, snapshots, events (raw data)
 - L2/L3 analysts → notes (analysis, assessments, predictions)
 - L4/L5 chat/cron → plans (watchlists, trade plans, journals)
+- Utility agents → no ownership (stateless: trader executes, charter renders)
 
 Storage is the shared bus. Analysts read raw data by handing off to data agents.
+L4/L5 execute trades by handing off to the trader utility agent.
 
 ---
 
@@ -363,6 +420,8 @@ Storage is the shared bus. Analysts read raw data by handing off to data agents.
 | **L1 Data Agents** | Profiles, snapshots, events | `store_snapshot`, `store_event`, `store_history`, `store_trend`, `store_get_profile`, `store_put_profile`, `store_find_profile`, `store_search_profiles`, `store_list_profiles`, `store_nearby`, `store_recent_events`, `store_archive_*`, `store_compact`, `store_aggregate`, `store_chart` |
 | **L2/L3 Analysts** | Notes (analysis, assessments) | `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note` |
 | **L4/L5 Chat+Cron** | Plans (watchlists, trade plans, journals) | `store_save_note(kind=plan)`, `store_get_notes(kind=plan)`, `store_update_note`, `store_delete_note`, `store_risk_status` |
+| **Utility (trader)** | No ownership (stateless) | Broker tools, `store_risk_status`, `store_event` |
+| **Utility (charter)** | No ownership (stateless) | `store_chart`, `store_history`, `store_trend` |
 
 ### L1 Data Agents — MCP Data Tools + Store Read/Write
 
@@ -386,18 +445,24 @@ Storage is the shared bus. Analysts read raw data by handing off to data agents.
 |-------|------------------|---------------|
 | **synthesizer** | Same note tools as L2 | → market-data, osint-data, signals-data |
 
-### L4 Orchestrators — Plans + Handoff to All
+### L4 Cron Planner — Plans + Trades + Handoff to All
 
 | Agent | trading MCP tools | Handoff edges |
 |-------|------------------|---------------|
-| **research-organizer** | `store_save_note(kind=plan)`, `store_get_notes`, `store_update_note`, `store_delete_note`, `store_risk_status` | → all L1, all L2, L3 |
-| **plan-executor** | Same plan tools + `store_risk_status` (+ future broker tools) | → all L1, all L2, L3 |
+| **cron-planner** | `store_save_note(kind=plan)`, `store_get_notes`, `store_update_note`, `store_delete_note`, `store_risk_status` | → all L1, all L2, L3, trader, charter |
 
-### L5 Live Chat — Plans + Notes Read + Handoff to Everything
+### L5 Live Chat — Plans + Trades + Handoff to Everything
 
 | Agent | trading MCP tools | Handoff edges |
 |-------|------------------|---------------|
-| **live-chat** | `store_save_note(kind=plan)`, `store_get_notes`, `store_update_note`, `store_delete_note`, `store_risk_status` | → ALL agents (L1, L2, L3, L4) |
+| **live-chat** | `store_save_note(kind=plan)`, `store_get_notes`, `store_update_note`, `store_delete_note`, `store_risk_status` | → ALL agents (L1, L2, L3, L4, trader, charter) |
+
+### Utility Agents — Stateless Helpers
+
+| Agent | trading MCP tools | Called by |
+|-------|------------------|-----------|
+| **trader** | Broker tools (future), `store_risk_status`, `store_event` | L4, L5 |
+| **charter** | `store_chart`, `store_history`, `store_trend` | L4, L5 (and others) |
 
 ### Utility MCPs — Attached to Data Agents
 
@@ -562,12 +627,12 @@ The research organizer runs on cron, triggering scraper → analyst → synthesi
 
 | Schedule | Pipeline | Agent Chain |
 |----------|----------|-------------|
-| **Every 2h** | Signals refresh | signals-scraper → signals-analyst |
-| **Every 6h** | OSINT refresh | osint-scraper → osint-analyst |
-| **Hourly** (market hours) | Market refresh | market-scraper → market-analyst |
-| **Daily 06:00** | Morning briefing | all scrapers → all analysts → synthesizer |
+| **Every 2h** | Signals refresh | signals-data → signals-analyst |
+| **Every 6h** | OSINT refresh | osint-data → osint-analyst |
+| **Hourly** (market hours) | Market refresh | market-data → market-analyst |
+| **Daily 06:00** | Morning briefing | all data agents → all analysts → synthesizer |
 | **Daily 22:00** | End-of-day summary | synthesizer (reads day's data) |
-| **Weekly Sun** | Deep research | research-organizer (reviews watchlists, schedules deep dives) |
+| **Weekly Sun** | Deep research | cron-planner (reviews watchlists, schedules deep dives) |
 
 **Implementation**: LibreChat Agent Chain for deterministic pipelines.
 Research organizer uses handoff edges for dynamic scheduling.
@@ -580,11 +645,12 @@ Handoff success rate is ~60%. Strategies per layer:
 
 | Layer | Strategy |
 |-------|----------|
-| L1 (scrapers) | Use **Agent Chain** — deterministic, no handoff ambiguity |
-| L2 (analysts) | Use **Agent Chain** after scraper completes |
+| L1 (data agents) | Use **Agent Chain** — deterministic, no handoff ambiguity |
+| L2 (analysts) | Use **Agent Chain** after data agent completes |
 | L3 (synthesizer) | Use **Agent Chain** — receives all analyst output sequentially |
-| L4 (planner) | Use **Handoff Edges** — needs dynamic routing based on context |
+| L4 (cron planner) | Use **Handoff Edges** — needs dynamic routing based on context |
 | L5 (live chat) | Use **Handoff Edges** — interactive, unpredictable user queries |
+| Utility (trader, charter) | Called via **Handoff Edges** from L4/L5 |
 
 **Rule**: Use Agent Chain for deterministic pipelines (scrape → analyze → synthesize).
 Use Handoff Edges only where dynamic routing is needed (L4 planner, L5 live chat).
@@ -598,32 +664,33 @@ Use Handoff Edges only where dynamic routing is needed (L4 planner, L5 live chat
 | L1 | 3 data agents | Haiku | ~30 | Scrape + store profiles/snapshots/events |
 | L2 | 3 analysts | Sonnet | ~10 | Reason + write notes |
 | L3 | 1 synthesizer | Sonnet/Opus | ~3 | Cross-domain notes |
-| L4 | 2 orchestrators | Sonnet | ~5 | Plan + execute |
-| L5 | 1 live chat | Opus/Sonnet | ~20 (user-driven) | Plans + conversation |
-| **Total** | **10 agents** | | **~68 calls/day** | |
+| L4 | 1 cron planner | Sonnet | ~5 | Plans + trades + portfolio |
+| L5 | 1 live chat | Opus/Sonnet | ~20 (user-driven) | Plans + trades + conversation |
+| Util | 2 (trader, charter) | Haiku | ~15 | Stateless trade execution + charts |
+| **Total** | **11 agents** | | **~83 calls/day** | |
 
 ---
 
 ## Migration Path
 
-### Phase 1: Data agents + chat (4 agents)
+### Phase 1: Data agents + utility + chat (6 agents)
 
 - 3 data agents (market-data, osint-data, signals-data) with MCP + store access
-- 1 live chat agent with handoff edges to all 3
-- Validates: MCP tool filtering, handoff reliability, storage read/write
+- 2 utility agents (trader, charter)
+- 1 live chat agent with handoff edges to all 5
+- Validates: MCP tool filtering, handoff reliability, storage read/write, trading
 
-### Phase 2: Add analysts (7 agents)
+### Phase 2: Add analysts (9 agents)
 
 - 3 analysts (market-analyst, osint-analyst, signals-analyst) with note tools
 - Each analyst has handoff edge to its data agent
 - Wire as Agent Chains: data agent → analyst
 - Chat gets handoff edges to analysts too
 
-### Phase 3: Add synthesizer + cron (10 agents)
+### Phase 3: Add synthesizer + cron (11 agents)
 
 - L3 synthesizer with note tools + handoff edges to all data agents
-- L4 research organizer with plan tools + handoff edges to all
-- L4 plan executor with plan tools + risk gate
+- L4 cron planner with plan tools + handoff edges to all
 - Wire morning briefing chain: data agents → analysts → synthesizer
 
 ---
@@ -632,7 +699,7 @@ Use Handoff Edges only where dynamic routing is needed (L4 planner, L5 live chat
 
 | Flat (previous) | Layered (this doc) | Why |
 |----------------|-------------------|-----|
-| 5 agents, all peer-level | 10 agents across 5 layers | Separation of concerns: fetch vs. reason vs. synthesize |
+| 5 agents, all peer-level | 11 agents across 5 layers + utility | Separation of concerns: fetch vs. reason vs. synthesize vs. execute |
 | Main agent delegates everything | L5 chat + L4 cron both orchestrate | Autonomous ops (cron) + interactive (chat) |
 | Scrapers also analyze | Data agents fetch+store; analysts reason+note | Cheaper scraping (Haiku), better analysis (Sonnet) |
 | No cross-domain reasoning | L3 synthesizer sees all domains | Catches disaster→supply chain→stock correlations |
