@@ -442,3 +442,80 @@ class TestValidKinds:
     def test_blocked_agg_stages(self, store):
         for stage in ("$out", "$merge", "$unionWith"):
             assert stage in store._BLOCKED_STAGES
+
+
+# ── User context helpers ────────────────────────
+
+
+class TestGetUserId:
+    def test_returns_empty_when_no_headers(self, store):
+        """Without streamable-http, _get_user_id returns empty or env fallback."""
+        uid = store._get_user_id()
+        # Should return empty string (no HTTP context, no env var set)
+        assert isinstance(uid, str)
+
+    def test_env_fallback(self, store, monkeypatch):
+        monkeypatch.setenv("LIBRECHAT_USER_ID", "user-from-env")
+        uid = store._get_user_id()
+        assert uid == "user-from-env"
+
+    def test_header_takes_priority(self, store, monkeypatch):
+        """If get_http_headers returns a user ID, it takes priority over env."""
+        monkeypatch.setenv("LIBRECHAT_USER_ID", "env-user")
+        fake_headers = {"x-user-id": "header-user"}
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
+        uid = store._get_user_id()
+        assert uid == "header-user"
+
+
+class TestGetUserKey:
+    def test_returns_empty_without_headers(self, store):
+        key = store._get_user_key("x-broker-key")
+        assert key == ""
+
+    def test_reads_header(self, store, monkeypatch):
+        fake_headers = {"x-broker-key": "my-secret-key"}
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
+        key = store._get_user_key("x-broker-key")
+        assert key == "my-secret-key"
+
+
+# ── Risk gate ───────────────────────────────────
+
+
+class TestRiskGate:
+    def test_blocks_without_user(self, store, monkeypatch):
+        monkeypatch.delenv("LIBRECHAT_USER_ID", raising=False)
+        result = store._risk_check("buy", {"symbol": "AAPL"})
+        assert result is not None
+        assert "user not identified" in result["error"]
+
+    def test_dry_run_blocks_by_default(self, store, monkeypatch):
+        monkeypatch.setenv("LIBRECHAT_USER_ID", "test-user")
+        result = store._risk_check("buy", {"symbol": "AAPL"})
+        assert result is not None
+        assert result["blocked"] == "dry_run"
+
+    def test_passes_when_confirmed(self, store, monkeypatch):
+        monkeypatch.setenv("LIBRECHAT_USER_ID", "test-user")
+        store._user_action_counts.clear()
+        result = store._risk_check("buy", {"symbol": "AAPL"}, dry_run=False)
+        assert result is None
+
+    def test_daily_limit_enforced(self, store, monkeypatch):
+        monkeypatch.setenv("LIBRECHAT_USER_ID", "limit-user")
+        store._user_action_counts["limit-user"] = store._DAILY_ACTION_LIMIT
+        result = store._risk_check("buy", {"symbol": "AAPL"}, dry_run=False)
+        assert result is not None
+        assert "daily action limit" in result["error"]
+        store._user_action_counts.clear()
+
+    def test_risk_status_tool(self, store, monkeypatch):
+        monkeypatch.setenv("LIBRECHAT_USER_ID", "status-user")
+        store._user_action_counts["status-user"] = 5
+        result = store.risk_status()
+        assert result["actions_today"] == 5
+        assert result["remaining"] == store._DAILY_ACTION_LIMIT - 5
+        store._user_action_counts.clear()

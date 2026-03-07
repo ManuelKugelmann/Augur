@@ -55,23 +55,24 @@ mcpServers:
       Supports full SQL: CREATE TABLE, INSERT, SELECT, UPDATE, DELETE.
 
   # ── Trading Server (signals store + 12 data domains, 62 tools, one process) ──
+  # Runs as streamable-http so LibreChat injects per-user headers.
+  # Env vars + API keys are set in the supervisord service, not here.
 
   trading:
-    command: __HOME__/mcps/venv/bin/python
-    args:
-      - __HOME__/mcps/src/servers/combined_server.py
-    env:
-      PROFILES_DIR: __HOME__/mcps/profiles
-      MONGO_URI_SIGNALS: "${MONGO_URI_SIGNALS}"
-      FRED_API_KEY: "${FRED_API_KEY}"
-      USDA_NASS_API_KEY: "${USDA_NASS_API_KEY}"
-      ACLED_API_KEY: "${ACLED_API_KEY}"
-      ACLED_EMAIL: "${ACLED_EMAIL}"
-      EIA_API_KEY: "${EIA_API_KEY}"
-      COMTRADE_API_KEY: "${COMTRADE_API_KEY}"
-      GOOGLE_API_KEY: "${GOOGLE_API_KEY}"
-      AISSTREAM_API_KEY: "${AISSTREAM_API_KEY}"
-      CF_API_TOKEN: "${CF_API_TOKEN}"
+    type: streamable-http
+    url: http://localhost:8071/mcp
+    headers:
+      X-User-ID: "{{LIBRECHAT_USER_ID}}"
+      X-User-Email: "{{LIBRECHAT_USER_EMAIL}}"
+      X-Broker-Key: "{{BROKER_API_KEY}}"
+      X-Broker-Secret: "{{BROKER_API_SECRET}}"
+    customUserVars:
+      BROKER_API_KEY:
+        title: "Broker API Key"
+        description: "Your trading broker API key (e.g. Alpaca, IBKR). Set in Settings > Plugins."
+      BROKER_API_SECRET:
+        title: "Broker API Secret"
+        description: "Your trading broker API secret. Never shared with other users."
     serverInstructions: |
       Combined trading server — 62 tools: signals store (19, store_* prefix) + 12 data domains (43 tools).
       STORE (store_*): Profiles + MongoDB snapshots for trading signals.

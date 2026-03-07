@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 4 MCP servers exposing 62 tools: 3 utility (filesystem, memory, sqlite) + 1 combined trading server (signals store + 12 data domains, 62 tools, 75+ data sources). Each server is a single process with many tools.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 4 MCP servers: 3 utility (filesystem, memory, sqlite via stdio) + 1 combined trading server (signals store + 12 data domains, 68 tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -123,10 +123,17 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                                   ▼
                            Uberspace (assist.uber.space)
                            ├─ LibreChat (:3080, Node.js)
-                           │   ├─ MCP: filesystem  → ~/TradeAssistant_Data/files/
-                           │   ├─ MCP: memory      → ~/TradeAssistant_Data/memory.jsonl
-                           │   ├─ MCP: sqlite      → ~/TradeAssistant_Data/data.db
-                           │   └─ MCP: trading (Python, store + 12 domains, 62 tools)
+                           │   ├─ MCP: filesystem  → ~/TradeAssistant_Data/files/ (stdio)
+                           │   ├─ MCP: memory      → ~/TradeAssistant_Data/memory.jsonl (stdio)
+                           │   ├─ MCP: sqlite      → ~/TradeAssistant_Data/data.db (stdio)
+                           │   └─ MCP: trading ──streamable-http──▶ :8071/mcp
+                           │         X-User-ID / X-User-Email injected per request
+                           │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET
+                           │
+                           ├─ trading server (:8071, Python, store + 12 domains, 68 tools)
+                           │   ├─ shared: OSINT data, profiles, snapshots, events
+                           │   ├─ per-user: notes/plans (MongoDB user_notes), risk gate
+                           │   └─ per-user: broker keys (headers, never stored)
                            │
                            └─ cron (every 15 min) ──push──▶ GitHub (TradeAssistant_Data, private)
                                   │
@@ -138,19 +145,27 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 
 ## Key Technical Details
 
-### Combined Trading Server (`src/servers/combined_server.py`) — 62 tools in one process
-- **Architecture**: Signals store (19 tools) + 12 data domains (43 tools) combined via FastMCP `mount(namespace=)`
+### Combined Trading Server (`src/servers/combined_server.py`) — 68 tools in one process
+- **Architecture**: Signals store (25 tools) + 12 data domains (43 tools) combined via FastMCP `mount(namespace=)`
+- **Transport**: streamable-http on `:8071/mcp` (`stateless_http=True`), falls back to stdio for dev/testing
 - **Entry point**: `combined_server.py` mounts `store/server.py` as `store` namespace + 12 domain servers
 - **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, etc.
-- Spawned as single stdio child process by LibreChat
+- **Multi-user**: LibreChat injects `X-User-ID` / `X-User-Email` headers per request; `_get_user_id()` reads them via `fastmcp.server.dependencies.get_http_headers()`
+- **Per-user isolation**: notes/plans scoped by `user_id` in MongoDB; broker keys passed as headers (never stored); snapshots/events tagged with `user_id` in meta
+- **Risk gate**: `_risk_check()` enforces user identification, dry_run default, daily action limits before any external trading API call
+- **Per-user keys**: `customUserVars` in `librechat.yaml` lets each user set `BROKER_API_KEY` / `BROKER_API_SECRET`; forwarded as HTTP headers, read via `_get_user_key()`
 - Individual servers (`store/server.py`, `weather_server.py`, etc.) still work standalone for testing
 
-#### Signals Store (store_* namespace, 19 tools)
-- **Profiles**: JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
-- **MongoDB**: Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`)
+#### Signals Store (store_* namespace, 25 tools)
+- **Profiles** (shared): JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
+- **MongoDB** (shared): Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`); snapshots/events include `user_id` in meta
+- **Notes** (per-user): `user_notes` collection keyed by `user_id` — plans, watchlists, journal entries
+- **Risk gate** (per-user): `risk_status()` tool, `_risk_check()` guard for trading actions, configurable daily limit
 - **Geo support**: Optional GeoJSON `location` field, 2dsphere indexes, `nearby()` tool
 - **Profile tools**: `store_get_profile`, `store_put_profile`, `store_list_profiles`, `store_find_profile`, `store_search_profiles`, `store_list_regions`, `store_rebuild_index`, `store_lint_profiles`
 - **Snapshot tools**: `store_snapshot`, `store_history`, `store_trend`, `store_nearby`, `store_event`, `store_recent_events`, `store_archive_snapshot`, `store_archive_history`, `store_compact`, `store_aggregate`, `store_chart`
+- **Notes tools**: `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
+- **Risk tools**: `store_risk_status`
 - **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
 - **Regions**: north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
@@ -168,7 +183,7 @@ All scripts source this file. Key variables:
 
 ### Python Dependencies
 ```
-fastmcp>=2.0
+fastmcp>=3.1
 httpx>=0.27
 pymongo>=4.7
 python-dotenv>=1.0
@@ -286,11 +301,31 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `aggregate(kind, pipeline, archive?)` | Raw aggregation pipeline |
 | `chart(kind, entity, type, fields, ...)` | Generate Plotly chart |
 
+### Notes tools (per-user, same API + user scoping)
+
+| Tool | Purpose |
+|------|---------|
+| `save_note(title, content, tags?, kind?)` | Save note/plan/watchlist/journal (scoped to user) |
+| `get_notes(kind?, tag?, limit?)` | List your notes, filter by kind or tag |
+| `update_note(note_id, content?, title?, tags?)` | Update a note (owner only) |
+| `delete_note(note_id)` | Delete a note (owner only) |
+
+### Risk gate
+
+| Tool | Purpose |
+|------|---------|
+| `risk_status()` | Show actions used today, daily limit, remaining |
+
+Internal: `_risk_check(action, params, dry_run=True)` — called before any external trading API call. Blocks if user not identified, dry_run=True (default), or daily limit exceeded.
+
 ## Environment Variables
 
 ### Signals Stack (`.env`)
 - `MONGO_URI` — MongoDB Atlas connection string (database: `signals`)
 - `PROFILES_DIR` — path to profiles directory (default: `./profiles`)
+- `MCP_TRANSPORT` — `streamable-http` (production) or `stdio` (dev/testing, default)
+- `MCP_PORT` — port for streamable-http (default: `8071`)
+- `RISK_DAILY_LIMIT` — max trading actions per user per day (default: `50`)
 - Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`
 - Full reference: `docs/api-keys.md`
 

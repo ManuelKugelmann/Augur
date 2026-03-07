@@ -8,6 +8,9 @@ MongoDB: Per-kind timeseries collections with geo support:
 
 All docs share: ts (datetime), meta (entity, kind, region, type, source),
 data (payload), location (optional GeoJSON Point).
+
+When running behind LibreChat via streamable-http, X-User-ID / X-User-Email
+headers are injected per request and stored in snapshot/event meta.
 """
 from fastmcp import FastMCP
 from pymongo import MongoClient
@@ -36,6 +39,23 @@ _RESERVED_DIRS = frozenset({"SCHEMAS"})
 SNAPSHOTS_TTL = 365 * 86400         # 1 year
 
 _SAFE_ID = re.compile(r'^[A-Za-z0-9_-]+$')
+
+
+# ── User context helper ──────────────────────────
+
+
+def _get_user_id() -> str:
+    """Return the LibreChat user ID from HTTP headers (streamable-http)
+    or LIBRECHAT_USER_ID env var (stdio fallback). Empty string if unavailable."""
+    try:
+        from fastmcp.server.dependencies import get_http_headers
+        headers = get_http_headers()
+        uid = headers.get("x-user-id", "")
+        if uid:
+            return uid
+    except (RuntimeError, ImportError):
+        pass
+    return os.environ.get("LIBRECHAT_USER_ID", "")
 
 
 # ── MongoDB helpers ───────────────────────────────
@@ -455,10 +475,14 @@ def snapshot(kind: str, entity: str, type: str, data: dict,
     if kind not in VALID_KINDS:
         return {"error": f"unknown kind: {kind}"}
     now = datetime.now(timezone.utc)
+    meta = {"entity": entity, "kind": kind, "region": region,
+            "type": type, "source": source}
+    uid = _get_user_id()
+    if uid:
+        meta["user_id"] = uid
     doc = {
         "ts": datetime.fromisoformat(ts) if ts else now,
-        "meta": {"entity": entity, "kind": kind, "region": region,
-                 "type": type, "source": source},
+        "meta": meta,
         "data": data,
     }
     if lon is not None and lat is not None:
@@ -476,17 +500,21 @@ def event(subtype: str, summary: str, data: dict,
     """Log a signal event. severity: low, medium, high, critical.
     region: geographic region key. lon/lat: optional coordinates."""
     now = datetime.now(timezone.utc)
+    meta = {
+        "type": "event",
+        "subtype": subtype,
+        "severity": severity,
+        "region": region,
+        "countries": countries or [],
+        "entities": entities or [],
+        "source": source,
+    }
+    uid = _get_user_id()
+    if uid:
+        meta["user_id"] = uid
     doc = {
         "ts": datetime.fromisoformat(ts) if ts else now,
-        "meta": {
-            "type": "event",
-            "subtype": subtype,
-            "severity": severity,
-            "region": region,
-            "countries": countries or [],
-            "entities": entities or [],
-            "source": source,
-        },
+        "meta": meta,
         "summary": summary,
         "data": data,
     }
@@ -689,10 +717,14 @@ def archive_snapshot(kind: str, entity: str, type: str, data: dict,
     if kind not in VALID_KINDS:
         return {"error": f"unknown kind: {kind}"}
     now = datetime.now(timezone.utc)
+    meta = {"entity": entity, "kind": kind, "region": region,
+            "type": type, "source": source}
+    uid = _get_user_id()
+    if uid:
+        meta["user_id"] = uid
     doc = {
         "ts": datetime.fromisoformat(ts) if ts else now,
-        "meta": {"entity": entity, "kind": kind, "region": region,
-                 "type": type, "source": source},
+        "meta": meta,
         "data": data,
     }
     r = _arch_col(kind).insert_one(doc)
@@ -814,6 +846,158 @@ def compact(kind: str, entity: str, type: str, older_than_days: int = 90,
         "bucket_size": bucket,
         "oldest": archive_docs[0]["ts"].isoformat(),
         "newest": archive_docs[-1]["ts"].isoformat(),
+    }
+
+
+# ── Per-user notes / plans ────────────────────────
+# Stored in MongoDB "user_notes" collection, keyed by user_id.
+# user_id comes from X-User-ID header (streamable-http) or env var.
+
+
+def _notes_col():
+    """Return the user_notes collection."""
+    return _db().user_notes
+
+
+@mcp.tool()
+def save_note(title: str, content: str, tags: list[str] | None = None,
+              kind: str = "note") -> dict:
+    """Save a personal note or trading plan. Scoped to the current user.
+    kind: 'note', 'plan', 'watchlist', 'journal'."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified (X-User-ID header missing)"}
+    now = datetime.now(timezone.utc)
+    doc = {
+        "user_id": uid,
+        "kind": kind,
+        "title": title,
+        "content": content,
+        "tags": tags or [],
+        "created": now,
+        "updated": now,
+    }
+    r = _notes_col().insert_one(doc)
+    return {"id": str(r.inserted_id), "status": "ok"}
+
+
+@mcp.tool()
+def get_notes(kind: str = "", tag: str = "", limit: int = 50) -> list[dict]:
+    """List your notes/plans. Optionally filter by kind or tag."""
+    uid = _get_user_id()
+    if not uid:
+        return [{"error": "user not identified"}]
+    q: dict = {"user_id": uid}
+    if kind:
+        q["kind"] = kind
+    if tag:
+        q["tags"] = tag
+    rows = _notes_col().find(q).sort("updated", -1).limit(limit)
+    result = []
+    for r in rows:
+        r["_id"] = str(r["_id"])
+        for k in ("created", "updated"):
+            if isinstance(r.get(k), datetime):
+                r[k] = r[k].isoformat()
+        result.append(r)
+    return result
+
+
+@mcp.tool()
+def update_note(note_id: str, content: str = "", title: str = "",
+                tags: list[str] | None = None) -> dict:
+    """Update an existing note. Only the owner can update."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    from bson import ObjectId
+    update: dict = {"updated": datetime.now(timezone.utc)}
+    if content:
+        update["content"] = content
+    if title:
+        update["title"] = title
+    if tags is not None:
+        update["tags"] = tags
+    r = _notes_col().update_one(
+        {"_id": ObjectId(note_id), "user_id": uid},
+        {"$set": update}
+    )
+    if r.matched_count == 0:
+        return {"error": "note not found or not owned by you"}
+    return {"status": "ok"}
+
+
+@mcp.tool()
+def delete_note(note_id: str) -> dict:
+    """Delete a note. Only the owner can delete."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    from bson import ObjectId
+    r = _notes_col().delete_one({"_id": ObjectId(note_id), "user_id": uid})
+    if r.deleted_count == 0:
+        return {"error": "note not found or not owned by you"}
+    return {"status": "ok"}
+
+
+# ── Per-user trading keys ─────────────────────────
+# Users provide their own API keys via LibreChat customUserVars.
+# Keys arrive as HTTP headers (e.g. X-Broker-Key) and are NOT stored server-side.
+
+
+def _get_user_key(header_name: str) -> str:
+    """Read a per-user API key from HTTP headers. Empty string if unavailable."""
+    try:
+        from fastmcp.server.dependencies import get_http_headers
+        headers = get_http_headers()
+        return headers.get(header_name.lower(), "")
+    except (RuntimeError, ImportError):
+        return ""
+
+
+# ── Risk gate ─────────────────────────────────────
+# All external trading actions (order placement, etc.) must pass through
+# this gate before executing. Currently enforces:
+#   - user must be identified
+#   - action must be explicitly confirmed (dry_run default)
+#   - basic rate limiting per user (in-memory, resets on restart)
+
+
+from collections import defaultdict
+
+_user_action_counts: dict[str, int] = defaultdict(int)
+_DAILY_ACTION_LIMIT = int(os.environ.get("RISK_DAILY_LIMIT", "50"))
+
+
+def _risk_check(action: str, params: dict,
+                dry_run: bool = True) -> dict | None:
+    """Validate a trading action before execution.
+    Returns None if approved, or an error dict if blocked."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified — cannot execute trading actions"}
+    if dry_run:
+        return {"blocked": "dry_run",
+                "action": action, "params": params,
+                "message": "Set dry_run=False to execute for real"}
+    if _user_action_counts[uid] >= _DAILY_ACTION_LIMIT:
+        return {"error": f"daily action limit ({_DAILY_ACTION_LIMIT}) reached",
+                "user_id": uid, "action": action}
+    _user_action_counts[uid] += 1
+    return None
+
+
+@mcp.tool()
+def risk_status() -> dict:
+    """Show current user's risk gate status: actions used today, limit."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    return {
+        "user_id": uid,
+        "actions_today": _user_action_counts[uid],
+        "daily_limit": _DAILY_ACTION_LIMIT,
+        "remaining": max(0, _DAILY_ACTION_LIMIT - _user_action_counts[uid]),
     }
 
 

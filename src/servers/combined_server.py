@@ -48,4 +48,11 @@ mcp.mount(water, namespace="water")
 mcp.mount(infra, namespace="infra")
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    import os
+    transport = os.environ.get("MCP_TRANSPORT", "stdio")
+    if transport == "streamable-http":
+        port = int(os.environ.get("MCP_PORT", "8071"))
+        mcp.run(transport="streamable-http", host="127.0.0.1", port=port,
+                stateless_http=True)
+    else:
+        mcp.run(transport="stdio")

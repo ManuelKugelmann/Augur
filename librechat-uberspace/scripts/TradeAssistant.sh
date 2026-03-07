@@ -121,8 +121,31 @@ _do_install() {
     log "Registering services..."
     mkdir -p ~/etc/services.d ~/logs
 
-    # All MCP servers (store + 12 domains) are spawned by LibreChat as a single
-    # stdio child process — no supervisord entries needed for MCP.
+    # trading: combined MCP server (store + 12 domains) via streamable-http
+    # LibreChat connects to localhost:8071/mcp and injects per-user headers.
+    cat > ~/etc/services.d/trading.ini << SVCEOF
+[program:trading]
+directory=${STACK}
+command=${STACK}/venv/bin/python src/servers/combined_server.py
+environment=MCP_TRANSPORT="streamable-http",MCP_PORT="8071",PROFILES_DIR="${STACK}/profiles"
+autostart=true
+autorestart=true
+startsecs=10
+SVCEOF
+    # Source .env for API keys into the trading service environment
+    if [[ -f "$STACK/.env" ]]; then
+        # Read key=value pairs from .env and append to environment= line
+        ENV_VARS=""
+        while IFS='=' read -r key value; do
+            [[ -z "$key" || "$key" =~ ^# ]] && continue
+            value="${value%\"}"
+            value="${value#\"}"
+            ENV_VARS="${ENV_VARS},${key}=\"${value}\""
+        done < "$STACK/.env"
+        if [[ -n "$ENV_VARS" ]]; then
+            sed -i "s|^environment=|environment=${ENV_VARS#,},|" ~/etc/services.d/trading.ini
+        fi
+    fi
 
     # charts: HTTP chart server, runs independently of LibreChat
     cat > ~/etc/services.d/charts.ini << SVCEOF
@@ -135,7 +158,7 @@ startsecs=60
 SVCEOF
     # Register /charts route to chart server port
     uberspace web backend set /charts --http --port 8066 2>/dev/null || true
-    log "Services registered (charts)"
+    log "Services registered (trading, charts)"
 
     # ── 6. LibreChat — try release bundle, fall back to git clone + build ──
     local NEED_LC_SETUP=false
@@ -324,6 +347,7 @@ SVCEOF
 case "$CMD" in
     s|status)
         supervisorctl status librechat 2>/dev/null || echo "librechat: not registered"
+        supervisorctl status trading 2>/dev/null || true
         supervisorctl status charts 2>/dev/null || true
         echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
@@ -718,7 +742,7 @@ SVCEOF
         echo ""
         echo -e "${CYAN}── Services ──${NC}"
         echo ""
-        for svc in librechat charts cliproxyapi; do
+        for svc in librechat trading charts cliproxyapi; do
             SVC_STATUS="$(supervisorctl status "$svc" 2>/dev/null || true)"
             if [[ -z "$SVC_STATUS" ]]; then
                 _skip "$svc: not registered"
