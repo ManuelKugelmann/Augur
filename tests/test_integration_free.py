@@ -169,7 +169,7 @@ class TestConflictFree:
         assert isinstance(result, list)
 
 
-# ── elections_server (ReliefWeb) ─────────────────────────
+# ── elections_server (Wikidata, EU Parliament, ReliefWeb) ─
 
 
 class TestElectionsFree:
@@ -177,6 +177,26 @@ class TestElectionsFree:
     def _load(self):
         import elections_server as mod
         self.m = mod
+
+    def test_global_elections_germany(self):
+        result = run(self.m.global_elections(country="Germany", limit=5))
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert "election" in result[0]
+
+    def test_global_elections_recent(self):
+        result = run(self.m.global_elections(limit=10))
+        assert isinstance(result, list)
+
+    def test_heads_of_state_germany(self):
+        result = run(self.m.heads_of_state(country="Germany", limit=5))
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_eu_parliament_meps_germany(self):
+        result = run(self.m.eu_parliament_meps(country="DE", limit=10))
+        assert "count" in result
+        assert "meps" in result
 
     def test_election_reports(self):
         result = run(self.m.election_reports(query="election", limit=3))

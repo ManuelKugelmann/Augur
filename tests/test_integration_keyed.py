@@ -115,9 +115,10 @@ class TestGoogleCivic:
         import elections_server as mod
         self.m = mod
 
-    def test_us_voter_info(self):
-        result = run(self.m.us_voter_info(address="1600 Pennsylvania Ave NW, Washington DC"))
+    def test_us_representatives(self):
+        result = run(self.m.us_representatives(address="1600 Pennsylvania Ave NW, Washington DC"))
         assert isinstance(result, dict)
+        assert "offices" in result or "officials" in result
 
 
 # ── Cloudflare Radar (infra_server) ─────────────────────
