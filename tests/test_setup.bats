@@ -20,7 +20,7 @@ setup() {
 # Helper: create a minimal source directory that passes setup.sh validation
 create_src_app() {
     local src="${1:?}"
-    create_src_app "$src" "$src/api/server"
+    mkdir -p "$src/config" "$src/scripts" "$src/node_modules/@modelcontextprotocol" "$src/api/server"
     echo "// stub" > "$src/api/server/index.js"
 }
 
