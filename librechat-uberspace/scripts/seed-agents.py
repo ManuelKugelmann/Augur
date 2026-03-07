@@ -92,19 +92,29 @@ def build_api_payload(agent_def: dict) -> dict:
 
 
 def resolve_edges(agent_defs: list[dict], id_map: dict[str, str]) -> dict[str, list]:
-    """Resolve _name references in edges to actual agent IDs."""
+    """Resolve _name references in edges to GraphEdge objects.
+
+    LibreChat edges are objects: {from: agent_id, to: agent_id, edgeType: "handoff"}
+    """
     resolved = {}
     for a in agent_defs:
         internal_name = a["_name"]
+        from_id = id_map.get(internal_name)
+        if not from_id:
+            continue
         edge_names = a.get("edges", [])
-        edge_ids = []
+        edge_objects = []
         for name in edge_names:
             if name in id_map:
-                edge_ids.append(id_map[name])
+                edge_objects.append({
+                    "from": from_id,
+                    "to": id_map[name],
+                    "edgeType": "handoff",
+                })
             else:
                 print(f"  WARNING: edge target '{name}' not found for {internal_name}",
                       file=sys.stderr)
-        resolved[internal_name] = edge_ids
+        resolved[internal_name] = edge_objects
     return resolved
 
 
@@ -178,9 +188,9 @@ def main():
 
     for agent_def in agent_defs:
         internal_name = agent_def["_name"]
-        edge_ids = resolved.get(internal_name, [])
+        edge_objects = resolved.get(internal_name, [])
 
-        if not edge_ids:
+        if not edge_objects:
             continue
 
         agent_id = id_map.get(internal_name)
@@ -188,8 +198,9 @@ def main():
             continue
 
         edge_names = agent_def.get("edges", [])
-        print(f"  {internal_name}: {edge_names} -> {edge_ids}")
-        update_agent(client, agent_id, {"edges": edge_ids})
+        target_ids = [e["to"] for e in edge_objects]
+        print(f"  {internal_name}: {edge_names} -> {target_ids}")
+        update_agent(client, agent_id, {"edges": edge_objects})
         time.sleep(0.1)
 
     # Summary

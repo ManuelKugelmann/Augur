@@ -5,11 +5,16 @@ Validates agents.json structure, internal consistency, and edge references.
 
 import json
 import pathlib
+import sys
 
 import pytest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 AGENTS_FILE = REPO_ROOT / "librechat-uberspace" / "config" / "agents.json"
+
+# Import seed-agents.py functions for testing edge resolution
+sys.path.insert(0, str(REPO_ROOT / "librechat-uberspace" / "scripts"))
+_seed_module_path = REPO_ROOT / "librechat-uberspace" / "scripts" / "seed-agents.py"
 
 
 @pytest.fixture(scope="module")
@@ -179,3 +184,58 @@ class TestTools:
         tool_str = " ".join(signals["tools"])
         assert "rss" in tool_str, "signals-data should have rss MCP"
         assert "reddit" in tool_str, "signals-data should have reddit MCP"
+
+
+# ── Seed script edge resolution ─────────────
+
+class TestEdgeResolution:
+    """Test that resolve_edges produces correct GraphEdge objects."""
+
+    def _load_resolve_edges(self):
+        """Import resolve_edges from seed-agents.py."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("seed_agents", _seed_module_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.resolve_edges
+
+    def test_resolve_edges_format(self, agents):
+        resolve_edges = self._load_resolve_edges()
+        # Simulate id_map (as if all agents were created)
+        id_map = {a["_name"]: f"agent_{i}" for i, a in enumerate(agents)}
+        resolved = resolve_edges(agents, id_map)
+
+        for a in agents:
+            name = a["_name"]
+            if not a["edges"]:
+                assert resolved.get(name, []) == []
+                continue
+            edge_objects = resolved[name]
+            assert len(edge_objects) == len(a["edges"])
+            for edge_obj in edge_objects:
+                assert "from" in edge_obj, "Edge must have 'from'"
+                assert "to" in edge_obj, "Edge must have 'to'"
+                assert edge_obj["edgeType"] == "handoff"
+                assert edge_obj["from"] == id_map[name]
+                assert edge_obj["to"] in id_map.values()
+
+    def test_resolve_edges_correct_targets(self, agents):
+        resolve_edges = self._load_resolve_edges()
+        id_map = {a["_name"]: f"agent_{a['_name']}" for a in agents}
+        resolved = resolve_edges(agents, id_map)
+
+        # Check market-analyst edges to market-data
+        ma_edges = resolved["market-analyst"]
+        assert len(ma_edges) == 1
+        assert ma_edges[0]["to"] == "agent_market-data"
+
+    def test_resolve_edges_missing_target(self, agents):
+        resolve_edges = self._load_resolve_edges()
+        # Incomplete id_map — missing "market-data"
+        id_map = {a["_name"]: f"agent_{a['_name']}" for a in agents
+                  if a["_name"] != "market-data"}
+        resolved = resolve_edges(agents, id_map)
+
+        # market-analyst edges to market-data, but market-data is missing
+        ma_edges = resolved["market-analyst"]
+        assert len(ma_edges) == 0  # should skip missing target
