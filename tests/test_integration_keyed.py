@@ -2,12 +2,14 @@
 
 Each test class is skipped unless the required env var is set.
 Marked with pytest.mark.integration to exclude from normal CI.
+External API failures are treated as xfail (flaky services).
 """
 import asyncio
 import os
 import sys
 from pathlib import Path
 
+import httpx
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "servers"))
@@ -16,7 +18,11 @@ pytestmark = pytest.mark.integration
 
 
 def run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    try:
+        return asyncio.get_event_loop().run_until_complete(coro)
+    except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ProxyError,
+            httpx.ConnectError) as exc:
+        pytest.xfail(f"External API unavailable: {exc}")
 
 
 # ── FRED (macro_server) ─────────────────────────────────

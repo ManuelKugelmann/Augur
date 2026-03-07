@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main, claude/check-ci-api-keys-rFAC1]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -65,7 +65,7 @@ jobs:
   integration-free:
     name: Integration tests (free APIs)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
   integration-keyed:
     name: Integration tests (keyed APIs)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
   integration-store:
     name: Integration tests (MongoDB store)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4

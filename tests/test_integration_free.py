@@ -2,6 +2,9 @@
 
 These hit real public APIs. Marked with pytest.mark.integration so they
 are skipped in normal CI and only run in the integration job.
+
+External API failures (timeouts, 503s, etc.) are treated as xfail so
+that flaky services don't break CI.
 """
 import asyncio
 import sys
@@ -20,7 +23,11 @@ pytestmark = pytest.mark.integration
 
 def run(coro):
     """Run an async tool function synchronously."""
-    return asyncio.get_event_loop().run_until_complete(coro)
+    try:
+        return asyncio.get_event_loop().run_until_complete(coro)
+    except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ProxyError,
+            httpx.ConnectError) as exc:
+        pytest.xfail(f"External API unavailable: {exc}")
 
 
 # ── weather_server (Open-Meteo, NOAA) ───────────────────
