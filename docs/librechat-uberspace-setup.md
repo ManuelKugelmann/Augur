@@ -17,8 +17,8 @@ Uberspace (assist.uber.space)
 │         X-User-ID / X-User-Email per request
 │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET, etc.
 │
-├─ trading server (:8071, Python, 68 tools, single process)
-│   ├─ shared: OSINT data (12 domains, 43 tools), profiles, snapshots
+├─ trading server (:8071, Python, 50+ tools, single process)
+│   ├─ shared: OSINT data (12 domains), profiles, snapshots
 │   ├─ per-user: notes/plans (MongoDB), risk gate
 │   └─ per-user: broker keys (headers, never stored)
 │

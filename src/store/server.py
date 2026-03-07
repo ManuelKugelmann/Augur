@@ -15,6 +15,7 @@ headers are injected per request and stored in snapshot/event meta.
 from fastmcp import FastMCP
 from pymongo import MongoClient
 from pathlib import Path
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 import json
 import os
@@ -967,8 +968,6 @@ def _get_user_key(header_name: str) -> str:
 #   - live trading must be explicitly enabled by user (default: dry_run)
 #   - per-user daily action limit (in-memory counter, resets on restart)
 
-
-from collections import defaultdict
 
 _user_action_counts: dict[str, int] = defaultdict(int)
 _DAILY_ACTION_LIMIT_DEFAULT = int(os.environ.get("RISK_DAILY_LIMIT", "50"))

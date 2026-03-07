@@ -1,4 +1,4 @@
-LibreChat deployment with 4 MCP servers exposing 68 tools: 3 utility (filesystem, memory, sqlite via stdio) + 1 combined trading server (signals store + 12 data domains, 68 tools, 75+ data sources) via streamable-http. Single process, multi-user. No Docker, no Meilisearch, no RAG, no Redis.
+LibreChat deployment with 4 MCP servers (50+ tools): 3 utility (filesystem, memory, sqlite via stdio) + 1 combined trading server (signals store + 12 data domains, 75+ data sources) via streamable-http. Single process, multi-user. No Docker, no Meilisearch, no RAG, no Redis.
 
 All scripts read from `deploy.conf` — edit once, applies everywhere.
 
@@ -41,7 +41,7 @@ cat deploy.conf
 | `UBER_USER` | `assist` | Uberspace username |
 | `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
-| `GH_REPO_STACK` | `TradingAssistant` | Signals stack repo |
+| `GH_REPO` | `TradingAssistant` | Signals stack repo |
 | `GH_REPO_DATA` | `TradeAssistant_Data` | Data repo (private) |
 | `STACK_DIR` | `$HOME/mcps` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
@@ -152,12 +152,12 @@ Users configure their own settings in **LibreChat Settings → Plugins → tradi
 
 ### Trading (streamable-http, single process)
 
-One combined Python server exposing 68 tools via FastMCP 3.1+ `mount()`:
+One combined Python server exposing 50+ tools via FastMCP 3.1+ `mount()`:
 
-| Namespace | Tools | Purpose |
-|---|---|---|
-| `store_*` | 25 | Profiles, snapshots, notes, charts, risk gate |
-| 12 data domains | 43 | Weather, disaster, econ, agri, conflict, commodity, health, politics, humanitarian, transport, water, infra |
+| Namespace | Purpose |
+|---|---|
+| `store_*` | Profiles, snapshots, notes, charts, risk gate |
+| 12 data domains | Weather, disaster, econ, agri, conflict, commodity, health, politics, humanitarian, transport, water, infra |
 
 ## Day-to-Day Operations
 

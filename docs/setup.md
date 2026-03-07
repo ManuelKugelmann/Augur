@@ -67,13 +67,13 @@ cd TradingAssistant
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env    # edit: set MONGO_URI + optional API keys
-python src/servers/combined_server.py  # all 62 tools (store + 12 domains)
+python src/servers/combined_server.py  # all tools (store + 12 domains)
 ```
 
 Run individual servers standalone for testing:
 
 ```bash
-python src/store/server.py             # signals store only (19 tools)
+python src/store/server.py             # signals store only
 python src/servers/weather_server.py   # no key needed
 python src/servers/macro_server.py     # needs FRED_API_KEY for FRED tools
 ```
@@ -121,7 +121,7 @@ What happens:
 2. Clones `TradingAssistant` repo to `~/mcps/`
 3. Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`, `python-dotenv`
 4. Generates `~/mcps/.env` from template
-5. Registers supervisord services (`mcp-store`, `charts`)
+5. Registers supervisord services (`trading`, `charts`)
 6. **Skips** tagged releases (dev mode)
 7. Downloads `librechat-build.tar.gz` from the CI prebuilt release
 8. If no CI build exists: clones `danny-avila/LibreChat` and builds locally (~10 min, needs ~2 GB RAM)
@@ -257,7 +257,7 @@ All deployment settings live in `deploy.conf` (sourced by all scripts):
 | `UBER_USER` | `assist` | Uberspace username |
 | `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
-| `GH_REPO_STACK` | `TradingAssistant` | Signals stack repo |
+| `GH_REPO` | `TradingAssistant` | Signals stack repo |
 | `GH_REPO_DATA` | `TradeAssistant_Data` | Data repo (private) |
 | `STACK_DIR` | `$HOME/mcps` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
@@ -353,7 +353,7 @@ uberspace web backend set / --http --port 3080
 | Node.js | 18, 20, 22 | Requires >=20 |
 | Docker | Not available | Not needed |
 
-Signals store + all 12 domain servers run in a single combined process (`trading`, ~80 MB) via FastMCP `mount()`, well within RAM limits. Total: 1 Python MCP server, 62 tools.
+Signals store + all 12 domain servers run in a single combined process (`trading`, ~80 MB) via FastMCP `mount()`, well within RAM limits.
 
 ## Cost
 

@@ -123,29 +123,16 @@ _do_install() {
 
     # trading: combined MCP server (store + 12 domains) via streamable-http
     # LibreChat connects to localhost:8071/mcp and injects per-user headers.
+    # Uses bash -c to source .env (which may contain MongoDB URIs with special chars)
+    # so we don't need to escape values for supervisord's environment= syntax.
     cat > ~/etc/services.d/trading.ini << SVCEOF
 [program:trading]
 directory=${STACK}
-command=${STACK}/venv/bin/python src/servers/combined_server.py
-environment=MCP_TRANSPORT="streamable-http",MCP_PORT="8071",PROFILES_DIR="${STACK}/profiles"
+command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=streamable-http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
 autostart=true
 autorestart=true
 startsecs=10
 SVCEOF
-    # Source .env for API keys into the trading service environment
-    if [[ -f "$STACK/.env" ]]; then
-        # Read key=value pairs from .env and append to environment= line
-        ENV_VARS=""
-        while IFS='=' read -r key value; do
-            [[ -z "$key" || "$key" =~ ^# ]] && continue
-            value="${value%\"}"
-            value="${value#\"}"
-            ENV_VARS="${ENV_VARS},${key}=\"${value}\""
-        done < "$STACK/.env"
-        if [[ -n "$ENV_VARS" ]]; then
-            sed -i "s|^environment=|environment=${ENV_VARS#,},|" ~/etc/services.d/trading.ini
-        fi
-    fi
 
     # charts: HTTP chart server, runs independently of LibreChat
     cat > ~/etc/services.d/charts.ini << SVCEOF
@@ -354,7 +341,8 @@ case "$CMD" in
         ;;
     r|restart)
         supervisorctl restart librechat
-        echo -e "${GREEN}✓${NC} Restarted"
+        supervisorctl restart trading 2>/dev/null || true
+        echo -e "${GREEN}✓${NC} Restarted (librechat + trading)"
         ;;
     l|logs)
         supervisorctl tail -f librechat
@@ -390,6 +378,7 @@ case "$CMD" in
 
         echo "$VER" > "$APP/.version"
         supervisorctl restart librechat 2>/dev/null || true
+        supervisorctl restart trading 2>/dev/null || true
         echo -e "${GREEN}✓${NC} Updated to ${VER} via git pull"
         ;;
     install)

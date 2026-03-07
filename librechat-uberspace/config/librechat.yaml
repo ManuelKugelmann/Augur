@@ -54,7 +54,7 @@ mcpServers:
       Use for logs, research results, structured notes, transaction records.
       Supports full SQL: CREATE TABLE, INSERT, SELECT, UPDATE, DELETE.
 
-  # ── Trading Server (signals store + 12 data domains, 68 tools, one process) ──
+  # ── Trading Server (signals store + 12 data domains, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.
   # Env vars + API keys are set in the supervisord service, not here.
 
@@ -86,7 +86,7 @@ mcpServers:
         title: "Enable Live Trading"
         description: "Set to 'yes' to allow real trades. Leave blank for dry-run only (paper trading)."
     serverInstructions: |
-      Combined trading server — 68 tools: signals store (25, store_* prefix) + 12 data domains (43 tools).
+      Combined trading server — signals store (store_* prefix) + 12 data domains (40+ tools).
       STORE (store_*): Profiles + MongoDB snapshots for trading signals.
         Profiles: store_get_profile, store_put_profile, store_list_profiles, store_search_profiles
           — for countries (DEU, USA), stocks (AAPL), ETFs, crypto, indices, sources.

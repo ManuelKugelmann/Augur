@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 4 MCP servers: 3 utility (filesystem, memory, sqlite via stdio) + 1 combined trading server (signals store + 12 data domains, 68 tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 4 MCP servers: 3 utility (filesystem, memory, sqlite via stdio) + 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -95,7 +95,6 @@ TradingAssistant/
 │   └── test_ta_sync.bats             ← sync commit/push logic
 │
 ├── scripts/
-│   ├── bootstrap-uberspace.sh         ← legacy bootstrap
 │   └── nightly-git-commit.sh          ← nightly profile commit
 │
 ├── docs/
@@ -130,7 +129,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                            │         X-User-ID / X-User-Email injected per request
                            │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET
                            │
-                           ├─ trading server (:8071, Python, store + 12 domains, 68 tools)
+                           ├─ trading server (:8071, Python, store + 12 domains, 50+ tools)
                            │   ├─ shared: OSINT data, profiles, snapshots, events
                            │   ├─ per-user: notes/plans (MongoDB user_notes), risk gate
                            │   └─ per-user: broker keys (headers, never stored)
@@ -145,8 +144,8 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 
 ## Key Technical Details
 
-### Combined Trading Server (`src/servers/combined_server.py`) — 68 tools in one process
-- **Architecture**: Signals store (25 tools) + 12 data domains (43 tools) combined via FastMCP `mount(namespace=)`
+### Combined Trading Server (`src/servers/combined_server.py`)
+- **Architecture**: Signals store + 12 data domains combined via FastMCP `mount(namespace=)`
 - **Transport**: streamable-http on `:8071/mcp` (`stateless_http=True`), falls back to stdio for dev/testing
 - **Entry point**: `combined_server.py` mounts `store/server.py` as `store` namespace + 12 domain servers
 - **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, etc.
@@ -156,7 +155,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - **Per-user keys**: `customUserVars` in `librechat.yaml` lets each user set `BROKER_API_KEY` / `BROKER_API_SECRET`; forwarded as HTTP headers, read via `_get_user_key()`
 - Individual servers (`store/server.py`, `weather_server.py`, etc.) still work standalone for testing
 
-#### Signals Store (store_* namespace, 25 tools)
+#### Signals Store (store_* namespace)
 - **Profiles** (shared): JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
 - **MongoDB** (shared): Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`); snapshots/events include `user_id` in meta
 - **Notes** (per-user): `user_notes` collection keyed by `user_id` — plans, watchlists, journal entries
@@ -170,14 +169,14 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
 - **Regions**: north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
 
-#### Data Domains (12 namespaces, 43 tools)
+#### Data Domains (12 namespaces)
 - All use FastMCP framework + `httpx` for HTTP calls
 - Most APIs are free/no-key; some need optional API keys (FRED, ACLED, EIA, etc.)
 
 ### deploy.conf (Central Config)
 All scripts source this file. Key variables:
 - `UBER_USER=assist`, `UBER_HOST=assist.uber.space`
-- `GH_USER=ManuelKugelmann`, `GH_REPO_STACK=TradingAssistant`, `GH_REPO_DATA=TradeAssistant_Data`
+- `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`, `GH_REPO_DATA=TradeAssistant_Data`
 - `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `DATA_DIR=$HOME/TradeAssistant_Data`
 - `LC_PORT=3080`, `NODE_VERSION=22`
 
@@ -431,3 +430,4 @@ Runs on every push to `main` and on PRs:
 - Cron sync logger tag: `ta-data-sync`
 - `__HOME__` placeholder in `librechat.yaml` is replaced by `setup.sh` with actual `$HOME`
 - After editing any `.sh` file, always run `bash -n <file>` to verify syntax — especially for `TradeAssistant.sh` which must work when piped via `curl | bash` (avoid complex nested quoting in that context)
+- Use approximate tool counts (e.g. "50+ tools") instead of exact numbers — exact counts go stale as tools are added/removed
