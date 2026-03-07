@@ -1,86 +1,35 @@
-"""Shared test fixtures for MCP server tests."""
+"""Pytest conftest — mock heavy dependencies before store module imports them."""
 import json
-import os
+import sys
+from unittest.mock import MagicMock
+
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
+# Mock pymongo (prevents cryptography/SSL import chain failure in sandbox)
+if "pymongo" not in sys.modules:
+    mock_pymongo = MagicMock()
+    mock_pymongo.MongoClient = MagicMock
+    sys.modules["pymongo"] = mock_pymongo
 
-@pytest.fixture
-def tmp_profiles(tmp_path):
-    """Create a temporary profiles directory with sample data."""
-    profiles_dir = tmp_path / "profiles"
-    profiles_dir.mkdir()
+# Mock fastmcp (v3 API changes; we only need the @mcp.tool() decorator to be a no-op)
+if "fastmcp" not in sys.modules:
+    mock_fastmcp = MagicMock()
 
-    # Create SCHEMAS dir
-    schemas = profiles_dir / "SCHEMAS"
-    schemas.mkdir()
-    schemas_json = {
-        "required": ["name"],
-        "properties": {
-            "name": "string",
-            "tags": "array of strings",
-            "exposure": {"countries": "array"},
-        },
-    }
-    (schemas / "stocks.schema.json").write_text(json.dumps(schemas_json))
-    (schemas / "countries.schema.json").write_text(json.dumps({
-        "required": ["name", "iso2"],
-        "properties": {"name": "string", "iso2": "string", "tags": "array"},
-    }))
+    class _FakeMCP:
+        def __init__(self, *a, **kw):
+            pass
 
-    # Create region/kind structure
-    europe = profiles_dir / "europe"
-    europe.mkdir()
-    (europe / "countries").mkdir()
-    (europe / "stocks").mkdir()
+        def tool(self, *a, **kw):
+            """Decorator that returns the function unchanged."""
+            def decorator(fn):
+                return fn
+            return decorator
 
-    na = profiles_dir / "north_america"
-    na.mkdir()
-    (na / "countries").mkdir()
-    (na / "stocks").mkdir()
+        def run(self, **kw):
+            pass
 
-    global_dir = profiles_dir / "global"
-    global_dir.mkdir()
-    (global_dir / "commodities").mkdir()
-    (global_dir / "sources").mkdir()
-
-    # Sample profiles
-    (europe / "countries" / "DEU.json").write_text(json.dumps({
-        "name": "Germany",
-        "iso2": "DE",
-        "iso3": "DEU",
-        "tags": ["eu", "g7", "eurozone"],
-    }))
-    (europe / "stocks" / "SAP.json").write_text(json.dumps({
-        "name": "SAP SE",
-        "ticker": "SAP",
-        "sector": "Technology",
-        "tags": ["dax", "software"],
-    }))
-    (na / "countries" / "USA.json").write_text(json.dumps({
-        "name": "United States",
-        "iso2": "US",
-        "iso3": "USA",
-        "tags": ["g7", "nato"],
-    }))
-    (na / "stocks" / "AAPL.json").write_text(json.dumps({
-        "name": "Apple Inc.",
-        "ticker": "AAPL",
-        "sector": "Technology",
-        "tags": ["sp500", "nasdaq"],
-    }))
-    (global_dir / "commodities" / "crude_oil.json").write_text(json.dumps({
-        "name": "Crude Oil (WTI)",
-        "tags": ["energy", "fossil"],
-    }))
-    (global_dir / "sources" / "faostat.json").write_text(json.dumps({
-        "name": "FAOSTAT",
-        "url": "https://www.fao.org/faostat",
-        "tags": ["agriculture", "food"],
-    }))
-
-    return profiles_dir
+    mock_fastmcp.FastMCP = _FakeMCP
+    sys.modules["fastmcp"] = mock_fastmcp
 
 
 @pytest.fixture
@@ -89,10 +38,7 @@ def mock_mongo():
     mock_client = MagicMock()
     mock_db = MagicMock()
     mock_client.signals = mock_db
-
-    # Default: empty list_collection_names so _ensure_ts tries to create
     mock_db.list_collection_names.return_value = []
-
     return mock_client, mock_db
 
 
