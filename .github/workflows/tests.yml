@@ -40,7 +40,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest pytest-asyncio httpx python-dotenv
+        run: pip install pytest pytest-asyncio httpx python-dotenv pyyaml
 
       - name: Run pytest
         run: python -m pytest tests/ -v
