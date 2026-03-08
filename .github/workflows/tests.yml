@@ -205,14 +205,14 @@ jobs:
 
       - name: Derive MongoDB URIs from cluster secret
         env:
-          MONGO_CLUSTER_URI: ${{ secrets.MONGO_CLUSTER_URI }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
-          if [ -n "$MONGO_CLUSTER_URI" ]; then
-            BASE="${MONGO_CLUSTER_URI%/}"
+          if [ -n "$MONGO_URI" ]; then
+            BASE="${MONGO_URI%/}"
             echo "MONGO_URI_SIGNALS=${BASE}/ci_signals" >> "$GITHUB_ENV"
-            echo "MONGO_CLUSTER_URI: SET → derived ci_signals"
+            echo "MONGO_URI: SET → derived ci_signals"
           else
-            echo "MONGO_CLUSTER_URI: MISSING — store tests will be skipped"
+            echo "MONGO_URI: MISSING — store tests will be skipped"
           fi
 
       - name: Run store integration tests
@@ -236,15 +236,15 @@ jobs:
 
       - name: Derive MongoDB URIs from cluster secret
         env:
-          MONGO_CLUSTER_URI: ${{ secrets.MONGO_CLUSTER_URI }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
-          if [ -n "$MONGO_CLUSTER_URI" ]; then
-            BASE="${MONGO_CLUSTER_URI%/}"
+          if [ -n "$MONGO_URI" ]; then
+            BASE="${MONGO_URI%/}"
             echo "MONGO_URI_SIGNALS=${BASE}/ci_signals" >> "$GITHUB_ENV"
             echo "MONGO_URI_LIBRECHAT=${BASE}/ci_LibreChat" >> "$GITHUB_ENV"
-            echo "MONGO_CLUSTER_URI: SET → derived ci_signals + ci_LibreChat"
+            echo "MONGO_URI: SET → derived ci_signals + ci_LibreChat"
           else
-            echo "MONGO_CLUSTER_URI: MISSING — smoke tests will be skipped"
+            echo "MONGO_URI: MISSING — smoke tests will be skipped"
           fi
 
       - name: Run combined server smoke tests
