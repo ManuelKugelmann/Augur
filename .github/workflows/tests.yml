@@ -183,15 +183,61 @@ jobs:
 
       - name: Check MongoDB connection
         env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
         run: |
-          if [ -n "$MONGO_URI" ]; then
-            echo "MONGO_URI: SET (${#MONGO_URI} chars)"
+          if [ -n "$MONGO_URI_SIGNALS" ]; then
+            echo "MONGO_URI_SIGNALS: SET (${#MONGO_URI_SIGNALS} chars)"
           else
-            echo "MONGO_URI: MISSING — store tests will be skipped"
+            echo "MONGO_URI_SIGNALS: MISSING — store tests will be skipped"
           fi
 
       - name: Run store integration tests
         env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
         run: python -m pytest tests/test_integration_store.py -v -m integration --timeout=60
+
+  smoke-combined:
+    name: Smoke test (combined server + Atlas)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [python-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp
+
+      - name: Check MongoDB connection
+        env:
+          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
+        run: |
+          if [ -n "$MONGO_URI_SIGNALS" ]; then
+            echo "MONGO_URI_SIGNALS: SET (${#MONGO_URI_SIGNALS} chars)"
+          else
+            echo "MONGO_URI_SIGNALS: MISSING — smoke tests will be skipped"
+          fi
+
+      - name: Run combined server smoke tests
+        env:
+          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
+        run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
+
+  smoke-install:
+    name: Smoke test (one-liner install)
+    runs-on: ubuntu-latest
+    needs: [shell-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        run: |
+          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
+          sudo /tmp/bats/install.sh /usr/local
+
+      - name: Run install smoke tests
+        run: bats tests/test_install_smoke.bats
