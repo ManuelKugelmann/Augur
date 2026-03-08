@@ -1027,6 +1027,96 @@ def delete_memory(key: str) -> dict:
     return {"key": key, "status": "deleted"}
 
 
+# ── Per-user plans ───────────────────────────────
+# Plans are named documents (research plans, watchlists, trade schedules).
+# Stored in user_notes with kind="plan". Title is unique per user (upsert).
+
+
+@mcp.tool()
+def save_plan(title: str, content: str,
+              tags: list[str] | None = None) -> dict:
+    """Save a plan (per-user). Overwrites if title exists."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified (X-User-ID header missing)"}
+    now = datetime.now(timezone.utc)
+    col = _notes_col()
+    r = col.update_one(
+        {"user_id": uid, "kind": "plan", "title": title},
+        {"$set": {
+            "content": content,
+            "tags": tags or [],
+            "updated": now,
+        }, "$setOnInsert": {
+            "user_id": uid,
+            "kind": "plan",
+            "title": title,
+            "created": now,
+        }},
+        upsert=True,
+    )
+    action = "updated" if r.matched_count else "created"
+    return {"title": title, "status": action}
+
+
+@mcp.tool()
+def get_plans(title: str = "", tag: str = "",
+              limit: int = 50) -> list[dict]:
+    """List your plans. Filter by title or tag. Returns all if no filter."""
+    uid = _get_user_id()
+    if not uid:
+        return [{"error": "user not identified"}]
+    q: dict = {"user_id": uid, "kind": "plan"}
+    if title:
+        q["title"] = title
+    if tag:
+        q["tags"] = tag
+    rows = _notes_col().find(q).sort("updated", -1).limit(limit)
+    result = []
+    for r in rows:
+        r["_id"] = str(r["_id"])
+        for k in ("created", "updated"):
+            if isinstance(r.get(k), datetime):
+                r[k] = r[k].isoformat()
+        result.append(r)
+    return result
+
+
+@mcp.tool()
+def update_plan(title: str, content: str = "",
+                tags: list[str] | None = None) -> dict:
+    """Update an existing plan by title (owner only)."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    update: dict = {"updated": datetime.now(timezone.utc)}
+    if content:
+        update["content"] = content
+    if tags is not None:
+        update["tags"] = tags
+    r = _notes_col().update_one(
+        {"user_id": uid, "kind": "plan", "title": title},
+        {"$set": update}
+    )
+    if r.matched_count == 0:
+        return {"error": "plan not found"}
+    return {"title": title, "status": "updated"}
+
+
+@mcp.tool()
+def delete_plan(title: str) -> dict:
+    """Delete a plan by title (owner only)."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    r = _notes_col().delete_one(
+        {"user_id": uid, "kind": "plan", "title": title}
+    )
+    if r.deleted_count == 0:
+        return {"error": "plan not found"}
+    return {"title": title, "status": "deleted"}
+
+
 # ── Per-user trading keys ─────────────────────────
 # Users provide their own API keys via LibreChat customUserVars.
 # Keys arrive as HTTP headers (e.g. X-Broker-Key) and are NOT stored server-side.

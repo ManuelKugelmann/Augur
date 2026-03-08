@@ -702,3 +702,70 @@ class TestMemoryTools:
         monkeypatch.setattr(deps, "get_http_headers", lambda: {})
         r = store.save_memory("k", "v")
         assert "error" in r
+
+
+# ── Plan tools ───────────────────────────────────
+
+
+class TestPlanTools:
+    @pytest.fixture(autouse=True)
+    def setup_plans(self, store, monkeypatch):
+        """Provide a fake notes collection and user identity."""
+        self.col = _FakeCollection()
+        monkeypatch.setattr(store, "_notes_col", lambda: self.col)
+        fake_headers = {"x-user-id": "plan-user"}
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
+
+    def test_save_plan_creates(self, store):
+        r = store.save_plan("Weekly Watchlist", "AAPL, NVDA, TSLA")
+        assert r["status"] == "created"
+        assert r["title"] == "Weekly Watchlist"
+
+    def test_save_plan_overwrites(self, store):
+        store.save_plan("My Plan", "v1")
+        r = store.save_plan("My Plan", "v2")
+        assert r["status"] == "updated"
+        plans = store.get_plans(title="My Plan")
+        assert len(plans) == 1
+        assert plans[0]["content"] == "v2"
+
+    def test_get_plans_all(self, store):
+        store.save_plan("A", "1")
+        store.save_plan("B", "2")
+        plans = store.get_plans()
+        assert len(plans) == 2
+
+    def test_get_plans_by_tag(self, store):
+        store.save_plan("X", "val", tags=["earnings"])
+        store.save_plan("Y", "val2", tags=["macro"])
+        plans = store.get_plans(tag="earnings")
+        assert len(plans) == 1
+
+    def test_update_plan(self, store):
+        store.save_plan("Edit Me", "original")
+        r = store.update_plan("Edit Me", content="revised")
+        assert r["status"] == "updated"
+        plans = store.get_plans(title="Edit Me")
+        assert plans[0]["content"] == "revised"
+
+    def test_update_plan_not_found(self, store):
+        r = store.update_plan("Ghost Plan")
+        assert "error" in r
+
+    def test_delete_plan(self, store):
+        store.save_plan("Del Me", "gone")
+        r = store.delete_plan("Del Me")
+        assert r["status"] == "deleted"
+        plans = store.get_plans(title="Del Me")
+        assert len(plans) == 0
+
+    def test_delete_plan_not_found(self, store):
+        r = store.delete_plan("nonexistent")
+        assert "error" in r
+
+    def test_plan_requires_user(self, store, monkeypatch):
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: {})
+        r = store.save_plan("k", "v")
+        assert "error" in r

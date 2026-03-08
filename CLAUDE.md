@@ -163,6 +163,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - **Snapshot tools**: `store_snapshot`, `store_history`, `store_trend`, `store_nearby`, `store_event`, `store_recent_events`, `store_archive_snapshot`, `store_archive_history`, `store_compact`, `store_aggregate`, `store_chart`
 - **Notes tools**: `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
 - **Memory tools**: `store_save_memory`, `store_get_memories`, `store_delete_memory`
+- **Plan tools**: `store_save_plan`, `store_get_plans`, `store_update_plan`, `store_delete_plan`
 - **Risk tools**: `store_risk_status`
 - **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
@@ -316,6 +317,15 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `get_memories(key?, tag?, limit?)` | Recall memories, filter by key or tag |
 | `delete_memory(key)` | Delete a memory by key (owner only) |
 
+### Plan tools (per-user, named documents)
+
+| Tool | Purpose |
+|------|---------|
+| `save_plan(title, content, tags?)` | Save/overwrite a plan by title (scoped to user) |
+| `get_plans(title?, tag?, limit?)` | List plans, filter by title or tag |
+| `update_plan(title, content?, tags?)` | Update a plan by title (owner only) |
+| `delete_plan(title)` | Delete a plan by title (owner only) |
+
 ### Risk gate
 
 | Tool | Purpose |
@@ -395,7 +405,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
-| `test_store.py` | 63 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools |
+| `test_store.py` | 72 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools, plan tools |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |
