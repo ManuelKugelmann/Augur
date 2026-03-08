@@ -229,6 +229,26 @@ class TestHealthServer:
         assert result["error"] == "invalid year"
 
     @pytest.mark.asyncio
+    async def test_who_rejects_invalid_indicator(self):
+        result = await self.mod.who_indicator(indicator="../../etc/passwd")
+        assert result["error"] == "invalid indicator code"
+
+    @pytest.mark.asyncio
+    async def test_disease_tracker_rejects_bad_country(self):
+        result = await self.mod.disease_tracker(country="../../admin")
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_disease_tracker_rejects_bad_disease(self):
+        result = await self.mod.disease_tracker(disease="malware")
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_fda_rejects_bad_drug(self):
+        result = await self.mod.fda_adverse_events(drug="aspirin'; DROP TABLE")
+        assert "error" in result
+
+    @pytest.mark.asyncio
     async def test_who_indicator_builds_filter(self):
         resp = _mock_response({"value": []})
         patcher, client = _patch_httpx_get(resp)
@@ -414,6 +434,24 @@ class TestElectionsServer:
         assert result["error"] == "GOOGLE_API_KEY not set"
 
     @pytest.mark.asyncio
+    async def test_global_elections_rejects_sparql_injection(self):
+        result = await self.mod.global_elections(country='")}\nDELETE{?s ?p ?o}#')
+        assert len(result) == 1
+        assert "error" in result[0]
+
+    @pytest.mark.asyncio
+    async def test_global_elections_rejects_bad_year(self):
+        result = await self.mod.global_elections(year="2025; DROP")
+        assert len(result) == 1
+        assert "error" in result[0]
+
+    @pytest.mark.asyncio
+    async def test_heads_of_state_rejects_sparql_injection(self):
+        result = await self.mod.heads_of_state(country='")}\nDELETE{?s ?p ?o}#')
+        assert len(result) == 1
+        assert "error" in result[0]
+
+    @pytest.mark.asyncio
     async def test_global_elections_wikidata(self):
         resp = _mock_response({"results": {"bindings": [
             {"electionLabel": {"value": "2025 German federal election"},
@@ -480,14 +518,17 @@ class TestElectionsServer:
         assert params["address"] == "1600 Pennsylvania Ave"
 
 
-# ── Humanitarian Server ──────────────────────────
+# ── Humanitarian Server (via conflict import — legacy) ──
 
 
-class TestHumanitarianServer:
+class TestHumanitarianViaConflict:
+    """These tests were originally importing conflict_server for humanitarian
+    tools — the humanitarian_server tests below are the correct ones."""
+
     @pytest.fixture(autouse=True)
     def _import(self):
-        import conflict_server
-        self.mod = conflict_server
+        import humanitarian_server
+        self.mod = humanitarian_server
 
     @pytest.mark.asyncio
     async def test_unhcr_filters(self):
@@ -510,44 +551,6 @@ class TestHumanitarianServer:
         body = client.post.call_args[1]["json"]
         assert body["query"]["value"] == "flood"
         assert body["filter"]["value"] == ["Bangladesh"]
-
-
-# ── Infra Server ─────────────────────────────────
-
-
-class TestInfraServer:
-    @pytest.fixture(autouse=True)
-    def _import(self, monkeypatch):
-        monkeypatch.setenv("CF_API_TOKEN", "test_cf")
-        if "transport_server" in sys.modules:
-            del sys.modules["transport_server"]
-        import transport_server
-        self.mod = transport_server
-
-    @pytest.mark.asyncio
-    async def test_internet_traffic_missing_key(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "CF_TOKEN", "")
-        result = await self.mod.internet_traffic()
-        assert result["error"] == "CF_API_TOKEN not set"
-
-    @pytest.mark.asyncio
-    async def test_internet_traffic_auth_header(self):
-        resp = _mock_response({"result": {}})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.internet_traffic(location="DE")
-        headers = client.get.call_args[1]["headers"]
-        assert "Bearer" in headers["Authorization"]
-
-    @pytest.mark.asyncio
-    async def test_ripe_probes_params(self):
-        resp = _mock_response({"results": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.ripe_probes(country="US", status=2)
-        params = client.get.call_args[1]["params"]
-        assert params["country_code"] == "US"
-        assert params["status"] == 2
 
 
 # ── Transport Server ─────────────────────────────
