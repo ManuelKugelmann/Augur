@@ -208,8 +208,22 @@ jobs:
           MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
           if [ -n "$MONGO_URI" ]; then
-            BASE="${MONGO_URI%/}"
-            echo "MONGO_URI_SIGNALS=${BASE}/ci_signals" >> "$GITHUB_ENV"
+            # Strip any existing db name and query params, then append ci db
+            SCHEME_AND_HOST="${MONGO_URI%%\?*}"      # remove ?params
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"    # remove trailing /
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/*}"   # remove /dbname if present
+            # Re-check: if we stripped too far (no / after ://), restore
+            if [[ "$SCHEME_AND_HOST" != *"://"*"."* ]]; then
+              SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+              SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+            fi
+            # Extract query params if any
+            if [[ "$MONGO_URI" == *"?"* ]]; then
+              PARAMS="?${MONGO_URI#*\?}"
+            else
+              PARAMS=""
+            fi
+            echo "MONGO_URI_SIGNALS=${SCHEME_AND_HOST}/ci_signals${PARAMS}" >> "$GITHUB_ENV"
             echo "MONGO_URI: SET → derived ci_signals"
           else
             echo "MONGO_URI: MISSING — store tests will be skipped"
@@ -239,9 +253,20 @@ jobs:
           MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
           if [ -n "$MONGO_URI" ]; then
-            BASE="${MONGO_URI%/}"
-            echo "MONGO_URI_SIGNALS=${BASE}/ci_signals" >> "$GITHUB_ENV"
-            echo "MONGO_URI_LIBRECHAT=${BASE}/ci_LibreChat" >> "$GITHUB_ENV"
+            SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/*}"
+            if [[ "$SCHEME_AND_HOST" != *"://"*"."* ]]; then
+              SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+              SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+            fi
+            if [[ "$MONGO_URI" == *"?"* ]]; then
+              PARAMS="?${MONGO_URI#*\?}"
+            else
+              PARAMS=""
+            fi
+            echo "MONGO_URI_SIGNALS=${SCHEME_AND_HOST}/ci_signals${PARAMS}" >> "$GITHUB_ENV"
+            echo "MONGO_URI_LIBRECHAT=${SCHEME_AND_HOST}/ci_LibreChat${PARAMS}" >> "$GITHUB_ENV"
             echo "MONGO_URI: SET → derived ci_signals + ci_LibreChat"
           else
             echo "MONGO_URI: MISSING — smoke tests will be skipped"
