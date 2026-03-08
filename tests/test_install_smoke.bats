@@ -1,79 +1,47 @@
 #!/usr/bin/env bats
-# Smoke test for the one-liner install path (curl ... | bash).
-# Runs TradeAssistant.sh in a fully sandboxed environment with stubbed externals,
-# simulating a fresh Uberspace host where the repo hasn't been cloned yet.
+# Smoke test for the install path.
+# Uses real git/python3/node/curl — only stubs Uberspace-specific commands
+# (supervisorctl, uberspace, hostname). Pre-creates APP_DIR/.version so
+# install skips the LibreChat download (tested separately).
 
 load helpers/setup
-
-_write_stub() {
-    # Write a stub script to $HOME/bin/$1 with body from stdin
-    local name="$1"
-    { echo "#!/bin/bash"; cat; } > "$HOME/bin/$name"
-    chmod +x "$HOME/bin/$name"
-}
 
 setup() {
     setup_sandbox
     prepend_bin_to_path
 
-    # Simple stubs
+    # Only stub what CI genuinely lacks (Uberspace-specific)
     stub_command "supervisorctl" 'echo "stubbed supervisorctl $*"'
     stub_command "uberspace" 'echo "stubbed uberspace $*"'
     stub_command "hostname" 'echo "test.uber.space"'
     stub_command "crontab" 'echo ""'
     stub_command "nano" 'echo "stubbed nano $*"'
-    stub_command "openssl" 'echo "deadbeef1234567890abcdef12345678"'
 
-    # node stub: returns version when asked
-    _write_stub "node" <<'STUBEOF'
-if [[ "${1:-}" == "-v" ]]; then echo "v22.0.0"; else echo "stubbed node $*"; fi
-STUBEOF
+    # Pre-create LibreChat dir with .version so install skips LC download/build
+    mkdir -p "$APP_DIR"
+    echo "v0.0.0-test" > "$APP_DIR/.version"
 
-    # python3 stub: handles -m venv by creating fake venv dir
-    _write_stub "python3" <<'STUBEOF'
-if [[ "${1:-}" == "-m" && "${2:-}" == "venv" ]]; then
-    mkdir -p "${3}/bin"
-    printf '#!/bin/bash\necho "stubbed venv python $*"\n' > "${3}/bin/python"
-    chmod +x "${3}/bin/python"
-    printf '#!/bin/bash\necho "stubbed pip $*"\n' > "${3}/bin/pip"
-    chmod +x "${3}/bin/pip"
-else
-    echo "stubbed python3 $*"
-fi
-STUBEOF
-
-    # curl stub: simulate GitHub API responses
-    _write_stub "curl" <<'STUBEOF'
-# Release metadata request
-if echo "$*" | grep -q "api.github.com/repos.*releases"; then
-    echo '{"tag_name":"v0.1.0","assets":[]}'
-    exit 0
-fi
-echo "stubbed curl $*"
-STUBEOF
-
-    # git stub: intercept clone, delegate the rest
+    # Use real git, but intercept clone to use local repo (no network)
     local real_git="$REAL_GIT"
     local real_repo="$REPO_ROOT"
-    _write_stub "git" <<STUBEOF
+    cat > "$HOME/bin/git" <<STUBEOF
+#!/bin/bash
 REAL_GIT="$real_git"
 REAL_REPO="$real_repo"
-if [[ "\${1:-}" == "clone" ]]; then
-    TARGET=""
-    for arg in "\$@"; do
-        case "\$arg" in clone|-b|--depth|1|main|https://*) ;; *) TARGET="\$arg" ;; esac
-    done
-    if [[ -n "\$TARGET" ]]; then
-        mkdir -p "\$TARGET"
-        cp -r "\$REAL_REPO"/. "\$TARGET/"
-        "\$REAL_GIT" -C "\$TARGET" init -q 2>/dev/null || true
-        "\$REAL_GIT" -C "\$TARGET" add -A 2>/dev/null || true
-        "\$REAL_GIT" -C "\$TARGET" commit -q -m "init" --allow-empty 2>/dev/null || true
-        exit 0
-    fi
+# Only intercept clone of TradingAssistant repo
+if [[ "\${1:-}" == "clone" ]] && echo "\$*" | grep -q "TradingAssistant\|TestRepo"; then
+    TARGET="\${@: -1}"
+    mkdir -p "\$TARGET"
+    cp -r "\$REAL_REPO"/. "\$TARGET/"
+    "\$REAL_GIT" -C "\$TARGET" init -q 2>/dev/null || true
+    "\$REAL_GIT" -C "\$TARGET" add -A 2>/dev/null || true
+    "\$REAL_GIT" -C "\$TARGET" commit -q -m "init" --allow-empty 2>/dev/null || true
+    exit 0
 fi
+# Everything else: use real git
 exec "\$REAL_GIT" "\$@"
 STUBEOF
+    chmod +x "$HOME/bin/git"
 
     # Remove STACK_DIR so install auto-detect triggers (simulates fresh host)
     rm -rf "$STACK_DIR"

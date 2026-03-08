@@ -13,6 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps (for real venv in install smoke tests)
+        run: pip install httpx python-dotenv pymongo
+
       - name: Install bats
         run: |
           git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
@@ -26,9 +34,7 @@ jobs:
           done
 
       - name: Run bats tests
-        run: |
-          # Exclude tests that have dedicated CI jobs with extra deps
-          bats $(ls tests/*.bats | grep -v -e test_install_smoke -e test_install_lifecycle)
+        run: bats tests/*.bats
 
   python-tests:
     name: Python tests (pytest)
@@ -63,28 +69,6 @@ jobs:
             scripts/nightly-git-commit.sh \
             deploy.conf \
           || true
-
-  install-lifecycle:
-    name: Install lifecycle (install → pull → update)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Python deps (for venv creation in tests)
-        run: pip install httpx python-dotenv pymongo
-
-      - name: Install bats
-        run: |
-          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
-          sudo /tmp/bats/install.sh /usr/local
-
-      - name: Run install lifecycle tests
-        run: bats tests/test_install_lifecycle.bats
 
   integration-free:
     name: Integration tests (free APIs)
@@ -277,17 +261,3 @@ jobs:
       - name: Run combined server smoke tests
         run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
 
-  smoke-install:
-    name: Smoke test (one-liner install)
-    runs-on: ubuntu-latest
-    needs: [shell-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install bats
-        run: |
-          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
-          sudo /tmp/bats/install.sh /usr/local
-
-      - name: Run install smoke tests
-        run: bats tests/test_install_smoke.bats

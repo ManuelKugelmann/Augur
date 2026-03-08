@@ -1,5 +1,9 @@
 # CLAUDE.md — Project context for Claude Code
 
+## Rules
+
+- **Never circumvent or exclude failing tests.** Always find and fix the root cause. If not possible, discuss the problem with the user before proceeding.
+
 ## Project
 
 **TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (yahoo-finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
