@@ -256,3 +256,78 @@ jobs:
       - name: Run combined server smoke tests
         run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
 
+  e2e-smoke:
+    name: E2E smoke (LibreChat + trading server)
+    runs-on: ubuntu-latest
+    needs: [python-tests, smoke-combined]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install pytest pytest-timeout httpx python-dotenv pymongo fastmcp
+
+      - name: Derive MongoDB URIs
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: |
+          if [ -z "$MONGO_URI" ]; then
+            echo "MONGO_URI not set — e2e tests will be skipped"
+            exit 0
+          fi
+          SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+          SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+          SCHEME_AND_HOST="${SCHEME_AND_HOST%/*}"
+          if [[ "$SCHEME_AND_HOST" != *"://"*"."* ]]; then
+            SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+          fi
+          if [[ "$MONGO_URI" == *"?"* ]]; then
+            PARAMS="?${MONGO_URI#*\?}"
+          else
+            PARAMS=""
+          fi
+          echo "MONGO_URI_SIGNALS=${SCHEME_AND_HOST}/ci_e2e_signals${PARAMS}" >> "$GITHUB_ENV"
+          echo "MONGO_URI_LIBRECHAT=${SCHEME_AND_HOST}/ci_e2e_LibreChat${PARAMS}" >> "$GITHUB_ENV"
+          echo "MONGO_URI: SET → derived ci_e2e_signals + ci_e2e_LibreChat"
+
+      - name: Run E2E smoke tests
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: python -m pytest tests/test_e2e_smoke.py -v -m "integration and e2e" --timeout=180
+
+      - name: Cleanup E2E databases
+        if: always()
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: |
+          python3 -c "
+          import os, sys
+          uri = os.environ.get('MONGO_URI', '')
+          if not uri:
+              sys.exit(0)
+          try:
+              from pymongo import MongoClient
+              scheme = uri.split('?')[0].rstrip('/').rsplit('/', 1)[0]
+              params = '?' + uri.split('?')[1] if '?' in uri else ''
+              for db_name in ('ci_e2e_signals', 'ci_e2e_LibreChat'):
+                  client = MongoClient(f'{scheme}/{db_name}{params}', serverSelectionTimeoutMS=5000)
+                  client.drop_database(db_name)
+                  client.close()
+                  print(f'Dropped {db_name}')
+          except Exception as e:
+              print(f'Cleanup warning: {e}')
+          " || true
+
