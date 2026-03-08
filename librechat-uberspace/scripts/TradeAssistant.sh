@@ -128,7 +128,7 @@ _do_install() {
     cat > ~/etc/services.d/trading.ini << SVCEOF
 [program:trading]
 directory=${STACK}
-command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=streamable-http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
+command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
 autostart=true
 autorestart=true
 startsecs=10

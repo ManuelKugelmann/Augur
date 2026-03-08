@@ -6,38 +6,77 @@ from dotenv import load_dotenv
 load_dotenv()
 
 mcp = FastMCP("conflict", instructions="Armed conflict events, military data, sanctions")
-ACLED_KEY = os.environ.get("ACLED_API_KEY", "")
 ACLED_EMAIL = os.environ.get("ACLED_EMAIL", "")
+ACLED_PASSWORD = os.environ.get("ACLED_PASSWORD", "")
+UCDP_TOKEN = os.environ.get("UCDP_ACCESS_TOKEN", "")
+
+
+# ── ACLED OAuth helper ───────────────────────────
+
+_acled_token: str = ""
+
+
+async def _acled_auth() -> str:
+    """Get ACLED OAuth bearer token (cached in module)."""
+    global _acled_token
+    if _acled_token:
+        return _acled_token
+    if not ACLED_EMAIL or not ACLED_PASSWORD:
+        return ""
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.post("https://acleddata.com/oauth/token", data={
+                "username": ACLED_EMAIL, "password": ACLED_PASSWORD,
+                "grant_type": "password", "client_id": "acled"})
+            r.raise_for_status()
+            _acled_token = r.json().get("access_token", "")
+            return _acled_token
+    except httpx.HTTPError:
+        return ""
 
 
 @mcp.tool()
 async def ucdp_conflicts(year: int = 2024, page: int = 1) -> dict:
-    """UCDP armed conflicts by year. Georeferenced events 1946-present."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://ucdpapi.pcr.uu.se/api/gedevents/24.1",
-                        params={"pagesize": 100, "page": page, "Year": year})
-        r.raise_for_status()
-        return r.json()
+    """UCDP armed conflicts by year. Georeferenced events 1946-present.
+    Optional: set UCDP_ACCESS_TOKEN env var (request from UCDP)."""
+    headers: dict = {}
+    if UCDP_TOKEN:
+        headers["x-ucdp-access-token"] = UCDP_TOKEN
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://ucdpapi.pcr.uu.se/api/gedevents/25.1",
+                            params={"pagesize": 100, "page": page, "Year": year},
+                            headers=headers)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"UCDP request failed: {e}"}
 
 
 @mcp.tool()
 async def acled_events(country: str = "", event_type: str = "",
                         event_date_start: str = "", limit: int = 100) -> dict:
-    """ACLED conflict/protest events. event_type: Battles, Protests, Riots,
-    Violence against civilians, Explosions/Remote violence."""
-    if not ACLED_KEY:
-        return {"error": "ACLED_API_KEY not set"}
-    params = {"key": ACLED_KEY, "email": ACLED_EMAIL, "limit": limit}
+    """ACLED conflict/protest events. Requires ACLED_EMAIL + ACLED_PASSWORD (OAuth).
+    event_type: Battles, Protests, Riots, Violence against civilians,
+    Explosions/Remote violence."""
+    token = await _acled_auth()
+    if not token:
+        return {"error": "ACLED_EMAIL + ACLED_PASSWORD not set (OAuth login required)"}
+    params: dict = {"limit": limit}
     if country:
         params["country"] = country
     if event_type:
         params["event_type"] = event_type
     if event_date_start:
         params["event_date"] = f"{event_date_start}|"
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.acleddata.com/acled/read", params=params)
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://acleddata.com/api/acled/read", params=params,
+                            headers={"Authorization": f"Bearer {token}"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"ACLED request failed: {e}"}
 
 
 @mcp.tool()

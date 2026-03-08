@@ -336,27 +336,44 @@ class TestCommoditiesServer:
 class TestConflictServer:
     @pytest.fixture(autouse=True)
     def _import(self, monkeypatch):
-        monkeypatch.setenv("ACLED_API_KEY", "test_acled")
         monkeypatch.setenv("ACLED_EMAIL", "test@test.com")
+        monkeypatch.setenv("ACLED_PASSWORD", "test_pass")
+        monkeypatch.setenv("UCDP_ACCESS_TOKEN", "test_ucdp_token")
         if "conflict_server" in sys.modules:
             del sys.modules["conflict_server"]
         import conflict_server
         self.mod = conflict_server
 
     @pytest.mark.asyncio
-    async def test_acled_missing_key(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "ACLED_KEY", "")
+    async def test_acled_missing_credentials(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "ACLED_EMAIL", "")
+        monkeypatch.setattr(self.mod, "ACLED_PASSWORD", "")
+        monkeypatch.setattr(self.mod, "_acled_token", "")
         result = await self.mod.acled_events()
-        assert result["error"] == "ACLED_API_KEY not set"
+        assert "error" in result
+        assert "ACLED_EMAIL" in result["error"]
 
     @pytest.mark.asyncio
-    async def test_acled_date_filter(self):
+    async def test_acled_date_filter(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "_acled_token", "cached-token")
         resp = _mock_response({"data": []})
         patcher, client = _patch_httpx_get(resp)
         with patcher:
             await self.mod.acled_events(event_date_start="2024-01-01")
         params = client.get.call_args[1]["params"]
         assert params["event_date"] == "2024-01-01|"
+        assert "Bearer" in client.get.call_args[1]["headers"]["Authorization"]
+
+    @pytest.mark.asyncio
+    async def test_ucdp_sends_token(self):
+        resp = _mock_response({"Result": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ucdp_conflicts(year=2024)
+        headers = client.get.call_args[1]["headers"]
+        assert headers["x-ucdp-access-token"] == "test_ucdp_token"
+        url = client.get.call_args[0][0]
+        assert "25.1" in url
 
     @pytest.mark.asyncio
     async def test_sanctions_search(self):
