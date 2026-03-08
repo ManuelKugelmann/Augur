@@ -129,21 +129,25 @@ async def reliefweb_disasters(country: str = "", status: str = "ongoing",
 
 
 @mcp.tool()
-async def idmc_displacement(iso3: str = "", year: int = 0) -> dict:
+async def idmc_displacement(iso3: str = "", start_year: int = 0,
+                             end_year: int = 0) -> dict:
     """IDMC internal displacement data (GIDD). iso3: country code (e.g. SYR).
-    Returns conflict and disaster displacement figures.
+    Returns conflict and disaster displacement figures by year.
     Requires IDMC_API_KEY env var."""
     if not IDMC_KEY:
         return {"error": "IDMC_API_KEY not set — request key from IDMC"}
-    params: dict = {"client_id": IDMC_KEY}
+    params: dict = {"client_id": IDMC_KEY,
+                    "release_environment": "RELEASE"}
     if iso3:
-        params["iso3"] = iso3
-    if year:
-        params["year"] = year
+        params["iso3__in"] = iso3
+    if start_year:
+        params["start_year"] = start_year
+    if end_year:
+        params["end_year"] = end_year
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.get(
-                "https://helix-tools-api.idmcdb.org/external-api/gidd/displacements/",
+                "https://helix-tools-api.idmcdb.org/external-api/gidd/displacements/displacement-export/",
                 params=params)
             r.raise_for_status()
             return r.json()
@@ -152,20 +156,24 @@ async def idmc_displacement(iso3: str = "", year: int = 0) -> dict:
 
 
 @mcp.tool()
-async def idmc_disasters(iso3: str = "", year: int = 0) -> dict:
+async def idmc_disasters(iso3: str = "", start_year: int = 0,
+                          end_year: int = 0) -> dict:
     """IDMC disaster displacement events. iso3: country code.
     Requires IDMC_API_KEY env var."""
     if not IDMC_KEY:
         return {"error": "IDMC_API_KEY not set — request key from IDMC"}
-    params: dict = {"client_id": IDMC_KEY}
+    params: dict = {"client_id": IDMC_KEY,
+                    "release_environment": "RELEASE"}
     if iso3:
-        params["iso3"] = iso3
-    if year:
-        params["year"] = year
+        params["iso3__in"] = iso3
+    if start_year:
+        params["start_year"] = start_year
+    if end_year:
+        params["end_year"] = end_year
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.get(
-                "https://helix-tools-api.idmcdb.org/external-api/gidd/disasters/",
+                "https://helix-tools-api.idmcdb.org/external-api/gidd/disasters/disaster-export/",
                 params=params)
             r.raise_for_status()
             return r.json()

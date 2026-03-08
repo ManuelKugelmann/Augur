@@ -15,7 +15,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "store"))
 
 # Prevent module-level MongoClient from connecting
-os.environ.setdefault("MONGO_URI", "mongodb://localhost:27017/test_unused")
+os.environ.setdefault("MONGO_URI_SIGNALS", "mongodb://localhost:27017/test_unused")
 
 
 @pytest.fixture(autouse=True)

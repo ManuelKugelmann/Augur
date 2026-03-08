@@ -8,7 +8,7 @@ Complete reference for all credentials used by the TradingAssistant stack.
 
 | Variable | Service | Used by | Free tier | Signup |
 |----------|---------|---------|-----------|--------|
-| `MONGO_URI` | MongoDB Atlas | signals-store | M0 (512 MB) | https://cloud.mongodb.com |
+| `MONGO_URI_SIGNALS` | MongoDB Atlas | signals-store (database: `signals`) | M0 (512 MB) | https://cloud.mongodb.com |
 
 ## Optional API Keys (per domain server)
 
@@ -78,7 +78,7 @@ cp .env.example .env
 # 2. Set MongoDB (required)
 # Create free M0 cluster at https://cloud.mongodb.com
 # Get connection string from: Database > Connect > Drivers
-MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
+MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
 
 # 3. Add optional API keys as needed
 # Start with FRED (most useful, instant signup)
@@ -90,7 +90,7 @@ FRED_API_KEY=your_key_here
 ```
 .env (signals stack)
   │
-  ├─ MONGO_URI ──────────► signals-store (server.py)
+  ├─ MONGO_URI_SIGNALS ─► signals-store (server.py)
   ├─ PROFILES_DIR ───────► signals-store (server.py)
   └─ API keys ──────────┐
                          │ load_dotenv() in each server

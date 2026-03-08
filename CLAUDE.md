@@ -320,7 +320,7 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 ## Environment Variables
 
 ### Signals Stack (`.env`)
-- `MONGO_URI` — MongoDB Atlas connection string (database: `signals`)
+- `MONGO_URI_SIGNALS` — MongoDB Atlas connection string (database: `signals`). **Not** the same as LibreChat's `MONGO_URI`.
 - `PROFILES_DIR` — path to profiles directory (default: `./profiles`)
 - `MCP_TRANSPORT` — `streamable-http` (production) or `stdio` (dev/testing, default)
 - `MCP_PORT` — port for streamable-http (default: `8071`)

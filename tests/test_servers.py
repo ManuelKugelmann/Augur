@@ -368,16 +368,6 @@ class TestConflictServer:
         assert params["q"] == "Putin"
         assert params["schema"] == "Person"
 
-    @pytest.mark.asyncio
-    async def test_hdx_search_params(self):
-        resp = _mock_response({"result": {"results": []}})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.hdx_search(query="displacement", rows=5)
-        params = client.get.call_args[1]["params"]
-        assert params["q"] == "displacement"
-        assert params["rows"] == 5
-
 
 # ── Elections Server ─────────────────────────────
 
@@ -593,8 +583,8 @@ class TestTransportServer:
 class TestWaterServer:
     @pytest.fixture(autouse=True)
     def _import(self):
-        import weather_server
-        self.mod = weather_server
+        import water_server
+        self.mod = water_server
 
     @pytest.mark.asyncio
     async def test_streamflow_by_site(self):
@@ -616,21 +606,185 @@ class TestWaterServer:
         assert params["stateCd"] == "TX"
 
     @pytest.mark.asyncio
-    async def test_drought_params(self):
+    async def test_groundwater_by_state(self):
+        resp = _mock_response({"value": {}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.groundwater(state="CA")
+        params = client.get.call_args[1]["params"]
+        assert params["stateCd"] == "CA"
+        assert params["parameterCd"] == "72019"
+        assert params["siteType"] == "GW"
+
+    @pytest.mark.asyncio
+    async def test_drought_uses_fips(self):
         resp = _mock_response([])
         patcher, client = _patch_httpx_get(resp)
         with patcher:
-            await self.mod.drought(area_type="county", area="06037")
+            await self.mod.drought(area="CA")
         params = client.get.call_args[1]["params"]
-        assert params["area_type"] == "county"
-        assert params["area"] == "06037"
+        assert params["aoi"] == "06"  # CA -> FIPS 06
+
+    @pytest.mark.asyncio
+    async def test_drought_dsci(self):
+        resp = _mock_response([])
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.drought_dsci(area="TX")
+        url = client.get.call_args[0][0]
+        assert "GetDSCI" in url
+        params = client.get.call_args[1]["params"]
+        assert params["aoi"] == "48"  # TX -> FIPS 48
+
+    @pytest.mark.asyncio
+    async def test_water_quality_params(self):
+        resp = _mock_response({"value": {}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.water_quality(state="NY", parameter="00300")
+        params = client.get.call_args[1]["params"]
+        assert params["stateCd"] == "NY"
+        assert params["parameterCd"] == "00300"
+
+
+# ── Humanitarian Server ──────────────────────────
+
+
+class TestHumanitarianServer:
+    @pytest.fixture(autouse=True)
+    def _import(self):
+        import humanitarian_server
+        self.mod = humanitarian_server
+
+    @pytest.mark.asyncio
+    async def test_unhcr_population_params(self):
+        resp = _mock_response({"items": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.unhcr_population(year=2023, country_origin="SYR")
+        params = client.get.call_args[1]["params"]
+        assert params["year"] == 2023
+        assert params["coo"] == "SYR"
+
+    @pytest.mark.asyncio
+    async def test_unhcr_demographics(self):
+        resp = _mock_response({"items": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.unhcr_demographics(year=2023, country_asylum="DEU")
+        params = client.get.call_args[1]["params"]
+        assert params["coa"] == "DEU"
+
+    @pytest.mark.asyncio
+    async def test_hdx_search(self):
+        resp = _mock_response({"success": True, "result": {"results": []}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.hdx_search(query="displacement")
+        params = client.get.call_args[1]["params"]
+        assert params["q"] == "displacement"
+
+    @pytest.mark.asyncio
+    async def test_reliefweb_reports_country_filter(self):
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.reliefweb_reports(country="Syria")
+        body = client.post.call_args[1]["json"]
+        assert body["filter"]["field"] == "country.name"
+        assert "Syria" in body["filter"]["value"]
+
+    @pytest.mark.asyncio
+    async def test_idmc_missing_key(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "IDMC_KEY", "")
+        result = await self.mod.idmc_displacement(iso3="SYR")
+        assert "error" in result
+        assert "IDMC_API_KEY" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_idmc_displacement_params(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "IDMC_KEY", "test-key")
+        resp = _mock_response({"results": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.idmc_displacement(iso3="SYR", start_year=2020)
+        url = client.get.call_args[0][0]
+        assert "displacement-export" in url
+        params = client.get.call_args[1]["params"]
+        assert params["iso3__in"] == "SYR"
+        assert params["start_year"] == 2020
+
+
+# ── Infra Server ─────────────────────────────────
+
+
+class TestInfraServer:
+    @pytest.fixture(autouse=True)
+    def _import(self):
+        import infra_server
+        self.mod = infra_server
+
+    @pytest.mark.asyncio
+    async def test_internet_traffic_missing_key(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "")
+        result = await self.mod.internet_traffic(location="US")
+        assert result["error"] == "CF_API_TOKEN not set"
+
+    @pytest.mark.asyncio
+    async def test_internet_traffic_params(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "test-token")
+        resp = _mock_response({"success": True, "result": {}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.internet_traffic(location="DE", date_range="1d")
+        params = client.get.call_args[1]["params"]
+        assert params["location"] == "DE"
+        assert params["dateRange"] == "1d"
+
+    @pytest.mark.asyncio
+    async def test_ripe_probes_params(self):
+        resp = _mock_response({"count": 10, "results": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ripe_probes(country="FR", status=2)
+        params = client.get.call_args[1]["params"]
+        assert params["country_code"] == "FR"
+        assert params["status"] == 2
+
+    @pytest.mark.asyncio
+    async def test_ioda_outages_params(self):
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ioda_outages(entity_type="asn", entity_code="3320")
+        params = client.get.call_args[1]["params"]
+        assert params["entityType"] == "asn"
+        assert params["entityCode"] == "3320"
+        assert "from" in params
+        assert "until" in params
+
+    @pytest.mark.asyncio
+    async def test_traffic_anomalies_missing_key(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "")
+        result = await self.mod.traffic_anomalies(location="US")
+        assert result["error"] == "CF_API_TOKEN not set"
+
+    @pytest.mark.asyncio
+    async def test_ripe_measurements_params(self):
+        resp = _mock_response({"count": 5, "results": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ripe_measurements(type="ping", country="DE")
+        params = client.get.call_args[1]["params"]
+        assert params["type"] == "ping"
+        assert params["target_cc"] == "DE"
 
 
 # ── Combined Server ─────────────────────────────
 
 
 class TestCombinedServer:
-    """Verify combined_server.py mounts store + 9 domains with correct namespaces."""
+    """Verify combined_server.py mounts store + 12 domains with correct namespaces."""
 
     @pytest.fixture(autouse=True)
     def _import(self, monkeypatch):
@@ -638,7 +792,7 @@ class TestCombinedServer:
         for key in ("GOOGLE_API_KEY", "CF_API_TOKEN", "AISSTREAM_API_KEY",
                      "FRED_API_KEY", "EIA_API_KEY", "ACLED_API_KEY",
                      "COMTRADE_API_KEY", "USDA_NASS_API_KEY",
-                     "MONGO_URI"):
+                     "IDMC_API_KEY", "MONGO_URI_SIGNALS"):
             monkeypatch.setenv(key, "test")
         # Clear cached modules to pick up env changes
         for mod_name in list(sys.modules):
@@ -662,7 +816,8 @@ class TestCombinedServer:
         tool_names = {t.name for t in tools}
         expected_prefixes = [
             "store_", "weather_", "disaster_", "econ_", "agri_", "conflict_",
-            "commodity_", "health_", "politics_", "transport_"
+            "commodity_", "health_", "politics_", "transport_",
+            "water_", "humanitarian_", "infra_"
         ]
         for prefix in expected_prefixes:
             matching = [n for n in tool_names if n.startswith(prefix)]
@@ -678,8 +833,10 @@ class TestCombinedServer:
             "weather_forecast", "disaster_get_earthquakes", "econ_fred_series",
             "agri_fao_data", "conflict_acled_events", "commodity_trade_flows",
             "health_who_indicator", "politics_global_elections",
-            "conflict_unhcr_population", "transport_flights_in_area",
-            "weather_streamflow", "transport_internet_traffic"
+            "transport_flights_in_area",
+            "water_streamflow", "water_drought",
+            "humanitarian_unhcr_population", "humanitarian_hdx_search",
+            "infra_internet_traffic", "infra_ioda_outages", "infra_ripe_probes"
         ]
         for name in must_have:
             assert name in tool_names, f"Missing tool: {name}"
