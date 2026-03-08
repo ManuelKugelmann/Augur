@@ -26,7 +26,9 @@ jobs:
           done
 
       - name: Run bats tests
-        run: bats tests/*.bats
+        run: |
+          # Exclude tests that have dedicated CI jobs with extra deps
+          bats $(ls tests/*.bats | grep -v -e test_install_smoke -e test_install_lifecycle)
 
   python-tests:
     name: Python tests (pytest)
