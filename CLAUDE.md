@@ -36,8 +36,7 @@ TradingAssistant/
 │
 ├── src/
 │   ├── store/
-│   │   ├── server.py                  ← signals store (FastMCP, profiles + MongoDB snapshots)
-│   │   └── plan_worker.py             ← in-process timer, triggers T4 agent per user via ntfy
+│   │   └── server.py                  ← signals store (FastMCP, profiles + MongoDB snapshots)
 │   └── servers/
 │       ├── agri_server.py             ← FAOSTAT, USDA NASS/FAS, GIEWS, WASDE
 │       ├── commodities_server.py      ← UN Comtrade, EIA, LME metals
@@ -90,7 +89,6 @@ TradingAssistant/
 │   ├── test_nightly_commit.bats       ← profile staging, no-op when clean
 │   ├── test_setup.bats                ← install/update modes, .env generation
 │   ├── test_setup_data_repo.bats      ← data repo init, cron setup, idempotency
-│   ├── test_plan_worker.py            ← pytest: plan parsing, schedule gating, triggering
 │   ├── test_store.py                  ← pytest: profile CRUD, index, lint, search
 │   ├── test_ta_cron.bats              ← data sync, profile auto-commit
 │   ├── test_ta_dispatch.bats          ← help, status, version, restart, rollback
@@ -331,16 +329,6 @@ Research kinds: `research` (default), `report`, `briefing`, `alert`
 | `notify(title, message, priority?, tags?)` | Send push notification via ntfy (per-user topic) |
 
 Per-user topic via `X-Ntfy-Topic` header (customUserVars). Fallback: `NTFY_TOPIC` env var.
-Internal `send_notification(topic, ...)` used by the plan worker.
-
-### Plan worker (in-process timer)
-
-Background asyncio task that triggers LibreChat T4 agents per user on a schedule.
-- Runs on a configurable interval (`PLAN_WORKER_INTERVAL`, default: 60s)
-- Finds distinct users who have plans, sends one ntfy notification per user
-- The T4 agent receives the notification, reads the user's plans, and acts
-- Plan content (JSON): `{"ntfy_topic": "user-topic"}`
-- Auto-starts in http mode, off in stdio. Override: `PLAN_WORKER_ENABLED=1|0`
 
 ### Risk gate
 
@@ -360,8 +348,6 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 - `RISK_DAILY_LIMIT` — max trading actions per user per day (default: `50`)
 - `NTFY_BASE_URL` — ntfy server URL (default: `https://ntfy.sh`)
 - `NTFY_TOPIC` — server-wide fallback ntfy topic (per-user via `X-Ntfy-Topic` header)
-- `PLAN_WORKER_ENABLED` — enable plan worker (default: `1` in http mode, `0` in stdio)
-- `PLAN_WORKER_INTERVAL` — plan worker check interval in seconds (default: `60`)
 - Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY`
 - Full reference: `docs/api-keys.md`
 
@@ -425,7 +411,6 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
-| `test_plan_worker.py` | 11 | pytest | Plan parsing, schedule gating, trigger events, ntfy calls |
 | `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |

@@ -1176,23 +1176,5 @@ def notify(title: str, message: str, priority: str = "default",
         return {"error": f"ntfy send failed: {e}"}
 
 
-def send_notification(topic: str, title: str, message: str,
-                      priority: str = "default", tags: str = "") -> dict:
-    """Internal: send ntfy notification to a specific topic (for plan worker)."""
-    if not topic:
-        return {"error": "no topic"}
-    import httpx
-    headers = {"Title": title, "Priority": priority}
-    if tags:
-        headers["Tags"] = tags
-    try:
-        r = httpx.post(f"{_NTFY_BASE}/{topic}", content=message,
-                       headers=headers, timeout=10)
-        r.raise_for_status()
-        return {"status": "sent", "topic": topic}
-    except Exception as e:
-        return {"error": f"ntfy send failed: {e}"}
-
-
 if __name__ == "__main__":
     mcp.run(transport="stdio")

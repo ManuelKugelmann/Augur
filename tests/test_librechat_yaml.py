@@ -97,7 +97,7 @@ class TestTradingMCP:
     def test_has_customUserVars(self, cfg):
         custom = cfg["mcpServers"]["trading"]["customUserVars"]
         for var in ["BROKER_API_KEY", "BROKER_API_SECRET", "BROKER_NAME",
-                     "RISK_DAILY_LIMIT", "RISK_LIVE_TRADING"]:
+                     "RISK_DAILY_LIMIT", "RISK_LIVE_TRADING", "NTFY_TOPIC"]:
             assert var in custom, f"Missing customUserVar: {var}"
 
     def test_customUserVars_have_title_and_description(self, cfg):

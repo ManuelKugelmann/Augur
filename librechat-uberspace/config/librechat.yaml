@@ -48,6 +48,7 @@ mcpServers:
       X-Broker-Name: "{{BROKER_NAME}}"
       X-Risk-Daily-Limit: "{{RISK_DAILY_LIMIT}}"
       X-Risk-Live-Trading: "{{RISK_LIVE_TRADING}}"
+      X-Ntfy-Topic: "{{NTFY_TOPIC}}"
     customUserVars:
       BROKER_API_KEY:
         title: "Broker API Key"
@@ -64,6 +65,9 @@ mcpServers:
       RISK_LIVE_TRADING:
         title: "Enable Live Trading"
         description: "Set to 'yes' to allow real trades. Leave blank for dry-run only (paper trading)."
+      NTFY_TOPIC:
+        title: "Notification Topic"
+        description: "Your ntfy.sh topic for push notifications (plan alerts, trade confirmations). Create one at ntfy.sh."
     serverInstructions: |
       Trading signals server: store_* tools + 12 OSINT data domains.
       STORE: Profile = what an entity IS (JSON on disk). Snapshot = what was MEASURED when (MongoDB timeseries).
