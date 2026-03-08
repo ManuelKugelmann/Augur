@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,7 +16,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "store"))
 
 # Prevent module-level MongoClient from connecting
-os.environ.setdefault("MONGO_URI", "mongodb://localhost:27017/test_unused")
+os.environ.setdefault("MONGO_URI_SIGNALS", "mongodb://localhost:27017/test_unused")
 
 
 @pytest.fixture(autouse=True)
@@ -566,3 +567,167 @@ class TestRiskGate:
         assert result["actions_today"] == 2
         assert result["remaining"] == 8
         store._user_action_counts.clear()
+
+
+# ── Memory tools ─────────────────────────────────
+
+
+class _FakeCollection:
+    """Minimal in-memory MongoDB collection mock for testing."""
+
+    def __init__(self):
+        self._docs = []
+        self._counter = 0
+
+    def insert_one(self, doc):
+        self._counter += 1
+        doc["_id"] = f"fake_{self._counter}"
+        self._docs.append(doc.copy())
+        result = MagicMock()
+        result.inserted_id = doc["_id"]
+        return result
+
+    def update_one(self, filter_, update, upsert=False):
+        matched = [d for d in self._docs
+                   if all(d.get(k) == v for k, v in filter_.items())]
+        result = MagicMock()
+        if matched:
+            doc = matched[0]
+            for k, v in update.get("$set", {}).items():
+                doc[k] = v
+            result.matched_count = 1
+            result.upserted_id = None
+        elif upsert:
+            new_doc = {}
+            new_doc.update(update.get("$setOnInsert", {}))
+            new_doc.update(update.get("$set", {}))
+            self._counter += 1
+            new_doc["_id"] = f"fake_{self._counter}"
+            self._docs.append(new_doc)
+            result.matched_count = 0
+            result.upserted_id = new_doc["_id"]
+        else:
+            result.matched_count = 0
+            result.upserted_id = None
+        return result
+
+    def delete_one(self, filter_):
+        before = len(self._docs)
+        self._docs = [d for d in self._docs
+                      if not all(d.get(k) == v for k, v in filter_.items())]
+        result = MagicMock()
+        result.deleted_count = before - len(self._docs)
+        return result
+
+    @staticmethod
+    def _match(doc_val, query_val):
+        """Emulate MongoDB matching: scalar in array matches."""
+        if isinstance(doc_val, list) and not isinstance(query_val, list):
+            return query_val in doc_val
+        return doc_val == query_val
+
+    def find(self, filter_):
+        matches = [d.copy() for d in self._docs
+                   if all(self._match(d.get(k), v)
+                          for k, v in filter_.items())]
+        return _FakeCursor(matches)
+
+
+class _FakeCursor:
+    def __init__(self, docs):
+        self._docs = docs
+
+    def sort(self, field, direction):
+        return self
+
+    def limit(self, n):
+        return self._docs[:n]
+
+
+class TestNoteKinds:
+    @pytest.fixture(autouse=True)
+    def setup_memory(self, store, monkeypatch):
+        """Provide a fake notes collection and user identity."""
+        self.col = _FakeCollection()
+        monkeypatch.setattr(store, "_notes_col", lambda: self.col)
+        fake_headers = {"x-user-id": "note-user"}
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
+
+    def test_save_note_with_kind(self, store):
+        """Notes support kind parameter for plans, watchlists, journal etc."""
+        r = store.save_note("My Plan", "trade AAPL", kind="plan")
+        assert r["status"] == "ok"
+        notes = store.get_notes(kind="plan")
+        assert len(notes) == 1
+        assert notes[0]["kind"] == "plan"
+
+    def test_notes_filter_by_kind(self, store):
+        store.save_note("A", "content", kind="note")
+        store.save_note("B", "content", kind="plan")
+        store.save_note("C", "content", kind="watchlist")
+        assert len(store.get_notes(kind="plan")) == 1
+        assert len(store.get_notes()) == 3
+
+
+# ── Shared research notes ────────────────────────
+
+
+class TestResearchTools:
+    @pytest.fixture(autouse=True)
+    def setup_research(self, store, monkeypatch):
+        """Provide a fake shared_notes collection."""
+        self.col = _FakeCollection()
+        monkeypatch.setattr(store, "_shared_notes_col", lambda: self.col)
+
+    def test_save_research_creates(self, store):
+        r = store.save_research("Oil Market Brief", "Brent up 3%")
+        assert r["status"] == "created"
+        assert r["title"] == "Oil Market Brief"
+
+    def test_save_research_overwrites(self, store):
+        store.save_research("Weekly Macro", "v1")
+        r = store.save_research("Weekly Macro", "v2")
+        assert r["status"] == "updated"
+        notes = store.get_research(title="Weekly Macro")
+        assert len(notes) == 1
+        assert notes[0]["content"] == "v2"
+
+    def test_save_research_custom_kind(self, store):
+        store.save_research("Alert", "high vol", kind="alert")
+        notes = store.get_research(kind="alert")
+        assert len(notes) == 1
+        assert notes[0]["kind"] == "alert"
+
+    def test_get_research_all(self, store):
+        store.save_research("A", "1")
+        store.save_research("B", "2")
+        notes = store.get_research()
+        assert len(notes) == 2
+
+    def test_get_research_by_tag(self, store):
+        store.save_research("A", "1", tags=["macro"])
+        store.save_research("B", "2", tags=["sector"])
+        notes = store.get_research(tag="macro")
+        assert len(notes) == 1
+
+    def test_update_research(self, store):
+        store.save_research("Edit Me", "original")
+        r = store.update_research("Edit Me", content="revised")
+        assert r["status"] == "updated"
+        notes = store.get_research(title="Edit Me")
+        assert notes[0]["content"] == "revised"
+
+    def test_update_research_not_found(self, store):
+        r = store.update_research("Ghost")
+        assert "error" in r
+
+    def test_delete_research(self, store):
+        store.save_research("Delete Me", "bye")
+        r = store.delete_research("Delete Me")
+        assert r["status"] == "deleted"
+        assert len(store.get_research(title="Delete Me")) == 0
+
+    def test_delete_research_not_found(self, store):
+        r = store.delete_research("nonexistent")
+        assert "error" in r

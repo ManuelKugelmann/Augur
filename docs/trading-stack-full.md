@@ -388,7 +388,7 @@ No MCP for: Luma (popular AI events), confs.tech (tech conference JSON), CES/GDC
 
 ```
 Signal Ingestion (cron) → Prediction Engine (OpenForecaster / Claude API)
-  → Prediction Store (SQLite)
+  → Prediction Store (MongoDB)
     → Publish (static site / RSS / social) [⚠️ AI PREDICTION label]
     → Resolution Checker (cron, daily: web_search + GDELT)
       → Brier Score computation

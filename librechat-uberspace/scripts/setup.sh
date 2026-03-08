@@ -86,18 +86,7 @@ mkdir -p "$DATA/files"
 *.tar.gz
 GITIGNORE
 
-# ── Install MCP dependencies (skip if bundled by CI) ─
-if [[ ! -d "$APP/node_modules/@modelcontextprotocol" ]]; then
-    log "Installing MCP server packages..."
-    cd "$APP"
-    npm install --save \
-        @modelcontextprotocol/server-filesystem \
-        @modelcontextprotocol/server-memory \
-        mcp-sqlite 2>/dev/null || warn "MCP package install had warnings (may be ok)"
-    cd - >/dev/null
-else
-    log "MCP packages already bundled"
-fi
+# No additional MCP npm packages needed — trading server is Python-only.
 
 # ── Install external MCP dependencies ─────────────
 # RSS MCP (Node, runs via node_modules)

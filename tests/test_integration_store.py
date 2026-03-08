@@ -15,9 +15,9 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-MONGO_URI = os.environ.get("MONGO_URI_SIGNALS") or os.environ.get("MONGO_URI")
+MONGO_URI = os.environ.get("MONGO_URI_SIGNALS", "")
 
-skip_no_mongo = pytest.mark.skipif(not MONGO_URI, reason="MONGO_URI not set")
+skip_no_mongo = pytest.mark.skipif(not MONGO_URI, reason="MONGO_URI_SIGNALS not set")
 
 
 @skip_no_mongo
@@ -28,7 +28,7 @@ class TestStoreLive:
     def _setup(self, tmp_path):
         # Point store at temp profiles dir and real MongoDB
         os.environ["PROFILES_DIR"] = str(tmp_path / "profiles")
-        os.environ.setdefault("MONGO_URI", MONGO_URI)
+        os.environ.setdefault("MONGO_URI_SIGNALS", MONGO_URI)
 
         # Create a minimal profile structure
         p = tmp_path / "profiles" / "europe" / "countries"

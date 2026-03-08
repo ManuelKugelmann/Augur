@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 13 MCP servers: 2 utility (filesystem, memory via stdio) + 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (yahoo-finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (yahoo-finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -20,7 +20,7 @@
 |------|---------|
 | `~/mcps/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
-| `~/TradeAssistant_Data/` | Git-versioned MCP data (files, memory, sqlite) |
+| `~/TradeAssistant_Data/` | Git-versioned MCP data (files) |
 | `~/bin/ta` | Ops CLI tool |
 
 ## Directory Layout (Repo)
@@ -122,8 +122,6 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                                   ▼
                            Uberspace (assist.uber.space)
                            ├─ LibreChat (:3080, Node.js)
-                           │   ├─ MCP: filesystem  → ~/TradeAssistant_Data/files/ (stdio)
-                           │   ├─ MCP: memory      → ~/TradeAssistant_Data/memory.jsonl (stdio)
                            │   ├─ MCP: trading ──streamable-http──▶ :8071/mcp
                            │   ├─ MCP: Tier 1 external (yahoo-finance, gdelt-cloud,
                            │   │       prediction-markets, rss, reddit)
@@ -166,7 +164,9 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - **Geo support**: Optional GeoJSON `location` field, 2dsphere indexes, `nearby()` tool
 - **Profile tools**: `store_get_profile`, `store_put_profile`, `store_list_profiles`, `store_find_profile`, `store_search_profiles`, `store_list_regions`, `store_rebuild_index`, `store_lint_profiles`
 - **Snapshot tools**: `store_snapshot`, `store_history`, `store_trend`, `store_nearby`, `store_event`, `store_recent_events`, `store_archive_snapshot`, `store_archive_history`, `store_compact`, `store_aggregate`, `store_chart`
-- **Notes tools**: `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
+- **Notes tools** (per-user): `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
+- **Research tools** (shared): `store_save_research`, `store_get_research`, `store_update_research`, `store_delete_research`
+- **Notification tool**: `store_notify` (per-user push via ntfy)
 - **Risk tools**: `store_risk_status`
 - **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
@@ -312,6 +312,27 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `update_note(note_id, content?, title?, tags?)` | Update a note (owner only) |
 | `delete_note(note_id)` | Delete a note (owner only) |
 
+Note kinds: `note` (default), `plan`, `watchlist`, `journal` — use `kind` to organize.
+
+### Research tools (shared, no user tracking)
+
+| Tool | Purpose |
+|------|---------|
+| `save_research(title, content, tags?, kind?)` | Save shared research note (upsert by title) |
+| `get_research(title?, tag?, kind?, limit?)` | List shared research notes |
+| `update_research(title, content?, tags?)` | Update shared research by title |
+| `delete_research(title)` | Delete shared research by title |
+
+Research kinds: `research` (default), `report`, `briefing`, `alert`
+
+### Notifications (ntfy)
+
+| Tool | Purpose |
+|------|---------|
+| `notify(title, message, priority?, tags?)` | Send push notification via ntfy (per-user topic) |
+
+Per-user topic via `X-Ntfy-Topic` header (customUserVars). Fallback: `NTFY_TOPIC` env var.
+
 ### Risk gate
 
 | Tool | Purpose |
@@ -323,12 +344,14 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 ## Environment Variables
 
 ### Signals Stack (`.env`)
-- `MONGO_URI` — MongoDB Atlas connection string (database: `signals`)
+- `MONGO_URI_SIGNALS` — MongoDB Atlas connection string (database: `signals`). **Not** the same as LibreChat's `MONGO_URI`.
 - `PROFILES_DIR` — path to profiles directory (default: `./profiles`)
 - `MCP_TRANSPORT` — `streamable-http` (production) or `stdio` (dev/testing, default)
 - `MCP_PORT` — port for streamable-http (default: `8071`)
 - `RISK_DAILY_LIMIT` — max trading actions per user per day (default: `50`)
-- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`
+- `NTFY_BASE_URL` — ntfy server URL (default: `https://ntfy.sh`)
+- `NTFY_TOPIC` — server-wide fallback ntfy topic (per-user via `X-Ntfy-Topic` header)
+- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY`
 - Full reference: `docs/api-keys.md`
 
 ### LibreChat (`~/LibreChat/.env`)
@@ -391,7 +414,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
-| `test_store.py` | 42 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation |
+| `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |

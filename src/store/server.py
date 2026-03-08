@@ -65,10 +65,15 @@ def _get_user_id() -> str:
 def _db():
     global _client
     if not _client:
-        uri = os.environ.get("MONGO_URI_SIGNALS") or os.environ.get("MONGO_URI")
+        uri = os.environ.get("MONGO_URI_SIGNALS", "")
         if not uri:
-            raise RuntimeError("MONGO_URI_SIGNALS (or MONGO_URI) not set")
-        _client = MongoClient(uri)
+            raise RuntimeError(
+                "MONGO_URI_SIGNALS not set — set it in .env or environment. "
+                "Do NOT reuse LibreChat's MONGO_URI (different database).")
+        try:
+            _client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        except Exception as e:
+            raise RuntimeError(f"MongoDB connection failed: {e}") from e
     return _client.signals
 
 
@@ -133,6 +138,14 @@ def _ser(doc: dict) -> dict:
             if k not in doc:
                 doc[k] = v
     return doc
+
+
+def _parse_ts(iso_str: str) -> datetime | None:
+    """Parse ISO date string safely. Returns None on invalid input."""
+    try:
+        return datetime.fromisoformat(iso_str)
+    except (ValueError, TypeError):
+        return None
 
 
 # ── Profile filesystem helpers ────────────────────
@@ -316,11 +329,14 @@ def put_profile(kind: str, id: str, data: dict,
         p, err = _safe_profile_path(region, kind, id)
         if err:
             return err
-    p.parent.mkdir(parents=True, exist_ok=True)
-    existing = json.loads(p.read_text()) if p.exists() else {}
-    existing.update(data)
-    existing["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    p.write_text(json.dumps(existing, indent=2, ensure_ascii=False))
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        existing = json.loads(p.read_text()) if p.exists() else {}
+        existing.update(data)
+        existing["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        p.write_text(json.dumps(existing, indent=2, ensure_ascii=False))
+    except (OSError, json.JSONDecodeError) as e:
+        return {"error": f"failed to write profile {kind}/{id}: {e}"}
     actual_region = p.parent.parent.name
     _update_index(kind, id, existing, actual_region)
     return {"path": str(p), "region": actual_region, "status": "ok"}
@@ -464,8 +480,11 @@ def snapshot(kind: str, entity: str, type: str, data: dict,
     uid = _get_user_id()
     if uid:
         meta["user_id"] = uid
+    parsed_ts = _parse_ts(ts) if ts else now
+    if ts and parsed_ts is None:
+        return {"error": f"invalid ISO date: {ts}"}
     doc = {
-        "ts": datetime.fromisoformat(ts) if ts else now,
+        "ts": parsed_ts,
         "meta": meta,
         "data": data,
     }
@@ -495,8 +514,11 @@ def event(subtype: str, summary: str, data: dict,
     uid = _get_user_id()
     if uid:
         meta["user_id"] = uid
+    parsed_ts = _parse_ts(ts) if ts else now
+    if ts and parsed_ts is None:
+        return {"error": f"invalid ISO date: {ts}"}
     doc = {
-        "ts": datetime.fromisoformat(ts) if ts else now,
+        "ts": parsed_ts,
         "meta": meta,
         "summary": summary,
         "data": data,
@@ -522,9 +544,15 @@ def history(kind: str, entity: str, type: str = "",
     if after or before:
         q["ts"] = {}
         if after:
-            q["ts"]["$gte"] = datetime.fromisoformat(after)
+            parsed = _parse_ts(after)
+            if not parsed:
+                return [{"error": f"invalid after date: {after}"}]
+            q["ts"]["$gte"] = parsed
         if before:
-            q["ts"]["$lt"] = datetime.fromisoformat(before)
+            parsed = _parse_ts(before)
+            if not parsed:
+                return [{"error": f"invalid before date: {before}"}]
+            q["ts"]["$lt"] = parsed
     rows = _snap_col(kind).find(q).sort("ts", -1).limit(limit)
     return [_ser(r) for r in rows]
 
@@ -698,8 +726,11 @@ def archive_snapshot(kind: str, entity: str, type: str, data: dict,
     uid = _get_user_id()
     if uid:
         meta["user_id"] = uid
+    parsed_ts = _parse_ts(ts) if ts else now
+    if ts and parsed_ts is None:
+        return {"error": f"invalid ISO date: {ts}"}
     doc = {
-        "ts": datetime.fromisoformat(ts) if ts else now,
+        "ts": parsed_ts,
         "meta": meta,
         "data": data,
     }
@@ -722,9 +753,15 @@ def archive_history(kind: str, entity: str, type: str = "",
     if after or before:
         q["ts"] = {}
         if after:
-            q["ts"]["$gte"] = datetime.fromisoformat(after)
+            parsed = _parse_ts(after)
+            if not parsed:
+                return [{"error": f"invalid after date: {after}"}]
+            q["ts"]["$gte"] = parsed
         if before:
-            q["ts"]["$lt"] = datetime.fromisoformat(before)
+            parsed = _parse_ts(before)
+            if not parsed:
+                return [{"error": f"invalid before date: {before}"}]
+            q["ts"]["$lt"] = parsed
     rows = _arch_col(kind).find(q).sort("ts", -1).limit(limit)
     return [_ser(r) for r in rows]
 
@@ -885,6 +922,10 @@ def update_note(note_id: str, content: str = "", title: str = "",
     if not uid:
         return {"error": "user not identified"}
     from bson import ObjectId
+    try:
+        oid = ObjectId(note_id)
+    except Exception:
+        return {"error": f"invalid note_id format: {note_id}"}
     update: dict = {"updated": datetime.now(timezone.utc)}
     if content:
         update["content"] = content
@@ -893,7 +934,7 @@ def update_note(note_id: str, content: str = "", title: str = "",
     if tags is not None:
         update["tags"] = tags
     r = _notes_col().update_one(
-        {"_id": ObjectId(note_id), "user_id": uid},
+        {"_id": oid, "user_id": uid},
         {"$set": update}
     )
     if r.matched_count == 0:
@@ -908,10 +949,102 @@ def delete_note(note_id: str) -> dict:
     if not uid:
         return {"error": "user not identified"}
     from bson import ObjectId
-    r = _notes_col().delete_one({"_id": ObjectId(note_id), "user_id": uid})
+    try:
+        oid = ObjectId(note_id)
+    except Exception:
+        return {"error": f"invalid note_id format: {note_id}"}
+    r = _notes_col().delete_one({"_id": oid, "user_id": uid})
     if r.deleted_count == 0:
         return {"error": "note not found or not owned by you"}
     return {"status": "ok"}
+
+
+
+# ── Shared research notes ────────────────────────
+# Research findings produced by analyzing agents — shared across all users.
+# Stored in "shared_notes" collection. No user tracking — any agent can
+# read, write, update, or delete. Title is unique (upsert).
+
+
+def _shared_notes_col():
+    """Return the shared_notes collection."""
+    return _db().shared_notes
+
+
+@mcp.tool()
+def save_research(title: str, content: str,
+                  tags: list[str] | None = None,
+                  kind: str = "research") -> dict:
+    """Save a shared research note. Overwrites if title exists.
+
+    kind: research | report | briefing | alert (default: research)
+    """
+    now = datetime.now(timezone.utc)
+    col = _shared_notes_col()
+    r = col.update_one(
+        {"title": title},
+        {"$set": {
+            "content": content,
+            "kind": kind,
+            "tags": tags or [],
+            "updated": now,
+        }, "$setOnInsert": {
+            "title": title,
+            "created": now,
+        }},
+        upsert=True,
+    )
+    action = "updated" if r.matched_count else "created"
+    return {"title": title, "status": action}
+
+
+@mcp.tool()
+def get_research(title: str = "", tag: str = "", kind: str = "",
+                 limit: int = 50) -> list[dict]:
+    """List shared research notes. Filter by title, tag, or kind."""
+    q: dict = {}
+    if title:
+        q["title"] = title
+    if tag:
+        q["tags"] = tag
+    if kind:
+        q["kind"] = kind
+    rows = _shared_notes_col().find(q).sort("updated", -1).limit(limit)
+    result = []
+    for r in rows:
+        r["_id"] = str(r["_id"])
+        for k in ("created", "updated"):
+            if isinstance(r.get(k), datetime):
+                r[k] = r[k].isoformat()
+        result.append(r)
+    return result
+
+
+@mcp.tool()
+def update_research(title: str, content: str = "",
+                    tags: list[str] | None = None) -> dict:
+    """Update a shared research note by title."""
+    update: dict = {"updated": datetime.now(timezone.utc)}
+    if content:
+        update["content"] = content
+    if tags is not None:
+        update["tags"] = tags
+    r = _shared_notes_col().update_one(
+        {"title": title},
+        {"$set": update}
+    )
+    if r.matched_count == 0:
+        return {"error": "research note not found"}
+    return {"title": title, "status": "updated"}
+
+
+@mcp.tool()
+def delete_research(title: str) -> dict:
+    """Delete a shared research note by title."""
+    r = _shared_notes_col().delete_one({"title": title})
+    if r.deleted_count == 0:
+        return {"error": "research note not found"}
+    return {"title": title, "status": "deleted"}
 
 
 # ── Per-user trading keys ─────────────────────────
@@ -1000,6 +1133,47 @@ def risk_status() -> dict:
         "daily_limit": settings["daily_limit"],
         "remaining": max(0, settings["daily_limit"] - _user_action_counts[uid]),
     }
+
+
+# ── Notifications (ntfy) ──────────────────────────
+# Per-user push notifications via ntfy.sh.
+# User sets their ntfy topic via X-Ntfy-Topic header (customUserVars).
+# Server-wide fallback: NTFY_TOPIC env var.
+# NTFY_BASE_URL defaults to https://ntfy.sh
+
+
+_NTFY_BASE = os.environ.get("NTFY_BASE_URL", "https://ntfy.sh")
+_NTFY_TOPIC_DEFAULT = os.environ.get("NTFY_TOPIC", "")
+
+
+def _get_ntfy_topic() -> str:
+    """Get the ntfy topic for the current user (header > env default)."""
+    topic = _get_user_key("x-ntfy-topic")
+    return topic or _NTFY_TOPIC_DEFAULT
+
+
+@mcp.tool()
+def notify(title: str, message: str, priority: str = "default",
+           tags: str = "") -> dict:
+    """Send a push notification via ntfy (per-user topic).
+
+    priority: min | low | default | high | urgent
+    tags: comma-separated emoji tags (e.g. "warning,chart_with_upwards_trend")
+    """
+    topic = _get_ntfy_topic()
+    if not topic:
+        return {"error": "no ntfy topic configured — set X-Ntfy-Topic in Settings > Plugins or NTFY_TOPIC env var"}
+    import httpx
+    headers = {"Title": title, "Priority": priority}
+    if tags:
+        headers["Tags"] = tags
+    try:
+        r = httpx.post(f"{_NTFY_BASE}/{topic}", content=message,
+                       headers=headers, timeout=10)
+        r.raise_for_status()
+        return {"status": "sent", "topic": topic}
+    except Exception as e:
+        return {"error": f"ntfy send failed: {e}"}
 
 
 if __name__ == "__main__":

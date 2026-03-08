@@ -1,39 +1,83 @@
-"""Transport & Infra — OpenSky flights, AIS vessels, Cloudflare Radar, RIPE Atlas."""
+"""Transport — OpenSky flights, AIS vessel tracking."""
 from fastmcp import FastMCP
 import httpx
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
-mcp = FastMCP("transport", instructions="Flights, vessels, internet traffic, network probes")
+mcp = FastMCP("transport", instructions="Flight tracking, vessel tracking, shipping chokepoints")
 AIS_KEY = os.environ.get("AISSTREAM_API_KEY", "")
-CF_TOKEN = os.environ.get("CF_API_TOKEN", "")
+OPENSKY_CLIENT_ID = os.environ.get("OPENSKY_CLIENT_ID", "")
+OPENSKY_CLIENT_SECRET = os.environ.get("OPENSKY_CLIENT_SECRET", "")
+
+# ── OpenSky OAuth2 helper ────────────────────────
+
+_opensky_token: str = ""
+_opensky_token_exp: float = 0
+
+
+async def _opensky_headers() -> dict:
+    """Get Authorization header for OpenSky (OAuth2 client credentials)."""
+    global _opensky_token, _opensky_token_exp
+    if not OPENSKY_CLIENT_ID or not OPENSKY_CLIENT_SECRET:
+        return {}
+    if _opensky_token and time.time() < _opensky_token_exp:
+        return {"Authorization": f"Bearer {_opensky_token}"}
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.post(
+                "https://auth.opensky-network.org/auth/realms/opensky-network"
+                "/protocol/openid-connect/token",
+                data={"grant_type": "client_credentials",
+                      "client_id": OPENSKY_CLIENT_ID,
+                      "client_secret": OPENSKY_CLIENT_SECRET})
+            r.raise_for_status()
+            data = r.json()
+            _opensky_token = data["access_token"]
+            _opensky_token_exp = time.time() + data.get("expires_in", 1800) - 60
+            return {"Authorization": f"Bearer {_opensky_token}"}
+    except httpx.HTTPError:
+        return {}
 
 
 @mcp.tool()
 async def flights_in_area(lat_min: float, lat_max: float,
                            lon_min: float, lon_max: float) -> dict:
-    """OpenSky live aircraft in bounding box."""
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get("https://opensky-network.org/api/states/all", params={
-            "lamin": lat_min, "lamax": lat_max, "lomin": lon_min, "lomax": lon_max})
-        r.raise_for_status()
-        data = r.json()
-        return {"count": len(data.get("states", [])), "states": data.get("states", [])[:50]}
+    """OpenSky live aircraft in bounding box. Optional: OPENSKY_CLIENT_ID +
+    OPENSKY_CLIENT_SECRET for authenticated access (higher rate limits)."""
+    headers = await _opensky_headers()
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get("https://opensky-network.org/api/states/all",
+                            params={"lamin": lat_min, "lamax": lat_max,
+                                    "lomin": lon_min, "lomax": lon_max},
+                            headers=headers)
+            r.raise_for_status()
+            data = r.json()
+            return {"count": len(data.get("states", [])),
+                    "states": data.get("states", [])[:50]}
+    except httpx.HTTPError as e:
+        return {"error": f"OpenSky request failed: {e}"}
 
 
 @mcp.tool()
 async def flight_history(icao24: str, begin: int = 0, end: int = 0) -> dict:
     """Flight history for aircraft by ICAO24 hex address."""
-    async with httpx.AsyncClient(timeout=15) as c:
-        params = {"icao24": icao24}
-        if begin:
-            params["begin"] = begin
-        if end:
-            params["end"] = end
-        r = await c.get("https://opensky-network.org/api/flights/aircraft", params=params)
-        r.raise_for_status()
-        return r.json()
+    headers = await _opensky_headers()
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            params: dict = {"icao24": icao24}
+            if begin:
+                params["begin"] = begin
+            if end:
+                params["end"] = end
+            r = await c.get("https://opensky-network.org/api/flights/aircraft",
+                            params=params, headers=headers)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"OpenSky flight history request failed: {e}"}
 
 
 @mcp.tool()
@@ -47,38 +91,6 @@ async def vessels_in_area(lat_min: float, lat_max: float,
         r = await c.get("https://api.aisstream.io/v0/vessel-positions", params={
             "apiKey": AIS_KEY,
             "boundingBox": f"{lat_min},{lon_min},{lat_max},{lon_max}"})
-        r.raise_for_status()
-        return r.json()
-
-
-# ── Internet Infrastructure (formerly infra_server.py) ──────────
-
-
-@mcp.tool()
-async def internet_traffic(location: str = "", date_range: str = "7d") -> dict:
-    """Cloudflare Radar internet traffic. location: country ISO2."""
-    if not CF_TOKEN:
-        return {"error": "CF_API_TOKEN not set"}
-    params = {"dateRange": date_range}
-    if location:
-        params["location"] = location
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.cloudflare.com/client/v4/radar/http/summary/http_protocol",
-                        params=params,
-                        headers={"Authorization": f"Bearer {CF_TOKEN}"})
-        r.raise_for_status()
-        return r.json()
-
-
-@mcp.tool()
-async def ripe_probes(country: str = "", status: int = 1,
-                       limit: int = 50) -> dict:
-    """RIPE Atlas probes. status: 1=connected, 2=disconnected."""
-    params = {"limit": limit, "status": status}
-    if country:
-        params["country_code"] = country
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://atlas.ripe.net/api/v2/probes/", params=params)
         r.raise_for_status()
         return r.json()
 

@@ -11,8 +11,7 @@
       "sys__server__sys_mcp_trading",
       "sys__server__sys_mcp_yahoo-finance",
       "sys__server__sys_mcp_prediction-markets",
-      "sys__server__sys_mcp_filesystem",
-      "sys__server__sys_mcp_memory"
+      "sys__server__sys_mcp_filesystem"
     ],
     "edges": []
   },
@@ -27,8 +26,7 @@
     "tools": [
       "sys__server__sys_mcp_trading",
       "sys__server__sys_mcp_gdelt-cloud",
-      "sys__server__sys_mcp_filesystem",
-      "sys__server__sys_mcp_memory"
+      "sys__server__sys_mcp_filesystem"
     ],
     "edges": []
   },
@@ -44,8 +42,7 @@
       "sys__server__sys_mcp_trading",
       "sys__server__sys_mcp_rss",
       "sys__server__sys_mcp_reddit",
-      "sys__server__sys_mcp_filesystem",
-      "sys__server__sys_mcp_memory"
+      "sys__server__sys_mcp_filesystem"
     ],
     "edges": []
   },

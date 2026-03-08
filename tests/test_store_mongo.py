@@ -24,7 +24,7 @@ except ImportError:
             return self._id
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "store"))
-os.environ.setdefault("MONGO_URI", "mongodb://localhost:27017/test_unused")
+os.environ.setdefault("MONGO_URI_SIGNALS", "mongodb://localhost:27017/test_unused")
 
 import server
 
