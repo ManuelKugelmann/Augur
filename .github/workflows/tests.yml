@@ -203,19 +203,19 @@ jobs:
       - name: Install dependencies
         run: pip install pytest pytest-timeout httpx python-dotenv pymongo
 
-      - name: Check MongoDB connection
+      - name: Derive MongoDB URIs from cluster secret
         env:
-          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
+          MONGO_CLUSTER_URI: ${{ secrets.MONGO_CLUSTER_URI }}
         run: |
-          if [ -n "$MONGO_URI_SIGNALS" ]; then
-            echo "MONGO_URI_SIGNALS: SET (${#MONGO_URI_SIGNALS} chars)"
+          if [ -n "$MONGO_CLUSTER_URI" ]; then
+            BASE="${MONGO_CLUSTER_URI%/}"
+            echo "MONGO_URI_SIGNALS=${BASE}/ci_signals" >> "$GITHUB_ENV"
+            echo "MONGO_CLUSTER_URI: SET → derived ci_signals"
           else
-            echo "MONGO_URI_SIGNALS: MISSING — store tests will be skipped"
+            echo "MONGO_CLUSTER_URI: MISSING — store tests will be skipped"
           fi
 
       - name: Run store integration tests
-        env:
-          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
         run: python -m pytest tests/test_integration_store.py -v -m integration --timeout=60
 
   smoke-combined:
@@ -234,24 +234,20 @@ jobs:
       - name: Install dependencies
         run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp
 
-      - name: Check MongoDB connections
+      - name: Derive MongoDB URIs from cluster secret
         env:
-          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
-          MONGO_URI_LIBRECHAT: ${{ secrets.MONGO_URI_LIBRECHAT }}
+          MONGO_CLUSTER_URI: ${{ secrets.MONGO_CLUSTER_URI }}
         run: |
-          for var in MONGO_URI_SIGNALS MONGO_URI_LIBRECHAT; do
-            val=$(printenv "$var" 2>/dev/null || true)
-            if [ -n "$val" ]; then
-              echo "$var: SET (${#val} chars)"
-            else
-              echo "$var: MISSING — related tests will be skipped"
-            fi
-          done
+          if [ -n "$MONGO_CLUSTER_URI" ]; then
+            BASE="${MONGO_CLUSTER_URI%/}"
+            echo "MONGO_URI_SIGNALS=${BASE}/ci_signals" >> "$GITHUB_ENV"
+            echo "MONGO_URI_LIBRECHAT=${BASE}/ci_LibreChat" >> "$GITHUB_ENV"
+            echo "MONGO_CLUSTER_URI: SET → derived ci_signals + ci_LibreChat"
+          else
+            echo "MONGO_CLUSTER_URI: MISSING — smoke tests will be skipped"
+          fi
 
       - name: Run combined server smoke tests
-        env:
-          MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
-          MONGO_URI_LIBRECHAT: ${{ secrets.MONGO_URI_LIBRECHAT }}
         run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
 
   smoke-install:
