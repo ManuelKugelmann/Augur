@@ -50,7 +50,7 @@ class TestYAMLSyntax:
 class TestMCPServers:
     REQUIRED = ["trading", "filesystem", "memory"]
     EXTERNAL = ["yahoo-finance", "gdelt-cloud", "prediction-markets", "rss", "reddit"]
-    REMOVED = ["sqlite"]
+    REMOVED = []
 
     def test_required_servers_present(self, cfg):
         servers = cfg["mcpServers"]

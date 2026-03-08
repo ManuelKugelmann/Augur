@@ -45,8 +45,7 @@ jobs:
           cd bundle
           npm install --save \
             @modelcontextprotocol/server-filesystem \
-            @modelcontextprotocol/server-memory \
-            mcp-sqlite
+            @modelcontextprotocol/server-memory
           rm -f package-lock.json
           cd ..
 

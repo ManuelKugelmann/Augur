@@ -468,8 +468,7 @@ L4/L5 execute trades by handing off to the trader utility agent.
 
 The trading store is the primary storage layer. Filesystem is secondary
 (for file exports/reports). Memory (knowledge graph) is useful for
-cross-conversation entity tracking. SQLite is not needed — the trading
-store's MongoDB backend covers structured queries via `store_aggregate`.
+cross-conversation entity tracking.
 
 | MCP | Attached To | Purpose | Priority |
 |-----|------------|---------|----------|
@@ -497,9 +496,6 @@ mcpServers:
     env:
       MEMORY_FILE_PATH: __HOME__/TradeAssistant_Data/memory.jsonl
     chatMenu: false
-
-  # sqlite removed — trading store's MongoDB covers structured queries via store_aggregate
-
   trading:
     type: streamable-http
     url: http://localhost:8071/mcp

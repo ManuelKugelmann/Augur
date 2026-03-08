@@ -41,9 +41,6 @@ mcpServers:
       MEMORY_FILE_PATH: __HOME__/TradeAssistant_Data/memory.jsonl
     chatMenu: false
     serverInstructions: "Knowledge graph memory. Store entities, relations, preferences across conversations."
-
-  # sqlite removed — trading store's MongoDB covers structured queries via store_aggregate
-
   # ── Trading Server (signals store + 12 data domains, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.
   # Env vars + API keys are set in the supervisord service, not here.

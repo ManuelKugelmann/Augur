@@ -195,7 +195,7 @@ ta install dev    # re-downloads CI build or rebuilds from source
 bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
 ```
 
-Auto-syncs every 15 min via cron. Stores filesystem files, memory graph, and SQLite DB.
+Auto-syncs every 15 min via cron. Stores filesystem files and memory graph.
 
 ---
 
