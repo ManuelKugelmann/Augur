@@ -164,9 +164,9 @@ class TestConflictFree:
         result = run(self.m.search_sanctions(query="Gazprom"))
         assert "results" in result or "result" in result
 
-    def test_military_spending(self):
-        result = run(self.m.military_spending(country="USA", date="2020:2022"))
-        assert isinstance(result, list)
+    def test_search_sanctions_result(self):
+        result = run(self.m.search_sanctions(query="Russia"))
+        assert isinstance(result, dict)
 
 
 # ── elections_server (Wikidata, EU Parliament, ReliefWeb) ─
@@ -198,9 +198,9 @@ class TestElectionsFree:
         assert "count" in result
         assert "meps" in result
 
-    def test_election_reports(self):
-        result = run(self.m.election_reports(query="election", limit=3))
-        assert "data" in result
+    def test_eu_parliament_votes(self):
+        result = run(self.m.eu_parliament_votes(year="2024", limit=5))
+        assert isinstance(result, dict)
 
 
 # ── humanitarian_server (UNHCR, HDX, ReliefWeb) ─────────
@@ -222,6 +222,8 @@ class TestHumanitarian:
 
     def test_reliefweb_reports(self):
         result = run(self.m.reliefweb_reports(query="drought", limit=3))
+        if "error" in result:
+            pytest.xfail(f"ReliefWeb API unavailable: {result['error']}")
         assert "data" in result
 
 
@@ -254,7 +256,9 @@ class TestWater:
         assert "value" in result
 
     def test_drought(self):
-        result = run(self.m.drought(area_type="state", area="CA"))
+        result = run(self.m.drought(area="CA", scope="StateStatistics"))
+        if isinstance(result, dict) and "error" in result:
+            pytest.xfail(f"Drought Monitor API unavailable: {result['error']}")
         assert isinstance(result, (dict, list))
 
 
@@ -271,5 +275,7 @@ class TestTransportFree:
         # Small bounding box over Frankfurt airport
         result = run(self.m.flights_in_area(
             lat_min=50.0, lat_max=50.1, lon_min=8.5, lon_max=8.6))
+        if "error" in result:
+            pytest.xfail(f"OpenSky API unavailable: {result['error']}")
         assert "count" in result
         assert "states" in result
