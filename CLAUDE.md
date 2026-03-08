@@ -86,6 +86,7 @@ TradingAssistant/
 │   │   └── setup.bash                 ← shared bats helpers (sandbox, stubs)
 │   ├── test_bootstrap.bats            ← syntax validation for all scripts
 │   ├── test_deploy_conf.bats          ← config loading, env overrides
+│   ├── test_install_lifecycle.bats    ← install → pull → update integration
 │   ├── test_nightly_commit.bats       ← profile staging, no-op when clean
 │   ├── test_setup.bats                ← install/update modes, .env generation
 │   ├── test_setup_data_repo.bats      ← data repo init, cron setup, idempotency
@@ -420,6 +421,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |
 | `test_setup_data_repo.bats` | 6 | bats | Directory structure, `.gitignore`, cron setup, idempotency |
 | `test_deploy_conf.bats` | 5 | bats | Config loading, env overrides, variable defaults |
+| `test_install_lifecycle.bats` | 15 | bats | Install → pull → update lifecycle, setup.sh modes, rollback, crypto keys, cron import |
 | `test_ta_sync.bats` | 3 | bats | Sync with/without git repo, commit + push behavior |
 | `test_nightly_commit.bats` | 3 | bats | Profile staging, no-op when clean, selective `git add` |
 | `test_bootstrap.bats` | 2 | bats | Syntax validation for all `.sh` files |
