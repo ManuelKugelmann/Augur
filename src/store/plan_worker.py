@@ -1,28 +1,16 @@
-"""In-process plan worker — timed agent trigger per user.
+"""In-process plan worker — triggers T4 agent per user via ntfy.
 
-Scans all user plans (notes with kind="plan") on a timer.
-For each enabled plan, sends an ntfy notification to the user's topic,
-which triggers their LibreChat T4 agent to execute the plan.
-
-No condition evaluation — just timed execution. KISS.
-
-Plan content (JSON):
-  schedule: interval in minutes (default: 5)
-  enabled: bool (default: true)
-  ntfy_topic: user's ntfy topic for push notifications
+Simple cron: on each interval, find all distinct users who have plans,
+send one ntfy notification per user to trigger their agent.
+The agent reads the user's plans and decides what to do.
 """
 
 import asyncio
-import json
 import logging
 from datetime import datetime, timezone
 
 log = logging.getLogger("plan-worker")
 
-# In-memory tracking: last trigger time per plan _id
-_last_trigger: dict[str, datetime] = {}
-
-# Default check interval in seconds
 _CHECK_INTERVAL = int(__import__("os").environ.get("PLAN_WORKER_INTERVAL", "60"))
 
 _running = False
@@ -30,76 +18,8 @@ _task: asyncio.Task | None = None
 _notify_func = None  # set by start() — server.send_notification
 
 
-def _parse_plan(note: dict) -> dict | None:
-    """Extract structured plan data from a note's content field.
-    Returns None if not a valid plan."""
-    content = note.get("content", "")
-    if isinstance(content, dict):
-        plan = content
-    elif isinstance(content, str):
-        try:
-            plan = json.loads(content)
-        except (json.JSONDecodeError, ValueError):
-            return None
-    else:
-        return None
-    if not isinstance(plan, dict):
-        return None
-    plan.setdefault("schedule", 5)
-    plan.setdefault("enabled", True)
-    return plan
-
-
-def _should_trigger(note_id: str, schedule_minutes: int) -> bool:
-    """Check if enough time has passed since last trigger."""
-    now = datetime.now(timezone.utc)
-    last = _last_trigger.get(note_id)
-    if last is None:
-        return True
-    elapsed = (now - last).total_seconds()
-    return elapsed >= schedule_minutes * 60
-
-
-async def _trigger_plan(note: dict, plan: dict, db_func) -> dict | None:
-    """Trigger a plan: log event + send ntfy to activate user's agent."""
-    note_id = str(note.get("_id", ""))
-    user_id = note.get("user_id", "")
-    title = note.get("title", "")
-    ntfy_topic = plan.get("ntfy_topic", "")
-
-    now = datetime.now(timezone.utc)
-    _last_trigger[note_id] = now
-
-    event = {
-        "ts": now,
-        "meta": {
-            "kind": "plan_trigger",
-            "type": "scheduled",
-            "source": "plan_worker",
-            "user_id": user_id,
-        },
-        "data": {
-            "plan_id": note_id,
-            "plan_title": title,
-        },
-    }
-    try:
-        db_func().events.insert_one(event)
-    except Exception as e:
-        log.error("Failed to insert plan event: %s", e)
-
-    # Send ntfy push — triggers the T4 agent for this user
-    if ntfy_topic and _notify_func:
-        _notify_func(ntfy_topic, f"Plan: {title}",
-                     f"Scheduled execution for plan '{title}'.",
-                     priority="default", tags="robot")
-
-    log.info("Plan triggered: %s for user %s", title, user_id)
-    return event
-
-
 async def _run_loop(db_func):
-    """Main worker loop — scans plans and triggers on schedule."""
+    """Main loop: find users with plans, trigger their agent."""
     global _running
     _running = True
     log.info("Plan worker started (interval=%ds)", _CHECK_INTERVAL)
@@ -107,23 +27,20 @@ async def _run_loop(db_func):
     while _running:
         try:
             notes_col = db_func().user_notes
-            plans = list(notes_col.find({"kind": "plan"}))
+            # Get distinct user_ids that have at least one plan
+            user_ids = notes_col.distinct("user_id", {"kind": "plan"})
 
-            for note in plans:
-                plan = _parse_plan(note)
-                if plan is None or not plan.get("enabled", True):
+            for uid in user_ids:
+                if not uid:
                     continue
-
-                note_id = str(note.get("_id", ""))
-                schedule = plan.get("schedule", 5)
-
-                if not _should_trigger(note_id, schedule):
-                    continue
-
-                try:
-                    await _trigger_plan(note, plan, db_func)
-                except Exception as e:
-                    log.error("Error triggering plan %s: %s", note_id, e)
+                # Look up the user's ntfy topic from any of their plans
+                sample = notes_col.find_one({"kind": "plan", "user_id": uid})
+                topic = _extract_topic(sample)
+                if topic and _notify_func:
+                    _notify_func(topic, "Plan check",
+                                 "Scheduled plan review — check your plans.",
+                                 priority="default", tags="robot")
+                    log.info("Triggered agent for user %s", uid)
 
         except Exception as e:
             log.error("Plan worker cycle error: %s", e)
@@ -131,19 +48,31 @@ async def _run_loop(db_func):
         await asyncio.sleep(_CHECK_INTERVAL)
 
 
-def start(db_func, notify_func=None):
-    """Start the plan worker as a background asyncio task.
+def _extract_topic(note: dict | None) -> str:
+    """Try to read ntfy_topic from a plan note's content."""
+    if note is None:
+        return ""
+    content = note.get("content", "")
+    if isinstance(content, dict):
+        return content.get("ntfy_topic", "")
+    if isinstance(content, str):
+        try:
+            import json
+            parsed = json.loads(content)
+            if isinstance(parsed, dict):
+                return parsed.get("ntfy_topic", "")
+        except (ValueError, TypeError):
+            pass
+    return ""
 
-    Args:
-        db_func: callable returning the MongoDB database
-        notify_func: callable(topic, title, message, priority, tags) for ntfy
-    """
+
+def start(db_func, notify_func=None):
+    """Start the plan worker as a background asyncio task."""
     global _task, _notify_func
     _notify_func = notify_func
     if _task is not None and not _task.done():
         log.warning("Plan worker already running")
         return
-
     loop = asyncio.get_event_loop()
     _task = loop.create_task(_run_loop(db_func))
     return _task
@@ -164,8 +93,4 @@ def status() -> dict:
     return {
         "running": _running,
         "check_interval_seconds": _CHECK_INTERVAL,
-        "plans_tracked": len(_last_trigger),
-        "last_trigger_times": {
-            k: v.isoformat() for k, v in _last_trigger.items()
-        },
     }

@@ -336,11 +336,10 @@ Internal `send_notification(topic, ...)` used by the plan worker.
 ### Plan worker (in-process timer)
 
 Background asyncio task that triggers LibreChat T4 agents per user on a schedule.
-- Scans all notes with `kind="plan"` on a configurable interval (`PLAN_WORKER_INTERVAL`, default: 60s)
-- For each enabled plan, sends an ntfy notification to the user's topic
-- The T4 agent receives the notification and executes the plan (notify or trade actions)
-- Whether the agent notifies or executes is controlled by agent instructions / tool availability
-- Plan content (JSON): `{"schedule": 5, "enabled": true, "ntfy_topic": "user-topic"}`
+- Runs on a configurable interval (`PLAN_WORKER_INTERVAL`, default: 60s)
+- Finds distinct users who have plans, sends one ntfy notification per user
+- The T4 agent receives the notification, reads the user's plans, and acts
+- Plan content (JSON): `{"ntfy_topic": "user-topic"}`
 - Auto-starts in http mode, off in stdio. Override: `PLAN_WORKER_ENABLED=1|0`
 
 ### Risk gate
