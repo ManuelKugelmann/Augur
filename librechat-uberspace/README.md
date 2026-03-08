@@ -1,4 +1,4 @@
-LibreChat deployment with MCP servers (50+ tools): 2 utility (filesystem, memory via stdio) + 1 combined trading server (signals store + 12 data domains, 75+ data sources) via streamable-http. Single process, multi-user. No Docker, no Meilisearch, no RAG, no Redis.
+LibreChat deployment with MCP servers (50+ tools): 1 utility (filesystem via stdio) + 1 combined trading server (signals store + 12 data domains, 75+ data sources) via streamable-http. Single process, multi-user. No Docker, no Meilisearch, no RAG, no Redis.
 
 All scripts read from `deploy.conf` — edit once, applies everywhere.
 
@@ -10,7 +10,6 @@ All scripts read from `deploy.conf` — edit once, applies everywhere.
 │ dev + test   │push │  repo  │tag  │ build+tar  │pull │                             │
 └──────────────┘     └────────┘     └───────────┘     │ LibreChat (:3080)           │
                                                        │ ├─ MCP: filesystem (stdio)  │
-                                                       │ ├─ MCP: memory (stdio)      │
                                                        │ └─ MCP: trading ──http──▶   │
                                                        │                             │
                                                        │ trading server (:8071, 68t) │
@@ -146,7 +145,6 @@ Users configure their own settings in **LibreChat Settings → Plugins → tradi
 | MCP Server | Purpose | Storage |
 |---|---|---|
 | `filesystem` | File read/write | `~/TradeAssistant_Data/files/` |
-| `memory` | Knowledge graph | `~/TradeAssistant_Data/memory.jsonl` |
 
 ### Trading (streamable-http, single process)
 

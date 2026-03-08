@@ -32,15 +32,6 @@ mcpServers:
     chatMenu: false
     serverInstructions: "Persistent file storage (git-synced). Secondary to trading store. For documents, exports, reports."
 
-  memory:
-    command: npx
-    args:
-      - -y
-      - "@modelcontextprotocol/server-memory"
-    env:
-      MEMORY_FILE_PATH: __HOME__/TradeAssistant_Data/memory.jsonl
-    chatMenu: false
-    serverInstructions: "Knowledge graph memory. Store entities, relations, preferences across conversations."
   # ── Trading Server (signals store + 12 data domains, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.
   # Env vars + API keys are set in the supervisord service, not here.

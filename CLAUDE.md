@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. MCP servers: 2 utility (filesystem, memory via stdio) + 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. MCP servers: 1 utility (filesystem via stdio) + 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -20,7 +20,7 @@
 |------|---------|
 | `~/mcps/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
-| `~/TradeAssistant_Data/` | Git-versioned MCP data (files, memory) |
+| `~/TradeAssistant_Data/` | Git-versioned MCP data (files) |
 | `~/bin/ta` | Ops CLI tool |
 
 ## Directory Layout (Repo)
@@ -123,7 +123,6 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                            Uberspace (assist.uber.space)
                            ├─ LibreChat (:3080, Node.js)
                            │   ├─ MCP: filesystem  → ~/TradeAssistant_Data/files/ (stdio)
-                           │   ├─ MCP: memory      → ~/TradeAssistant_Data/memory.jsonl (stdio)
                            │   └─ MCP: trading ──streamable-http──▶ :8071/mcp
                            │         X-User-ID / X-User-Email injected per request
                            │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET
@@ -163,6 +162,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - **Profile tools**: `store_get_profile`, `store_put_profile`, `store_list_profiles`, `store_find_profile`, `store_search_profiles`, `store_list_regions`, `store_rebuild_index`, `store_lint_profiles`
 - **Snapshot tools**: `store_snapshot`, `store_history`, `store_trend`, `store_nearby`, `store_event`, `store_recent_events`, `store_archive_snapshot`, `store_archive_history`, `store_compact`, `store_aggregate`, `store_chart`
 - **Notes tools**: `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
+- **Memory tools**: `store_save_memory`, `store_get_memories`, `store_delete_memory`
 - **Risk tools**: `store_risk_status`
 - **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
@@ -308,6 +308,14 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `update_note(note_id, content?, title?, tags?)` | Update a note (owner only) |
 | `delete_note(note_id)` | Delete a note (owner only) |
 
+### Memory tools (per-user, key-value)
+
+| Tool | Purpose |
+|------|---------|
+| `save_memory(key, value, tags?)` | Save/overwrite a memory by key (scoped to user) |
+| `get_memories(key?, tag?, limit?)` | Recall memories, filter by key or tag |
+| `delete_memory(key)` | Delete a memory by key (owner only) |
+
 ### Risk gate
 
 | Tool | Purpose |
@@ -387,7 +395,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
-| `test_store.py` | 42 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation |
+| `test_store.py` | 63 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |

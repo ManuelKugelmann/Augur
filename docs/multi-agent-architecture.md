@@ -37,7 +37,7 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 │  L1  DATA AGENTS      │  Thematic data collection. Scrape MCPs, │
 │                       │  own profiles, snapshots, events.       │
 │  market-data          │  Also read from storage on request.     │
-│  osint-data           │  + filesystem, memory                   │
+│  osint-data           │  + filesystem                            │
 │  signals-data         │                                         │
 ├───────────────────────┼─────────────────────────────────────────┤
 │  UTILITY AGENTS       │  Stateless helpers for specific tasks.  │
@@ -47,7 +47,7 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 ├───────────────────────┴─────────────────────────────────────────┤
 │  STORAGE              │  Profiles (JSON/git), Snapshots (Mongo), │
 │                       │  Notes (Mongo), Plans (Mongo),           │
-│                       │  Files, Memory                           │
+│                       │  Files                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -390,13 +390,13 @@ needs a visual output.
     ┌────┴──────────┴──────┴──────┴──┐
     │  L1 Data Agents                │
     │  market-data │ osint-data      │  own: PROFILES, SNAPSHOTS, EVENTS
-    │  signals-data                  │  + filesystem, memory
+    │  signals-data                  │  + filesystem
     └───────┬────────────────────────┘
             ▼
     ┌───────────────────────────────────────────────┐
     │                   STORAGE                     │
     │  Profiles │ Snapshots │ Events │ Notes │ Plans│
-    │  Files    │ Memory                            │
+    │  Files                                        │
     └───────────────────────────────────────────────┘
 ```
 
@@ -466,14 +466,13 @@ L4/L5 execute trades by handing off to the trader utility agent.
 
 ### Utility MCPs — Attached to Data Agents
 
-The trading store is the primary storage layer. Filesystem is secondary
-(for file exports/reports). Memory (knowledge graph) is useful for
-cross-conversation entity tracking.
+The trading store is the primary storage layer (including per-user memory
+via `save_memory`/`get_memories` tools). Filesystem is secondary
+(for file exports/reports).
 
 | MCP | Attached To | Purpose | Priority |
 |-----|------------|---------|----------|
 | filesystem | All L1 data agents | File exports, reports, documents | Secondary to trading store |
-| memory | All L1 data agents | Knowledge graph across conversations | Useful for entity relations |
 
 ---
 
@@ -490,12 +489,6 @@ mcpServers:
     args: ["-y", "@modelcontextprotocol/server-filesystem", "__HOME__/TradeAssistant_Data/files/"]
     chatMenu: false
 
-  memory:
-    command: npx
-    args: ["-y", "@modelcontextprotocol/server-memory"]
-    env:
-      MEMORY_FILE_PATH: __HOME__/TradeAssistant_Data/memory.jsonl
-    chatMenu: false
   trading:
     type: streamable-http
     url: http://localhost:8071/mcp

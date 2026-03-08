@@ -48,7 +48,7 @@ class TestYAMLSyntax:
 # ── Required MCP servers ─────────────────────
 
 class TestMCPServers:
-    REQUIRED = ["trading", "filesystem", "memory"]
+    REQUIRED = ["trading", "filesystem"]
     EXTERNAL = ["yahoo-finance", "gdelt-cloud", "prediction-markets", "rss", "reddit"]
     REMOVED = []
 

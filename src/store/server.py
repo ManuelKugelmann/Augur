@@ -959,6 +959,74 @@ def delete_note(note_id: str) -> dict:
     return {"status": "ok"}
 
 
+# ── Per-user memory (key-value) ──────────────────────
+# Simple persistent memory stored as notes with kind="memory".
+# Each memory has a unique key per user — saving with the same key overwrites.
+
+
+@mcp.tool()
+def save_memory(key: str, value: str, tags: list[str] | None = None) -> dict:
+    """Save a memory (key-value, per-user). Overwrites if key exists."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified (X-User-ID header missing)"}
+    now = datetime.now(timezone.utc)
+    col = _notes_col()
+    r = col.update_one(
+        {"user_id": uid, "kind": "memory", "title": key},
+        {"$set": {
+            "content": value,
+            "tags": tags or [],
+            "updated": now,
+        }, "$setOnInsert": {
+            "user_id": uid,
+            "kind": "memory",
+            "title": key,
+            "created": now,
+        }},
+        upsert=True,
+    )
+    action = "updated" if r.matched_count else "created"
+    return {"key": key, "status": action}
+
+
+@mcp.tool()
+def get_memories(key: str = "", tag: str = "",
+                 limit: int = 100) -> list[dict]:
+    """Recall memories. Filter by key or tag. Returns all if no filter."""
+    uid = _get_user_id()
+    if not uid:
+        return [{"error": "user not identified"}]
+    q: dict = {"user_id": uid, "kind": "memory"}
+    if key:
+        q["title"] = key
+    if tag:
+        q["tags"] = tag
+    rows = _notes_col().find(q).sort("updated", -1).limit(limit)
+    result = []
+    for r in rows:
+        r["_id"] = str(r["_id"])
+        for k in ("created", "updated"):
+            if isinstance(r.get(k), datetime):
+                r[k] = r[k].isoformat()
+        result.append(r)
+    return result
+
+
+@mcp.tool()
+def delete_memory(key: str) -> dict:
+    """Delete a memory by key (owner only)."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    r = _notes_col().delete_one(
+        {"user_id": uid, "kind": "memory", "title": key}
+    )
+    if r.deleted_count == 0:
+        return {"error": "memory not found"}
+    return {"key": key, "status": "deleted"}
+
+
 # ── Per-user trading keys ─────────────────────────
 # Users provide their own API keys via LibreChat customUserVars.
 # Keys arrive as HTTP headers (e.g. X-Broker-Key) and are NOT stored server-side.

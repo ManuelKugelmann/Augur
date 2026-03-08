@@ -91,8 +91,7 @@ if [[ ! -d "$APP/node_modules/@modelcontextprotocol" ]]; then
     log "Installing MCP server packages..."
     cd "$APP"
     npm install --save \
-        @modelcontextprotocol/server-filesystem \
-        @modelcontextprotocol/server-memory 2>/dev/null || warn "MCP package install had warnings (may be ok)"
+        @modelcontextprotocol/server-filesystem 2>/dev/null || warn "MCP package install had warnings (may be ok)"
     cd - >/dev/null
 else
     log "MCP packages already bundled"

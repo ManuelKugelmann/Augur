@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -566,3 +567,138 @@ class TestRiskGate:
         assert result["actions_today"] == 2
         assert result["remaining"] == 8
         store._user_action_counts.clear()
+
+
+# ── Memory tools ─────────────────────────────────
+
+
+class _FakeCollection:
+    """Minimal in-memory MongoDB collection mock for testing."""
+
+    def __init__(self):
+        self._docs = []
+        self._counter = 0
+
+    def insert_one(self, doc):
+        self._counter += 1
+        doc["_id"] = f"fake_{self._counter}"
+        self._docs.append(doc.copy())
+        result = MagicMock()
+        result.inserted_id = doc["_id"]
+        return result
+
+    def update_one(self, filter_, update, upsert=False):
+        matched = [d for d in self._docs
+                   if all(d.get(k) == v for k, v in filter_.items())]
+        result = MagicMock()
+        if matched:
+            doc = matched[0]
+            for k, v in update.get("$set", {}).items():
+                doc[k] = v
+            result.matched_count = 1
+            result.upserted_id = None
+        elif upsert:
+            new_doc = {}
+            new_doc.update(update.get("$setOnInsert", {}))
+            new_doc.update(update.get("$set", {}))
+            self._counter += 1
+            new_doc["_id"] = f"fake_{self._counter}"
+            self._docs.append(new_doc)
+            result.matched_count = 0
+            result.upserted_id = new_doc["_id"]
+        else:
+            result.matched_count = 0
+            result.upserted_id = None
+        return result
+
+    def delete_one(self, filter_):
+        before = len(self._docs)
+        self._docs = [d for d in self._docs
+                      if not all(d.get(k) == v for k, v in filter_.items())]
+        result = MagicMock()
+        result.deleted_count = before - len(self._docs)
+        return result
+
+    @staticmethod
+    def _match(doc_val, query_val):
+        """Emulate MongoDB matching: scalar in array matches."""
+        if isinstance(doc_val, list) and not isinstance(query_val, list):
+            return query_val in doc_val
+        return doc_val == query_val
+
+    def find(self, filter_):
+        matches = [d.copy() for d in self._docs
+                   if all(self._match(d.get(k), v)
+                          for k, v in filter_.items())]
+        return _FakeCursor(matches)
+
+
+class _FakeCursor:
+    def __init__(self, docs):
+        self._docs = docs
+
+    def sort(self, field, direction):
+        return self
+
+    def limit(self, n):
+        return self._docs[:n]
+
+
+class TestMemoryTools:
+    @pytest.fixture(autouse=True)
+    def setup_memory(self, store, monkeypatch):
+        """Provide a fake notes collection and user identity."""
+        self.col = _FakeCollection()
+        monkeypatch.setattr(store, "_notes_col", lambda: self.col)
+        fake_headers = {"x-user-id": "mem-user"}
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
+
+    def test_save_memory_creates(self, store):
+        r = store.save_memory("pref_style", "momentum trading")
+        assert r["status"] == "created"
+        assert r["key"] == "pref_style"
+
+    def test_save_memory_overwrites(self, store):
+        store.save_memory("k1", "v1")
+        r = store.save_memory("k1", "v2")
+        assert r["status"] == "updated"
+        mems = store.get_memories(key="k1")
+        assert len(mems) == 1
+        assert mems[0]["content"] == "v2"
+
+    def test_get_memories_all(self, store):
+        store.save_memory("a", "1")
+        store.save_memory("b", "2")
+        mems = store.get_memories()
+        assert len(mems) == 2
+
+    def test_get_memories_by_key(self, store):
+        store.save_memory("a", "1")
+        store.save_memory("b", "2")
+        mems = store.get_memories(key="a")
+        assert len(mems) == 1
+        assert mems[0]["title"] == "a"
+
+    def test_get_memories_by_tag(self, store):
+        store.save_memory("x", "val", tags=["trading"])
+        store.save_memory("y", "val2", tags=["personal"])
+        mems = store.get_memories(tag="trading")
+        assert len(mems) == 1
+
+    def test_delete_memory(self, store):
+        store.save_memory("del_me", "gone")
+        r = store.delete_memory("del_me")
+        assert r["status"] == "deleted"
+        mems = store.get_memories(key="del_me")
+        assert len(mems) == 0
+
+    def test_delete_memory_not_found(self, store):
+        r = store.delete_memory("nonexistent")
+        assert "error" in r
+
+    def test_memory_requires_user(self, store, monkeypatch):
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: {})
+        r = store.save_memory("k", "v")
+        assert "error" in r

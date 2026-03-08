@@ -44,8 +44,7 @@ jobs:
           # Install MCP Node packages into existing node_modules
           cd bundle
           npm install --save \
-            @modelcontextprotocol/server-filesystem \
-            @modelcontextprotocol/server-memory
+            @modelcontextprotocol/server-filesystem
           rm -f package-lock.json
           cd ..
 

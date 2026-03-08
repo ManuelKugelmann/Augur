@@ -1,5 +1,5 @@
 #!/bin/bash
-# Set up git-versioned data directory for MCP file/memory storage
+# Set up git-versioned data directory for MCP file storage
 # Usage: bash setup-data-repo.sh [YOUR_USER/TradeAssistant_Data]
 set -euo pipefail
 
@@ -85,7 +85,6 @@ Git-versioned data store for LibreChat MCP servers on ${UBER_HOST:-Uberspace}.
 | Path | MCP Server | Content |
 |---|---|---|
 | \`files/\` | \`server-filesystem\` | User files, documents, exports |
-| \`memory.jsonl\` | \`server-memory\` | Knowledge graph (entities + relations) |
 
 Auto-synced every 15 minutes via cron.
 EOF
@@ -119,6 +118,5 @@ fi
 echo ""
 log "Data repo ready at $DATA"
 echo "  Files MCP:    $DATA/files/"
-echo "  Memory MCP:   $DATA/memory.jsonl"
 echo "  Git remote:   git@github.com:${REPO}.git"
 echo "  Auto-sync:    every 15 min via cron"
