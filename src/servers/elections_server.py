@@ -133,22 +133,6 @@ async def us_voter_info(address: str) -> dict:
         return r.json()
 
 
-# ── ReliefWeb (election-related reports, no key) ────────
-
-
-@mcp.tool()
-async def election_reports(query: str = "election", country: str = "",
-                            limit: int = 20) -> dict:
-    """ReliefWeb election/crisis reports."""
-    params = {"appname": "mcp", "limit": limit,
-              "query[value]": query, "sort[]": "date:desc"}
-    if country:
-        params["filter[field]"] = f"country.name:{country}"
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.reliefweb.int/v1/reports", params=params)
-        r.raise_for_status()
-        return r.json()
-
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
