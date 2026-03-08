@@ -378,7 +378,11 @@ case "$CMD" in
         ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
         # Update Python deps if changed
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+        if [[ -d "$STACK/venv" ]]; then
+            "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+        else
+            warn "Python venv not found at $STACK/venv — run 'ta install' first"
+        fi
 
         echo "$VER" > "$APP/.version"
         supervisorctl restart librechat 2>/dev/null || true
@@ -452,10 +456,12 @@ case "$CMD" in
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
 import os, sys
-sys.path.insert(0, os.environ.get("STACK", os.path.expanduser("~/mcps")))
+stack = os.environ.get("STACK", os.path.expanduser("~/mcps"))
+sys.path.insert(0, os.path.join(stack, "src", "store"))
+sys.path.insert(0, os.path.join(stack, "src", "servers"))
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.environ.get("STACK", os.path.expanduser("~/mcps")), ".env"))
-from src.store.server import compact, _snap_col, VALID_KINDS
+load_dotenv(os.path.join(stack, ".env"))
+from server import compact, _snap_col, VALID_KINDS
 
 for kind in VALID_KINDS:
     try:

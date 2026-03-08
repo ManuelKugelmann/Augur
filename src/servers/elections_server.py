@@ -2,6 +2,7 @@
 from fastmcp import FastMCP
 import httpx
 import os
+import re
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,6 +10,10 @@ mcp = FastMCP("elections", instructions="Global elections and democracy data")
 GOOGLE_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
 _WD_HEADERS = {"User-Agent": "TradingAssistant/1.0 (trading signals research)"}
+
+# Sanitize inputs for SPARQL queries to prevent injection
+_SAFE_SPARQL_TEXT = re.compile(r'^[A-Za-z0-9 .\'()-]+$')
+_SAFE_YEAR = re.compile(r'^\d{4}$')
 
 
 # ── Wikidata (global elections, no key) ──────────────────
@@ -20,8 +25,12 @@ async def global_elections(country: str = "", year: str = "",
     """Global elections (Wikidata). country: English name. year: e.g. '2025'."""
     filters = []
     if country:
+        if not _SAFE_SPARQL_TEXT.match(country):
+            return [{"error": "invalid country name (letters, spaces, digits only)"}]
         filters.append(f'FILTER(CONTAINS(LCASE(?countryLabel), LCASE("{country}")))')
     if year:
+        if not _SAFE_YEAR.match(year):
+            return [{"error": "invalid year (must be 4 digits, e.g. 2025)"}]
         filters.append(f"FILTER(YEAR(?date) = {year})")
     filter_block = "\n    ".join(filters)
     query = f"""SELECT ?election ?electionLabel ?countryLabel ?date ?typeLabel WHERE {{
@@ -50,6 +59,8 @@ async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
     """Heads of state/government (Wikidata). country: English name."""
     country_filter = ""
     if country:
+        if not _SAFE_SPARQL_TEXT.match(country):
+            return [{"error": "invalid country name (letters, spaces, digits only)"}]
         country_filter = f'FILTER(CONTAINS(LCASE(?countryLabel), LCASE("{country}")))'
     query = f"""SELECT ?person ?personLabel ?countryLabel ?positionLabel ?start ?end WHERE {{
   ?person wdt:P39 ?position .

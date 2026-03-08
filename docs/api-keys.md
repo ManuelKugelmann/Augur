@@ -17,14 +17,18 @@ All domain servers work partially without keys — tools that need a key return 
 | Variable | Service | Used by | Free tier | Signup |
 |----------|---------|---------|-----------|--------|
 | `FRED_API_KEY` | FRED (Federal Reserve) | macro_server | unlimited | https://fred.stlouisfed.org/docs/api/api_key.html |
-| `ACLED_API_KEY` | ACLED (armed conflict) | conflict_server | research access | https://developer.acleddata.com/ |
-| `ACLED_EMAIL` | ACLED (required with key) | conflict_server | — | same as above |
+| `ACLED_EMAIL` | ACLED (OAuth login) | conflict_server | research access | https://developer.acleddata.com/ |
+| `ACLED_PASSWORD` | ACLED (OAuth password) | conflict_server | — | same as above |
+| `UCDP_ACCESS_TOKEN` | UCDP (armed conflict) | conflict_server | free (request token) | https://ucdp.uu.se/apidocs/ |
 | `EIA_API_KEY` | EIA (US energy data) | commodities_server | unlimited | https://www.eia.gov/opendata/register.php |
 | `COMTRADE_API_KEY` | UN Comtrade (trade flows) | commodities_server | 100 req/day | https://comtradeplus.un.org/TradeFlow |
 | `GOOGLE_API_KEY` | Google Civic Info | elections_server | generous | https://console.cloud.google.com/apis/credentials |
 | `AISSTREAM_API_KEY` | AIS Stream (ship tracking) | transport_server | free tier | https://aisstream.io/ |
+| `OPENSKY_CLIENT_ID` | OpenSky Network (OAuth2) | transport_server | free (higher rate limits) | https://opensky-network.org/ |
+| `OPENSKY_CLIENT_SECRET` | OpenSky Network (OAuth2) | transport_server | — | same as above |
 | `CF_API_TOKEN` | Cloudflare Radar | infra_server | free | https://dash.cloudflare.com/profile/api-tokens |
 | `USDA_NASS_API_KEY` | USDA NASS (ag stats) | agri_server | unlimited | https://quickstats.nass.usda.gov/api/ |
+| `IDMC_API_KEY` | IDMC (displacement data) | humanitarian_server | free (request key) | https://www.internal-displacement.org/ |
 
 ## LLM Provider Keys (LibreChat)
 
@@ -61,11 +65,11 @@ These APIs require no authentication and work out of the box:
 | disasters | USGS Earthquakes, GDACS, NASA EONET |
 | macro | World Bank, IMF WEO (FRED needs key) |
 | agri | FAOSTAT (USDA NASS needs key) |
-| conflict | UCDP, OpenSanctions (ACLED needs key) |
+| conflict | UCDP, OpenSanctions (ACLED needs OAuth, UCDP token optional) |
 | health | WHO GHO, WHO Outbreaks, disease.sh, FDA |
-| humanitarian | UNHCR, OCHA HDX, ReliefWeb |
-| elections | ReliefWeb (Google Civic needs key) |
-| transport | OpenSky Network (AIS Stream needs key) |
+| humanitarian | UNHCR, OCHA HDX, ReliefWeb (IDMC needs key) |
+| elections | Wikidata, EU Parliament (Google Civic needs key) |
+| transport | OpenSky Network (AIS Stream needs key, OpenSky OAuth2 optional) |
 | water | USGS Water Services, US Drought Monitor |
 | infra | RIPE Atlas (Cloudflare Radar needs token) |
 
@@ -97,11 +101,16 @@ FRED_API_KEY=your_key_here
                          │
 librechat.yaml           │ env: blocks pass keys explicitly
   ├─ FRED_API_KEY ──────►│ macro_server
-  ├─ ACLED_API_KEY ─────►│ conflict_server
+  ├─ ACLED_EMAIL ───────►│ conflict_server (OAuth login)
+  ├─ ACLED_PASSWORD ────►│ conflict_server (OAuth password)
+  ├─ UCDP_ACCESS_TOKEN ─►│ conflict_server
   ├─ EIA_API_KEY ───────►│ commodities_server
   ├─ COMTRADE_API_KEY ──►│ commodities_server
   ├─ GOOGLE_API_KEY ────►│ elections_server
   ├─ AISSTREAM_API_KEY ──► transport_server
+  ├─ OPENSKY_CLIENT_ID ──► transport_server (OAuth2)
+  ├─ OPENSKY_CLIENT_SECRET► transport_server (OAuth2)
   ├─ CF_API_TOKEN ──────►│ infra_server
-  └─ USDA_NASS_API_KEY ──► agri_server
+  ├─ USDA_NASS_API_KEY ──► agri_server
+  └─ IDMC_API_KEY ──────►│ humanitarian_server
 ```
