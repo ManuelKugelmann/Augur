@@ -1,5 +1,5 @@
 # LibreChat configuration
-# MCP servers: utility (filesystem, memory) + trading signals stack + external data MCPs
+# MCP servers: trading signals stack + external data MCPs
 # Multi-agent architecture: see docs/multi-agent-architecture.md
 version: 1.2.1
 
@@ -22,15 +22,6 @@ interface:
 mcpServers:
 
   # ── Utility (secondary to trading store) ───
-
-  filesystem:
-    command: npx
-    args:
-      - -y
-      - "@modelcontextprotocol/server-filesystem"
-      - __HOME__/TradeAssistant_Data/files/
-    chatMenu: false
-    serverInstructions: "Persistent file storage (git-synced). Secondary to trading store. For documents, exports, reports."
 
   # ── Trading Server (signals store + 12 data domains, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.

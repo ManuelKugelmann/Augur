@@ -1,4 +1,4 @@
-LibreChat deployment with MCP servers (50+ tools): 1 utility (filesystem via stdio) + 1 combined trading server (signals store + 12 data domains, 75+ data sources) via streamable-http. Single process, multi-user. No Docker, no Meilisearch, no RAG, no Redis.
+LibreChat deployment with MCP server (50+ tools): 1 combined trading server (signals store + 12 data domains, 75+ data sources) via streamable-http. Single process, multi-user. No Docker, no Meilisearch, no RAG, no Redis.
 
 All scripts read from `deploy.conf` — edit once, applies everywhere.
 
@@ -9,7 +9,6 @@ All scripts read from `deploy.conf` — edit once, applies everywhere.
 │ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ assist.uber.space           │
 │ dev + test   │push │  repo  │tag  │ build+tar  │pull │                             │
 └──────────────┘     └────────┘     └───────────┘     │ LibreChat (:3080)           │
-                                                       │ ├─ MCP: filesystem (stdio)  │
                                                        │ └─ MCP: trading ──http──▶   │
                                                        │                             │
                                                        │ trading server (:8071, 68t) │

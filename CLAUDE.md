@@ -2,7 +2,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. MCP servers: 1 utility (filesystem via stdio) + 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. MCP server: 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http. Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -122,7 +122,6 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                                   ▼
                            Uberspace (assist.uber.space)
                            ├─ LibreChat (:3080, Node.js)
-                           │   ├─ MCP: filesystem  → ~/TradeAssistant_Data/files/ (stdio)
                            │   └─ MCP: trading ──streamable-http──▶ :8071/mcp
                            │         X-User-ID / X-User-Email injected per request
                            │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET
