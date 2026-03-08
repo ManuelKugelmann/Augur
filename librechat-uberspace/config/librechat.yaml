@@ -101,6 +101,44 @@ mcpServers:
     chatMenu: false
     serverInstructions: "Reddit post/comment search for sentiment and signal detection."
 
+  # ── External MCPs (Tier 2 — additive analytics & signals) ──
+
+  alphavantage:
+    command: npx
+    args: ["-y", "mcp-remote", "https://mcp.alphavantage.co"]
+    chatMenu: false
+    serverInstructions: "Stock/forex/crypto prices, 50+ technical indicators (RSI, MACD, Bollinger, etc.), fundamentals. Free key: 25 calls/day."
+
+  hackernews:
+    command: npx
+    args: ["-y", "@devabdultech/hn-mcp-server"]
+    chatMenu: false
+    serverInstructions: "Hacker News stories, comments, Algolia search. Tech/startup sentiment signal."
+
+  arxiv:
+    command: uv
+    args: ["tool", "run", "arxiv-mcp-server"]
+    chatMenu: false
+    serverInstructions: "arXiv paper search, metadata, download. Research signal for thematic plays (AI, biotech, materials, etc.)."
+
+  math:
+    command: uv
+    args: ["tool", "run", "mcp-mathematics"]
+    chatMenu: false
+    serverInstructions: "52 math functions, 158 unit conversions, financial calcs (NPV, IRR, loan amortization). AST-secure eval."
+
+  regression:
+    command: uvx
+    args: ["mcp-ols"]
+    chatMenu: false
+    serverInstructions: "OLS + logistic regression, residual diagnostics, VIF, Cook's distance. Reads CSV/Excel/JSON/Parquet/SQLite."
+
+  crypto-sentiment:
+    command: python
+    args: ["-m", "crypto_feargreed_mcp"]
+    chatMenu: false
+    serverInstructions: "Real-time + historical Crypto Fear & Greed Index. Sentiment signal for crypto markets."
+
 # ── Agents Endpoint ─────────────────────────
 # Required for multi-agent handoffs and Agent Chain pipelines.
 endpoints:
