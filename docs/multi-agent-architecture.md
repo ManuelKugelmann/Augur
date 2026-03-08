@@ -18,10 +18,10 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 │       Can hand off to ANY agent below                           │
 │       Owns plans, executes trades, watches portfolio            │
 ├─────────────────────────────────────────────────────────────────┤
-│  L4  CRON PLANNER + EXECUTOR                     (autonomous)   │
-│       Research organizer: schedules what to scrape/analyze      │
-│       Executes trades, watches portfolio via risk gate          │
-│       Can use ALL agents below                                  │
+│  L4  AUTONOMOUS AGENTS                            (autonomous)   │
+│       T4-shared: general data updates + shared research         │
+│       T4-user:  per-user plans, plan research, trade execution  │
+│       Both can use ALL agents below                             │
 ├─────────────────────────────────────────────────────────────────┤
 │  L3  CROSS-CUTTING REASONING                     (synthesis)    │
 │       Reads across ALL domain data in storage                   │
@@ -37,7 +37,7 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 │  L1  DATA AGENTS      │  Thematic data collection. Scrape MCPs, │
 │                       │  own profiles, snapshots, events.       │
 │  market-data          │  Also read from storage on request.     │
-│  osint-data           │  + filesystem, memory                   │
+│  osint-data           │  + filesystem                            │
 │  signals-data         │                                         │
 ├───────────────────────┼─────────────────────────────────────────┤
 │  UTILITY AGENTS       │  Stateless helpers for specific tasks.  │
@@ -47,7 +47,7 @@ on cron, live chat assistant serves the user. Each layer can only see downward.
 ├───────────────────────┴─────────────────────────────────────────┤
 │  STORAGE              │  Profiles (JSON/git), Snapshots (Mongo), │
 │                       │  Notes (Mongo), Plans (Mongo),           │
-│                       │  Files, Memory                           │
+│                       │  Files                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -180,50 +180,89 @@ notes (briefings, predictions, assessments).
 
 ---
 
-### L4 — Cron Planner + Executor (autonomous, owns plans, trades, portfolio)
+### L4 — Autonomous Agents (two variants: shared + per-user)
 
-Runs autonomously on cron. **Owns plans**: research plans, watchlists, schedules.
-Also **executes trades** (via trader utility agent) and **watches portfolio**.
+Two T4 agents run autonomously. **T4-shared** handles general data freshness
+and shared research (no user context). **T4-user** handles per-user plans,
+plan-relevant research, and trade execution (needs `X-User-ID`).
+
+#### T4-shared — General Data & Research
+
+Keeps data fresh and produces shared research available to all users.
+No per-user state — uses only shared tools.
+
+| Capability | How |
+|-----------|-----|
+| Refresh data | Hands off to market-data, osint-data, signals-data |
+| Trigger analysis | Hands off to market-analyst, osint-analyst, signals-analyst |
+| Request synthesis | Hands off to synthesizer |
+| Shared research | `store_save_research`, `store_get_research`, `store_update_research` |
+| Generate charts | Hands off to **charter** utility agent |
+
+**Owns**: `store_save_research`, `store_get_research`, `store_update_research`,
+`store_delete_research`.
+
+**System prompt**:
+
+> You are the Shared Research Agent. You run autonomously on a schedule.
+> Your job: keep data fresh and produce shared research for all users.
+>
+> Routine:
+> 1. Hand off to data agents to refresh snapshots for key entities.
+> 2. Hand off to analysts for domain-specific analysis.
+> 3. Hand off to synthesizer for cross-domain patterns.
+> 4. Save findings as shared research via `store_save_research()`.
+> 5. Update existing research when data changes.
+>
+> You do NOT access per-user notes, plans, or notifications.
+> You do NOT execute trades.
+> Priority: high-severity events > major market moves > routine coverage.
+
+**Model**: Sonnet (needs judgment for research prioritization).
+
+**Handoff edges**: → all L1 data agents, all L2 analysts, L3 synthesizer, charter.
+
+#### T4-user — Per-User Planner + Executor
+
+Runs per-user, triggered by ntfy. Owns user plans, executes plan-relevant
+research, follows up on plans, executes trades via risk gate.
 
 | Capability | How |
 |-----------|-----|
 | Read/write plans | `store_save_note(kind=plan)`, `store_get_notes(kind=plan)` |
-| Schedule scraper runs | Hands off to market-data, osint-data, signals-data |
-| Trigger analysis | Hands off to market-analyst, osint-analyst, signals-analyst |
-| Request synthesis | Hands off to synthesizer |
+| Plan-relevant research | Hands off to data agents + analysts for plan-specific queries |
+| Read shared research | `store_get_research` (reads T4-shared output) |
 | Execute trades | Hands off to **trader** utility agent (risk-gated) |
 | Watch portfolio | Hands off to **trader** for positions, P&L, fills |
 | Generate charts | Hands off to **charter** utility agent |
 | Manage watchlists | Read/write `store_save_note(kind=plan, tags=["watchlist"])` |
 | Check risk budget | `store_risk_status()` |
+| Notify user | `store_notify(title, message)` via ntfy |
 
 **Owns**: `store_save_note(kind=plan)`, `store_get_notes(kind=plan)`,
-`store_update_note`, `store_delete_note` (for plan management),
-`store_risk_status`.
+`store_update_note`, `store_delete_note`, `store_risk_status`, `store_notify`.
 
 **System prompt**:
 
-> You are the Cron Planner. You run autonomously on a schedule.
-> Your job: ensure data is fresh, analysis is current, plans are executed.
->
-> You own **plans** — research plans, watchlists, trade schedules.
+> You are the Per-User Planner. You run for a specific user on their schedule.
+> Your job: execute their plans, do plan-relevant research, and notify them.
 >
 > Routine:
-> 1. Read current plans and watchlists (`store_get_notes(kind="plan")`).
-> 2. For each watched entity, hand off to the appropriate data agent to check freshness.
-> 3. If data is stale, the data agent will scrape fresh data.
-> 4. After scraping, hand off to the appropriate analyst for analysis.
-> 5. After analysis, hand off to the synthesizer for cross-domain patterns.
-> 6. If plans call for trade execution, hand off to the **trader** agent.
-> 7. Check portfolio status via **trader** and log changes.
-> 8. Update plans with results and next scheduled actions.
+> 1. Read user's plans and watchlists (`store_get_notes(kind="plan")`).
+> 2. Read shared research (`store_get_research`) for relevant context.
+> 3. For plan-specific data needs, hand off to the appropriate data agent.
+> 4. After gathering data, hand off to analysts for plan-relevant analysis.
+> 5. If plans call for trade execution, hand off to the **trader** agent.
+> 6. Check portfolio status via **trader** and log changes.
+> 7. Update plans with results and next scheduled actions.
+> 8. Notify the user via `store_notify()` for important events.
 >
 > Trading rules:
 > - ALWAYS check `store_risk_status()` before handing off to trader.
 > - Default to dry-run mode. Only execute live if user has enabled live trading.
 > - If risk budget is low, skip lower-confidence predictions.
 >
-> Priority: user watchlist entities > high-severity events > routine coverage.
+> Priority: user watchlist entities > plan deadlines > plan-relevant events.
 
 **Model**: Sonnet (needs judgment for planning and risk decisions).
 
@@ -257,8 +296,8 @@ Conversational, explains reasoning, takes user input. Like L4, the chat agent
 (analyst output) directly.
 
 **Handoff edges**: ALL agents (market-data, osint-data, signals-data,
-market-analyst, osint-analyst, signals-analyst, synthesizer, cron-planner,
-trader, charter).
+market-analyst, osint-analyst, signals-analyst, synthesizer, t4-shared,
+t4-user, trader, charter).
 
 **System prompt**:
 
@@ -390,13 +429,13 @@ needs a visual output.
     ┌────┴──────────┴──────┴──────┴──┐
     │  L1 Data Agents                │
     │  market-data │ osint-data      │  own: PROFILES, SNAPSHOTS, EVENTS
-    │  signals-data                  │  + filesystem, memory
+    │  signals-data                  │  + filesystem
     └───────┬────────────────────────┘
             ▼
     ┌───────────────────────────────────────────────┐
     │                   STORAGE                     │
     │  Profiles │ Snapshots │ Events │ Notes │ Plans│
-    │  Files    │ Memory                            │
+    │  Files                                        │
     └───────────────────────────────────────────────┘
 ```
 
@@ -466,15 +505,13 @@ L4/L5 execute trades by handing off to the trader utility agent.
 
 ### Utility MCPs — Attached to Data Agents
 
-The trading store is the primary storage layer. Filesystem is secondary
-(for file exports/reports). Memory (knowledge graph) is useful for
-cross-conversation entity tracking. SQLite is not needed — the trading
-store's MongoDB backend covers structured queries via `store_aggregate`.
+The trading store is the primary storage layer (including per-user memory
+via `save_memory`/`get_memories` tools). Filesystem is secondary
+(for file exports/reports).
 
 | MCP | Attached To | Purpose | Priority |
 |-----|------------|---------|----------|
 | filesystem | All L1 data agents | File exports, reports, documents | Secondary to trading store |
-| memory | All L1 data agents | Knowledge graph across conversations | Useful for entity relations |
 
 ---
 
@@ -490,15 +527,6 @@ mcpServers:
     command: npx
     args: ["-y", "@modelcontextprotocol/server-filesystem", "__HOME__/TradeAssistant_Data/files/"]
     chatMenu: false
-
-  memory:
-    command: npx
-    args: ["-y", "@modelcontextprotocol/server-memory"]
-    env:
-      MEMORY_FILE_PATH: __HOME__/TradeAssistant_Data/memory.jsonl
-    chatMenu: false
-
-  # sqlite removed — trading store's MongoDB covers structured queries via store_aggregate
 
   trading:
     type: streamable-http

@@ -11,8 +11,6 @@ One-liner install, then configure and go.
 Uberspace (assist.uber.space)
 ├─ LibreChat (:3080, Node.js)         — chat UI, multi-user
 │   ├─ MCP: filesystem (stdio)        → ~/TradeAssistant_Data/files/
-│   ├─ MCP: memory (stdio)            → ~/TradeAssistant_Data/memory.jsonl
-│   ├─ MCP: sqlite (stdio)            → ~/TradeAssistant_Data/data.db
 │   └─ MCP: trading (streamable-http) → localhost:8071/mcp
 │         X-User-ID / X-User-Email per request
 │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET, etc.
@@ -452,9 +450,7 @@ ssh -T git@github.com   # should say "Hi youruser!"
 │   └── api/                       ← LibreChat backend
 │
 ├── TradeAssistant_Data/           ← git-versioned MCP data
-│   ├── files/                     ← filesystem MCP storage
-│   ├── memory.jsonl               ← knowledge graph
-│   └── data.db                    ← SQLite database
+│   └── files/                     ← filesystem MCP storage
 │
 ├── bin/
 │   ├── ta                         ← ops CLI (primary)

@@ -41,7 +41,7 @@ git clone https://github.com/ManuelKugelmann/TradingAssistant.git
 cd TradingAssistant
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # edit with MONGO_URI + API keys
+cp .env.example .env   # edit with MONGO_URI_SIGNALS + API keys
 python src/store/server.py
 ```
 

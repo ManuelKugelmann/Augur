@@ -35,11 +35,11 @@ Both the signals store and LibreChat share this cluster (different database name
 
 See **[docs/api-keys.md](api-keys.md)** for the full reference with signup links.
 
-Quick summary — only `MONGO_URI` is required. Everything else is optional:
+Quick summary — only `MONGO_URI_SIGNALS` is required. Everything else is optional:
 
 ```bash
 # Required
-MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
+MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
 
 # Recommended (most useful, instant free signup)
 FRED_API_KEY=           # https://fred.stlouisfed.org/docs/api/api_key.html
@@ -66,7 +66,7 @@ git clone https://github.com/ManuelKugelmann/TradingAssistant.git
 cd TradingAssistant
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env    # edit: set MONGO_URI + optional API keys
+cp .env.example .env    # edit: set MONGO_URI_SIGNALS + optional API keys
 python src/servers/combined_server.py  # all tools (store + 12 domains)
 ```
 
@@ -134,7 +134,7 @@ What happens:
 ```bash
 # Signals stack — one shared MongoDB Atlas cluster, database: signals
 ta conf
-# Set: MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
+# Set: MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
 
 # LibreChat — same cluster, database: LibreChat
 ta env
@@ -195,7 +195,7 @@ ta install dev    # re-downloads CI build or rebuilds from source
 bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
 ```
 
-Auto-syncs every 15 min via cron. Stores filesystem files, memory graph, and SQLite DB.
+Auto-syncs every 15 min via cron. Stores filesystem files.
 
 ---
 
@@ -219,7 +219,7 @@ git tag v0.1.0 && git push --tags
 #### Configure
 
 ```bash
-ta conf   # signals stack: set MONGO_URI
+ta conf   # signals stack: set MONGO_URI_SIGNALS
 ta env    # LibreChat: set MONGO_URI + LLM key
 ```
 

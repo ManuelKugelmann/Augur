@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The trading stack exposes **50+ tools** across 10 namespaces via a single combined FastMCP process, plus 3 utility MCPs (filesystem, memory, sqlite) via stdio. All servers are **self-hosted** — no cloud MCP services.
+The trading stack exposes **50+ tools** across 10 namespaces via a single combined FastMCP process, plus 1 utility MCP (filesystem) via stdio. All servers are **self-hosted** — no cloud MCP services.
 
 This review identifies:
 1. **4 redundant tools** that wrap the same API endpoint or duplicate existing capability
@@ -126,26 +126,20 @@ async def hazard_alerts(hazard: str = "", days: int = 7,
 |--------|-----------|---------|---------|
 | **trading** | streamable-http :8071 | FastMCP (Python) | Store + 9 data domains |
 | **filesystem** | stdio | `@modelcontextprotocol/server-filesystem` | File read/write in `~/TradeAssistant_Data/files/` |
-| **memory** | stdio | `@modelcontextprotocol/server-memory` | Knowledge graph (entities, relations) |
-| **sqlite** | stdio | `mcp-sqlite` | SQL queries on `data.db` |
 
 ### Overlap with Trading Store?
 
 | Capability | Store Already Does | Utility MCP Adds |
 |------------|-------------------|------------------|
 | Document storage | Profiles (structured JSON, git-tracked) | Arbitrary files (exports, reports, PDFs) |
-| Knowledge persistence | Notes (per-user, MongoDB) | Entity graph (cross-session, relational) |
-| Structured queries | MongoDB aggregation pipeline | SQL (joins, GROUP BY, ad-hoc analytics) |
-
-**Verdict**: **No functional overlap.** The store handles domain-specific structured data (profiles, snapshots, notes). The utility MCPs handle ad-hoc user data (files, knowledge, SQL). Keep separate.
+| Knowledge persistence | Notes + memory (per-user, MongoDB) | N/A |
+**Verdict**: **No functional overlap.** The store handles domain-specific structured data (profiles, snapshots, notes, memory). The filesystem MCP handles ad-hoc user data (files). Keep separate.
 
 ### Could We Drop Any?
 
 | MCP | Drop? | Rationale |
 |-----|-------|-----------|
 | **filesystem** | No | Needed for user exports, report generation, document storage |
-| **memory** | Maybe | Lowest usage; knowledge could be stored as notes. But memory's entity-relation graph is better for connecting concepts across conversations. **Keep for now, monitor usage.** |
-| **sqlite** | No | SQL is the right tool for ad-hoc structured queries. MongoDB aggregation is powerful but SQL is more natural for many analyses. |
 
 ---
 
@@ -195,8 +189,7 @@ Tool count stays the same, but **LLM decision quality improves** — the routers
 
 ### Monitor (P2)
 
-5. **Track memory MCP usage** — if rarely used, consider dropping in favor of store notes
-6. **Add docstring disambiguation** to disaster tools — make it clear when to use USGS vs GDACS vs EONET
+5. **Add docstring disambiguation** to disaster tools — make it clear when to use USGS vs GDACS vs EONET
 
 ---
 
