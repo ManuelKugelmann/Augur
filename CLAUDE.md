@@ -164,6 +164,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - **Notes tools**: `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
 - **Memory tools**: `store_save_memory`, `store_get_memories`, `store_delete_memory`
 - **Plan tools**: `store_save_plan`, `store_get_plans`, `store_update_plan`, `store_delete_plan`
+- **Research tools**: `store_save_research`, `store_get_research`, `store_update_research`, `store_delete_research`
 - **Risk tools**: `store_risk_status`
 - **Shared API**: Both profile and snapshot tools use `kind` + `id` + optional `region`; snapshot tools add time fields
 - **Profile kinds**: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
@@ -326,6 +327,17 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `update_plan(title, content?, tags?)` | Update a plan by title (owner only) |
 | `delete_plan(title)` | Delete a plan by title (owner only) |
 
+### Research tools (shared, multi-user)
+
+| Tool | Purpose |
+|------|---------|
+| `save_research(title, content, tags?, kind?)` | Save shared research note (visible to all, upsert by title) |
+| `get_research(title?, tag?, kind?, author?, limit?)` | List shared research (no auth required to read) |
+| `update_research(title, content?, tags?)` | Update shared research (any identified user) |
+| `delete_research(title)` | Delete shared research (original author only) |
+
+Research kinds: `research` (default), `report`, `briefing`, `alert`
+
 ### Risk gate
 
 | Tool | Purpose |
@@ -405,7 +417,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
-| `test_store.py` | 72 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools, plan tools |
+| `test_store.py` | 84 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools, plan tools, shared research |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |

@@ -769,3 +769,95 @@ class TestPlanTools:
         monkeypatch.setattr(deps, "get_http_headers", lambda: {})
         r = store.save_plan("k", "v")
         assert "error" in r
+
+
+# ── Shared research notes ────────────────────────
+
+
+class TestResearchTools:
+    @pytest.fixture(autouse=True)
+    def setup_research(self, store, monkeypatch):
+        """Provide a fake shared_notes collection and user identity."""
+        self.col = _FakeCollection()
+        monkeypatch.setattr(store, "_shared_notes_col", lambda: self.col)
+        fake_headers = {"x-user-id": "analyst-1"}
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
+
+    def test_save_research_creates(self, store):
+        r = store.save_research("Oil Market Brief", "Brent up 3%")
+        assert r["status"] == "created"
+        assert r["title"] == "Oil Market Brief"
+
+    def test_save_research_overwrites(self, store):
+        store.save_research("Weekly Macro", "v1")
+        r = store.save_research("Weekly Macro", "v2")
+        assert r["status"] == "updated"
+        notes = store.get_research(title="Weekly Macro")
+        assert len(notes) == 1
+        assert notes[0]["content"] == "v2"
+
+    def test_save_research_custom_kind(self, store):
+        store.save_research("Alert", "high vol", kind="alert")
+        notes = store.get_research(kind="alert")
+        assert len(notes) == 1
+        assert notes[0]["kind"] == "alert"
+
+    def test_get_research_no_auth_needed(self, store, monkeypatch):
+        """Reading shared research does not require user identification."""
+        store.save_research("Public Report", "open data")
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: {})
+        notes = store.get_research(title="Public Report")
+        assert len(notes) == 1
+
+    def test_get_research_by_tag(self, store):
+        store.save_research("A", "1", tags=["macro"])
+        store.save_research("B", "2", tags=["sector"])
+        notes = store.get_research(tag="macro")
+        assert len(notes) == 1
+
+    def test_get_research_by_author(self, store):
+        store.save_research("My Research", "content")
+        notes = store.get_research(author="analyst-1")
+        assert len(notes) == 1
+
+    def test_update_research(self, store):
+        store.save_research("Edit Me", "original")
+        r = store.update_research("Edit Me", content="revised")
+        assert r["status"] == "updated"
+        notes = store.get_research(title="Edit Me")
+        assert notes[0]["content"] == "revised"
+
+    def test_update_research_not_found(self, store):
+        r = store.update_research("Ghost")
+        assert "error" in r
+
+    def test_update_research_by_different_user(self, store, monkeypatch):
+        """Any identified user can update shared research."""
+        store.save_research("Shared Note", "v1")
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers",
+                            lambda: {"x-user-id": "analyst-2"})
+        r = store.update_research("Shared Note", content="v2")
+        assert r["status"] == "updated"
+
+    def test_delete_research_by_author(self, store):
+        store.save_research("Delete Me", "bye")
+        r = store.delete_research("Delete Me")
+        assert r["status"] == "deleted"
+
+    def test_delete_research_wrong_author(self, store, monkeypatch):
+        """Only the original author can delete."""
+        store.save_research("Protected", "important")
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers",
+                            lambda: {"x-user-id": "analyst-2"})
+        r = store.delete_research("Protected")
+        assert "error" in r
+
+    def test_save_research_requires_user(self, store, monkeypatch):
+        deps = sys.modules["fastmcp.server.dependencies"]
+        monkeypatch.setattr(deps, "get_http_headers", lambda: {})
+        r = store.save_research("t", "c")
+        assert "error" in r

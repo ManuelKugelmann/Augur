@@ -1117,6 +1117,106 @@ def delete_plan(title: str) -> dict:
     return {"title": title, "status": "deleted"}
 
 
+# ── Shared research notes ────────────────────────
+# Research findings produced by analyzing agents — shared across all users.
+# Stored in "shared_notes" collection. Author is tracked but anyone can read.
+# Title is unique (upsert): saving with the same title overwrites.
+
+
+def _shared_notes_col():
+    """Return the shared_notes collection."""
+    return _db().shared_notes
+
+
+@mcp.tool()
+def save_research(title: str, content: str,
+                  tags: list[str] | None = None,
+                  kind: str = "research") -> dict:
+    """Save a shared research note (visible to all users). Overwrites if title exists.
+
+    kind: research | report | briefing | alert (default: research)
+    """
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified (X-User-ID header missing)"}
+    now = datetime.now(timezone.utc)
+    col = _shared_notes_col()
+    r = col.update_one(
+        {"title": title},
+        {"$set": {
+            "content": content,
+            "kind": kind,
+            "tags": tags or [],
+            "updated": now,
+            "updated_by": uid,
+        }, "$setOnInsert": {
+            "title": title,
+            "created": now,
+            "author": uid,
+        }},
+        upsert=True,
+    )
+    action = "updated" if r.matched_count else "created"
+    return {"title": title, "status": action}
+
+
+@mcp.tool()
+def get_research(title: str = "", tag: str = "", kind: str = "",
+                 author: str = "", limit: int = 50) -> list[dict]:
+    """List shared research notes. Readable by all users. Filter by title, tag, kind, or author."""
+    q: dict = {}
+    if title:
+        q["title"] = title
+    if tag:
+        q["tags"] = tag
+    if kind:
+        q["kind"] = kind
+    if author:
+        q["author"] = author
+    rows = _shared_notes_col().find(q).sort("updated", -1).limit(limit)
+    result = []
+    for r in rows:
+        r["_id"] = str(r["_id"])
+        for k in ("created", "updated"):
+            if isinstance(r.get(k), datetime):
+                r[k] = r[k].isoformat()
+        result.append(r)
+    return result
+
+
+@mcp.tool()
+def update_research(title: str, content: str = "",
+                    tags: list[str] | None = None) -> dict:
+    """Update a shared research note by title. Any identified user can update."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    update: dict = {"updated": datetime.now(timezone.utc), "updated_by": uid}
+    if content:
+        update["content"] = content
+    if tags is not None:
+        update["tags"] = tags
+    r = _shared_notes_col().update_one(
+        {"title": title},
+        {"$set": update}
+    )
+    if r.matched_count == 0:
+        return {"error": "research note not found"}
+    return {"title": title, "status": "updated"}
+
+
+@mcp.tool()
+def delete_research(title: str) -> dict:
+    """Delete a shared research note by title. Only the original author can delete."""
+    uid = _get_user_id()
+    if not uid:
+        return {"error": "user not identified"}
+    r = _shared_notes_col().delete_one({"title": title, "author": uid})
+    if r.deleted_count == 0:
+        return {"error": "research note not found or you are not the author"}
+    return {"title": title, "status": "deleted"}
+
+
 # ── Per-user trading keys ─────────────────────────
 # Users provide their own API keys via LibreChat customUserVars.
 # Keys arrive as HTTP headers (e.g. X-Broker-Key) and are NOT stored server-side.
