@@ -47,6 +47,17 @@ mcp.mount(infra, namespace="infra")
 if __name__ == "__main__":
     import os
     transport_mode = os.environ.get("MCP_TRANSPORT", "stdio")
+
+    # Start the plan worker if enabled (default: on for http, off for stdio)
+    plan_worker_enabled = os.environ.get(
+        "PLAN_WORKER_ENABLED",
+        "1" if transport_mode in ("streamable-http", "http") else "0"
+    )
+    if plan_worker_enabled in ("1", "true", "yes"):
+        from server import _db, send_notification
+        import plan_worker
+        plan_worker.start(_db, send_notification)
+
     if transport_mode in ("streamable-http", "http"):
         port = int(os.environ.get("MCP_PORT", "8071"))
         mcp.run(transport="http", host="127.0.0.1", port=port,

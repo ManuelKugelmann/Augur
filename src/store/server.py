@@ -1135,5 +1135,64 @@ def risk_status() -> dict:
     }
 
 
+# ── Notifications (ntfy) ──────────────────────────
+# Per-user push notifications via ntfy.sh.
+# User sets their ntfy topic via X-Ntfy-Topic header (customUserVars).
+# Server-wide fallback: NTFY_TOPIC env var.
+# NTFY_BASE_URL defaults to https://ntfy.sh
+
+
+_NTFY_BASE = os.environ.get("NTFY_BASE_URL", "https://ntfy.sh")
+_NTFY_TOPIC_DEFAULT = os.environ.get("NTFY_TOPIC", "")
+
+
+def _get_ntfy_topic() -> str:
+    """Get the ntfy topic for the current user (header > env default)."""
+    topic = _get_user_key("x-ntfy-topic")
+    return topic or _NTFY_TOPIC_DEFAULT
+
+
+@mcp.tool()
+def notify(title: str, message: str, priority: str = "default",
+           tags: str = "") -> dict:
+    """Send a push notification via ntfy (per-user topic).
+
+    priority: min | low | default | high | urgent
+    tags: comma-separated emoji tags (e.g. "warning,chart_with_upwards_trend")
+    """
+    topic = _get_ntfy_topic()
+    if not topic:
+        return {"error": "no ntfy topic configured — set X-Ntfy-Topic in Settings > Plugins or NTFY_TOPIC env var"}
+    import httpx
+    headers = {"Title": title, "Priority": priority}
+    if tags:
+        headers["Tags"] = tags
+    try:
+        r = httpx.post(f"{_NTFY_BASE}/{topic}", content=message,
+                       headers=headers, timeout=10)
+        r.raise_for_status()
+        return {"status": "sent", "topic": topic}
+    except Exception as e:
+        return {"error": f"ntfy send failed: {e}"}
+
+
+def send_notification(topic: str, title: str, message: str,
+                      priority: str = "default", tags: str = "") -> dict:
+    """Internal: send ntfy notification to a specific topic (for plan worker)."""
+    if not topic:
+        return {"error": "no topic"}
+    import httpx
+    headers = {"Title": title, "Priority": priority}
+    if tags:
+        headers["Tags"] = tags
+    try:
+        r = httpx.post(f"{_NTFY_BASE}/{topic}", content=message,
+                       headers=headers, timeout=10)
+        r.raise_for_status()
+        return {"status": "sent", "topic": topic}
+    except Exception as e:
+        return {"error": f"ntfy send failed: {e}"}
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
