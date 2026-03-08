@@ -237,9 +237,9 @@ jobs:
       - name: Check MongoDB connections
         env:
           MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
-          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_URI_LIBRECHAT: ${{ secrets.MONGO_URI_LIBRECHAT }}
         run: |
-          for var in MONGO_URI_SIGNALS MONGO_URI; do
+          for var in MONGO_URI_SIGNALS MONGO_URI_LIBRECHAT; do
             val=$(printenv "$var" 2>/dev/null || true)
             if [ -n "$val" ]; then
               echo "$var: SET (${#val} chars)"
@@ -251,7 +251,7 @@ jobs:
       - name: Run combined server smoke tests
         env:
           MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
-          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_URI_LIBRECHAT: ${{ secrets.MONGO_URI_LIBRECHAT }}
         run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
 
   smoke-install:
