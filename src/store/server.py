@@ -75,7 +75,11 @@ def _db():
             _client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         except Exception as e:
             raise RuntimeError(f"MongoDB connection failed: {e}") from e
-    return _client.signals
+    # Use database name from URI path if present, otherwise default to 'signals'
+    try:
+        return _client.get_default_database()
+    except Exception:
+        return _client.signals
 
 
 def _ensure_ts(name: str, ttl: int | None = None, granularity: str = "hours"):

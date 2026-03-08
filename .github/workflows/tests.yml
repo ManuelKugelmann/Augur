@@ -13,6 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps (for real venv in install smoke tests)
+        run: pip install httpx python-dotenv pymongo
+
       - name: Install bats
         run: |
           git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
@@ -61,28 +69,6 @@ jobs:
             scripts/nightly-git-commit.sh \
             deploy.conf \
           || true
-
-  install-lifecycle:
-    name: Install lifecycle (install → pull → update)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Python deps (for venv creation in tests)
-        run: pip install httpx python-dotenv pymongo
-
-      - name: Install bats
-        run: |
-          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
-          sudo /tmp/bats/install.sh /usr/local
-
-      - name: Run install lifecycle tests
-        run: bats tests/test_install_lifecycle.bats
 
   integration-free:
     name: Integration tests (free APIs)
@@ -203,17 +189,75 @@ jobs:
       - name: Install dependencies
         run: pip install pytest pytest-timeout httpx python-dotenv pymongo
 
-      - name: Check MongoDB connection
+      - name: Derive MongoDB URIs from cluster secret
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
           if [ -n "$MONGO_URI" ]; then
-            echo "MONGO_URI: SET (${#MONGO_URI} chars)"
+            # Strip any existing db name and query params, then append ci db
+            SCHEME_AND_HOST="${MONGO_URI%%\?*}"      # remove ?params
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"    # remove trailing /
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/*}"   # remove /dbname if present
+            # Re-check: if we stripped too far (no / after ://), restore
+            if [[ "$SCHEME_AND_HOST" != *"://"*"."* ]]; then
+              SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+              SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+            fi
+            # Extract query params if any
+            if [[ "$MONGO_URI" == *"?"* ]]; then
+              PARAMS="?${MONGO_URI#*\?}"
+            else
+              PARAMS=""
+            fi
+            echo "MONGO_URI_SIGNALS=${SCHEME_AND_HOST}/ci_signals${PARAMS}" >> "$GITHUB_ENV"
+            echo "MONGO_URI: SET → derived ci_signals"
           else
             echo "MONGO_URI: MISSING — store tests will be skipped"
           fi
 
       - name: Run store integration tests
+        run: python -m pytest tests/test_integration_store.py -v -m integration --timeout=60
+
+  smoke-combined:
+    name: Smoke test (combined server + Atlas)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [python-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp
+
+      - name: Derive MongoDB URIs from cluster secret
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
-        run: python -m pytest tests/test_integration_store.py -v -m integration --timeout=60
+        run: |
+          if [ -n "$MONGO_URI" ]; then
+            SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+            SCHEME_AND_HOST="${SCHEME_AND_HOST%/*}"
+            if [[ "$SCHEME_AND_HOST" != *"://"*"."* ]]; then
+              SCHEME_AND_HOST="${MONGO_URI%%\?*}"
+              SCHEME_AND_HOST="${SCHEME_AND_HOST%/}"
+            fi
+            if [[ "$MONGO_URI" == *"?"* ]]; then
+              PARAMS="?${MONGO_URI#*\?}"
+            else
+              PARAMS=""
+            fi
+            echo "MONGO_URI_SIGNALS=${SCHEME_AND_HOST}/ci_signals${PARAMS}" >> "$GITHUB_ENV"
+            echo "MONGO_URI_LIBRECHAT=${SCHEME_AND_HOST}/ci_LibreChat${PARAMS}" >> "$GITHUB_ENV"
+            echo "MONGO_URI: SET → derived ci_signals + ci_LibreChat"
+          else
+            echo "MONGO_URI: MISSING — smoke tests will be skipped"
+          fi
+
+      - name: Run combined server smoke tests
+        run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
+

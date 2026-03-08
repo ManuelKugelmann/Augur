@@ -186,6 +186,57 @@ class TestTools:
         assert "reddit" in tool_str, "signals-data should have reddit MCP"
 
 
+# ── T4 cron-planner validation ──────────────
+
+class TestCronPlanner:
+    """T4 cron-planner must reference per-user (notes/plans) and shared
+    (research) store tools in its instructions, and edge to all needed agents."""
+
+    def test_t4_has_trading_mcp(self, agents):
+        cp = next(a for a in agents if a["_name"] == "cron-planner")
+        assert any("trading" in t for t in cp["tools"]), \
+            "cron-planner needs trading MCP for store_* tools"
+
+    def test_t4_instructions_reference_plans(self, agents):
+        cp = next(a for a in agents if a["_name"] == "cron-planner")
+        instr = cp["instructions"]
+        assert "plan" in instr.lower(), \
+            "cron-planner instructions should reference plans"
+        assert "get_notes" in instr, \
+            "cron-planner instructions should reference store_get_notes"
+
+    def test_t4_instructions_reference_research(self, agents):
+        cp = next(a for a in agents if a["_name"] == "cron-planner")
+        instr = cp["instructions"]
+        assert "research" in instr.lower(), \
+            "cron-planner instructions should reference research"
+
+    def test_t4_edges_to_data_and_analyst_agents(self, agents):
+        cp = next(a for a in agents if a["_name"] == "cron-planner")
+        edges = set(cp["edges"])
+        # Must reach all 3 data agents (for freshness checks)
+        for data_agent in ("market-data", "osint-data", "signals-data"):
+            assert data_agent in edges, \
+                f"cron-planner should edge to {data_agent}"
+        # Must reach all 3 analysts (for triggering analysis)
+        for analyst in ("market-analyst", "osint-analyst", "signals-analyst"):
+            assert analyst in edges, \
+                f"cron-planner should edge to {analyst}"
+        # Must reach synthesizer (for cross-domain)
+        assert "synthesizer" in edges
+        # Must reach trader (for execution)
+        assert "trader" in edges
+
+    def test_t4_edges_do_not_include_self(self, agents):
+        cp = next(a for a in agents if a["_name"] == "cron-planner")
+        assert "cron-planner" not in cp["edges"]
+
+    def test_l5_edges_include_t4(self, agents):
+        """L5 live-chat must be able to hand off to T4 cron-planner."""
+        lc = next(a for a in agents if a["_name"] == "live-chat")
+        assert "cron-planner" in lc["edges"]
+
+
 # ── Seed script edge resolution ─────────────
 
 class TestEdgeResolution:

@@ -13,14 +13,14 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 MONGO_URI = os.environ.get("MONGO_URI_SIGNALS", "")
 
-skip_no_mongo = pytest.mark.skipif(not MONGO_URI, reason="MONGO_URI_SIGNALS not set")
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(not MONGO_URI, reason="MONGO_URI_SIGNALS not set"),
+]
 
 
-@skip_no_mongo
 class TestStoreLive:
     """Test signals store profile + snapshot tools against real MongoDB."""
 
