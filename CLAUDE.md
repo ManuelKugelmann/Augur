@@ -327,14 +327,14 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `update_plan(title, content?, tags?)` | Update a plan by title (owner only) |
 | `delete_plan(title)` | Delete a plan by title (owner only) |
 
-### Research tools (shared, multi-user)
+### Research tools (shared, no user tracking)
 
 | Tool | Purpose |
 |------|---------|
-| `save_research(title, content, tags?, kind?)` | Save shared research note (visible to all, upsert by title) |
-| `get_research(title?, tag?, kind?, author?, limit?)` | List shared research (no auth required to read) |
-| `update_research(title, content?, tags?)` | Update shared research (any identified user) |
-| `delete_research(title)` | Delete shared research (original author only) |
+| `save_research(title, content, tags?, kind?)` | Save shared research note (upsert by title) |
+| `get_research(title?, tag?, kind?, limit?)` | List shared research notes |
+| `update_research(title, content?, tags?)` | Update shared research by title |
+| `delete_research(title)` | Delete shared research by title |
 
 Research kinds: `research` (default), `report`, `briefing`, `alert`
 
@@ -417,7 +417,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
-| `test_store.py` | 84 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools, plan tools, shared research |
+| `test_store.py` | 81 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, memory tools, plan tools, shared research |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |

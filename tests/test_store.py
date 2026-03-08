@@ -777,12 +777,9 @@ class TestPlanTools:
 class TestResearchTools:
     @pytest.fixture(autouse=True)
     def setup_research(self, store, monkeypatch):
-        """Provide a fake shared_notes collection and user identity."""
+        """Provide a fake shared_notes collection."""
         self.col = _FakeCollection()
         monkeypatch.setattr(store, "_shared_notes_col", lambda: self.col)
-        fake_headers = {"x-user-id": "analyst-1"}
-        deps = sys.modules["fastmcp.server.dependencies"]
-        monkeypatch.setattr(deps, "get_http_headers", lambda: fake_headers)
 
     def test_save_research_creates(self, store):
         r = store.save_research("Oil Market Brief", "Brent up 3%")
@@ -803,23 +800,16 @@ class TestResearchTools:
         assert len(notes) == 1
         assert notes[0]["kind"] == "alert"
 
-    def test_get_research_no_auth_needed(self, store, monkeypatch):
-        """Reading shared research does not require user identification."""
-        store.save_research("Public Report", "open data")
-        deps = sys.modules["fastmcp.server.dependencies"]
-        monkeypatch.setattr(deps, "get_http_headers", lambda: {})
-        notes = store.get_research(title="Public Report")
-        assert len(notes) == 1
+    def test_get_research_all(self, store):
+        store.save_research("A", "1")
+        store.save_research("B", "2")
+        notes = store.get_research()
+        assert len(notes) == 2
 
     def test_get_research_by_tag(self, store):
         store.save_research("A", "1", tags=["macro"])
         store.save_research("B", "2", tags=["sector"])
         notes = store.get_research(tag="macro")
-        assert len(notes) == 1
-
-    def test_get_research_by_author(self, store):
-        store.save_research("My Research", "content")
-        notes = store.get_research(author="analyst-1")
         assert len(notes) == 1
 
     def test_update_research(self, store):
@@ -833,31 +823,12 @@ class TestResearchTools:
         r = store.update_research("Ghost")
         assert "error" in r
 
-    def test_update_research_by_different_user(self, store, monkeypatch):
-        """Any identified user can update shared research."""
-        store.save_research("Shared Note", "v1")
-        deps = sys.modules["fastmcp.server.dependencies"]
-        monkeypatch.setattr(deps, "get_http_headers",
-                            lambda: {"x-user-id": "analyst-2"})
-        r = store.update_research("Shared Note", content="v2")
-        assert r["status"] == "updated"
-
-    def test_delete_research_by_author(self, store):
+    def test_delete_research(self, store):
         store.save_research("Delete Me", "bye")
         r = store.delete_research("Delete Me")
         assert r["status"] == "deleted"
+        assert len(store.get_research(title="Delete Me")) == 0
 
-    def test_delete_research_wrong_author(self, store, monkeypatch):
-        """Only the original author can delete."""
-        store.save_research("Protected", "important")
-        deps = sys.modules["fastmcp.server.dependencies"]
-        monkeypatch.setattr(deps, "get_http_headers",
-                            lambda: {"x-user-id": "analyst-2"})
-        r = store.delete_research("Protected")
-        assert "error" in r
-
-    def test_save_research_requires_user(self, store, monkeypatch):
-        deps = sys.modules["fastmcp.server.dependencies"]
-        monkeypatch.setattr(deps, "get_http_headers", lambda: {})
-        r = store.save_research("t", "c")
+    def test_delete_research_not_found(self, store):
+        r = store.delete_research("nonexistent")
         assert "error" in r

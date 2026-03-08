@@ -1119,8 +1119,8 @@ def delete_plan(title: str) -> dict:
 
 # ── Shared research notes ────────────────────────
 # Research findings produced by analyzing agents — shared across all users.
-# Stored in "shared_notes" collection. Author is tracked but anyone can read.
-# Title is unique (upsert): saving with the same title overwrites.
+# Stored in "shared_notes" collection. No user tracking — any agent can
+# read, write, update, or delete. Title is unique (upsert).
 
 
 def _shared_notes_col():
@@ -1132,13 +1132,10 @@ def _shared_notes_col():
 def save_research(title: str, content: str,
                   tags: list[str] | None = None,
                   kind: str = "research") -> dict:
-    """Save a shared research note (visible to all users). Overwrites if title exists.
+    """Save a shared research note. Overwrites if title exists.
 
     kind: research | report | briefing | alert (default: research)
     """
-    uid = _get_user_id()
-    if not uid:
-        return {"error": "user not identified (X-User-ID header missing)"}
     now = datetime.now(timezone.utc)
     col = _shared_notes_col()
     r = col.update_one(
@@ -1148,11 +1145,9 @@ def save_research(title: str, content: str,
             "kind": kind,
             "tags": tags or [],
             "updated": now,
-            "updated_by": uid,
         }, "$setOnInsert": {
             "title": title,
             "created": now,
-            "author": uid,
         }},
         upsert=True,
     )
@@ -1162,8 +1157,8 @@ def save_research(title: str, content: str,
 
 @mcp.tool()
 def get_research(title: str = "", tag: str = "", kind: str = "",
-                 author: str = "", limit: int = 50) -> list[dict]:
-    """List shared research notes. Readable by all users. Filter by title, tag, kind, or author."""
+                 limit: int = 50) -> list[dict]:
+    """List shared research notes. Filter by title, tag, or kind."""
     q: dict = {}
     if title:
         q["title"] = title
@@ -1171,8 +1166,6 @@ def get_research(title: str = "", tag: str = "", kind: str = "",
         q["tags"] = tag
     if kind:
         q["kind"] = kind
-    if author:
-        q["author"] = author
     rows = _shared_notes_col().find(q).sort("updated", -1).limit(limit)
     result = []
     for r in rows:
@@ -1187,11 +1180,8 @@ def get_research(title: str = "", tag: str = "", kind: str = "",
 @mcp.tool()
 def update_research(title: str, content: str = "",
                     tags: list[str] | None = None) -> dict:
-    """Update a shared research note by title. Any identified user can update."""
-    uid = _get_user_id()
-    if not uid:
-        return {"error": "user not identified"}
-    update: dict = {"updated": datetime.now(timezone.utc), "updated_by": uid}
+    """Update a shared research note by title."""
+    update: dict = {"updated": datetime.now(timezone.utc)}
     if content:
         update["content"] = content
     if tags is not None:
@@ -1207,13 +1197,10 @@ def update_research(title: str, content: str = "",
 
 @mcp.tool()
 def delete_research(title: str) -> dict:
-    """Delete a shared research note by title. Only the original author can delete."""
-    uid = _get_user_id()
-    if not uid:
-        return {"error": "user not identified"}
-    r = _shared_notes_col().delete_one({"title": title, "author": uid})
+    """Delete a shared research note by title."""
+    r = _shared_notes_col().delete_one({"title": title})
     if r.deleted_count == 0:
-        return {"error": "research note not found or you are not the author"}
+        return {"error": "research note not found"}
     return {"title": title, "status": "deleted"}
 
 
