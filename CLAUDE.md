@@ -325,7 +325,7 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 - `MCP_TRANSPORT` — `streamable-http` (production) or `stdio` (dev/testing, default)
 - `MCP_PORT` — port for streamable-http (default: `8071`)
 - `RISK_DAILY_LIMIT` — max trading actions per user per day (default: `50`)
-- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`
+- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY`
 - Full reference: `docs/api-keys.md`
 
 ### LibreChat (`~/LibreChat/.env`)

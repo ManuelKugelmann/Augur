@@ -1,4 +1,4 @@
-"""Combined trading server — signals store + 9 data domains in one process."""
+"""Combined trading server — signals store + 12 data domains in one process."""
 import sys
 from pathlib import Path
 
@@ -11,13 +11,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "store"))
 from fastmcp import FastMCP
 
 mcp = FastMCP("trading",
-    instructions="Trading signals: store (profiles, snapshots, notes, risk gate) + 9 OSINT data domains (75+ sources)")
+    instructions="Trading signals: store (profiles, snapshots, notes, risk gate) + 12 OSINT data domains (75+ sources)")
 
 # Signals store (profiles, snapshots, charts, archival)
 from server import mcp as store
 
-# 9 data domains (weather+water, disaster, econ, agri, conflict+humanitarian,
-#                  commodity, health, politics, transport+infra)
+# 12 data domains
 from weather_server import mcp as weather
 from disasters_server import mcp as disaster
 from macro_server import mcp as econ
@@ -27,6 +26,9 @@ from commodities_server import mcp as commodity
 from health_server import mcp as health
 from elections_server import mcp as politics
 from transport_server import mcp as transport
+from water_server import mcp as water
+from humanitarian_server import mcp as humanitarian
+from infra_server import mcp as infra
 
 mcp.mount(store, namespace="store")
 mcp.mount(weather, namespace="weather")
@@ -38,6 +40,9 @@ mcp.mount(commodity, namespace="commodity")
 mcp.mount(health, namespace="health")
 mcp.mount(politics, namespace="politics")
 mcp.mount(transport, namespace="transport")
+mcp.mount(water, namespace="water")
+mcp.mount(humanitarian, namespace="humanitarian")
+mcp.mount(infra, namespace="infra")
 
 if __name__ == "__main__":
     import os

@@ -1,11 +1,11 @@
-"""Conflict, Military & Humanitarian — UCDP, ACLED, sanctions, UNHCR, HDX, ReliefWeb."""
+"""Conflict & Military — UCDP, ACLED, OpenSanctions."""
 from fastmcp import FastMCP
 import httpx
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-mcp = FastMCP("conflict", instructions="Armed conflict, military, sanctions, refugees, humanitarian data")
+mcp = FastMCP("conflict", instructions="Armed conflict events, military data, sanctions")
 ACLED_KEY = os.environ.get("ACLED_API_KEY", "")
 ACLED_EMAIL = os.environ.get("ACLED_EMAIL", "")
 
@@ -48,50 +48,6 @@ async def search_sanctions(query: str, schema: str = "") -> dict:
         params["schema"] = schema
     async with httpx.AsyncClient(timeout=30) as c:
         r = await c.get("https://api.opensanctions.org/search/default", params=params)
-        r.raise_for_status()
-        return r.json()
-
-
-# ── Humanitarian (formerly humanitarian_server.py) ──────────
-
-
-@mcp.tool()
-async def unhcr_population(year: int = 2024, country_origin: str = "",
-                            country_asylum: str = "") -> dict:
-    """UNHCR refugee population. Countries as ISO3."""
-    params = {"year": year, "limit": 100}
-    if country_origin:
-        params["coo"] = country_origin
-    if country_asylum:
-        params["coa"] = country_asylum
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.unhcr.org/population/v1/population/", params=params)
-        r.raise_for_status()
-        return r.json()
-
-
-@mcp.tool()
-async def hdx_search(query: str, rows: int = 20) -> dict:
-    """Search Humanitarian Data Exchange datasets."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://data.humdata.org/api/3/action/package_search",
-                        params={"q": query, "rows": rows})
-        r.raise_for_status()
-        return r.json()
-
-
-@mcp.tool()
-async def reliefweb_reports(query: str = "", country: str = "",
-                             limit: int = 20) -> dict:
-    """ReliefWeb humanitarian reports and situation updates."""
-    body = {"limit": limit, "sort": ["date:desc"]}
-    if query:
-        body["query"] = {"value": query}
-    if country:
-        body["filter"] = {"field": "country.name", "value": [country]}
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.post("https://api.reliefweb.int/v1/reports",
-                         json=body, params={"appname": "mcp"})
         r.raise_for_status()
         return r.json()
 

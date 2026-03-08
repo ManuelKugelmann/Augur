@@ -83,8 +83,8 @@ mcpServers:
         Notes (store_save_note etc.) are per-user — plans, watchlists, journals.
         Risk gate: dry-run by default. Users enable live trading in Settings > Plugins.
       DATA: Tools prefixed by domain (weather_, disaster_, econ_, agri_, conflict_,
-        commodity_, health_, politics_, transport_, infra_, water_, elections_).
-        Most free/no-key. Some need optional keys (FRED, ACLED, EIA, etc.).
+        commodity_, health_, politics_, transport_, water_, humanitarian_, infra_).
+        Most free/no-key. Some need optional keys (FRED, ACLED, EIA, IDMC, CF_API_TOKEN).
 
   # ── External MCPs (Tier 1 — genuinely additive data) ──
 

@@ -1,8 +1,8 @@
-"""Weather, Climate & Water — Open-Meteo + NOAA SWPC + USGS Water + US Drought."""
+"""Weather & Climate — Open-Meteo forecasts + NOAA SWPC space weather."""
 from fastmcp import FastMCP
 import httpx
 
-mcp = FastMCP("weather", instructions="Weather, climate, space weather, water levels, drought")
+mcp = FastMCP("weather", instructions="Weather forecasts, historical climate, space weather")
 
 
 @mcp.tool()
@@ -58,34 +58,6 @@ async def space_weather() -> dict:
             }
     except httpx.HTTPError as e:
         return {"error": f"NOAA SWPC request failed: {e}"}
-
-
-# ── Water (formerly water_server.py) ──────────────────
-
-
-@mcp.tool()
-async def streamflow(site: str = "", state: str = "CA",
-                     period: str = "P7D") -> dict:
-    """USGS real-time streamflow. period: P1D, P7D, P30D."""
-    params = {"format": "json", "period": period, "parameterCd": "00060"}
-    if site:
-        params["sites"] = site
-    elif state:
-        params["stateCd"] = state
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get("https://waterservices.usgs.gov/nwis/iv", params=params)
-        r.raise_for_status()
-        return r.json()
-
-
-@mcp.tool()
-async def drought(area_type: str = "state", area: str = "CA") -> dict:
-    """US Drought Monitor. area_type: state/county/national."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://usdm.unl.edu/DmData/TimeSeries.aspx",
-                        params={"area_type": area_type, "area": area, "format": "json"})
-        r.raise_for_status()
-        return r.json()
 
 
 if __name__ == "__main__":
