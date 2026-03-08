@@ -94,7 +94,7 @@ async def reliefweb_reports(query: str = "", country: str = "",
         body["filter"] = {"operator": "AND", "conditions": filters}
     try:
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.post("https://api.reliefweb.int/v1/reports",
+            r = await c.post("https://api.reliefweb.int/v2/reports",
                              json=body, params={"appname": "mcp-trading"})
             r.raise_for_status()
             return r.json()
@@ -120,7 +120,7 @@ async def reliefweb_disasters(country: str = "", status: str = "ongoing",
         body["filter"] = {"operator": "AND", "conditions": filters}
     try:
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.post("https://api.reliefweb.int/v1/disasters",
+            r = await c.post("https://api.reliefweb.int/v2/disasters",
                              json=body, params={"appname": "mcp-trading"})
             r.raise_for_status()
             return r.json()
