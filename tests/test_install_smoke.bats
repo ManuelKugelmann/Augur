@@ -146,3 +146,54 @@ teardown() {
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Installation complete"* ]]
 }
+
+# ── Cron entrypoint tests ─────────────────────
+
+@test "cron: runs without error after install" {
+    # First install to set up STACK_DIR with .git
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    [[ "$status" -eq 0 ]]
+
+    # Now run cron — should succeed (no data changes, skips compact without venv python)
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"done (hour="* ]]
+}
+
+@test "cron: commits profile changes" {
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    [[ "$status" -eq 0 ]]
+
+    # Add a profile file
+    mkdir -p "$STACK_DIR/profiles/global/countries"
+    echo '{"id":"TST","name":"Testland"}' > "$STACK_DIR/profiles/global/countries/TST.json"
+
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"profiles committed"* ]]
+}
+
+@test "cron: data sync commits when data dir is a git repo" {
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    [[ "$status" -eq 0 ]]
+
+    # Init DATA_DIR as a git repo with a bare remote (so push works)
+    local bare="$TEST_SANDBOX/data_remote.git"
+    "$REAL_GIT" init -q --bare "$bare"
+    "$REAL_GIT" -C "$DATA_DIR" init -q
+    "$REAL_GIT" -C "$DATA_DIR" config user.email "test@test.com"
+    "$REAL_GIT" -C "$DATA_DIR" config user.name "Test"
+    touch "$DATA_DIR/.gitkeep"
+    "$REAL_GIT" -C "$DATA_DIR" add -A
+    "$REAL_GIT" -C "$DATA_DIR" commit -q -m "init"
+    "$REAL_GIT" -C "$DATA_DIR" remote add origin "$bare"
+    "$REAL_GIT" -C "$DATA_DIR" push -u origin main -q 2>/dev/null || \
+        "$REAL_GIT" -C "$DATA_DIR" push -u origin master -q 2>/dev/null || true
+
+    # Add a data file
+    echo "test data" > "$DATA_DIR/files/test.txt"
+
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"data synced"* ]]
+}

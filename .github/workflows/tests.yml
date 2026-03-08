@@ -234,19 +234,24 @@ jobs:
       - name: Install dependencies
         run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp
 
-      - name: Check MongoDB connection
+      - name: Check MongoDB connections
         env:
           MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
-          if [ -n "$MONGO_URI_SIGNALS" ]; then
-            echo "MONGO_URI_SIGNALS: SET (${#MONGO_URI_SIGNALS} chars)"
-          else
-            echo "MONGO_URI_SIGNALS: MISSING — smoke tests will be skipped"
-          fi
+          for var in MONGO_URI_SIGNALS MONGO_URI; do
+            val=$(printenv "$var" 2>/dev/null || true)
+            if [ -n "$val" ]; then
+              echo "$var: SET (${#val} chars)"
+            else
+              echo "$var: MISSING — related tests will be skipped"
+            fi
+          done
 
       - name: Run combined server smoke tests
         env:
           MONGO_URI_SIGNALS: ${{ secrets.MONGO_URI_SIGNALS }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
         run: python -m pytest tests/test_smoke_combined.py -v -m integration --timeout=120
 
   smoke-install:
