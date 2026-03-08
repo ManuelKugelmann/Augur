@@ -15,11 +15,14 @@ from unittest.mock import patch
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 MONGO_URI = os.environ.get("MONGO_URI_SIGNALS", "")
 LIBRECHAT_MONGO_URI = os.environ.get("MONGO_URI_LIBRECHAT", "")
-skip_no_mongo = pytest.mark.skipif(not MONGO_URI, reason="MONGO_URI_SIGNALS not set")
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(not MONGO_URI, reason="MONGO_URI_SIGNALS not set"),
+]
+
 skip_no_librechat_mongo = pytest.mark.skipif(
     not LIBRECHAT_MONGO_URI, reason="MONGO_URI_LIBRECHAT not set"
 )
@@ -84,7 +87,6 @@ def _cleanup_signals_db():
         pass
 
 
-@skip_no_mongo
 class TestCombinedSmoke:
     """Verify the combined server imports, mounts all namespaces, and
     store tools actually round-trip through MongoDB Atlas."""
@@ -253,7 +255,6 @@ print("CRON_COMPACT_OK")
 # ── Per-user notes (T4 cron-planner / L5 live-chat) ─
 
 
-@skip_no_mongo
 class TestPerUserNotes:
     """Test per-user note CRUD against real Atlas — simulates T4/L5 agent
     workflows (plans, watchlists, journal entries scoped by user)."""
@@ -351,7 +352,6 @@ class TestPerUserNotes:
 # ── Shared research (cross-agent, no user tracking) ─
 
 
-@skip_no_mongo
 class TestSharedResearch:
     """Test shared research CRUD against real Atlas — simulates L2/L3
     analyst agents writing research accessible to all users/agents."""
