@@ -99,6 +99,38 @@ else
     log "MCP packages already bundled"
 fi
 
+# ── Install external MCP dependencies ─────────────
+# RSS MCP (Node, runs via node_modules)
+if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
+    log "Installing rss-mcp..."
+    cd "$STACK"
+    npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
+    cd - >/dev/null
+else
+    log "rss-mcp already installed"
+fi
+
+# Python MCPs installed into signals stack venv
+if [[ -d "$STACK/venv" ]]; then
+    VPIP="$STACK/venv/bin/pip"
+    # yahoo-finance-mcp
+    if ! "$STACK/venv/bin/python" -c "import yahoo_finance_mcp" 2>/dev/null; then
+        log "Installing yahoo-finance-mcp..."
+        "$VPIP" install -q yahoo-finance-mcp || warn "yahoo-finance-mcp install failed"
+    fi
+    # crypto-feargreed-mcp
+    if ! "$STACK/venv/bin/python" -c "import crypto_feargreed_mcp" 2>/dev/null; then
+        log "Installing crypto-feargreed-mcp..."
+        "$VPIP" install -q crypto-feargreed-mcp || warn "crypto-feargreed-mcp install failed"
+    fi
+fi
+
+# uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
+if ! command -v uvx &>/dev/null; then
+    log "Installing uv (Python package runner)..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
+fi
+
 # ── Install signals stack (Python MCP servers) ──
 if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
     log "Setting up signals stack Python environment..."
