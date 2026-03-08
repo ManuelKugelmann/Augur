@@ -369,14 +369,14 @@ class TestConflictServer:
         assert params["schema"] == "Person"
 
     @pytest.mark.asyncio
-    async def test_military_spending_url(self):
-        resp = _mock_response([{}, []])
+    async def test_hdx_search_params(self):
+        resp = _mock_response({"result": {"results": []}})
         patcher, client = _patch_httpx_get(resp)
         with patcher:
-            await self.mod.military_spending(country="DEU")
-        url = client.get.call_args[0][0]
-        assert "DEU" in url
-        assert "MS.MIL.XPND.GD.ZS" in url
+            await self.mod.hdx_search(query="displacement", rows=5)
+        params = client.get.call_args[1]["params"]
+        assert params["q"] == "displacement"
+        assert params["rows"] == 5
 
 
 # ── Elections Server ─────────────────────────────
@@ -392,13 +392,13 @@ class TestElectionsServer:
         self.mod = elections_server
 
     @pytest.mark.asyncio
-    async def test_election_reports_country(self):
-        resp = _mock_response({"data": []})
+    async def test_heads_of_state_country(self):
+        resp = _mock_response({"results": {"bindings": []}})
         patcher, client = _patch_httpx_get(resp)
         with patcher:
-            await self.mod.election_reports(query="election", country="Kenya")
+            await self.mod.heads_of_state(country="Germany", limit=5)
         params = client.get.call_args[1]["params"]
-        assert "Kenya" in params["filter[field]"]
+        assert "Germany" in params["query"]
 
     @pytest.mark.asyncio
     async def test_voter_info_missing_key(self, monkeypatch):
@@ -479,8 +479,8 @@ class TestElectionsServer:
 class TestHumanitarianServer:
     @pytest.fixture(autouse=True)
     def _import(self):
-        import humanitarian_server
-        self.mod = humanitarian_server
+        import conflict_server
+        self.mod = conflict_server
 
     @pytest.mark.asyncio
     async def test_unhcr_filters(self):
@@ -512,10 +512,10 @@ class TestInfraServer:
     @pytest.fixture(autouse=True)
     def _import(self, monkeypatch):
         monkeypatch.setenv("CF_API_TOKEN", "test_cf")
-        if "infra_server" in sys.modules:
-            del sys.modules["infra_server"]
-        import infra_server
-        self.mod = infra_server
+        if "transport_server" in sys.modules:
+            del sys.modules["transport_server"]
+        import transport_server
+        self.mod = transport_server
 
     @pytest.mark.asyncio
     async def test_internet_traffic_missing_key(self, monkeypatch):
@@ -593,8 +593,8 @@ class TestTransportServer:
 class TestWaterServer:
     @pytest.fixture(autouse=True)
     def _import(self):
-        import water_server
-        self.mod = water_server
+        import weather_server
+        self.mod = weather_server
 
     @pytest.mark.asyncio
     async def test_streamflow_by_site(self):
@@ -630,7 +630,7 @@ class TestWaterServer:
 
 
 class TestCombinedServer:
-    """Verify combined_server.py mounts store + 12 domains with correct namespaces."""
+    """Verify combined_server.py mounts store + 9 domains with correct namespaces."""
 
     @pytest.fixture(autouse=True)
     def _import(self, monkeypatch):
@@ -662,8 +662,7 @@ class TestCombinedServer:
         tool_names = {t.name for t in tools}
         expected_prefixes = [
             "store_", "weather_", "disaster_", "econ_", "agri_", "conflict_",
-            "commodity_", "health_", "politics_", "humanitarian_",
-            "transport_", "water_", "infra_"
+            "commodity_", "health_", "politics_", "transport_"
         ]
         for prefix in expected_prefixes:
             matching = [n for n in tool_names if n.startswith(prefix)]
@@ -679,8 +678,8 @@ class TestCombinedServer:
             "weather_forecast", "disaster_get_earthquakes", "econ_fred_series",
             "agri_fao_data", "conflict_acled_events", "commodity_trade_flows",
             "health_who_indicator", "politics_global_elections",
-            "humanitarian_unhcr_population", "transport_flights_in_area",
-            "water_streamflow", "infra_internet_traffic"
+            "conflict_unhcr_population", "transport_flights_in_area",
+            "weather_streamflow", "transport_internet_traffic"
         ]
         for name in must_have:
             assert name in tool_names, f"Missing tool: {name}"
