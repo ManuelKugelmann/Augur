@@ -40,6 +40,7 @@ _RESERVED_DIRS = frozenset({"SCHEMAS"})
 SNAPSHOTS_TTL = 365 * 86400         # 1 year
 
 _SAFE_ID = re.compile(r'^[A-Za-z0-9_-]+$')
+_SAFE_FIELD = re.compile(r'^[A-Za-z0-9_][A-Za-z0-9_.]*$')
 
 
 # ── User context helper ──────────────────────────
@@ -607,6 +608,8 @@ def trend(kind: str, entity: str, type: str, field: str,
     """Extract a field's trend over time (e.g. field='gdp_growth_pct')."""
     if kind not in VALID_KINDS:
         return [{"error": f"unknown kind: {kind}"}]
+    if not _SAFE_FIELD.match(field):
+        return [{"error": f"invalid field name: {field}"}]
     pipeline = [
         {"$match": {"meta.entity": entity, "meta.type": type}},
         {"$sort": {"ts": -1}},
@@ -671,6 +674,9 @@ def chart(kind: str, entity: str, type: str, fields: list[str],
     """Plotly HTML chart from timeseries. chart_type: line/bar/scatter. Output HTML directly as artifact."""
     if kind not in VALID_KINDS:
         return f"Unknown kind: {kind}"
+    for field in fields:
+        if not _SAFE_FIELD.match(field):
+            return f"Invalid field name: {field}"
     col = _arch_col(kind) if archive else _snap_col(kind)
 
     traces = []
@@ -772,7 +778,6 @@ def compact(kind: str, entity: str, type: str, older_than_days: int = 90,
     """Downsample old snapshots to archive. bucket: week/month/quarter."""
     if kind not in VALID_KINDS:
         return {"error": f"unknown kind: {kind}"}
-    cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
 
     date_trunc = {
         "week": {"$dateTrunc": {"date": "$ts", "unit": "week"}},
@@ -782,6 +787,7 @@ def compact(kind: str, entity: str, type: str, older_than_days: int = 90,
     if bucket not in date_trunc:
         return {"error": f"invalid bucket: {bucket}, use week/month/quarter"}
 
+    cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
     snap = _snap_col(kind)
     sample = snap.find_one(
         {"meta.entity": entity, "meta.type": type, "ts": {"$lt": cutoff}}
@@ -790,7 +796,7 @@ def compact(kind: str, entity: str, type: str, older_than_days: int = 90,
         return {"status": "nothing_to_compact", "entity": entity, "type": type}
 
     sample_data = sample.get("data", {})
-    data_keys = list(sample_data.keys())
+    data_keys = [k for k in sample_data.keys() if _SAFE_FIELD.match(k)]
 
     group_accumulators = {}
     for k in data_keys:

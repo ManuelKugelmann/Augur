@@ -6,6 +6,7 @@ import re
 mcp = FastMCP("health", instructions="Global health, disease outbreaks, FDA data")
 
 _SAFE_ODATA = re.compile(r'^[A-Za-z0-9_-]+$')
+_SAFE_COUNTRY = re.compile(r'^[A-Za-z0-9 -]+$')
 
 
 @mcp.tool()
@@ -14,6 +15,8 @@ async def who_indicator(indicator: str = "NCDMORT3070",
     """WHO health indicator. Examples: WHOSIS_000001 (life expectancy),
     MDG_0000000001 (under-5 mortality), WHS4_100 (hospital beds),
     NCD_BMI_30A (obesity)."""
+    if not _SAFE_ODATA.match(indicator):
+        return {"error": "invalid indicator code"}
     url = f"https://ghoapi.azureedge.net/api/{indicator}"
     params = {}
     filters = []
@@ -47,6 +50,10 @@ async def disease_outbreaks(limit: int = 20) -> dict:
 @mcp.tool()
 async def disease_tracker(disease: str = "covid", country: str = "") -> dict:
     """Real-time disease tracking (disease.sh). disease: covid/influenza."""
+    if country and not _SAFE_COUNTRY.match(country):
+        return {"error": "invalid country name (letters, spaces, digits only)"}
+    if disease not in ("covid", "influenza"):
+        return {"error": "disease must be 'covid' or 'influenza'"}
     async with httpx.AsyncClient(timeout=30) as c:
         if disease == "covid":
             url = f"https://disease.sh/v3/covid-19/{'countries/' + country if country else 'all'}"
@@ -60,6 +67,8 @@ async def disease_tracker(disease: str = "covid", country: str = "") -> dict:
 @mcp.tool()
 async def fda_adverse_events(drug: str = "", limit: int = 20) -> dict:
     """FDA adverse drug event reports."""
+    if drug and not _SAFE_COUNTRY.match(drug):
+        return {"error": "invalid drug name (letters, spaces, digits only)"}
     search = f'patient.drug.medicinalproduct:"{drug}"' if drug else ""
     async with httpx.AsyncClient(timeout=30) as c:
         r = await c.get("https://api.fda.gov/drug/event.json",

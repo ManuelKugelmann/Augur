@@ -5,30 +5,36 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
-# Allow importing store/server.py
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "store"))
+# Ensure both src/servers/ and src/store/ are importable regardless of CWD
+_here = Path(__file__).resolve().parent
+_store_dir = str(_here.parent / "store")
+_servers_dir = str(_here)
+if _servers_dir not in sys.path:
+    sys.path.insert(0, _servers_dir)
+if _store_dir not in sys.path:
+    sys.path.insert(0, _store_dir)
 
-from fastmcp import FastMCP
+from fastmcp import FastMCP  # noqa: E402
 
 mcp = FastMCP("trading",
     instructions="Trading signals: store (profiles, snapshots, notes, risk gate) + 12 OSINT data domains (75+ sources)")
 
 # Signals store (profiles, snapshots, charts, archival)
-from server import mcp as store
+from server import mcp as store  # noqa: E402 — src/store/server.py
 
-# 12 data domains
-from weather_server import mcp as weather
-from disasters_server import mcp as disaster
-from macro_server import mcp as econ
-from agri_server import mcp as agri
-from conflict_server import mcp as conflict
-from commodities_server import mcp as commodity
-from health_server import mcp as health
-from elections_server import mcp as politics
-from transport_server import mcp as transport
-from water_server import mcp as water
-from humanitarian_server import mcp as humanitarian
-from infra_server import mcp as infra
+# 12 data domains (src/servers/*_server.py)
+from weather_server import mcp as weather  # noqa: E402
+from disasters_server import mcp as disaster  # noqa: E402
+from macro_server import mcp as econ  # noqa: E402
+from agri_server import mcp as agri  # noqa: E402
+from conflict_server import mcp as conflict  # noqa: E402
+from commodities_server import mcp as commodity  # noqa: E402
+from health_server import mcp as health  # noqa: E402
+from elections_server import mcp as politics  # noqa: E402
+from transport_server import mcp as transport  # noqa: E402
+from water_server import mcp as water  # noqa: E402
+from humanitarian_server import mcp as humanitarian  # noqa: E402
+from infra_server import mcp as infra  # noqa: E402
 
 mcp.mount(store, namespace="store")
 mcp.mount(weather, namespace="weather")
