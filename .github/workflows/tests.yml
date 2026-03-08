@@ -73,7 +73,6 @@ jobs:
   integration-free:
     name: Integration tests (free APIs)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +91,6 @@ jobs:
   integration-keyed:
     name: Integration tests (keyed APIs)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
@@ -143,7 +141,6 @@ jobs:
   integration-llm-keys:
     name: Integration tests (LLM key validation)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
@@ -176,7 +173,6 @@ jobs:
   integration-store:
     name: Integration tests (MongoDB store)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
@@ -221,7 +217,6 @@ jobs:
   smoke-combined:
     name: Smoke test (combined server + Atlas)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [python-tests]
     steps:
       - uses: actions/checkout@v4
