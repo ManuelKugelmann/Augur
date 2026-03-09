@@ -1,11 +1,8 @@
 """Tests for signals store profile, index, and lint logic.
 
 These tests exercise profile CRUD, search, lint, and seed logic using
-in-memory MongoDB collection mocks. No real MongoDB needed.
-
-Note: We use a custom _FakeCollection rather than mongomock because
-pymongo cannot import in this sandbox (broken cffi/cryptography chain).
-conftest.py mocks pymongo before any imports.
+mongomock (CI, where pymongo imports) or a lightweight _FakeCollection
+fallback (Claude Code sandbox, where pymongo/cffi is broken).
 """
 import json
 import os
@@ -21,6 +18,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "store")
 
 # Prevent module-level MongoClient from connecting
 os.environ.setdefault("MONGO_URI_SIGNALS", "mongodb://localhost:27017/test_unused")
+
+# Detect mongomock availability (flag set by conftest.py)
+from conftest import _USE_MONGOMOCK
+if _USE_MONGOMOCK:
+    import mongomock
 
 
 # ── In-memory MongoDB mock ──────────────────────
@@ -187,17 +189,29 @@ def profiles_dir(tmp_path, monkeypatch):
         for kind in ("countries", "stocks", "sources"):
             (tmp_path / region / kind).mkdir(parents=True)
 
-    # Wire up fake collections for profiles_{kind}
-    _profile_cols: dict[str, _FakeCollection] = {}
+    # Wire up mock collections for profiles_{kind}
+    if _USE_MONGOMOCK:
+        # CI: use mongomock (full pymongo API compatibility)
+        mock_client = mongomock.MongoClient()
+        mock_db = mock_client["test_profiles"]
 
-    def fake_profiles_col(kind):
-        if kind not in _profile_cols:
-            _profile_cols[kind] = _FakeCollection()
-        return _profile_cols[kind]
+        def fake_profiles_col(kind):
+            return mock_db[f"profiles_{kind}"]
+    else:
+        # Sandbox fallback: lightweight custom mock
+        _profile_cols: dict[str, _FakeCollection] = {}
+
+        def fake_profiles_col(kind):
+            if kind not in _profile_cols:
+                _profile_cols[kind] = _FakeCollection()
+            return _profile_cols[kind]
 
     monkeypatch.setattr(server, "_profiles_col", fake_profiles_col)
 
     yield tmp_path
+
+    if _USE_MONGOMOCK:
+        mock_client.close()
 
 
 @pytest.fixture
