@@ -3,6 +3,7 @@
 ## Rules
 
 - **Never circumvent or exclude failing tests.** Always find and fix the root cause. If not possible, discuss the problem with the user before proceeding.
+- **Run tests locally before pushing.** Always run `python -m pytest tests/ -v` (and `bats tests/*.bats` if shell scripts changed) before committing and pushing. Do not push code that fails tests.
 
 ## Project
 
