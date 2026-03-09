@@ -77,7 +77,7 @@ One Node.js process handles all brands via `req.hostname` → brand config looku
 - Background: `#f4f0e8` (aged paper)
 - Ink: `#1a1a1a`
 - Accent: `#8b0000` (deep red) / `#1a3a5c` (deep blue for Der Augur)
-- Images: Engraved/etching style ("detailed engraving illustration, crosshatch shading, black and white")
+- Images: Fake photographs — photorealistic AI-generated editorial photography (FLUX.2 klein 4B, Apache 2.0)
 - Layout: Single-column, justified text, drop caps, rule lines
 
 **Financial Augur / Finanz Augur** (financial broadsheet):
@@ -209,7 +209,7 @@ DB stores the `key`. Routing maps `slug ↔ key` per brand config.
 │ HEADLINE IN LARGE SERIF                 │
 │                                         │
 │ ┌─────────────────────────────────┐     │
-│ │ [AI-generated engraving image]  │     │
+│ │ [AI-generated photograph]       │     │
 │ │ ⚠ AI-GENERATED · NOT A PHOTO   │     │
 │ └─────────────────────────────────┘     │
 │                                         │
@@ -433,7 +433,7 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 │  │     └── Pass 3: Social captions per platform         │   │
 │  │              │                                       │   │
 │  │  3. Asset Generator                                  │   │
-│  │     ├── Image gen (Replicate Flux Schnell)           │   │
+│  │     ├── Image gen (Replicate FLUX.2 klein 4B)           │   │
 │  │     ├── Watermark overlay (sharp)                    │   │
 │  │     └── Social cards: 1:1, 9:16, 16:9 (sharp)       │   │
 │  │              │                                       │   │
@@ -477,7 +477,7 @@ cron triggers: augur-cycle --brand=the --horizon=tomorrow
   │    → Generate image prompt from article content
   │
   ├── 3. GENERATE assets
-  │    Replicate: flux-1-schnell with brand.imageStylePrefix + imagePrompt
+  │    Replicate: flux-2-klein-4b with brand.imageStylePrefix + imagePrompt
   │    sharp: apply watermark text overlay
   │    sharp: composite social cards (3 ratios) with headline + branding
   │
@@ -650,7 +650,7 @@ augur-engine/
 │   │   └── prompts.ts              # System prompts per brand/horizon/locale
 │   │
 │   ├── assets/
-│   │   ├── imagegen.ts             # Replicate API (Flux Schnell)
+│   │   ├── imagegen.ts             # Replicate API (FLUX.2 klein 4B)
 │   │   ├── watermark.ts            # sharp: overlay watermark text
 │   │   └── cards.ts                # sharp: social card compositing (3 ratios)
 │   │
@@ -712,7 +712,7 @@ augur-engine/
 ### APIs (env vars)
 
 - `ANTHROPIC_API_KEY` — LLM extrapolation
-- `REPLICATE_API_TOKEN` — Flux Schnell image generation
+- `REPLICATE_API_TOKEN` — FLUX.2 klein 4B image generation
 - `TAVILY_API_KEY` — news search
 - `TWITTER_BEARER_TOKEN` + `TWITTER_API_KEY` + `TWITTER_API_SECRET` + `TWITTER_ACCESS_TOKEN` + `TWITTER_ACCESS_SECRET` — X posting
 - `BLUESKY_HANDLE` + `BLUESKY_APP_PASSWORD` — Bluesky posting
@@ -798,12 +798,12 @@ The website is optimized as a landing page for social traffic, not a reading des
 |------|------|
 | Uberspace hosting | ~€5/mo |
 | Anthropic API (Sonnet, ~120 articles/mo) | ~$5-10/mo |
-| Replicate (Flux Schnell, ~120 images/mo) | ~$0.36/mo |
+| Replicate (FLUX.2 klein 4B, ~120 images/mo) | ~$1.80/mo |
 | Tavily (free tier 1000/mo) | $0 |
 | GDELT (free) | $0 |
 | Domain (augur.news) | ~$20/year |
 | Social platform APIs | $0 (free tiers) |
-| **Total** | **~$15-20/mo** |
+| **Total** | **~$17-22/mo** |
 
 ---
 
