@@ -21,11 +21,24 @@ pytestmark = [
 ]
 
 
+def _check_mongo_connection():
+    """Verify MongoDB is reachable; skip tests if not (e.g. IP not allowlisted)."""
+    try:
+        import pymongo
+        client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        client.admin.command("ping")
+        client.close()
+    except Exception as exc:
+        pytest.skip(f"MongoDB not reachable: {exc}")
+
+
 class TestStoreLive:
     """Test signals store profile + snapshot tools against real MongoDB."""
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
+        _check_mongo_connection()
+
         # Point store at temp profiles dir and real MongoDB
         os.environ["PROFILES_DIR"] = str(tmp_path / "profiles")
         os.environ.setdefault("MONGO_URI_SIGNALS", MONGO_URI)

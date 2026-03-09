@@ -1,6 +1,7 @@
 [tool.pytest.ini_options]
 markers = [
     "integration: hits real APIs or databases (deselect with '-m not integration')",
+    "e2e: end-to-end tests requiring running services (LibreChat + trading server)",
     "asyncio: mark test as async (pytest-asyncio)",
 ]
 addopts = "-m 'not integration'"
