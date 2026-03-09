@@ -412,6 +412,20 @@ bats tests/test_ta_cron.bats
 bash -n librechat-uberspace/scripts/TradeAssistant.sh
 ```
 
+### Sandbox (Claude Code) Workarounds
+
+The `ta` library (technical analysis) has a setuptools compatibility issue in sandbox environments. Install with:
+```bash
+SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta --no-build-isolation
+```
+
+If `ta` is not installed, `test_indicators.py` and `TestCombinedServer` in `test_servers.py` are automatically skipped.
+
+Bats tests require `/dev/fd` (process substitution). If `/dev/fd` is missing (common in containers), create the symlink:
+```bash
+ln -sf /proc/self/fd /dev/fd
+```
+
 ### Test Architecture
 
 **Shell tests (bats)**:
