@@ -54,7 +54,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pytest pytest-asyncio httpx python-dotenv pyyaml pandas ta
+        run: pip install -r requirements-test.txt
 
       - name: Run pytest
         run: python -m pytest tests/ -v
@@ -90,7 +90,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pytest pytest-timeout httpx python-dotenv
+        run: pip install -r requirements-test.txt
 
       - name: Run free API integration tests
         run: python -m pytest tests/test_integration_free.py -v -m integration --timeout=60
@@ -109,7 +109,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pytest pytest-timeout httpx python-dotenv
+        run: pip install -r requirements-test.txt
 
       - name: Check available API keys
         env:
@@ -160,7 +160,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pytest pytest-timeout httpx
+        run: pip install -r requirements-test.txt
 
       - name: Run LLM key validation tests
         env:
@@ -192,7 +192,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pytest pytest-timeout httpx python-dotenv pymongo
+        run: pip install -r requirements-test.txt
 
       - name: Derive MongoDB URIs from cluster secret
         env:
@@ -237,7 +237,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp pandas ta
+        run: pip install -r requirements-test.txt
 
       - name: Derive MongoDB URIs from cluster secret
         env:
@@ -284,7 +284,7 @@ jobs:
           cache: 'pip'
 
       - name: Install Python dependencies
-        run: pip install pytest pytest-timeout httpx python-dotenv pymongo fastmcp pandas ta
+        run: pip install -r requirements-test.txt
 
       - name: Derive MongoDB URIs
         env:
