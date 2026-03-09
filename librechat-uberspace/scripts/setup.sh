@@ -121,13 +121,24 @@ if ! command -v uvx &>/dev/null; then
 fi
 
 # ── Install signals stack (Python MCP servers) ──
+# Resolve Python binary: prefer python$PYTHON_VERSION, fall back to python3
+_PYTHON_BIN=""
+for _py in "python${PYTHON_VERSION:-3.12}" python3; do
+    if command -v "$_py" &>/dev/null; then _PYTHON_BIN="$_py"; break; fi
+done
+
 if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
-    log "Setting up signals stack Python environment..."
-    cd "$STACK"
-    python3 -m venv venv
-    venv/bin/pip install -q -r requirements.txt
-    cd - >/dev/null
-    log "Signals stack ready"
+    if [[ -z "$_PYTHON_BIN" ]]; then
+        warn "Python 3.10+ not found — trading MCPs won't be available"
+    else
+        log "Setting up signals stack Python environment..."
+        cd "$STACK"
+        "$_PYTHON_BIN" -m venv venv
+        venv/bin/pip install -q --upgrade pip
+        venv/bin/pip install -q -r requirements.txt
+        cd - >/dev/null
+        log "Signals stack ready"
+    fi
 elif [[ -d "$STACK/venv" ]]; then
     log "Signals stack already set up"
 else

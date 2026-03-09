@@ -90,12 +90,28 @@ _do_install() {
     [[ -f "$STACK/deploy.conf" ]] && source "$STACK/deploy.conf"
 
     # ── 3. Python venv ──────────────────────────
+    # Resolve Python binary: prefer python$PYTHON_VERSION, fall back to python3
+    PYTHON_BIN=""
+    for _py in "python${PYTHON_VERSION:-3.12}" python3; do
+        if command -v "$_py" &>/dev/null; then PYTHON_BIN="$_py"; break; fi
+    done
+    [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. Install python3 or set PYTHON_VERSION."
+    _pyver=$("$PYTHON_BIN" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    log "Using $PYTHON_BIN (Python $_pyver)"
+    if "$PYTHON_BIN" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+        :
+    else
+        die "Python 3.10+ required (got $_pyver). Set PYTHON_VERSION to an available 3.10+ version."
+    fi
+
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
+        "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
         "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
-        python3 -m venv "$STACK/venv"
+        "$PYTHON_BIN" -m venv "$STACK/venv"
+        "$STACK/venv/bin/pip" install -q --upgrade pip
         "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt"
     fi
     log "Python venv ready"
@@ -402,6 +418,7 @@ case "$CMD" in
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
+            "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
             "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
         else
             warn "Python venv not found at $STACK/venv — run 'ta install' first"
