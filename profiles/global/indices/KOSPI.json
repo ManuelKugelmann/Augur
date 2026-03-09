@@ -1,0 +1,17 @@
+{
+  "id": "KOSPI",
+  "name": "KOSPI",
+  "type": "index",
+  "country": "KOR",
+  "exchange": "KRX",
+  "components": 940,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Financials", "Industrials", "Consumer Discretionary", "Materials", "Healthcare"],
+    "countries": ["KOR"],
+    "risk_factors": ["semiconductor_concentration", "krw_currency_risk", "geopolitical_risk", "china_dependence"]
+  },
+  "tags": ["benchmark", "korean_equity", "semiconductor_heavy"],
+  "_updated": "2026-03-09",
+  "_sources": ["Korea Exchange"]
+}

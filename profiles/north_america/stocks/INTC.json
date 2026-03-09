@@ -1,0 +1,22 @@
+{
+  "id": "INTC",
+  "name": "Intel Corporation",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1968,
+    "employees": 110600
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "ISR", "IRL", "MYS", "VNM"],
+    "commodities": ["silicon", "rare_earths", "copper"],
+    "supply_chain": ["ASML", "Applied Materials", "Lam Research"],
+    "risk_factors": ["foundry_execution", "amd_competition", "process_node_delays", "china_market_loss"]
+  },
+  "tags": ["large_cap", "semiconductors", "foundry", "data_center", "pc"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

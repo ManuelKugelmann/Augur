@@ -1,0 +1,17 @@
+{
+  "id": "phosphate",
+  "name": "Phosphate Rock",
+  "category": "minerals",
+  "producers": ["CHN", "MAR", "USA", "RUS", "JOR"],
+  "reserves": ["MAR", "CHN", "EGY", "ALG", "SAU"],
+  "processing": ["CHN", "MAR", "USA", "RUS", "IND"],
+  "end_uses": ["fertilizers (DAP/MAP)", "animal feed", "food additives", "industrial chemicals"],
+  "substitutes": ["manure (partial)", "precision agriculture (reduced use)"],
+  "exposure": {
+    "countries": ["MAR", "CHN", "USA", "RUS", "JOR"],
+    "risk_factors": ["morocco_reserve_dominance", "food_security_link", "export_restrictions", "cadmium_contamination"]
+  },
+  "tags": ["fertilizer", "agriculture", "food_security"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "IFA"]
+}

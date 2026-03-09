@@ -1,0 +1,22 @@
+{
+  "id": "BHP",
+  "name": "BHP Group Limited",
+  "type": "stock",
+  "exchange": "ASX",
+  "sector": "Materials",
+  "industry": "Diversified Metals & Mining",
+  "country": "AUS",
+  "fundamentals": {
+    "founded": 1885,
+    "employees": 80000
+  },
+  "exposure": {
+    "countries": ["AUS", "CHL", "USA", "CAN", "GBR", "CHN"],
+    "commodities": ["iron_ore", "copper", "coal", "nickel", "potash"],
+    "supply_chain": ["Rio Tinto", "Fortescue", "Caterpillar", "Komatsu"],
+    "risk_factors": ["china_demand", "commodity_supercycle", "climate_regulation", "water_scarcity", "indigenous_heritage"]
+  },
+  "tags": ["mining", "metals", "iron_ore", "copper", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["ASX", "Yahoo Finance"]
+}

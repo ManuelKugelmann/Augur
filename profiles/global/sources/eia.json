@@ -1,0 +1,16 @@
+{
+  "id": "eia",
+  "name": "U.S. Energy Information Administration",
+  "mcp": "commodities",
+  "tool": "eia_series",
+  "api_base": "https://api.eia.gov/v2/",
+  "auth": "api_key",
+  "refresh": {
+    "frequency": "weekly",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 7,
+  "_updated": "2026-03-09",
+  "_sources": ["EIA API Docs"]
+}

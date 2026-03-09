@@ -1,0 +1,22 @@
+{
+  "id": "ROG",
+  "name": "Roche Holding AG",
+  "type": "stock",
+  "exchange": "SWX",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "CHE",
+  "fundamentals": {
+    "founded": 1896,
+    "employees": 100000
+  },
+  "exposure": {
+    "countries": ["CHE", "USA", "CHN", "DEU", "JPN", "GBR"],
+    "commodities": [],
+    "supply_chain": ["Genentech", "Flatiron Health", "Foundation Medicine"],
+    "risk_factors": ["biosimilar_competition", "pipeline_risk", "drug_pricing", "diagnostic_reimbursement"]
+  },
+  "tags": ["pharma", "diagnostics", "oncology", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

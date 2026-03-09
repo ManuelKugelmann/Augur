@@ -1,0 +1,110 @@
+{
+  "id": "ARE",
+  "name": "United Arab Emirates",
+  "iso2": "AE",
+  "region": "Middle East & North Africa",
+  "currency": "AED",
+  "capital": "Abu Dhabi",
+  "population": 10000000,
+  "trade": {
+    "top_exports": [
+      "petroleum",
+      "gold",
+      "diamonds",
+      "aluminum",
+      "re-exports"
+    ],
+    "top_partners": [
+      "CHN",
+      "IND",
+      "JPN",
+      "SAU",
+      "IRQ"
+    ],
+    "major_ports": [
+      "Jebel Ali (Dubai)",
+      "Abu Dhabi",
+      "Fujairah"
+    ],
+    "chokepoint_exposure": [
+      "hormuz"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "gold",
+      "electronics",
+      "vehicles",
+      "machinery"
+    ],
+    "energy_mix": {
+      "gas": 0.7,
+      "oil": 0.05,
+      "nuclear": 0.15,
+      "renewables": 0.07,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "oil_price_dependence",
+      "water_scarcity",
+      "expat_labor_dependence"
+    ]
+  },
+  "ratings": {
+    "credit": "AA-",
+    "democracy_index": 2.76,
+    "press_freedom_rank": 145,
+    "corruption_perception": 68
+  },
+  "neighbors": [
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "GCC partner; largest land border; shared oil policy"
+    },
+    {
+      "id": "OMN",
+      "name": "Oman",
+      "relevance": "Eastern border; Strait of Hormuz flank; Musandam exclave"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Persian Gulf rival; disputed islands (Abu Musa, Tunbs); trade despite tensions"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Defense partner; Al Dhafra air base; arms sales; Abraham Accords signatory"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Top oil buyer; Huawei 5G; growing strategic hedge"
+    },
+    {
+      "target": "IND",
+      "type": "trade",
+      "description": "Largest diaspora; bilateral trade corridor; CEPA agreement"
+    },
+    {
+      "target": "ISR",
+      "type": "alliance",
+      "description": "Abraham Accords 2020; tech and defense cooperation; trade normalization"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "GCC"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

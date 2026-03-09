@@ -1,0 +1,17 @@
+{
+  "id": "DJI",
+  "name": "Dow Jones Industrial Average",
+  "type": "index",
+  "country": "USA",
+  "exchange": "NYSE",
+  "components": 30,
+  "methodology": "price-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Healthcare", "Financials", "Industrials", "Consumer Discretionary", "Energy", "Consumer Staples"],
+    "countries": ["USA"],
+    "risk_factors": ["price_weighting_bias", "blue_chip_concentration"]
+  },
+  "tags": ["benchmark", "blue_chip", "large_cap", "price_weighted"],
+  "_updated": "2026-03-09",
+  "_sources": ["S&P Dow Jones Indices"]
+}

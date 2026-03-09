@@ -1,0 +1,33 @@
+{
+  "id": "strait_of_malacca",
+  "name": "Strait of Malacca",
+  "type": "maritime",
+  "countries": ["MYS", "SGP", "IDN"],
+  "bbox": [95.0, -1.5, 104.5, 7.0],
+  "climate": "Tropical equatorial; hot and humid year-round; heavy monsoon rainfall; frequent thunderstorms",
+  "hazards": ["piracy", "ship_collision", "oil_spill", "typhoon", "tsunami", "flooding", "haze"],
+  "chokepoints": ["Strait_of_Malacca", "Singapore_Strait", "Phillips_Channel"],
+  "neighbors": [
+    {"id": "asean", "name": "ASEAN", "relevance": "Littoral states Malaysia, Singapore, and Indonesia are ASEAN members; strait governance is an ASEAN concern"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Eastern exit of Malacca feeds directly into SCS shipping lanes"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "Malacca is the most critical chokepoint in the Indo-Pacific maritime domain"},
+    {"id": "pearl_river_delta", "name": "Pearl River Delta", "relevance": "PRD-bound container and energy traffic constitutes a major share of Malacca throughput"},
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Gulf oil tankers transiting to East Asia must pass through Malacca or alternative straits"}
+  ],
+  "links": [
+    {"target": "south_china_sea", "type": "corridor", "description": "Malacca is the western chokepoint of SCS shipping; ~25% of global seaborne trade transits both"},
+    {"target": "asean", "type": "overlap", "description": "Three ASEAN members govern the strait; ASEAN maritime cooperation framework applies"},
+    {"target": "persian_gulf", "type": "corridor", "description": "Gulf crude oil and LNG bound for East Asia transit Malacca as the shortest route"},
+    {"target": "strait_of_hormuz", "type": "corridor", "description": "Hormuz-to-Malacca is the primary energy transit corridor feeding Northeast Asian economies"},
+    {"target": "pearl_river_delta", "type": "trade", "description": "Malacca handles the bulk of raw material imports destined for PRD manufacturing"},
+    {"target": "indo_pacific", "type": "corridor", "description": "Malacca links the Indian Ocean to the Pacific; its security underpins Indo-Pacific trade"},
+    {"target": "belt_and_road", "type": "corridor", "description": "Maritime Silk Road transits Malacca; China invests in alternative routes to reduce dependency"}
+  ],
+  "exposure": {
+    "commodities": ["crude_oil", "LNG", "palm_oil", "rubber", "tin", "electronics", "container_goods"],
+    "risk_factors": ["shipping_congestion", "piracy", "oil_transit_dependency", "China_energy_vulnerability", "territorial_overlaps", "environmental_degradation", "global_supply_chain_bottleneck"]
+  },
+  "tags": ["chokepoint", "25pct-global-shipping", "busiest-strait", "ASEAN", "piracy-risk", "energy-transit"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "IMB Piracy Reporting Centre", "UNCTAD", "Singapore MPA"]
+}

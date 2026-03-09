@@ -1,0 +1,18 @@
+{
+  "id": "copper",
+  "name": "Copper",
+  "category": "base_metals",
+  "unit": "metric_ton",
+  "benchmark": "LME Copper / COMEX",
+  "producers": ["CHL", "PER", "COD", "CHN", "USA", "AUS", "ZMB"],
+  "consumers": ["CHN", "USA", "DEU", "JPN", "KOR"],
+  "chokepoints": ["chilean_ports", "panama_canal"],
+  "seasonality": "Construction season spring-summer; Chinese restocking after Lunar New Year",
+  "exposure": {
+    "countries": ["CHL", "PER", "COD", "CHN", "USA", "ZMB"],
+    "risk_factors": ["china_demand", "mine_disruptions", "energy_transition_demand", "labor_strikes"]
+  },
+  "tags": ["base_metal", "industrial", "electrification", "construction"],
+  "_updated": "2026-03-09",
+  "_sources": ["ICSG", "USGS", "LME"]
+}

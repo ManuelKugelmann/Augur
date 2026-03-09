@@ -1,0 +1,22 @@
+{
+  "id": "OR",
+  "name": "L'Oréal S.A.",
+  "type": "stock",
+  "exchange": "EPA",
+  "sector": "Consumer Staples",
+  "industry": "Personal Care Products",
+  "country": "FRA",
+  "fundamentals": {
+    "founded": 1909,
+    "employees": 90000
+  },
+  "exposure": {
+    "countries": ["FRA", "USA", "CHN", "IND", "BRA", "JPN"],
+    "commodities": ["palm_oil", "petrochemicals"],
+    "supply_chain": ["BASF", "Symrise", "Givaudan", "IFF"],
+    "risk_factors": ["china_consumer_recovery", "raw_material_costs", "regulatory_cosmetics", "fx_exposure"]
+  },
+  "tags": ["beauty", "cosmetics", "consumer_staples", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

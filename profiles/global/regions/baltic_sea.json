@@ -1,0 +1,33 @@
+{
+  "id": "baltic_sea",
+  "name": "Baltic Sea Region",
+  "type": "maritime",
+  "countries": ["SWE", "FIN", "EST", "LVA", "LTU", "POL", "DEU", "DNK", "RUS"],
+  "bbox": [9.0, 53.5, 30.5, 66.0],
+  "climate": "Maritime to humid continental; cold winters with sea ice in the north and east; cool summers; moderate precipitation; limited daylight in winter",
+  "hazards": ["sea_ice", "severe_storms", "submarine_cable_sabotage", "pipeline_sabotage", "naval_confrontation", "oil_spill", "eutrophication"],
+  "chokepoints": ["Danish_Straits", "Kiel_Canal", "Gulf_of_Finland", "Aland_Sea"],
+  "neighbors": [
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Sweden, Finland, Denmark are both Nordic and Baltic littoral states; shared defense and energy interests"},
+    {"id": "eu", "name": "European Union", "relevance": "All Baltic littoral states except Russia are EU members; EU funds Baltic energy and transport infrastructure"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Russia's Baltic coastline and Kaliningrad exclave create direct security friction"},
+    {"id": "visegrad", "name": "Visegrád Group", "relevance": "Poland bridges Baltic and V4 regions; Suwalki Gap is a shared NATO concern"},
+    {"id": "ruhr_area", "name": "Ruhr Area", "relevance": "German Baltic ports (Rostock, Lubeck) connect to Ruhr industrial hinterland"},
+    {"id": "arctic_sea_route", "name": "Arctic Sea Route", "relevance": "Baltic ports serve as staging points for Arctic shipping routes via the North Sea"}
+  ],
+  "links": [
+    {"target": "nordic_council", "type": "overlap", "description": "Nordic states dominate the western and northern Baltic; joint maritime surveillance and energy grids"},
+    {"target": "eu", "type": "overlap", "description": "EU Baltic Energy Market Interconnection Plan links Baltic states to European energy networks"},
+    {"target": "cis", "type": "rivalry", "description": "NATO-Russia confrontation zone; Kaliningrad militarization and hybrid warfare threats"},
+    {"target": "visegrad", "type": "alliance", "description": "Poland anchors both V4 and Baltic NATO defense; joint military exercises on the eastern flank"},
+    {"target": "ruhr_area", "type": "corridor", "description": "Baltic Sea ports funnel raw materials and containerized goods to German industrial centers"},
+    {"target": "black_sea", "type": "trade", "description": "Ukrainian and Romanian grain transits from Black Sea to Baltic ports via inland waterways and rail"}
+  ],
+  "exposure": {
+    "commodities": ["natural_gas", "crude_oil", "timber", "fish", "grain", "fertilizer", "iron_ore", "container_goods", "wind_energy"],
+    "risk_factors": ["NATO-Russia_frontline", "critical_infrastructure_sabotage", "Nord_Stream_pipeline_politics", "Suwalki_Gap_vulnerability", "Kaliningrad_enclave", "hybrid_warfare", "undersea_cable_vulnerability", "energy_security", "Finland_Sweden_NATO_accession"]
+  },
+  "tags": ["NATO-frontline", "energy-infrastructure", "Baltic-states", "hybrid-warfare-risk", "critical-infrastructure", "semi-enclosed-sea"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "NATO", "HELCOM", "European Commission", "Baltic Sea Region Energy Cooperation"]
+}

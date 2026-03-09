@@ -1,0 +1,16 @@
+{
+  "id": "QQQ",
+  "name": "Invesco QQQ Trust",
+  "type": "etf",
+  "exchange": "NASDAQ",
+  "issuer": "Invesco",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Technology", "Communication Services", "Consumer Discretionary", "Healthcare", "Consumer Staples", "Industrials"],
+    "risk_factors": ["tech_concentration", "growth_factor", "valuation_risk"]
+  },
+  "tags": ["nasdaq100", "large_cap", "tech_heavy", "growth", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Invesco", "Yahoo Finance"]
+}

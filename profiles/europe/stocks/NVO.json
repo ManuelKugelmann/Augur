@@ -1,0 +1,22 @@
+{
+  "id": "NVO",
+  "name": "Novo Nordisk A/S",
+  "type": "stock",
+  "exchange": "CPH",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "DNK",
+  "fundamentals": {
+    "founded": 1923,
+    "employees": 64000
+  },
+  "exposure": {
+    "countries": ["DNK", "USA", "CHN", "DEU", "GBR", "JPN"],
+    "commodities": [],
+    "supply_chain": ["Catalent", "Thermo Fisher", "Lonza"],
+    "risk_factors": ["glp1_competition", "drug_pricing_regulation", "manufacturing_capacity", "obesity_market_saturation"]
+  },
+  "tags": ["pharma", "diabetes", "obesity", "glp1", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

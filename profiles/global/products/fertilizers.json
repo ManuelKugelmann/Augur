@@ -1,0 +1,18 @@
+{
+  "id": "fertilizers",
+  "name": "Fertilizers",
+  "category": "agriculture",
+  "hs_codes": ["3102", "3103", "3104", "3105"],
+  "manufacturers": ["CHN", "RUS", "CAN", "USA", "MAR", "BLR"],
+  "inputs": ["natural_gas", "phosphate_rock", "potash"],
+  "trade_volume": "$100B annual",
+  "exposure": {
+    "countries": ["CHN", "RUS", "CAN", "USA", "MAR", "BLR", "IND", "BRA"],
+    "materials": ["phosphate_rock", "potash"],
+    "commodities": ["natural_gas", "crude_oil"],
+    "risk_factors": ["russia_belarus_sanctions", "export_bans", "food_security_linkage"]
+  },
+  "tags": ["food_security", "sanctions_sensitive"],
+  "_updated": "2026-03-09",
+  "_sources": ["FAO", "IFA", "World Bank"]
+}

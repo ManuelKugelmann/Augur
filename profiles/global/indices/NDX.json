@@ -1,0 +1,17 @@
+{
+  "id": "NDX",
+  "name": "Nasdaq 100",
+  "type": "index",
+  "country": "USA",
+  "exchange": "NASDAQ",
+  "components": 100,
+  "methodology": "modified-market-cap-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Communication Services", "Consumer Discretionary", "Healthcare", "Consumer Staples", "Industrials"],
+    "countries": ["USA"],
+    "risk_factors": ["tech_concentration", "growth_factor", "valuation_risk"]
+  },
+  "tags": ["benchmark", "tech_heavy", "large_cap", "growth"],
+  "_updated": "2026-03-09",
+  "_sources": ["Nasdaq"]
+}

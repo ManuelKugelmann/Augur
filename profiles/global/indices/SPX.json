@@ -1,0 +1,17 @@
+{
+  "id": "SPX",
+  "name": "S&P 500",
+  "type": "index",
+  "country": "USA",
+  "exchange": "NYSE",
+  "components": 500,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Healthcare", "Financials", "Consumer Discretionary", "Communication Services", "Industrials", "Consumer Staples", "Energy", "Utilities", "Real Estate", "Materials"],
+    "countries": ["USA"],
+    "risk_factors": ["tech_concentration", "large_cap_bias"]
+  },
+  "tags": ["benchmark", "large_cap", "us_equity"],
+  "_updated": "2026-03-09",
+  "_sources": ["S&P Global"]
+}

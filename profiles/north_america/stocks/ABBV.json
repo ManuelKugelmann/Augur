@@ -1,0 +1,22 @@
+{
+  "id": "ABBV",
+  "name": "AbbVie Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 2013,
+    "employees": 50000
+  },
+  "exposure": {
+    "countries": ["USA", "JPN", "DEU", "GBR", "FRA", "CAN"],
+    "commodities": [],
+    "supply_chain": ["Catalent", "Samsung Biologics"],
+    "risk_factors": ["humira_biosimilar_competition", "patent_cliffs", "drug_pricing_regulation", "acquisition_integration"]
+  },
+  "tags": ["large_cap", "pharma", "immunology", "oncology", "dividend"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

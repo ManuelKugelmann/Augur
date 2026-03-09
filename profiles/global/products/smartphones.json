@@ -1,0 +1,18 @@
+{
+  "id": "smartphones",
+  "name": "Smartphones",
+  "category": "electronics",
+  "hs_codes": ["8517.13"],
+  "manufacturers": ["CHN", "KOR", "USA", "VNM", "IND"],
+  "inputs": ["semiconductors", "displays", "lithium_batteries", "rare_earths", "glass"],
+  "trade_volume": "$450B annual",
+  "exposure": {
+    "countries": ["CHN", "KOR", "USA", "VNM", "IND", "TWN", "JPN"],
+    "materials": ["rare_earths", "cobalt", "lithium", "copper"],
+    "commodities": [],
+    "risk_factors": ["china_assembly_concentration", "component_shortages", "trade_restrictions"]
+  },
+  "tags": ["consumer_electronics", "critical_tech"],
+  "_updated": "2026-03-09",
+  "_sources": ["IDC", "Counterpoint Research"]
+}

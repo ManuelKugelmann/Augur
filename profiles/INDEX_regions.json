@@ -1,0 +1,708 @@
+[
+  {
+    "id": "african_union",
+    "kind": "regions",
+    "name": "African Union",
+    "region": "global",
+    "tags": [
+      "african_union",
+      "afcfta",
+      "africa",
+      "continental_bloc",
+      "55_members"
+    ]
+  },
+  {
+    "id": "arctic_sea_route",
+    "kind": "regions",
+    "name": "Northern Sea Route / Arctic Shipping Corridor",
+    "region": "global",
+    "tags": [
+      "arctic",
+      "northern_sea_route",
+      "northwest_passage",
+      "corridor",
+      "shipping",
+      "climate_change",
+      "resource_frontier"
+    ]
+  },
+  {
+    "id": "asean",
+    "kind": "regions",
+    "name": "Association of Southeast Asian Nations",
+    "region": "global",
+    "tags": [
+      "asean",
+      "southeast_asia",
+      "trade_bloc",
+      "manufacturing_hub",
+      "rcep_member"
+    ]
+  },
+  {
+    "id": "aukus",
+    "kind": "regions",
+    "name": "AUKUS",
+    "region": "global",
+    "tags": [
+      "aukus",
+      "defense_pact",
+      "nuclear_submarines",
+      "indo_pacific",
+      "pillar_one",
+      "pillar_two",
+      "advanced_capabilities"
+    ]
+  },
+  {
+    "id": "baltic_sea",
+    "kind": "regions",
+    "name": "Baltic Sea Region",
+    "region": "global",
+    "tags": [
+      "NATO-frontline",
+      "energy-infrastructure",
+      "Baltic-states",
+      "hybrid-warfare-risk",
+      "critical-infrastructure",
+      "semi-enclosed-sea"
+    ]
+  },
+  {
+    "id": "belt_and_road",
+    "kind": "regions",
+    "name": "Belt and Road Initiative",
+    "region": "global",
+    "tags": [
+      "belt_and_road",
+      "bri",
+      "one_belt_one_road",
+      "corridor",
+      "infrastructure",
+      "china_led",
+      "cpec",
+      "development_finance"
+    ]
+  },
+  {
+    "id": "black_sea",
+    "kind": "regions",
+    "name": "Black Sea Region",
+    "region": "global",
+    "tags": [
+      "black_sea",
+      "grain_corridor",
+      "energy_transit",
+      "geopolitical_hotspot",
+      "maritime",
+      "nato_frontier"
+    ]
+  },
+  {
+    "id": "bosphorus",
+    "kind": "regions",
+    "name": "Turkish Straits",
+    "region": "global",
+    "tags": [
+      "chokepoint",
+      "Turkish-Straits",
+      "Black-Sea-access",
+      "Montreux-Convention",
+      "grain-corridor",
+      "NATO-member"
+    ]
+  },
+  {
+    "id": "brics",
+    "kind": "regions",
+    "name": "BRICS+",
+    "region": "global",
+    "tags": [
+      "brics",
+      "brics_plus",
+      "emerging_markets",
+      "multipolar",
+      "new_development_bank",
+      "alternative_bloc"
+    ]
+  },
+  {
+    "id": "cape_of_good_hope",
+    "kind": "regions",
+    "name": "Cape of Good Hope Sea Route",
+    "region": "global",
+    "tags": [
+      "alternative-route",
+      "Suez-bypass",
+      "southern-Africa",
+      "weather-risk",
+      "rerouting-hub",
+      "Agulhas-current"
+    ]
+  },
+  {
+    "id": "cis",
+    "kind": "regions",
+    "name": "Commonwealth of Independent States",
+    "region": "global",
+    "tags": [
+      "post-soviet",
+      "energy-exporter",
+      "sanctions-exposed",
+      "eurasian",
+      "commodity-dependent"
+    ]
+  },
+  {
+    "id": "corn_belt",
+    "kind": "regions",
+    "name": "US Corn Belt",
+    "region": "global",
+    "tags": [
+      "corn_belt",
+      "agriculture",
+      "midwest",
+      "grain_production",
+      "breadbasket",
+      "ethanol",
+      "soybeans"
+    ]
+  },
+  {
+    "id": "cptpp",
+    "kind": "regions",
+    "name": "Comprehensive and Progressive Agreement for Trans-Pacific Partnership",
+    "region": "global",
+    "tags": [
+      "cptpp",
+      "tpp",
+      "pacific_rim",
+      "free_trade",
+      "high_standards",
+      "trade_bloc"
+    ]
+  },
+  {
+    "id": "eac",
+    "kind": "regions",
+    "name": "East African Community",
+    "region": "global",
+    "tags": [
+      "eac",
+      "east_africa",
+      "customs_union",
+      "common_market",
+      "rift_valley"
+    ]
+  },
+  {
+    "id": "ecowas",
+    "kind": "regions",
+    "name": "Economic Community of West African States",
+    "region": "global",
+    "tags": [
+      "ecowas",
+      "west_africa",
+      "regional_bloc",
+      "cfa_franc_zone",
+      "economic_integration"
+    ]
+  },
+  {
+    "id": "eu",
+    "kind": "regions",
+    "name": "European Union",
+    "region": "global",
+    "tags": [
+      "eu",
+      "single_market",
+      "customs_union",
+      "eurozone_overlap",
+      "nato_overlap",
+      "trade_bloc"
+    ]
+  },
+  {
+    "id": "eurozone",
+    "kind": "regions",
+    "name": "Euro Area",
+    "region": "global",
+    "tags": [
+      "eurozone",
+      "emu",
+      "ecb",
+      "single_currency",
+      "monetary_union"
+    ]
+  },
+  {
+    "id": "five_eyes",
+    "kind": "regions",
+    "name": "Five Eyes Intelligence Alliance",
+    "region": "global",
+    "tags": [
+      "five_eyes",
+      "fvey",
+      "intelligence_alliance",
+      "anglosphere",
+      "security_cooperation",
+      "tech_regulation"
+    ]
+  },
+  {
+    "id": "g20",
+    "kind": "regions",
+    "name": "Group of Twenty",
+    "region": "global",
+    "tags": [
+      "g20",
+      "global_governance",
+      "major_economies",
+      "systemic_importance"
+    ]
+  },
+  {
+    "id": "g7",
+    "kind": "regions",
+    "name": "Group of Seven",
+    "region": "global",
+    "tags": [
+      "g7",
+      "advanced_economies",
+      "western_bloc",
+      "nato_overlap",
+      "reserve_currencies"
+    ]
+  },
+  {
+    "id": "gcc",
+    "kind": "regions",
+    "name": "Gulf Cooperation Council",
+    "region": "global",
+    "tags": [
+      "gcc",
+      "gulf",
+      "opec_overlap",
+      "petrostate",
+      "sovereign_wealth",
+      "middle_east"
+    ]
+  },
+  {
+    "id": "graph",
+    "kind": "regions",
+    "name": "Region Interconnection Graph",
+    "region": "global"
+  },
+  {
+    "id": "greater_bay_area",
+    "kind": "regions",
+    "name": "Guangdong–Hong Kong–Macau Greater Bay Area",
+    "region": "global",
+    "tags": [
+      "greater_bay_area",
+      "gba",
+      "tech_hub",
+      "manufacturing",
+      "hong_kong",
+      "shenzhen",
+      "guangdong",
+      "pearl_river_delta_overlap"
+    ]
+  },
+  {
+    "id": "horn_of_africa",
+    "kind": "regions",
+    "name": "Horn of Africa",
+    "region": "global",
+    "tags": [
+      "horn-of-africa",
+      "conflict-zone",
+      "famine-risk",
+      "Red-Sea",
+      "Bab-el-Mandeb",
+      "strategic-waterway"
+    ]
+  },
+  {
+    "id": "indo_pacific",
+    "kind": "regions",
+    "name": "Indo-Pacific",
+    "region": "global",
+    "tags": [
+      "indo_pacific",
+      "strategic_framework",
+      "quad_area",
+      "aukus_area",
+      "free_and_open",
+      "great_power_competition"
+    ]
+  },
+  {
+    "id": "levant",
+    "kind": "regions",
+    "name": "Levant",
+    "region": "global",
+    "tags": [
+      "levant",
+      "geopolitical-hotspot",
+      "Mediterranean",
+      "conflict-zone",
+      "water-stressed",
+      "refugee-host"
+    ]
+  },
+  {
+    "id": "mediterranean",
+    "kind": "regions",
+    "name": "Mediterranean Sea Basin",
+    "region": "global",
+    "tags": [
+      "mediterranean",
+      "maritime",
+      "shipping_lane",
+      "tourism",
+      "energy_transit",
+      "climate_hotspot",
+      "migration_route"
+    ]
+  },
+  {
+    "id": "mercosur",
+    "kind": "regions",
+    "name": "Mercosur",
+    "region": "global",
+    "tags": [
+      "mercosur",
+      "south_america",
+      "customs_union",
+      "trade_bloc",
+      "agricultural_powerhouse"
+    ]
+  },
+  {
+    "id": "nafta_usmca",
+    "kind": "regions",
+    "name": "United States–Mexico–Canada Agreement",
+    "region": "global",
+    "tags": [
+      "usmca",
+      "nafta",
+      "free_trade",
+      "north_america",
+      "integrated_supply_chain"
+    ]
+  },
+  {
+    "id": "nordic_council",
+    "kind": "regions",
+    "name": "Nordic Council",
+    "region": "global",
+    "tags": [
+      "nordic",
+      "NATO",
+      "Arctic",
+      "high-income",
+      "energy-transition",
+      "welfare-state"
+    ]
+  },
+  {
+    "id": "opec",
+    "kind": "regions",
+    "name": "Organization of the Petroleum Exporting Countries",
+    "region": "global",
+    "tags": [
+      "opec",
+      "oil_cartel",
+      "petroleum",
+      "production_quotas",
+      "energy"
+    ]
+  },
+  {
+    "id": "opec_plus",
+    "kind": "regions",
+    "name": "OPEC+",
+    "region": "global",
+    "tags": [
+      "opec_plus",
+      "oil_alliance",
+      "production_coordination",
+      "energy",
+      "expanded_cartel"
+    ]
+  },
+  {
+    "id": "panama_canal",
+    "kind": "regions",
+    "name": "Panama Canal",
+    "region": "global",
+    "tags": [
+      "chokepoint",
+      "trade-corridor",
+      "5pct-global-trade",
+      "Atlantic-Pacific-link",
+      "canal",
+      "water-dependent"
+    ]
+  },
+  {
+    "id": "pearl_river_delta",
+    "kind": "regions",
+    "name": "Pearl River Delta",
+    "region": "global",
+    "tags": [
+      "pearl_river_delta",
+      "prd",
+      "manufacturing",
+      "electronics",
+      "shenzhen",
+      "guangzhou",
+      "dongguan",
+      "factory_of_world"
+    ]
+  },
+  {
+    "id": "persian_gulf",
+    "kind": "regions",
+    "name": "Persian Gulf",
+    "region": "global",
+    "tags": [
+      "persian-gulf",
+      "OPEC",
+      "energy-superpower",
+      "GCC",
+      "oil-dependent",
+      "desalination"
+    ]
+  },
+  {
+    "id": "quad",
+    "kind": "regions",
+    "name": "Quadrilateral Security Dialogue",
+    "region": "global",
+    "tags": [
+      "quad",
+      "security_dialogue",
+      "indo_pacific_framework",
+      "supply_chain",
+      "tech_cooperation",
+      "democratic_alliance"
+    ]
+  },
+  {
+    "id": "rcep",
+    "kind": "regions",
+    "name": "Regional Comprehensive Economic Partnership",
+    "region": "global",
+    "tags": [
+      "rcep",
+      "asia_pacific",
+      "mega_trade_deal",
+      "asean_led",
+      "largest_fta"
+    ]
+  },
+  {
+    "id": "red_sea",
+    "kind": "regions",
+    "name": "Red Sea",
+    "region": "global",
+    "tags": [
+      "red_sea",
+      "suez_approach",
+      "bab_el_mandeb",
+      "shipping_lane",
+      "maritime",
+      "houthi_threat",
+      "energy_transit"
+    ]
+  },
+  {
+    "id": "ruhr_area",
+    "kind": "regions",
+    "name": "Ruhr Area",
+    "region": "global",
+    "tags": [
+      "industry",
+      "manufacturing",
+      "steel",
+      "chemicals",
+      "logistics",
+      "energy_transition",
+      "europe"
+    ]
+  },
+  {
+    "id": "rust_belt",
+    "kind": "regions",
+    "name": "US Rust Belt",
+    "region": "global",
+    "tags": [
+      "rust_belt",
+      "manufacturing",
+      "great_lakes",
+      "steel",
+      "automotive",
+      "industrial",
+      "reshoring"
+    ]
+  },
+  {
+    "id": "sadc",
+    "kind": "regions",
+    "name": "Southern African Development Community",
+    "region": "global",
+    "tags": [
+      "sadc",
+      "southern_africa",
+      "regional_bloc",
+      "mineral_wealth",
+      "customs_union_overlap"
+    ]
+  },
+  {
+    "id": "sahel",
+    "kind": "regions",
+    "name": "Sahel Belt",
+    "region": "global",
+    "tags": [
+      "sahel",
+      "conflict-zone",
+      "climate-vulnerable",
+      "food-insecure",
+      "resource-rich",
+      "francophone"
+    ]
+  },
+  {
+    "id": "sco",
+    "kind": "regions",
+    "name": "Shanghai Cooperation Organisation",
+    "region": "global",
+    "tags": [
+      "multipolar",
+      "eurasian-security",
+      "energy-corridor",
+      "BRI-aligned",
+      "nuclear-states"
+    ]
+  },
+  {
+    "id": "silicon_valley",
+    "kind": "regions",
+    "name": "Silicon Valley / San Francisco Bay Area",
+    "region": "global",
+    "tags": [
+      "silicon_valley",
+      "tech_hub",
+      "bay_area",
+      "venture_capital",
+      "ai_center",
+      "innovation",
+      "san_francisco"
+    ]
+  },
+  {
+    "id": "south_china_sea",
+    "kind": "regions",
+    "name": "South China Sea",
+    "region": "global",
+    "tags": [
+      "disputed-waters",
+      "territorial-claims",
+      "3.4T-annual-trade",
+      "UNCLOS",
+      "island-building",
+      "naval-flashpoint"
+    ]
+  },
+  {
+    "id": "strait_of_hormuz",
+    "kind": "regions",
+    "name": "Strait of Hormuz",
+    "region": "global",
+    "tags": [
+      "chokepoint",
+      "oil-transit",
+      "21pct-global-oil",
+      "Persian-Gulf-exit",
+      "strategic-waterway",
+      "naval-flashpoint"
+    ]
+  },
+  {
+    "id": "strait_of_malacca",
+    "kind": "regions",
+    "name": "Strait of Malacca",
+    "region": "global",
+    "tags": [
+      "chokepoint",
+      "25pct-global-shipping",
+      "busiest-strait",
+      "ASEAN",
+      "piracy-risk",
+      "energy-transit"
+    ]
+  },
+  {
+    "id": "suez_canal",
+    "kind": "regions",
+    "name": "Suez Canal",
+    "region": "global",
+    "tags": [
+      "chokepoint",
+      "trade-corridor",
+      "12pct-global-trade",
+      "Asia-Europe-link",
+      "canal",
+      "Egypt"
+    ]
+  },
+  {
+    "id": "taiwan_strait",
+    "kind": "regions",
+    "name": "Taiwan Strait",
+    "region": "global",
+    "tags": [
+      "chokepoint",
+      "semiconductor-lifeline",
+      "TSMC",
+      "geopolitical-flashpoint",
+      "US-China-tension",
+      "tech-supply-chain"
+    ]
+  },
+  {
+    "id": "visegrad",
+    "kind": "regions",
+    "name": "Visegrád Group",
+    "region": "global",
+    "tags": [
+      "V4",
+      "EU-member",
+      "NATO",
+      "automotive-hub",
+      "central-europe",
+      "post-communist"
+    ]
+  },
+  {
+    "id": "yangtze_river_delta",
+    "kind": "regions",
+    "name": "Yangtze River Delta",
+    "region": "global",
+    "tags": [
+      "yangtze_river_delta",
+      "yrd",
+      "shanghai",
+      "jiangsu",
+      "zhejiang",
+      "finance_hub",
+      "manufacturing",
+      "port_cluster"
+    ]
+  }
+]

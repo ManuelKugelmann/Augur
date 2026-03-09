@@ -1,0 +1,22 @@
+{
+  "id": "ASML",
+  "name": "ASML Holding N.V.",
+  "type": "stock",
+  "exchange": "AMS",
+  "sector": "Information Technology",
+  "industry": "Semiconductor Materials & Equipment",
+  "country": "NLD",
+  "fundamentals": {
+    "founded": 1984,
+    "employees": 43000
+  },
+  "exposure": {
+    "countries": ["NLD", "TWN", "KOR", "USA", "CHN", "JPN"],
+    "commodities": ["rare_earths", "silicon"],
+    "supply_chain": ["TSMC", "Samsung", "Intel", "Carl Zeiss", "Cymer"],
+    "risk_factors": ["china_export_controls", "euv_monopoly_risk", "semiconductor_cycle", "geopolitical_taiwan"]
+  },
+  "tags": ["semiconductors", "lithography", "euv", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

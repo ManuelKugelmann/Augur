@@ -1,0 +1,67 @@
+{
+  "id": "pearl_river_delta",
+  "name": "Pearl River Delta",
+  "type": "subregion",
+  "countries": ["CHN"],
+  "bbox": [112.5, 21.5, 114.5, 23.5],
+  "climate": "Subtropical monsoon; hot humid summers with typhoon season (Jun–Nov), mild dry winters; annual rainfall 1600–2000mm",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "storm_surges",
+    "sea_level_rise",
+    "subsidence",
+    "air_pollution",
+    "industrial_chemical_accidents"
+  ],
+  "chokepoints": [
+    "Pearl River estuary",
+    "Shenzhen–Hong Kong crossings",
+    "Port of Shenzhen",
+    "Port of Guangzhou"
+  ],
+  "neighbors": [
+    {"id": "greater_bay_area", "name": "Greater Bay Area", "relevance": "GBA is the expanded policy framework that encompasses PRD plus Hong Kong and Macau"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "PRD ports directly access South China Sea shipping lanes for global exports"},
+    {"id": "yangtze_river_delta", "name": "Yangtze River Delta", "relevance": "China's other major manufacturing and export cluster; supply chain interdependence"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Closest international manufacturing competitor; destination for PRD factory relocation"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "PRD electronics sector depends on Taiwan semiconductor foundries"}
+  ],
+  "links": [
+    {"target": "greater_bay_area", "type": "overlap", "description": "PRD forms the manufacturing core of the broader Greater Bay Area integration zone"},
+    {"target": "south_china_sea", "type": "corridor", "description": "Shenzhen and Guangzhou ports route container traffic through the South China Sea"},
+    {"target": "asean", "type": "trade", "description": "ASEAN nations are top export markets and increasingly competing manufacturing bases"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Raw material imports and finished goods exports transit via the Strait of Malacca"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "PRD electronics and tech manufacturing relies on Taiwan-made chips and components"},
+    {"target": "yangtze_river_delta", "type": "trade", "description": "Inter-cluster trade in components, steel, petrochemicals, and financial services"},
+    {"target": "belt_and_road", "type": "corridor", "description": "PRD is a major origin point for BRI maritime shipping and infrastructure equipment exports"}
+  ],
+  "exposure": {
+    "commodities": [
+      "consumer_electronics",
+      "smartphones",
+      "semiconductors",
+      "textiles",
+      "toys",
+      "furniture",
+      "plastics",
+      "container_shipping",
+      "ev_batteries",
+      "drones"
+    ],
+    "risk_factors": [
+      "us_china_trade_war",
+      "export_control_escalation",
+      "factory_relocation_to_southeast_asia",
+      "labor_cost_increases",
+      "typhoon_factory_shutdowns",
+      "water_pollution",
+      "power_shortages",
+      "supply_chain_concentration_risk",
+      "covid_lockdown_precedent"
+    ]
+  },
+  "tags": ["pearl_river_delta", "prd", "manufacturing", "electronics", "shenzhen", "guangzhou", "dongguan", "factory_of_world"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Guangdong Statistical Bureau", "HKTDC"]
+}

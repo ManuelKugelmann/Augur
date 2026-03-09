@@ -1,0 +1,129 @@
+{
+  "id": "SAU",
+  "name": "Saudi Arabia",
+  "iso2": "SA",
+  "region": "Middle East & North Africa",
+  "currency": "SAR",
+  "capital": "Riyadh",
+  "population": 36000000,
+  "trade": {
+    "top_exports": [
+      "petroleum",
+      "petrochemicals",
+      "plastics",
+      "aluminum",
+      "fertilizers"
+    ],
+    "top_partners": [
+      "CHN",
+      "IND",
+      "JPN",
+      "KOR",
+      "USA"
+    ],
+    "major_ports": [
+      "Jeddah",
+      "Dammam",
+      "Jubail",
+      "Yanbu"
+    ],
+    "chokepoint_exposure": [
+      "hormuz",
+      "suez",
+      "bab_el_mandeb"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "vehicles",
+      "machinery",
+      "food_products",
+      "electronics"
+    ],
+    "energy_mix": {
+      "oil": 0.4,
+      "gas": 0.55,
+      "renewables": 0.03,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "oil_price_dependence",
+      "water_scarcity",
+      "vision_2030_execution",
+      "regional_tensions"
+    ]
+  },
+  "ratings": {
+    "credit": "A",
+    "democracy_index": 2.08,
+    "press_freedom_rank": 166,
+    "corruption_perception": 53
+  },
+  "neighbors": [
+    {
+      "id": "ARE",
+      "name": "UAE",
+      "relevance": "GCC partner; economic competition (Vision 2030 vs diversification)"
+    },
+    {
+      "id": "YEM",
+      "name": "Yemen",
+      "relevance": "Houthi conflict; border security; migration; Red Sea threat"
+    },
+    {
+      "id": "IRQ",
+      "name": "Iraq",
+      "relevance": "Northern border; sectarian dynamics; diplomatic reopening"
+    },
+    {
+      "id": "JOR",
+      "name": "Jordan",
+      "relevance": "Security partner; economic support; NEOM border proximity"
+    },
+    {
+      "id": "KWT",
+      "name": "Kuwait",
+      "relevance": "GCC partner; Neutral Zone; oil coordination"
+    },
+    {
+      "id": "OMN",
+      "name": "Oman",
+      "relevance": "GCC partner; Yemen conflict neighbor; diplomatic mediator"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Petrodollar anchor; arms sales; security umbrella; strained over human rights"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest oil buyer; petroyuan settlement; Huawei 5G; growing strategic hedge"
+    },
+    {
+      "target": "OPEC",
+      "type": "alliance",
+      "description": "De facto OPEC+ leader; production cut coordination with Russia"
+    },
+    {
+      "target": "IRN",
+      "type": "rivalry",
+      "description": "Sectarian and geopolitical rival; Yemen proxy war; China-brokered détente"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "G20",
+    "GCC"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

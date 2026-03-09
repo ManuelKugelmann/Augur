@@ -1,0 +1,17 @@
+{
+  "id": "CAC",
+  "name": "CAC 40",
+  "type": "index",
+  "country": "FRA",
+  "exchange": "Euronext Paris",
+  "components": 40,
+  "methodology": "free-float-market-cap-weighted",
+  "exposure": {
+    "sectors": ["Consumer Discretionary", "Industrials", "Healthcare", "Financials", "Energy", "Technology", "Consumer Staples"],
+    "countries": ["FRA"],
+    "risk_factors": ["eur_currency_risk", "luxury_sector_concentration", "global_revenue_mix"]
+  },
+  "tags": ["benchmark", "french_equity", "large_cap", "luxury"],
+  "_updated": "2026-03-09",
+  "_sources": ["Euronext"]
+}

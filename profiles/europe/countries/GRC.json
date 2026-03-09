@@ -1,0 +1,124 @@
+{
+  "id": "GRC",
+  "name": "Greece",
+  "iso2": "GR",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Athens",
+  "population": 10400000,
+  "trade": {
+    "top_exports": [
+      "petroleum_products",
+      "aluminum",
+      "pharmaceuticals",
+      "food_products",
+      "shipping_services"
+    ],
+    "top_partners": [
+      "ITA",
+      "DEU",
+      "TUR",
+      "BGR",
+      "CYP"
+    ],
+    "major_ports": [
+      "Piraeus",
+      "Thessaloniki"
+    ],
+    "chokepoint_exposure": [
+      "suez",
+      "turkish_straits"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "vehicles",
+      "machinery"
+    ],
+    "energy_mix": {
+      "gas": 0.35,
+      "renewables": 0.3,
+      "coal": 0.1,
+      "oil": 0.05,
+      "hydro": 0.08,
+      "other": 0.12
+    },
+    "risk_factors": [
+      "sovereign_debt",
+      "tourism_dependence",
+      "turkey_tensions",
+      "demographic_decline"
+    ]
+  },
+  "ratings": {
+    "credit": "BBB-",
+    "democracy_index": 7.56,
+    "press_freedom_rank": 88,
+    "corruption_perception": 49
+  },
+  "neighbors": [
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Aegean disputes; Cyprus issue; NATO rivals; migration pressure"
+    },
+    {
+      "id": "BGR",
+      "name": "Bulgaria",
+      "relevance": "EU/NATO partner; energy corridor; Alexandroupolis LNG terminal"
+    },
+    {
+      "id": "ALB",
+      "name": "Albania",
+      "relevance": "Ethnic Greek minority; EU accession neighbor"
+    },
+    {
+      "id": "MKD",
+      "name": "North Macedonia",
+      "relevance": "Name dispute resolved; EU accession support"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU/eurozone member; sovereign debt crisis legacy; recovery fund beneficiary"
+    },
+    {
+      "target": "TUR",
+      "type": "rivalry",
+      "description": "Aegean continental shelf; airspace violations; Cyprus division"
+    },
+    {
+      "target": "ISR",
+      "type": "alliance",
+      "description": "EastMed energy cooperation; defense ties; tourism"
+    },
+    {
+      "target": "EGY",
+      "type": "trade",
+      "description": "EEZ delimitation; gas pipeline prospects; maritime cooperation"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions despite historical Orthodox ties; shipping sector impact"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "OECD"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

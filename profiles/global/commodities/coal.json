@@ -1,0 +1,18 @@
+{
+  "id": "coal",
+  "name": "Coal",
+  "category": "energy",
+  "unit": "metric_ton",
+  "benchmark": "Newcastle thermal / ICE Rotterdam",
+  "producers": ["CHN", "IND", "IDN", "USA", "AUS", "RUS"],
+  "consumers": ["CHN", "IND", "USA", "JPN", "KOR"],
+  "chokepoints": ["indonesian_straits", "malacca", "newcastle_port"],
+  "seasonality": "Winter heating demand; monsoon disruptions to Indian mining",
+  "exposure": {
+    "countries": ["CHN", "IND", "IDN", "AUS", "USA", "RUS"],
+    "risk_factors": ["energy_transition", "carbon_pricing", "weather_disruptions", "policy_phase_out"]
+  },
+  "tags": ["energy", "fossil_fuel", "thermal", "metallurgical"],
+  "_updated": "2026-03-09",
+  "_sources": ["EIA", "IEA", "World Coal Association"]
+}

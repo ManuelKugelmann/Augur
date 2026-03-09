@@ -1,0 +1,171 @@
+[
+  {
+    "id": "barley",
+    "kind": "crops",
+    "name": "Barley",
+    "region": "global",
+    "tags": [
+      "grains",
+      "feed",
+      "malt",
+      "beverage"
+    ]
+  },
+  {
+    "id": "canola",
+    "kind": "crops",
+    "name": "Canola (Rapeseed)",
+    "region": "global",
+    "tags": [
+      "oilseeds",
+      "vegetable_oil",
+      "biofuel"
+    ]
+  },
+  {
+    "id": "cocoa_beans",
+    "kind": "crops",
+    "name": "Cocoa Beans",
+    "region": "global",
+    "tags": [
+      "tree_crop",
+      "tropical",
+      "cash_crop"
+    ]
+  },
+  {
+    "id": "corn",
+    "kind": "crops",
+    "name": "Corn (Maize)",
+    "region": "global",
+    "tags": [
+      "grains",
+      "feed",
+      "biofuel"
+    ]
+  },
+  {
+    "id": "cotton",
+    "kind": "crops",
+    "name": "Cotton",
+    "region": "global",
+    "tags": [
+      "fiber",
+      "textile",
+      "agricultural"
+    ]
+  },
+  {
+    "id": "oats",
+    "kind": "crops",
+    "name": "Oats",
+    "region": "global",
+    "tags": [
+      "grains",
+      "feed",
+      "food",
+      "health"
+    ]
+  },
+  {
+    "id": "olive",
+    "kind": "crops",
+    "name": "Olive",
+    "region": "global",
+    "tags": [
+      "oilseeds",
+      "food",
+      "mediterranean"
+    ]
+  },
+  {
+    "id": "rice",
+    "kind": "crops",
+    "name": "Rice",
+    "region": "global",
+    "tags": [
+      "grains",
+      "food",
+      "staple"
+    ]
+  },
+  {
+    "id": "sorghum",
+    "kind": "crops",
+    "name": "Sorghum",
+    "region": "global",
+    "tags": [
+      "grains",
+      "feed",
+      "food",
+      "drought_resistant"
+    ]
+  },
+  {
+    "id": "soybeans",
+    "kind": "crops",
+    "name": "Soybeans",
+    "region": "global",
+    "tags": [
+      "oilseeds",
+      "feed",
+      "vegetable_oil",
+      "food"
+    ]
+  },
+  {
+    "id": "sugarcane",
+    "kind": "crops",
+    "name": "Sugarcane",
+    "region": "global",
+    "tags": [
+      "sugar",
+      "biofuel",
+      "food"
+    ]
+  },
+  {
+    "id": "sunflower",
+    "kind": "crops",
+    "name": "Sunflower",
+    "region": "global",
+    "tags": [
+      "oilseeds",
+      "vegetable_oil",
+      "food"
+    ]
+  },
+  {
+    "id": "tea",
+    "kind": "crops",
+    "name": "Tea",
+    "region": "global",
+    "tags": [
+      "beverages",
+      "plantation_crop",
+      "cash_crop"
+    ]
+  },
+  {
+    "id": "tobacco",
+    "kind": "crops",
+    "name": "Tobacco",
+    "region": "global",
+    "tags": [
+      "industrial_crop",
+      "cash_crop",
+      "regulated"
+    ]
+  },
+  {
+    "id": "wheat",
+    "kind": "crops",
+    "name": "Wheat",
+    "region": "global",
+    "tags": [
+      "grains",
+      "food",
+      "staple"
+    ]
+  }
+]

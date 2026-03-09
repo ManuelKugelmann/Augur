@@ -1,0 +1,16 @@
+{
+  "id": "who-gho",
+  "name": "WHO Global Health Observatory",
+  "mcp": "health",
+  "tool": "who_indicator",
+  "api_base": "https://ghoapi.azureedge.net/api/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "monthly",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 30,
+  "_updated": "2026-03-09",
+  "_sources": ["WHO GHO API Docs"]
+}

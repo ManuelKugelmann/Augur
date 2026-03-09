@@ -67,13 +67,17 @@ class TestStoreLive:
         server.PROFILES = Path(os.environ["PROFILES_DIR"])
         self.s = server
 
+        # Seed disk profiles into MongoDB so get/list/find work
+        server.seed_profiles(str(tmp_path / "profiles"))
+
         yield
 
         # Cleanup: drop test collections
         try:
             db = server._db()
             for name in db.list_collection_names():
-                if name.startswith("snap_") or name.startswith("arch_") or name == "events":
+                if (name.startswith("snap_") or name.startswith("arch_")
+                        or name.startswith("profiles_") or name == "events"):
                     db.drop_collection(name)
         except Exception:
             pass

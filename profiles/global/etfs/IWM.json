@@ -1,0 +1,16 @@
+{
+  "id": "IWM",
+  "name": "iShares Russell 2000 ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Healthcare", "Financials", "Industrials", "Technology", "Consumer Discretionary", "Energy", "Real Estate"],
+    "risk_factors": ["small_cap_risk", "liquidity_risk", "economic_sensitivity"]
+  },
+  "tags": ["russell2000", "small_cap", "us_equity", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

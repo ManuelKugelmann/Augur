@@ -1,0 +1,22 @@
+{
+  "id": "JNJ",
+  "name": "Johnson & Johnson",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1886,
+    "employees": 131900
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "JPN", "DEU", "BRA", "IND"],
+    "commodities": [],
+    "supply_chain": ["Catalent", "Emergent BioSolutions"],
+    "risk_factors": ["litigation_risk", "drug_pricing_regulation", "patent_cliffs", "fda_approval"]
+  },
+  "tags": ["mega_cap", "pharma", "medtech", "dividend_aristocrat", "defensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

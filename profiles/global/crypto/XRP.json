@@ -1,0 +1,15 @@
+{
+  "id": "XRP",
+  "name": "XRP",
+  "type": "crypto",
+  "network": "XRP Ledger",
+  "consensus": "RPCA",
+  "max_supply": 100000000000,
+  "exposure": {
+    "countries": ["USA", "JPN", "KOR", "GBR"],
+    "risk_factors": ["regulatory_risk", "volatility", "sec_litigation_legacy", "ripple_concentration"]
+  },
+  "tags": ["payments", "cross_border", "layer1", "institutional"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

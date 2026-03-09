@@ -1,0 +1,16 @@
+{
+  "id": "VTI",
+  "name": "Vanguard Total Stock Market ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "Vanguard",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Technology", "Healthcare", "Financials", "Consumer Discretionary", "Industrials", "Communication Services", "Consumer Staples", "Energy", "Real Estate", "Utilities", "Materials"],
+    "risk_factors": ["us_market_risk", "broad_market_exposure"]
+  },
+  "tags": ["total_market", "all_cap", "us_equity", "diversified", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Vanguard", "Yahoo Finance"]
+}

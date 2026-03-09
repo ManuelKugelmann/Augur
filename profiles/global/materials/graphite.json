@@ -1,0 +1,17 @@
+{
+  "id": "graphite",
+  "name": "Graphite",
+  "category": "minerals",
+  "producers": ["CHN", "MOZ", "BRA", "MDG", "CAN"],
+  "reserves": ["TUR", "CHN", "BRA", "MOZ", "MDG"],
+  "processing": ["CHN", "JPN", "IND", "KOR"],
+  "end_uses": ["battery anodes", "steel production", "lubricants", "refractories"],
+  "substitutes": ["silicon anodes (emerging)", "synthetic graphite"],
+  "exposure": {
+    "countries": ["CHN", "MOZ", "BRA", "MDG", "CAN"],
+    "risk_factors": ["china_processing_dominance", "ev_anode_demand", "natural_vs_synthetic_competition", "export_controls"]
+  },
+  "tags": ["critical_mineral", "battery", "ev"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "IEA"]
+}

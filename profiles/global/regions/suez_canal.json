@@ -1,0 +1,32 @@
+{
+  "id": "suez_canal",
+  "name": "Suez Canal",
+  "type": "corridor",
+  "countries": ["EGY"],
+  "bbox": [32.2, 29.8, 32.6, 31.3],
+  "climate": "Hyper-arid desert; hot summers with minimal rainfall; mild winters; occasional sandstorms",
+  "hazards": ["blockage_risk", "grounding", "geopolitical_disruption", "terrorist_attack", "sandstorm", "Red_Sea_security_threat"],
+  "chokepoints": ["Suez_Canal"],
+  "neighbors": [
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Southern approach; all Suez-bound traffic transits the Red Sea"},
+    {"id": "mediterranean", "name": "Mediterranean", "relevance": "Northern exit; Suez connects Red Sea to Mediterranean shipping lanes"},
+    {"id": "levant", "name": "Levant", "relevance": "Eastern neighbor across Sinai; Israel and Jordan are adjacent to the canal zone"},
+    {"id": "horn_of_africa", "name": "Horn of Africa", "relevance": "Bab el-Mandeb security at the Red Sea's southern end affects Suez traffic volume"}
+  ],
+  "links": [
+    {"target": "red_sea", "type": "corridor", "description": "Suez Canal is the northern terminus of the Red Sea shipping lane"},
+    {"target": "mediterranean", "type": "corridor", "description": "Canal connects Red Sea to Mediterranean, enabling Asia-Europe trade without circumnavigating Africa"},
+    {"target": "strait_of_hormuz", "type": "corridor", "description": "Gulf oil exits Hormuz, crosses Arabian Sea and Red Sea, then transits Suez to reach Europe"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "Cape route is the primary alternative when Suez or Red Sea is disrupted"},
+    {"target": "panama_canal", "type": "rivalry", "description": "Competing intercontinental trade route; Suez handles Asia-Europe, Panama handles Asia-US East Coast"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Asia-Europe container route runs Malacca to Red Sea to Suez"},
+    {"target": "bosphorus", "type": "corridor", "description": "Black Sea grain exports transit Bosphorus then may use Suez for Asian markets"}
+  ],
+  "exposure": {
+    "commodities": ["crude_oil", "LNG", "container_goods", "grain", "refined_products", "automobiles"],
+    "risk_factors": ["canal_blockage", "Houthi_Red_Sea_attacks", "Egypt_economic_instability", "transit_fee_increases", "capacity_constraints", "rerouting_via_Cape", "global_supply_chain_disruption", "Sinai_security"]
+  },
+  "tags": ["chokepoint", "trade-corridor", "12pct-global-trade", "Asia-Europe-link", "canal", "Egypt"],
+  "_updated": "2026-03-09",
+  "_sources": ["Suez Canal Authority", "CIA World Factbook", "UNCTAD", "Lloyd's List"]
+}

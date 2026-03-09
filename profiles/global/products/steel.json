@@ -1,0 +1,18 @@
+{
+  "id": "steel",
+  "name": "Steel",
+  "category": "metals",
+  "hs_codes": ["7206", "7207", "7208", "7209", "7210"],
+  "manufacturers": ["CHN", "IND", "JPN", "USA", "RUS", "KOR"],
+  "inputs": ["iron_ore", "coking_coal", "scrap_metal", "limestone"],
+  "trade_volume": "$450B annual",
+  "exposure": {
+    "countries": ["CHN", "IND", "JPN", "USA", "RUS", "KOR", "BRA", "AUS"],
+    "materials": ["iron_ore", "copper"],
+    "commodities": ["coking_coal", "natural_gas"],
+    "risk_factors": ["china_overcapacity", "anti_dumping_tariffs", "decarbonization_costs"]
+  },
+  "tags": ["industrial_base", "trade_sensitive"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Steel Association", "USGS"]
+}

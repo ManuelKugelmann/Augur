@@ -1,0 +1,68 @@
+{
+  "id": "asean",
+  "name": "Association of Southeast Asian Nations",
+  "type": "economic_zone",
+  "countries": ["BRN", "KHM", "IDN", "LAO", "MYS", "MMR", "PHL", "SGP", "THA", "VNM"],
+  "bbox": [92.2, -11.0, 141.0, 28.5],
+  "climate": "Tropical equatorial and monsoon, hot and humid year-round with distinct wet and dry seasons in mainland Southeast Asia",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "earthquakes",
+    "tsunamis",
+    "volcanic_eruptions",
+    "landslides",
+    "drought",
+    "haze_from_fires"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Strait of Singapore",
+    "Lombok Strait",
+    "Sunda Strait",
+    "South China Sea"
+  ],
+  "neighbors": [
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Core maritime space for ASEAN members; territorial disputes with China shape defense and trade policy"},
+    {"id": "strait_of_malacca", "name": "Strait of Malacca", "relevance": "Primary shipping chokepoint for ASEAN trade; Malaysia, Singapore, and Indonesia are littoral states"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "ASEAN centrality is a key pillar of Indo-Pacific strategy for all major powers"},
+    {"id": "rcep", "name": "Regional Comprehensive Economic Partnership", "relevance": "ASEAN-led mega trade agreement integrating ASEAN with major Asian economies"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Major recipient of BRI infrastructure investment in ports, rail, and industrial zones"}
+  ],
+  "links": [
+    {"target": "rcep", "type": "trade", "description": "ASEAN initiated and hosts RCEP, the world's largest free trade agreement"},
+    {"target": "south_china_sea", "type": "rivalry", "description": "Multiple ASEAN members contest China's nine-dash line claims"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Critical energy and goods transit route connecting ASEAN to global markets"},
+    {"target": "quad", "type": "alliance", "description": "ASEAN is a focal point of Quad engagement and Indo-Pacific strategy"},
+    {"target": "cptpp", "type": "trade", "description": "Several ASEAN members (BRN, MYS, SGP, VNM) are CPTPP signatories"},
+    {"target": "belt_and_road", "type": "dependency", "description": "BRI infrastructure financing in ASEAN creates economic ties and debt exposure to China"},
+    {"target": "indo_pacific", "type": "overlap", "description": "ASEAN sits at the geographic and strategic center of the Indo-Pacific framework"}
+  ],
+  "exposure": {
+    "commodities": [
+      "palm_oil",
+      "rubber",
+      "rice",
+      "tin",
+      "natural_gas",
+      "crude_oil",
+      "nickel",
+      "semiconductors",
+      "electronics",
+      "textiles"
+    ],
+    "risk_factors": [
+      "south_china_sea_disputes",
+      "supply_chain_relocation",
+      "climate_vulnerability",
+      "political_instability_myanmar",
+      "currency_volatility",
+      "infrastructure_gaps",
+      "us_china_competition",
+      "maritime_piracy"
+    ]
+  },
+  "tags": ["asean", "southeast_asia", "trade_bloc", "manufacturing_hub", "rcep_member"],
+  "_updated": "2026-03-09",
+  "_sources": ["ASEAN Secretariat", "CIA World Factbook", "World Bank"]
+}

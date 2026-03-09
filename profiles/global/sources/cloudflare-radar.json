@@ -1,0 +1,16 @@
+{
+  "id": "cloudflare-radar",
+  "name": "Cloudflare Radar",
+  "mcp": "infra",
+  "tool": "cf_radar",
+  "api_base": "https://api.cloudflare.com/client/v4/radar/",
+  "auth": "api_key",
+  "refresh": {
+    "frequency": "daily",
+    "snapshot_type": "traffic",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["Cloudflare Radar API Docs"]
+}

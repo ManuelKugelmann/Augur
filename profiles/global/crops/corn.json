@@ -1,0 +1,18 @@
+{
+  "id": "corn",
+  "name": "Corn (Maize)",
+  "category": "grains",
+  "growing_season": "April-October (Northern Hemisphere)",
+  "producers": ["USA", "CHN", "BRA", "ARG", "UKR"],
+  "exporters": ["USA", "BRA", "ARG", "UKR"],
+  "water_intensity": "medium",
+  "climate_sensitivity": ["drought", "heat_stress", "frost"],
+  "exposure": {
+    "countries": ["USA", "CHN", "BRA", "ARG", "UKR"],
+    "commodities": ["ethanol"],
+    "risk_factors": ["drought", "trade_policy", "biofuel_mandate"]
+  },
+  "tags": ["grains", "feed", "biofuel"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT"]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "semiconductors",
+  "name": "Semiconductors",
+  "category": "electronics",
+  "hs_codes": ["8541", "8542"],
+  "manufacturers": ["TWN", "KOR", "USA", "JPN", "CHN"],
+  "inputs": ["silicon", "rare_earths", "photoresists", "neon_gas"],
+  "trade_volume": "$600B annual",
+  "exposure": {
+    "countries": ["TWN", "KOR", "USA", "JPN", "CHN", "NLD"],
+    "materials": ["silicon", "rare_earths", "copper"],
+    "commodities": ["natural_gas"],
+    "risk_factors": ["taiwan_concentration", "export_controls", "fab_lead_time"]
+  },
+  "tags": ["critical_tech", "dual_use"],
+  "_updated": "2026-03-09",
+  "_sources": ["SIA", "WSTS"]
+}

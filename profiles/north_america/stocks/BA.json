@@ -1,0 +1,22 @@
+{
+  "id": "BA",
+  "name": "The Boeing Company",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Industrials",
+  "industry": "Aerospace & Defense",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1916,
+    "employees": 170000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "SAU", "IND", "GBR", "DEU"],
+    "commodities": ["aluminum", "titanium", "carbon_fiber"],
+    "supply_chain": ["Spirit AeroSystems", "GE Aerospace", "Raytheon", "Honeywell", "Safran"],
+    "risk_factors": ["safety_certification", "supply_chain_disruption", "defense_spending", "trade_war", "production_delays"]
+  },
+  "tags": ["aerospace", "defense", "manufacturing", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

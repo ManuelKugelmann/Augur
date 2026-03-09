@@ -1,0 +1,22 @@
+{
+  "id": "HD",
+  "name": "The Home Depot Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Discretionary",
+  "industry": "Home Improvement Retail",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1978,
+    "employees": 465000
+  },
+  "exposure": {
+    "countries": ["USA", "CAN", "MEX"],
+    "commodities": ["lumber", "copper", "steel"],
+    "supply_chain": ["Stanley Black & Decker", "Masco", "Fortune Brands"],
+    "risk_factors": ["housing_market_cyclicality", "interest_rate_sensitivity", "labor_market", "weather_events"]
+  },
+  "tags": ["mega_cap", "retail", "home_improvement", "housing"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

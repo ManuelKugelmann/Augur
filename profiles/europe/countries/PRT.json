@@ -1,0 +1,108 @@
+{
+  "id": "PRT",
+  "name": "Portugal",
+  "iso2": "PT",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Lisbon",
+  "population": 10400000,
+  "trade": {
+    "top_exports": [
+      "vehicles",
+      "machinery",
+      "petroleum_products",
+      "footwear",
+      "textiles"
+    ],
+    "top_partners": [
+      "ESP",
+      "FRA",
+      "DEU",
+      "GBR",
+      "USA"
+    ],
+    "major_ports": [
+      "Sines",
+      "Lisbon",
+      "Leixoes"
+    ],
+    "chokepoint_exposure": [
+      "gibraltar"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "vehicles",
+      "machinery",
+      "chemicals"
+    ],
+    "energy_mix": {
+      "renewables": 0.4,
+      "gas": 0.25,
+      "hydro": 0.15,
+      "coal": 0.0,
+      "oil": 0.05,
+      "other": 0.15
+    },
+    "risk_factors": [
+      "sovereign_debt",
+      "demographic_decline",
+      "drought_risk"
+    ]
+  },
+  "ratings": {
+    "credit": "A-",
+    "democracy_index": 8.03,
+    "press_freedom_rank": 10,
+    "corruption_perception": 62
+  },
+  "neighbors": [
+    {
+      "id": "ESP",
+      "name": "Spain",
+      "relevance": "Only land border; Iberian energy market; tourism corridor"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU/eurozone member; recovery fund beneficiary; Atlantic gateway"
+    },
+    {
+      "target": "BRA",
+      "type": "trade",
+      "description": "Lusophone ties; cultural and investment links; diaspora"
+    },
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "NATO ally; Azores base; Atlantic partnership"
+    },
+    {
+      "target": "AGO",
+      "type": "trade",
+      "description": "Former colony; energy investment; Lusophone trade"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; NATO solidarity; golden visa program ended partly due to Russian flows"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "OECD"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

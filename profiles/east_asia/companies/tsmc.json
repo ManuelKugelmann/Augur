@@ -1,0 +1,21 @@
+{
+  "id": "tsmc",
+  "name": "Taiwan Semiconductor Manufacturing Company",
+  "country": "TWN",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
+  "revenue": 76000000000,
+  "employees": 73000,
+  "publicly_traded": true,
+  "ticker": "TSM",
+  "subsidiaries": ["TSMC Arizona", "TSMC Japan", "TSMC Nanjing"],
+  "exposure": {
+    "countries": ["TWN", "USA", "JPN", "CHN"],
+    "products": ["semiconductors"],
+    "materials": ["silicon", "rare_earths"],
+    "risk_factors": ["taiwan_geopolitical", "earthquake_risk", "water_scarcity"]
+  },
+  "tags": ["foundry", "critical_infrastructure"],
+  "_updated": "2026-03-09",
+  "_sources": ["TSMC Annual Report", "Reuters"]
+}

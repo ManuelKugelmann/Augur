@@ -1,0 +1,18 @@
+{
+  "id": "silver",
+  "name": "Silver",
+  "category": "precious_metals",
+  "unit": "troy_ounce",
+  "benchmark": "LBMA Silver Price / COMEX",
+  "producers": ["MEX", "CHN", "PER", "CHL", "RUS", "AUS", "POL"],
+  "consumers": ["USA", "CHN", "IND", "JPN", "DEU"],
+  "chokepoints": [],
+  "seasonality": "Industrial demand follows manufacturing cycles; jewelry demand seasonal",
+  "exposure": {
+    "countries": ["MEX", "CHN", "PER", "IND", "USA"],
+    "risk_factors": ["industrial_demand", "solar_panel_growth", "gold_correlation", "investment_demand"]
+  },
+  "tags": ["precious_metal", "industrial_metal", "solar"],
+  "_updated": "2026-03-09",
+  "_sources": ["Silver Institute", "USGS", "LBMA"]
+}

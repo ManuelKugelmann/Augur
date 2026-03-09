@@ -1,0 +1,67 @@
+{
+  "id": "g7",
+  "name": "Group of Seven",
+  "type": "economic_zone",
+  "countries": ["USA", "CAN", "GBR", "FRA", "DEU", "ITA", "JPN"],
+  "bbox": [-179.2, 24.4, 153.99, 83.1],
+  "climate": "Predominantly temperate; ranges from subarctic in northern Canada to Mediterranean in southern Europe and humid subtropical in southern Japan",
+  "hazards": [
+    "hurricanes",
+    "earthquakes",
+    "tsunamis",
+    "flooding",
+    "wildfires",
+    "winter_storms",
+    "heatwaves",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "English Channel",
+    "Strait of Gibraltar",
+    "Panama Canal",
+    "Tsushima Strait",
+    "Strait of Sicily"
+  ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "France, Germany, Italy are EU members; G7 and EU policy closely aligned"},
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "USA, UK, Canada overlap; intelligence sharing underpins G7 security coordination"},
+    {"id": "g20", "name": "Group of Twenty", "relevance": "G7 is a subset of G20; advanced economies caucus within broader forum"},
+    {"id": "eurozone", "name": "Eurozone", "relevance": "France, Germany, Italy share the euro; ECB monetary policy affects G7 coordination"},
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "USA, Canada are G7 members and USMCA partners; North American trade integration"}
+  ],
+  "links": [
+    {"target": "brics", "type": "rivalry", "description": "G7 and BRICS represent competing visions for global governance and financial architecture"},
+    {"target": "g20", "type": "overlap", "description": "All G7 members sit in G20; G7 coordinates positions ahead of G20 summits"},
+    {"target": "quad", "type": "alliance", "description": "USA and Japan bridge G7 to Quad; Indo-Pacific strategy alignment"},
+    {"target": "eu", "type": "overlap", "description": "Three G7 members are EU states; shared trade, climate, and regulatory policy"},
+    {"target": "five_eyes", "type": "alliance", "description": "Three G7 members in Five Eyes; intelligence informs G7 sanctions and security policy"},
+    {"target": "indo_pacific", "type": "trade", "description": "G7 supply chain resilience agenda focused on reducing Indo-Pacific chokepoint risks"},
+    {"target": "aukus", "type": "alliance", "description": "USA and UK in both G7 and AUKUS; defense technology sharing"}
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "automobiles",
+      "semiconductors",
+      "pharmaceuticals",
+      "machinery",
+      "wheat",
+      "aerospace",
+      "financial_services"
+    ],
+    "risk_factors": [
+      "sovereign_debt_levels",
+      "demographic_aging",
+      "energy_transition",
+      "china_competition",
+      "inflation_management",
+      "tech_regulation",
+      "defense_spending_pressure",
+      "supply_chain_resilience"
+    ]
+  },
+  "tags": ["g7", "advanced_economies", "western_bloc", "nato_overlap", "reserve_currencies"],
+  "_updated": "2026-03-09",
+  "_sources": ["G7 Summit", "CIA World Factbook", "IMF", "OECD"]
+}

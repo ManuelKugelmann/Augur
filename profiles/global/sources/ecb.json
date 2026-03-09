@@ -1,0 +1,16 @@
+{
+  "id": "ecb",
+  "name": "European Central Bank",
+  "mcp": "macro",
+  "tool": "ecb_rates",
+  "api_base": "https://data-api.ecb.europa.eu/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "daily",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["ECB Data Portal Docs"]
+}

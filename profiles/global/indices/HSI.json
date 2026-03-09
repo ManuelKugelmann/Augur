@@ -1,0 +1,17 @@
+{
+  "id": "HSI",
+  "name": "Hang Seng Index",
+  "type": "index",
+  "country": "HKG",
+  "exchange": "HKEX",
+  "components": 82,
+  "methodology": "free-float-market-cap-weighted",
+  "exposure": {
+    "sectors": ["Financials", "Technology", "Consumer Discretionary", "Real Estate", "Energy"],
+    "countries": ["HKG", "CHN"],
+    "risk_factors": ["china_regulatory_risk", "hkd_peg_risk", "geopolitical_risk"]
+  },
+  "tags": ["benchmark", "hong_kong_equity", "china_proxy"],
+  "_updated": "2026-03-09",
+  "_sources": ["Hang Seng Indexes"]
+}
