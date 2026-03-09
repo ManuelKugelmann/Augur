@@ -7,15 +7,48 @@
   "capital": "Copenhagen",
   "population": 5900000,
   "trade": {
-    "top_exports": ["pharmaceuticals", "machinery", "food_products", "wind_turbines", "petroleum"],
-    "top_partners": ["DEU", "SWE", "NOR", "USA", "GBR"],
-    "major_ports": ["Copenhagen", "Aarhus", "Fredericia"],
-    "chokepoint_exposure": ["danish_straits"]
+    "top_exports": [
+      "pharmaceuticals",
+      "machinery",
+      "food_products",
+      "wind_turbines",
+      "petroleum"
+    ],
+    "top_partners": [
+      "DEU",
+      "SWE",
+      "NOR",
+      "USA",
+      "GBR"
+    ],
+    "major_ports": [
+      "Copenhagen",
+      "Aarhus",
+      "Fredericia"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
   },
   "exposure": {
-    "commodities_import": ["vehicles", "machinery", "electronics", "clothing"],
-    "energy_mix": {"renewables": 0.65, "gas": 0.12, "oil": 0.05, "coal": 0.05, "other": 0.13},
-    "risk_factors": ["greenland_geopolitics", "housing_prices", "small_open_economy"]
+    "commodities_import": [
+      "vehicles",
+      "machinery",
+      "electronics",
+      "clothing"
+    ],
+    "energy_mix": {
+      "renewables": 0.65,
+      "gas": 0.12,
+      "oil": 0.05,
+      "coal": 0.05,
+      "other": 0.13
+    },
+    "risk_factors": [
+      "greenland_geopolitics",
+      "housing_prices",
+      "small_open_economy"
+    ]
   },
   "ratings": {
     "credit": "AAA",
@@ -23,9 +56,51 @@
     "press_freedom_rank": 2,
     "corruption_perception": 90
   },
-  "tags": ["EU", "NATO", "OECD"],
+  "neighbors": [
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "relevance": "Only land border; trade corridor; Fehmarn Belt link"
+    },
+    {
+      "id": "SWE",
+      "name": "Sweden",
+      "relevance": "Øresund Bridge; Nordic cooperation; shared Baltic security"
+    },
+    {
+      "id": "NOR",
+      "name": "Norway",
+      "relevance": "Nordic partner; North Sea energy; Skagerrak strait"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "NATO ally; Greenland strategic importance; Arctic cooperation"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member; Danish krone pegged to euro; opt-outs on defense/justice"
+    },
+    {
+      "target": "GRL",
+      "type": "dependency",
+      "description": "Greenland autonomy; rare earth minerals; Arctic shipping routes"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

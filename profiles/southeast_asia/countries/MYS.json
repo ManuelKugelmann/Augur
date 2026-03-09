@@ -7,25 +7,116 @@
   "capital": "Kuala Lumpur",
   "population": 34000000,
   "trade": {
-    "top_exports": ["electronics", "petroleum", "palm_oil", "natural_gas", "rubber"],
-    "top_partners": ["SGP", "CHN", "USA", "JPN", "HKG"],
-    "major_ports": ["Port Klang", "Tanjung Pelepas", "Penang"],
-    "chokepoint_exposure": ["malacca"]
+    "top_exports": [
+      "electronics",
+      "petroleum",
+      "palm_oil",
+      "natural_gas",
+      "rubber"
+    ],
+    "top_partners": [
+      "SGP",
+      "CHN",
+      "USA",
+      "JPN",
+      "HKG"
+    ],
+    "major_ports": [
+      "Port Klang",
+      "Tanjung Pelepas",
+      "Penang"
+    ],
+    "chokepoint_exposure": [
+      "malacca"
+    ]
   },
   "exposure": {
-    "commodities_import": ["electronics", "petroleum", "machinery", "chemicals"],
-    "energy_mix": {"gas": 0.40, "coal": 0.25, "hydro": 0.15, "oil": 0.05, "renewables": 0.08, "other": 0.07},
-    "risk_factors": ["commodity_dependence", "palm_oil_sustainability", "political_uncertainty"]
+    "commodities_import": [
+      "electronics",
+      "petroleum",
+      "machinery",
+      "chemicals"
+    ],
+    "energy_mix": {
+      "gas": 0.4,
+      "coal": 0.25,
+      "hydro": 0.15,
+      "oil": 0.05,
+      "renewables": 0.08,
+      "other": 0.07
+    },
+    "risk_factors": [
+      "commodity_dependence",
+      "palm_oil_sustainability",
+      "political_uncertainty"
+    ]
   },
   "ratings": {
     "credit": "A-",
-    "democracy_index": 7.30,
+    "democracy_index": 7.3,
     "press_freedom_rank": 107,
     "corruption_perception": 50
   },
-  "tags": ["ASEAN", "APEC", "OPEC"],
+  "neighbors": [
+    {
+      "id": "IDN",
+      "name": "Indonesia",
+      "relevance": "Borneo border; Strait of Malacca; palm oil competition; labor"
+    },
+    {
+      "id": "THA",
+      "name": "Thailand",
+      "relevance": "Northern border; trade corridor; Malay Muslim south"
+    },
+    {
+      "id": "SGP",
+      "name": "Singapore",
+      "relevance": "Causeway/Second Link; water supply; economic rivalry; labor"
+    },
+    {
+      "id": "BRN",
+      "name": "Brunei",
+      "relevance": "Borneo neighbor; oil/gas; South China Sea claims overlap"
+    },
+    {
+      "id": "PHL",
+      "name": "Philippines",
+      "relevance": "Sulu Sea; Sabah claim; maritime security"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; electronics, palm oil; South China Sea dispute; BRI"
+    },
+    {
+      "target": "SGP",
+      "type": "trade",
+      "description": "Deep economic integration; Iskandar zone; water dependency reversed"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Electronics exports; semiconductor supply chain; Intel/major chip fabs"
+    },
+    {
+      "target": "ASEAN",
+      "type": "alliance",
+      "description": "Founding ASEAN member; palm oil bloc coordination; halal economy hub"
+    }
+  ],
+  "tags": [
+    "ASEAN",
+    "APEC",
+    "OPEC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

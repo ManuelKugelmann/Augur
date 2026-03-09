@@ -7,15 +7,49 @@
   "capital": "Sri Jayawardenepura Kotte",
   "population": 22000000,
   "trade": {
-    "top_exports": ["garments", "tea", "rubber", "spices", "gems"],
-    "top_partners": ["USA", "GBR", "IND", "DEU", "ITA"],
-    "major_ports": ["Colombo", "Hambantota"],
-    "chokepoint_exposure": ["malacca"]
+    "top_exports": [
+      "garments",
+      "tea",
+      "rubber",
+      "spices",
+      "gems"
+    ],
+    "top_partners": [
+      "USA",
+      "GBR",
+      "IND",
+      "DEU",
+      "ITA"
+    ],
+    "major_ports": [
+      "Colombo",
+      "Hambantota"
+    ],
+    "chokepoint_exposure": [
+      "malacca"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "textiles", "machinery", "food_products"],
-    "energy_mix": {"oil": 0.30, "hydro": 0.25, "coal": 0.20, "renewables": 0.12, "gas": 0.03, "other": 0.10},
-    "risk_factors": ["debt_restructuring", "forex_shortage", "political_instability", "tourism_dependence"]
+    "commodities_import": [
+      "petroleum",
+      "textiles",
+      "machinery",
+      "food_products"
+    ],
+    "energy_mix": {
+      "oil": 0.3,
+      "hydro": 0.25,
+      "coal": 0.2,
+      "renewables": 0.12,
+      "gas": 0.03,
+      "other": 0.1
+    },
+    "risk_factors": [
+      "debt_restructuring",
+      "forex_shortage",
+      "political_instability",
+      "tourism_dependence"
+    ]
   },
   "ratings": {
     "credit": "SD",
@@ -23,9 +57,37 @@
     "press_freedom_rank": 135,
     "corruption_perception": 36
   },
+  "neighbors": [
+    {
+      "id": "IND",
+      "name": "India",
+      "relevance": "Palk Strait; Tamil ties; fisheries disputes; economic lifeline during crisis"
+    }
+  ],
+  "links": [
+    {
+      "target": "IND",
+      "type": "dependency",
+      "description": "Economic rescue during 2022 crisis; trade; cultural ties; security cooperation"
+    },
+    {
+      "target": "CHN",
+      "type": "dependency",
+      "description": "Hambantota port lease; debt trap debate; BRI infrastructure; trade"
+    },
+    {
+      "target": "JPN",
+      "type": "trade",
+      "description": "Major aid donor; infrastructure investment; Colombo port terminal"
+    }
+  ],
   "tags": [],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

@@ -7,15 +7,52 @@
   "capital": "Brasilia",
   "population": 216000000,
   "trade": {
-    "top_exports": ["soybeans", "iron_ore", "petroleum", "sugar", "beef"],
-    "top_partners": ["CHN", "USA", "ARG", "NLD", "ESP"],
-    "major_ports": ["Santos", "Paranagua", "Rio Grande", "Itaqui"],
-    "chokepoint_exposure": ["panama"]
+    "top_exports": [
+      "soybeans",
+      "iron_ore",
+      "petroleum",
+      "sugar",
+      "beef"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "ARG",
+      "NLD",
+      "ESP"
+    ],
+    "major_ports": [
+      "Santos",
+      "Paranagua",
+      "Rio Grande",
+      "Itaqui"
+    ],
+    "chokepoint_exposure": [
+      "panama"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum_products", "electronics", "chemicals", "fertilizers"],
-    "energy_mix": {"hydro": 0.63, "gas": 0.08, "renewables": 0.15, "oil": 0.03, "nuclear": 0.02, "coal": 0.03, "other": 0.06},
-    "risk_factors": ["deforestation", "fiscal_deficit", "political_instability", "china_commodity_dependence"]
+    "commodities_import": [
+      "petroleum_products",
+      "electronics",
+      "chemicals",
+      "fertilizers"
+    ],
+    "energy_mix": {
+      "hydro": 0.63,
+      "gas": 0.08,
+      "renewables": 0.15,
+      "oil": 0.03,
+      "nuclear": 0.02,
+      "coal": 0.03,
+      "other": 0.06
+    },
+    "risk_factors": [
+      "deforestation",
+      "fiscal_deficit",
+      "political_instability",
+      "china_commodity_dependence"
+    ]
   },
   "ratings": {
     "credit": "BB",
@@ -23,9 +60,66 @@
     "press_freedom_rank": 92,
     "corruption_perception": 36
   },
-  "tags": ["BRICS", "G20", "Mercosur"],
+  "neighbors": [
+    {
+      "id": "ARG",
+      "name": "Argentina",
+      "relevance": "Mercosur partner; largest South American bilateral trade"
+    },
+    {
+      "id": "COL",
+      "name": "Colombia",
+      "relevance": "Amazon border; security cooperation; trade"
+    },
+    {
+      "id": "VEN",
+      "name": "Venezuela",
+      "relevance": "Refugee crisis; border security; political friction"
+    },
+    {
+      "id": "PRY",
+      "name": "Paraguay",
+      "relevance": "Itaipu dam; soy corridor; Mercosur"
+    },
+    {
+      "id": "URY",
+      "name": "Uruguay",
+      "relevance": "Mercosur; livestock; shared Río de la Plata basin"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; soy, iron ore, oil exports; BRI interest"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Second-largest trade partner; tech, aircraft (Embraer), agriculture"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Mercosur-EU FTA; deforestation conditionality; agricultural exports"
+    },
+    {
+      "target": "BRICS",
+      "type": "alliance",
+      "description": "Founding BRICS member; New Development Bank host; dedollarization interest"
+    }
+  ],
+  "tags": [
+    "BRICS",
+    "G20",
+    "Mercosur"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

@@ -7,15 +7,46 @@
   "capital": "Abuja",
   "population": 224000000,
   "trade": {
-    "top_exports": ["petroleum", "natural_gas", "cocoa", "rubber"],
-    "top_partners": ["IND", "ESP", "USA", "FRA", "NLD"],
-    "major_ports": ["Lagos (Apapa)", "Tin Can Island", "Onne"],
+    "top_exports": [
+      "petroleum",
+      "natural_gas",
+      "cocoa",
+      "rubber"
+    ],
+    "top_partners": [
+      "IND",
+      "ESP",
+      "USA",
+      "FRA",
+      "NLD"
+    ],
+    "major_ports": [
+      "Lagos (Apapa)",
+      "Tin Can Island",
+      "Onne"
+    ],
     "chokepoint_exposure": []
   },
   "exposure": {
-    "commodities_import": ["petroleum_products", "machinery", "vehicles", "cereals"],
-    "energy_mix": {"gas": 0.50, "oil": 0.15, "hydro": 0.25, "renewables": 0.02, "other": 0.08},
-    "risk_factors": ["oil_dependence", "insecurity", "currency_crisis", "infrastructure_deficit"]
+    "commodities_import": [
+      "petroleum_products",
+      "machinery",
+      "vehicles",
+      "cereals"
+    ],
+    "energy_mix": {
+      "gas": 0.5,
+      "oil": 0.15,
+      "hydro": 0.25,
+      "renewables": 0.02,
+      "other": 0.08
+    },
+    "risk_factors": [
+      "oil_dependence",
+      "insecurity",
+      "currency_crisis",
+      "infrastructure_deficit"
+    ]
   },
   "ratings": {
     "credit": "B-",
@@ -23,9 +54,61 @@
     "press_freedom_rank": 112,
     "corruption_perception": 25
   },
-  "tags": ["OPEC", "AU", "ECOWAS"],
+  "neighbors": [
+    {
+      "id": "CMR",
+      "name": "Cameroon",
+      "relevance": "Eastern border; Lake Chad Basin; Bakassi (resolved); Boko Haram"
+    },
+    {
+      "id": "NER",
+      "name": "Niger",
+      "relevance": "Northern border; Sahel instability; migration; ECOWAS crisis"
+    },
+    {
+      "id": "TCD",
+      "name": "Chad",
+      "relevance": "Lake Chad Basin; security cooperation; Boko Haram"
+    },
+    {
+      "id": "BEN",
+      "name": "Benin",
+      "relevance": "Western border; smuggling; trade corridor to landlocked Sahel"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Oil exports; AGOA; diaspora; security cooperation; LNG"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Infrastructure investment; oil exports; manufacturing imports; debt"
+    },
+    {
+      "target": "GBR",
+      "type": "trade",
+      "description": "Commonwealth; oil/gas (Shell legacy); diaspora; financial ties"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Oil/LNG exports; migration management; development cooperation"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "AU",
+    "ECOWAS"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

@@ -7,15 +7,48 @@
   "capital": "Oslo",
   "population": 5500000,
   "trade": {
-    "top_exports": ["petroleum", "natural_gas", "fish", "aluminum", "machinery"],
-    "top_partners": ["GBR", "DEU", "SWE", "NLD", "FRA"],
-    "major_ports": ["Bergen", "Stavanger", "Oslo"],
-    "chokepoint_exposure": ["danish_straits"]
+    "top_exports": [
+      "petroleum",
+      "natural_gas",
+      "fish",
+      "aluminum",
+      "machinery"
+    ],
+    "top_partners": [
+      "GBR",
+      "DEU",
+      "SWE",
+      "NLD",
+      "FRA"
+    ],
+    "major_ports": [
+      "Bergen",
+      "Stavanger",
+      "Oslo"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
   },
   "exposure": {
-    "commodities_import": ["vehicles", "machinery", "electronics", "food_products"],
-    "energy_mix": {"hydro": 0.88, "gas": 0.03, "renewables": 0.06, "oil": 0.01, "other": 0.02},
-    "risk_factors": ["oil_price_dependence", "dutch_disease", "arctic_geopolitics"]
+    "commodities_import": [
+      "vehicles",
+      "machinery",
+      "electronics",
+      "food_products"
+    ],
+    "energy_mix": {
+      "hydro": 0.88,
+      "gas": 0.03,
+      "renewables": 0.06,
+      "oil": 0.01,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "oil_price_dependence",
+      "dutch_disease",
+      "arctic_geopolitics"
+    ]
   },
   "ratings": {
     "credit": "AAA",
@@ -23,9 +56,56 @@
     "press_freedom_rank": 1,
     "corruption_perception": 84
   },
-  "tags": ["NATO", "EFTA", "OECD"],
+  "neighbors": [
+    {
+      "id": "SWE",
+      "name": "Sweden",
+      "relevance": "Longest border; Nordic cooperation; labor market integration"
+    },
+    {
+      "id": "FIN",
+      "name": "Finland",
+      "relevance": "Arctic border; Nordic defense; Sami peoples"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Arctic border; Svalbard; Barents Sea; NATO flank"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EEA member (not EU); largest gas supplier to Europe post-Russia"
+    },
+    {
+      "target": "GBR",
+      "type": "trade",
+      "description": "North Sea energy partner; major gas pipeline destination"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "Founding NATO member; North Atlantic and Arctic defense"
+    },
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "NATO ally; intelligence cooperation; Arctic strategy partner"
+    }
+  ],
+  "tags": [
+    "NATO",
+    "EFTA",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

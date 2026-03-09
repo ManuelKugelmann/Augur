@@ -7,15 +7,53 @@
   "capital": "Taipei",
   "population": 23500000,
   "trade": {
-    "top_exports": ["semiconductors", "electronics", "machinery", "plastics", "chemicals"],
-    "top_partners": ["CHN", "USA", "JPN", "HKG", "KOR"],
-    "major_ports": ["Kaohsiung", "Keelung", "Taichung"],
-    "chokepoint_exposure": ["taiwan_strait", "malacca"]
+    "top_exports": [
+      "semiconductors",
+      "electronics",
+      "machinery",
+      "plastics",
+      "chemicals"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "JPN",
+      "HKG",
+      "KOR"
+    ],
+    "major_ports": [
+      "Kaohsiung",
+      "Keelung",
+      "Taichung"
+    ],
+    "chokepoint_exposure": [
+      "taiwan_strait",
+      "malacca"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "coal", "iron_ore", "machinery"],
-    "energy_mix": {"gas": 0.35, "coal": 0.33, "nuclear": 0.09, "renewables": 0.10, "oil": 0.05, "hydro": 0.02, "other": 0.06},
-    "risk_factors": ["cross_strait_tensions", "energy_import_dependence", "semiconductor_concentration", "earthquake_risk"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "coal",
+      "iron_ore",
+      "machinery"
+    ],
+    "energy_mix": {
+      "gas": 0.35,
+      "coal": 0.33,
+      "nuclear": 0.09,
+      "renewables": 0.1,
+      "oil": 0.05,
+      "hydro": 0.02,
+      "other": 0.06
+    },
+    "risk_factors": [
+      "cross_strait_tensions",
+      "energy_import_dependence",
+      "semiconductor_concentration",
+      "earthquake_risk"
+    ]
   },
   "ratings": {
     "credit": "AA+",
@@ -23,9 +61,54 @@
     "press_freedom_rank": 35,
     "corruption_perception": 68
   },
-  "tags": ["APEC"],
+  "neighbors": [
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Claims sovereignty over Taiwan; military pressure; economic interdependence"
+    },
+    {
+      "id": "JPN",
+      "name": "Japan",
+      "relevance": "Nearest major ally; shared maritime security concerns; semiconductor customer"
+    },
+    {
+      "id": "PHL",
+      "name": "Philippines",
+      "relevance": "Maritime neighbor; shared South China Sea concerns"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Strategic ambiguity; arms sales; semiconductor leverage (TSMC)"
+    },
+    {
+      "target": "CHN",
+      "type": "dependency",
+      "description": "Largest trade partner despite political tensions; cross-strait investment"
+    },
+    {
+      "target": "JPN",
+      "type": "trade",
+      "description": "Major semiconductor customer; defense cooperation deepening"
+    },
+    {
+      "target": "NLD",
+      "type": "dependency",
+      "description": "ASML lithography equipment critical for advanced chip fabrication"
+    }
+  ],
+  "tags": [
+    "APEC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

@@ -7,25 +7,103 @@
   "capital": "Helsinki",
   "population": 5600000,
   "trade": {
-    "top_exports": ["machinery", "paper", "chemicals", "electronics", "steel"],
-    "top_partners": ["DEU", "SWE", "USA", "NLD", "CHN"],
-    "major_ports": ["Helsinki", "HaminaKotka", "Turku"],
-    "chokepoint_exposure": ["danish_straits"]
+    "top_exports": [
+      "machinery",
+      "paper",
+      "chemicals",
+      "electronics",
+      "steel"
+    ],
+    "top_partners": [
+      "DEU",
+      "SWE",
+      "USA",
+      "NLD",
+      "CHN"
+    ],
+    "major_ports": [
+      "Helsinki",
+      "HaminaKotka",
+      "Turku"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "vehicles", "electronics", "machinery"],
-    "energy_mix": {"nuclear": 0.33, "renewables": 0.20, "hydro": 0.15, "gas": 0.05, "coal": 0.07, "oil": 0.02, "other": 0.18},
-    "risk_factors": ["russian_border_proximity", "demographic_decline", "forest_industry_transition"]
+    "commodities_import": [
+      "petroleum",
+      "vehicles",
+      "electronics",
+      "machinery"
+    ],
+    "energy_mix": {
+      "nuclear": 0.33,
+      "renewables": 0.2,
+      "hydro": 0.15,
+      "gas": 0.05,
+      "coal": 0.07,
+      "oil": 0.02,
+      "other": 0.18
+    },
+    "risk_factors": [
+      "russian_border_proximity",
+      "demographic_decline",
+      "forest_industry_transition"
+    ]
   },
   "ratings": {
     "credit": "AA+",
-    "democracy_index": 9.30,
+    "democracy_index": 9.3,
     "press_freedom_rank": 5,
     "corruption_perception": 87
   },
-  "tags": ["EU", "NATO", "eurozone", "OECD"],
+  "neighbors": [
+    {
+      "id": "SWE",
+      "name": "Sweden",
+      "relevance": "Nordic partner; shared Baltic defense; cultural ties"
+    },
+    {
+      "id": "NOR",
+      "name": "Norway",
+      "relevance": "Arctic border; Nordic cooperation"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "1,340km border; NATO's newest eastern flank; severed trade ties"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU/eurozone member; strong fiscal position"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "Joined 2023; doubled NATO's border with Russia"
+    },
+    {
+      "target": "SWE",
+      "type": "alliance",
+      "description": "Joint Nordic defense; industrial cooperation (Nokia/Ericsson competition)"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

@@ -7,15 +7,45 @@
   "capital": "Bern",
   "population": 9000000,
   "trade": {
-    "top_exports": ["pharmaceuticals", "gold", "watches", "machinery", "chemicals"],
-    "top_partners": ["DEU", "USA", "FRA", "ITA", "GBR"],
-    "major_ports": ["Basel (Rhine river port)"],
+    "top_exports": [
+      "pharmaceuticals",
+      "gold",
+      "watches",
+      "machinery",
+      "chemicals"
+    ],
+    "top_partners": [
+      "DEU",
+      "USA",
+      "FRA",
+      "ITA",
+      "GBR"
+    ],
+    "major_ports": [
+      "Basel (Rhine river port)"
+    ],
     "chokepoint_exposure": []
   },
   "exposure": {
-    "commodities_import": ["gold", "petroleum", "vehicles", "pharmaceuticals"],
-    "energy_mix": {"hydro": 0.57, "nuclear": 0.29, "renewables": 0.08, "gas": 0.03, "oil": 0.01, "other": 0.02},
-    "risk_factors": ["strong_franc_pressure", "banking_sector_risk", "eu_bilateral_tensions"]
+    "commodities_import": [
+      "gold",
+      "petroleum",
+      "vehicles",
+      "pharmaceuticals"
+    ],
+    "energy_mix": {
+      "hydro": 0.57,
+      "nuclear": 0.29,
+      "renewables": 0.08,
+      "gas": 0.03,
+      "oil": 0.01,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "strong_franc_pressure",
+      "banking_sector_risk",
+      "eu_bilateral_tensions"
+    ]
   },
   "ratings": {
     "credit": "AAA",
@@ -23,9 +53,60 @@
     "press_freedom_rank": 12,
     "corruption_perception": 82
   },
-  "tags": ["EFTA", "OECD"],
+  "neighbors": [
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "relevance": "Largest trade partner; labor market integration; Rhine corridor"
+    },
+    {
+      "id": "FRA",
+      "name": "France",
+      "relevance": "Geneva/Romandie ties; CERN; cross-border workers"
+    },
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "relevance": "Ticino ties; Gotthard/Simplon transit corridors"
+    },
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "relevance": "Alpine neighbor; shared financial center role"
+    },
+    {
+      "id": "LIE",
+      "name": "Liechtenstein",
+      "relevance": "Customs union; Swiss franc zone"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Bilateral agreements framework; not EU member but deeply integrated"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Major pharma/financial services partner; commodity trading hub"
+    },
+    {
+      "target": "DEU",
+      "type": "dependency",
+      "description": "Largest export market; manufacturing supply chain integration"
+    }
+  ],
+  "tags": [
+    "EFTA",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

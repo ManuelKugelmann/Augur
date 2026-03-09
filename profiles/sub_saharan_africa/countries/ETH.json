@@ -7,15 +7,44 @@
   "capital": "Addis Ababa",
   "population": 126000000,
   "trade": {
-    "top_exports": ["coffee", "gold", "sesame", "flowers", "khat"],
-    "top_partners": ["CHN", "USA", "SAU", "DEU", "ARE"],
+    "top_exports": [
+      "coffee",
+      "gold",
+      "sesame",
+      "flowers",
+      "khat"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "SAU",
+      "DEU",
+      "ARE"
+    ],
     "major_ports": [],
-    "chokepoint_exposure": ["bab_el_mandeb"]
+    "chokepoint_exposure": [
+      "bab_el_mandeb"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "machinery", "vehicles", "cereals"],
-    "energy_mix": {"hydro": 0.85, "renewables": 0.08, "oil": 0.03, "other": 0.04},
-    "risk_factors": ["ethnic_conflict", "food_insecurity", "forex_shortage", "landlocked"]
+    "commodities_import": [
+      "petroleum",
+      "machinery",
+      "vehicles",
+      "cereals"
+    ],
+    "energy_mix": {
+      "hydro": 0.85,
+      "renewables": 0.08,
+      "oil": 0.03,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "ethnic_conflict",
+      "food_insecurity",
+      "forex_shortage",
+      "landlocked"
+    ]
   },
   "ratings": {
     "credit": "CCC-",
@@ -23,9 +52,64 @@
     "press_freedom_rank": 141,
     "corruption_perception": 37
   },
-  "tags": ["AU"],
+  "neighbors": [
+    {
+      "id": "ERI",
+      "name": "Eritrea",
+      "relevance": "Former enemy; 2018 peace deal; Tigray war involvement; border tensions"
+    },
+    {
+      "id": "SOM",
+      "name": "Somalia",
+      "relevance": "Al-Shabaab threat; Ogaden region; AMISOM troops; port access"
+    },
+    {
+      "id": "SDN",
+      "name": "Sudan",
+      "relevance": "Al-Fashaga border dispute; GERD negotiations; trade"
+    },
+    {
+      "id": "KEN",
+      "name": "Kenya",
+      "relevance": "Largest regional trade partner; Moyale corridor; Lamu port"
+    },
+    {
+      "id": "DJI",
+      "name": "Djibouti",
+      "relevance": "Primary port access (landlocked); Addis-Djibouti railway"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest creditor; Addis-Djibouti railway; industrial parks; telecom"
+    },
+    {
+      "target": "EGY",
+      "type": "rivalry",
+      "description": "GERD dam dispute over Nile water; existential stakes for both"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "AGOA (suspended post-Tigray); humanitarian aid; security partner; GERD mediator"
+    },
+    {
+      "target": "ARE",
+      "type": "trade",
+      "description": "Significant FDI; port investments; diplomatic mediation"
+    }
+  ],
+  "tags": [
+    "AU"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

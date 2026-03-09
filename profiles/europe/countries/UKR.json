@@ -7,15 +7,51 @@
   "capital": "Kyiv",
   "population": 37000000,
   "trade": {
-    "top_exports": ["cereals", "iron_ore", "sunflower_oil", "steel", "machinery"],
-    "top_partners": ["POL", "ROU", "TUR", "CHN", "DEU"],
-    "major_ports": ["Odesa", "Mykolaiv", "Chornomorsk"],
-    "chokepoint_exposure": ["turkish_straits"]
+    "top_exports": [
+      "cereals",
+      "iron_ore",
+      "sunflower_oil",
+      "steel",
+      "machinery"
+    ],
+    "top_partners": [
+      "POL",
+      "ROU",
+      "TUR",
+      "CHN",
+      "DEU"
+    ],
+    "major_ports": [
+      "Odesa",
+      "Mykolaiv",
+      "Chornomorsk"
+    ],
+    "chokepoint_exposure": [
+      "turkish_straits"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "machinery", "vehicles"],
-    "energy_mix": {"nuclear": 0.55, "gas": 0.15, "coal": 0.12, "hydro": 0.06, "renewables": 0.08, "oil": 0.01, "other": 0.03},
-    "risk_factors": ["active_conflict", "infrastructure_destruction", "economic_contraction", "grain_export_disruption"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "machinery",
+      "vehicles"
+    ],
+    "energy_mix": {
+      "nuclear": 0.55,
+      "gas": 0.15,
+      "coal": 0.12,
+      "hydro": 0.06,
+      "renewables": 0.08,
+      "oil": 0.01,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "active_conflict",
+      "infrastructure_destruction",
+      "economic_contraction",
+      "grain_export_disruption"
+    ]
   },
   "ratings": {
     "credit": "CC",
@@ -23,9 +59,79 @@
     "press_freedom_rank": 79,
     "corruption_perception": 33
   },
-  "tags": ["EU_candidate"],
+  "neighbors": [
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Invasion since 2022; existential security threat; former economic dependency"
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "relevance": "Largest western neighbor; military aid transit; refugee host; grain dispute"
+    },
+    {
+      "id": "ROU",
+      "name": "Romania",
+      "relevance": "Black Sea partner; grain export corridor via Constanta"
+    },
+    {
+      "id": "MDA",
+      "name": "Moldova",
+      "relevance": "Shared threat perception; energy vulnerability; EU accession parallel track"
+    },
+    {
+      "id": "BLR",
+      "name": "Belarus",
+      "relevance": "Northern front; Russian staging area; hybrid threat"
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "relevance": "Hungarian minority; EU veto threats on Ukraine aid"
+    },
+    {
+      "id": "SVK",
+      "name": "Slovakia",
+      "relevance": "Energy transit; political oscillation on Ukraine support"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Largest military aid provider; strategic partner; NATO aspiration"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU candidate since 2022; accession negotiations opened; reconstruction partner"
+    },
+    {
+      "target": "POL",
+      "type": "alliance",
+      "description": "Strongest European supporter; defense cooperation; grain trade friction"
+    },
+    {
+      "target": "RUS",
+      "type": "rivalry",
+      "description": "Full-scale war; Crimea/Donbas occupation; energy infrastructure destruction"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Former trade partner; positioning on Russia complicates relations"
+    }
+  ],
+  "tags": [
+    "EU_candidate"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

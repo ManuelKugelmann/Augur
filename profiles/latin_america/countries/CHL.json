@@ -7,15 +7,49 @@
   "capital": "Santiago",
   "population": 19500000,
   "trade": {
-    "top_exports": ["copper", "lithium", "fruit", "salmon", "wine"],
-    "top_partners": ["CHN", "USA", "JPN", "KOR", "BRA"],
-    "major_ports": ["San Antonio", "Valparaiso", "Mejillones"],
-    "chokepoint_exposure": ["panama"]
+    "top_exports": [
+      "copper",
+      "lithium",
+      "fruit",
+      "salmon",
+      "wine"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "JPN",
+      "KOR",
+      "BRA"
+    ],
+    "major_ports": [
+      "San Antonio",
+      "Valparaiso",
+      "Mejillones"
+    ],
+    "chokepoint_exposure": [
+      "panama"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "vehicles", "machinery", "electronics"],
-    "energy_mix": {"renewables": 0.35, "gas": 0.15, "coal": 0.18, "hydro": 0.20, "oil": 0.07, "other": 0.05},
-    "risk_factors": ["copper_price_dependence", "water_scarcity", "social_inequality"]
+    "commodities_import": [
+      "petroleum",
+      "vehicles",
+      "machinery",
+      "electronics"
+    ],
+    "energy_mix": {
+      "renewables": 0.35,
+      "gas": 0.15,
+      "coal": 0.18,
+      "hydro": 0.2,
+      "oil": 0.07,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "copper_price_dependence",
+      "water_scarcity",
+      "social_inequality"
+    ]
   },
   "ratings": {
     "credit": "A",
@@ -23,9 +57,56 @@
     "press_freedom_rank": 52,
     "corruption_perception": 67
   },
-  "tags": ["OECD", "Pacific_Alliance", "APEC"],
+  "neighbors": [
+    {
+      "id": "ARG",
+      "name": "Argentina",
+      "relevance": "Andes border; gas imports; lithium triangle; Patagonia"
+    },
+    {
+      "id": "PER",
+      "name": "Peru",
+      "relevance": "Pacific Alliance partner; mining corridor; maritime border resolved"
+    },
+    {
+      "id": "BOL",
+      "name": "Bolivia",
+      "relevance": "Landlocked neighbor; sea access dispute; lithium triangle"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; copper exports; lithium demand; FTA"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "FTA; copper and lithium strategic minerals; investment"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "FTA; wine, fruit, copper exports; modernized agreement"
+    },
+    {
+      "target": "JPN",
+      "type": "trade",
+      "description": "Major copper buyer; investment in mining sector"
+    }
+  ],
+  "tags": [
+    "OECD",
+    "Pacific_Alliance",
+    "APEC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

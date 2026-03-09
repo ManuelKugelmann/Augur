@@ -7,15 +7,54 @@
   "capital": "Seoul",
   "population": 52000000,
   "trade": {
-    "top_exports": ["semiconductors", "vehicles", "petroleum_products", "ships", "electronics"],
-    "top_partners": ["CHN", "USA", "VNM", "JPN", "HKG"],
-    "major_ports": ["Busan", "Incheon", "Ulsan", "Gwangyang"],
-    "chokepoint_exposure": ["malacca", "taiwan_strait"]
+    "top_exports": [
+      "semiconductors",
+      "vehicles",
+      "petroleum_products",
+      "ships",
+      "electronics"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "VNM",
+      "JPN",
+      "HKG"
+    ],
+    "major_ports": [
+      "Busan",
+      "Incheon",
+      "Ulsan",
+      "Gwangyang"
+    ],
+    "chokepoint_exposure": [
+      "malacca",
+      "taiwan_strait"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "coal", "iron_ore", "semiconductors"],
-    "energy_mix": {"gas": 0.27, "coal": 0.28, "nuclear": 0.28, "renewables": 0.08, "oil": 0.03, "hydro": 0.01, "other": 0.05},
-    "risk_factors": ["north_korea_risk", "china_dependence", "demographic_crisis", "semiconductor_cycle"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "coal",
+      "iron_ore",
+      "semiconductors"
+    ],
+    "energy_mix": {
+      "gas": 0.27,
+      "coal": 0.28,
+      "nuclear": 0.28,
+      "renewables": 0.08,
+      "oil": 0.03,
+      "hydro": 0.01,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "north_korea_risk",
+      "china_dependence",
+      "demographic_crisis",
+      "semiconductor_cycle"
+    ]
   },
   "ratings": {
     "credit": "AA",
@@ -23,9 +62,56 @@
     "press_freedom_rank": 47,
     "corruption_perception": 63
   },
-  "tags": ["OECD", "G20", "APEC"],
+  "neighbors": [
+    {
+      "id": "PRK",
+      "name": "North Korea",
+      "relevance": "Divided nation; existential military threat; reunification question"
+    },
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Largest trade partner; THAAD dispute; North Korea leverage"
+    },
+    {
+      "id": "JPN",
+      "name": "Japan",
+      "relevance": "Historical grievances; economic competitor; shared US alliance framework"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Treaty ally; 28,500 US troops stationed; nuclear umbrella"
+    },
+    {
+      "target": "CHN",
+      "type": "dependency",
+      "description": "Largest export market; rare earth and battery material supply"
+    },
+    {
+      "target": "VNM",
+      "type": "trade",
+      "description": "Major manufacturing investment destination; Samsung hub"
+    },
+    {
+      "target": "ARE",
+      "type": "trade",
+      "description": "Oil imports; nuclear plant construction (Barakah); defense sales"
+    }
+  ],
+  "tags": [
+    "OECD",
+    "G20",
+    "APEC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

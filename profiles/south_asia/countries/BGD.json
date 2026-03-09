@@ -7,15 +7,50 @@
   "capital": "Dhaka",
   "population": 172000000,
   "trade": {
-    "top_exports": ["garments", "textiles", "jute", "footwear", "shrimp"],
-    "top_partners": ["USA", "DEU", "GBR", "FRA", "ESP"],
-    "major_ports": ["Chittagong", "Mongla"],
-    "chokepoint_exposure": ["malacca"]
+    "top_exports": [
+      "garments",
+      "textiles",
+      "jute",
+      "footwear",
+      "shrimp"
+    ],
+    "top_partners": [
+      "USA",
+      "DEU",
+      "GBR",
+      "FRA",
+      "ESP"
+    ],
+    "major_ports": [
+      "Chittagong",
+      "Mongla"
+    ],
+    "chokepoint_exposure": [
+      "malacca"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "cotton", "iron_steel", "machinery", "food_grains"],
-    "energy_mix": {"gas": 0.65, "oil": 0.10, "coal": 0.05, "renewables": 0.05, "hydro": 0.01, "other": 0.14},
-    "risk_factors": ["climate_vulnerability", "garment_dependence", "flood_risk", "political_instability"]
+    "commodities_import": [
+      "petroleum",
+      "cotton",
+      "iron_steel",
+      "machinery",
+      "food_grains"
+    ],
+    "energy_mix": {
+      "gas": 0.65,
+      "oil": 0.1,
+      "coal": 0.05,
+      "renewables": 0.05,
+      "hydro": 0.01,
+      "other": 0.14
+    },
+    "risk_factors": [
+      "climate_vulnerability",
+      "garment_dependence",
+      "flood_risk",
+      "political_instability"
+    ]
   },
   "ratings": {
     "credit": "BB-",
@@ -23,9 +58,49 @@
     "press_freedom_rank": 163,
     "corruption_perception": 25
   },
-  "tags": ["LDC_graduating"],
+  "neighbors": [
+    {
+      "id": "IND",
+      "name": "India",
+      "relevance": "Surrounded on three sides; water sharing (Ganges/Teesta); trade dependency; migration"
+    },
+    {
+      "id": "MMR",
+      "name": "Myanmar",
+      "relevance": "Rohingya refugee crisis; border security; Bay of Bengal"
+    }
+  ],
+  "links": [
+    {
+      "target": "IND",
+      "type": "dependency",
+      "description": "Dominant trade partner; textile raw materials; energy imports; water treaties"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Infrastructure investment; Padma Bridge; growing trade; BRI projects"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Largest RMG export market; GSP/EBA preferential access; labor standards"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Second-largest RMG market; GSP reinstatement efforts; Indo-Pacific engagement"
+    }
+  ],
+  "tags": [
+    "LDC_graduating"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

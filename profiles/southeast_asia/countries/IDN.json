@@ -7,15 +7,52 @@
   "capital": "Jakarta",
   "population": 277000000,
   "trade": {
-    "top_exports": ["palm_oil", "coal", "petroleum", "iron_steel", "rubber"],
-    "top_partners": ["CHN", "USA", "JPN", "IND", "MYS"],
-    "major_ports": ["Tanjung Priok (Jakarta)", "Tanjung Perak (Surabaya)", "Belawan"],
-    "chokepoint_exposure": ["malacca", "lombok_strait", "sunda_strait"]
+    "top_exports": [
+      "palm_oil",
+      "coal",
+      "petroleum",
+      "iron_steel",
+      "rubber"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "JPN",
+      "IND",
+      "MYS"
+    ],
+    "major_ports": [
+      "Tanjung Priok (Jakarta)",
+      "Tanjung Perak (Surabaya)",
+      "Belawan"
+    ],
+    "chokepoint_exposure": [
+      "malacca",
+      "lombok_strait",
+      "sunda_strait"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "machinery", "electronics", "iron_steel"],
-    "energy_mix": {"coal": 0.45, "gas": 0.18, "oil": 0.10, "hydro": 0.07, "renewables": 0.10, "other": 0.10},
-    "risk_factors": ["commodity_price_exposure", "deforestation", "natural_disasters", "capital_relocation"]
+    "commodities_import": [
+      "petroleum",
+      "machinery",
+      "electronics",
+      "iron_steel"
+    ],
+    "energy_mix": {
+      "coal": 0.45,
+      "gas": 0.18,
+      "oil": 0.1,
+      "hydro": 0.07,
+      "renewables": 0.1,
+      "other": 0.1
+    },
+    "risk_factors": [
+      "commodity_price_exposure",
+      "deforestation",
+      "natural_disasters",
+      "capital_relocation"
+    ]
   },
   "ratings": {
     "credit": "BBB",
@@ -23,9 +60,67 @@
     "press_freedom_rank": 111,
     "corruption_perception": 34
   },
-  "tags": ["G20", "ASEAN", "APEC", "OPEC"],
+  "neighbors": [
+    {
+      "id": "MYS",
+      "name": "Malaysia",
+      "relevance": "Borneo border; Strait of Malacca; maritime delimitation; labor migration"
+    },
+    {
+      "id": "AUS",
+      "name": "Australia",
+      "relevance": "Timor Sea; maritime border; security cooperation; people smuggling"
+    },
+    {
+      "id": "PNG",
+      "name": "Papua New Guinea",
+      "relevance": "Papua border; shared island; ethnic ties"
+    },
+    {
+      "id": "TLS",
+      "name": "Timor-Leste",
+      "relevance": "Former territory; maritime boundary; development aid"
+    },
+    {
+      "id": "SGP",
+      "name": "Singapore",
+      "relevance": "Strait of Malacca; sand/water/airspace; investment"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; nickel/palm oil exports; South China Sea tensions; BRI investment"
+    },
+    {
+      "target": "JPN",
+      "type": "trade",
+      "description": "Major investor; automotive (Toyota); infrastructure development"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Security cooperation; nickel/critical minerals; Indo-Pacific engagement"
+    },
+    {
+      "target": "ASEAN",
+      "type": "alliance",
+      "description": "Largest ASEAN economy; de facto leader; 2023 chair"
+    }
+  ],
+  "tags": [
+    "G20",
+    "ASEAN",
+    "APEC",
+    "OPEC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

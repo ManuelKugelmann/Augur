@@ -7,15 +7,44 @@
   "capital": "Prague",
   "population": 10900000,
   "trade": {
-    "top_exports": ["vehicles", "machinery", "electronics", "iron_steel", "glass"],
-    "top_partners": ["DEU", "SVK", "POL", "FRA", "AUT"],
+    "top_exports": [
+      "vehicles",
+      "machinery",
+      "electronics",
+      "iron_steel",
+      "glass"
+    ],
+    "top_partners": [
+      "DEU",
+      "SVK",
+      "POL",
+      "FRA",
+      "AUT"
+    ],
     "major_ports": [],
     "chokepoint_exposure": []
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "vehicles", "electronics"],
-    "energy_mix": {"nuclear": 0.37, "coal": 0.30, "gas": 0.08, "renewables": 0.14, "oil": 0.02, "hydro": 0.03, "other": 0.06},
-    "risk_factors": ["auto_industry_dependence", "energy_transition", "labor_shortage"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "vehicles",
+      "electronics"
+    ],
+    "energy_mix": {
+      "nuclear": 0.37,
+      "coal": 0.3,
+      "gas": 0.08,
+      "renewables": 0.14,
+      "oil": 0.02,
+      "hydro": 0.03,
+      "other": 0.06
+    },
+    "risk_factors": [
+      "auto_industry_dependence",
+      "energy_transition",
+      "labor_shortage"
+    ]
   },
   "ratings": {
     "credit": "AA-",
@@ -23,9 +52,56 @@
     "press_freedom_rank": 14,
     "corruption_perception": 57
   },
-  "tags": ["EU", "NATO", "OECD"],
+  "neighbors": [
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "relevance": "Dominant trade partner; automotive supply chain (Skoda/VW)"
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "relevance": "Visegrad partner; shared EU policy positions"
+    },
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "relevance": "Historical ties; cross-border investment"
+    },
+    {
+      "id": "SVK",
+      "name": "Slovakia",
+      "relevance": "Former Czechoslovakia; deep cultural and economic ties"
+    }
+  ],
+  "links": [
+    {
+      "target": "DEU",
+      "type": "dependency",
+      "description": "~30% of exports go to Germany; Skoda/VW automotive integration"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member; not yet eurozone; Schengen area"
+    },
+    {
+      "target": "KOR",
+      "type": "trade",
+      "description": "Hyundai/Kia manufacturing presence; electronics assembly"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

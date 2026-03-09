@@ -7,15 +7,51 @@
   "capital": "London",
   "population": 68000000,
   "trade": {
-    "top_exports": ["machinery", "vehicles", "pharmaceuticals", "petroleum", "gold"],
-    "top_partners": ["USA", "DEU", "NLD", "FRA", "IRL"],
-    "major_ports": ["Felixstowe", "Southampton", "London Gateway", "Liverpool"],
-    "chokepoint_exposure": ["suez", "dover_strait"]
+    "top_exports": [
+      "machinery",
+      "vehicles",
+      "pharmaceuticals",
+      "petroleum",
+      "gold"
+    ],
+    "top_partners": [
+      "USA",
+      "DEU",
+      "NLD",
+      "FRA",
+      "IRL"
+    ],
+    "major_ports": [
+      "Felixstowe",
+      "Southampton",
+      "London Gateway",
+      "Liverpool"
+    ],
+    "chokepoint_exposure": [
+      "suez",
+      "dover_strait"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "vehicles", "machinery", "natural_gas"],
-    "energy_mix": {"gas": 0.36, "renewables": 0.40, "nuclear": 0.14, "coal": 0.02, "oil": 0.01, "other": 0.07},
-    "risk_factors": ["post_brexit_trade_friction", "current_account_deficit", "housing_affordability"]
+    "commodities_import": [
+      "petroleum",
+      "vehicles",
+      "machinery",
+      "natural_gas"
+    ],
+    "energy_mix": {
+      "gas": 0.36,
+      "renewables": 0.4,
+      "nuclear": 0.14,
+      "coal": 0.02,
+      "oil": 0.01,
+      "other": 0.07
+    },
+    "risk_factors": [
+      "post_brexit_trade_friction",
+      "current_account_deficit",
+      "housing_affordability"
+    ]
   },
   "ratings": {
     "credit": "AA",
@@ -23,9 +59,52 @@
     "press_freedom_rank": 26,
     "corruption_perception": 73
   },
-  "tags": ["G7", "NATO", "Five_Eyes", "OECD"],
+  "neighbors": [
+    {
+      "id": "IRL",
+      "name": "Ireland",
+      "relevance": "Northern Ireland protocol; Common Travel Area; deep economic ties"
+    },
+    {
+      "id": "FRA",
+      "name": "France",
+      "relevance": "Channel Tunnel; closest continental neighbor; defense partner"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Special relationship; Five Eyes; largest bilateral FDI partner"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Post-Brexit trade friction; still largest single trade partner bloc"
+    },
+    {
+      "target": "IND",
+      "type": "trade",
+      "description": "FTA negotiations; Commonwealth ties; diaspora and tech links"
+    },
+    {
+      "target": "AUS",
+      "type": "alliance",
+      "description": "AUKUS; Five Eyes; Commonwealth; FTA signed"
+    }
+  ],
+  "tags": [
+    "G7",
+    "NATO",
+    "Five_Eyes",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

@@ -7,15 +7,49 @@
   "capital": "Astana",
   "population": 19800000,
   "trade": {
-    "top_exports": ["petroleum", "uranium", "iron_ore", "wheat", "copper"],
-    "top_partners": ["CHN", "ITA", "RUS", "NLD", "FRA"],
-    "major_ports": ["Aktau (Caspian)"],
-    "chokepoint_exposure": ["turkish_straits"]
+    "top_exports": [
+      "petroleum",
+      "uranium",
+      "iron_ore",
+      "wheat",
+      "copper"
+    ],
+    "top_partners": [
+      "CHN",
+      "ITA",
+      "RUS",
+      "NLD",
+      "FRA"
+    ],
+    "major_ports": [
+      "Aktau (Caspian)"
+    ],
+    "chokepoint_exposure": [
+      "turkish_straits"
+    ]
   },
   "exposure": {
-    "commodities_import": ["machinery", "vehicles", "pharmaceuticals", "electronics"],
-    "energy_mix": {"gas": 0.20, "coal": 0.45, "oil": 0.15, "hydro": 0.10, "renewables": 0.05, "nuclear": 0.0, "other": 0.05},
-    "risk_factors": ["oil_price_dependence", "russia_dependence", "authoritarian_governance", "water_scarcity"]
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "pharmaceuticals",
+      "electronics"
+    ],
+    "energy_mix": {
+      "gas": 0.2,
+      "coal": 0.45,
+      "oil": 0.15,
+      "hydro": 0.1,
+      "renewables": 0.05,
+      "nuclear": 0.0,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "oil_price_dependence",
+      "russia_dependence",
+      "authoritarian_governance",
+      "water_scarcity"
+    ]
   },
   "ratings": {
     "credit": "BBB",
@@ -23,9 +57,64 @@
     "press_freedom_rank": 134,
     "corruption_perception": 36
   },
-  "tags": ["EAEU"],
+  "neighbors": [
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Longest continuous land border; energy transit, security dependence, and trade corridor"
+    },
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Belt and Road hub; growing trade partner and infrastructure investor"
+    },
+    {
+      "id": "UZB",
+      "name": "Uzbekistan",
+      "relevance": "Shared water resources, labor migration, and regional stability"
+    },
+    {
+      "id": "KGZ",
+      "name": "Kyrgyzstan",
+      "relevance": "Water-sharing disputes; border tensions and ethnic ties"
+    },
+    {
+      "id": "TKM",
+      "name": "Turkmenistan",
+      "relevance": "Caspian energy neighbor; trans-Caspian pipeline politics"
+    }
+  ],
+  "links": [
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Oil transit via CPC pipeline to Novorossiysk; security umbrella via CSTO"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "China is top non-oil trade partner; BRI rail corridors transit Kazakhstan"
+    },
+    {
+      "target": "EU",
+      "type": "corridor",
+      "description": "Trans-Caspian corridor gaining importance as alternative to Russian routes"
+    },
+    {
+      "target": "ARE",
+      "type": "trade",
+      "description": "UAE is major FDI source and sanctions-era trade intermediary"
+    }
+  ],
+  "tags": [
+    "EAEU"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

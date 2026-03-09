@@ -7,15 +7,46 @@
   "capital": "Doha",
   "population": 2900000,
   "trade": {
-    "top_exports": ["liquefied_natural_gas", "petroleum", "petrochemicals", "fertilizers"],
-    "top_partners": ["CHN", "IND", "JPN", "KOR", "GBR"],
-    "major_ports": ["Hamad Port", "Ras Laffan"],
-    "chokepoint_exposure": ["hormuz"]
+    "top_exports": [
+      "liquefied_natural_gas",
+      "petroleum",
+      "petrochemicals",
+      "fertilizers"
+    ],
+    "top_partners": [
+      "CHN",
+      "IND",
+      "JPN",
+      "KOR",
+      "GBR"
+    ],
+    "major_ports": [
+      "Hamad Port",
+      "Ras Laffan"
+    ],
+    "chokepoint_exposure": [
+      "hormuz"
+    ]
   },
   "exposure": {
-    "commodities_import": ["vehicles", "machinery", "food_products", "electronics"],
-    "energy_mix": {"gas": 0.90, "oil": 0.02, "renewables": 0.03, "other": 0.05},
-    "risk_factors": ["gas_price_dependence", "water_scarcity", "labor_conditions", "small_economy_concentration"]
+    "commodities_import": [
+      "vehicles",
+      "machinery",
+      "food_products",
+      "electronics"
+    ],
+    "energy_mix": {
+      "gas": 0.9,
+      "oil": 0.02,
+      "renewables": 0.03,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "gas_price_dependence",
+      "water_scarcity",
+      "labor_conditions",
+      "small_economy_concentration"
+    ]
   },
   "ratings": {
     "credit": "AA",
@@ -23,9 +54,55 @@
     "press_freedom_rank": 105,
     "corruption_perception": 58
   },
-  "tags": ["OPEC", "GCC"],
+  "neighbors": [
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "Only land border; post-blockade reconciliation; GCC dynamics"
+    },
+    {
+      "id": "BHR",
+      "name": "Bahrain",
+      "relevance": "Maritime neighbor; political rivalry; GCC mediation"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Shared North Field/South Pars gas reservoir; pragmatic relations"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Al Udeid air base (largest US base in Middle East); defense partnership"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Major LNG buyer; growing energy trade"
+    },
+    {
+      "target": "TUR",
+      "type": "alliance",
+      "description": "Military base; blockade support; strategic alignment"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Major LNG supplier; investment (PSG, Volkswagen stakes)"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "GCC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

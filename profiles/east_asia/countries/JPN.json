@@ -7,15 +7,56 @@
   "capital": "Tokyo",
   "population": 124000000,
   "trade": {
-    "top_exports": ["vehicles", "machinery", "electronics", "steel", "chemicals"],
-    "top_partners": ["CHN", "USA", "KOR", "TWN", "THA"],
-    "major_ports": ["Tokyo", "Yokohama", "Nagoya", "Kobe", "Osaka"],
-    "chokepoint_exposure": ["malacca", "taiwan_strait", "hormuz"]
+    "top_exports": [
+      "vehicles",
+      "machinery",
+      "electronics",
+      "steel",
+      "chemicals"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "KOR",
+      "TWN",
+      "THA"
+    ],
+    "major_ports": [
+      "Tokyo",
+      "Yokohama",
+      "Nagoya",
+      "Kobe",
+      "Osaka"
+    ],
+    "chokepoint_exposure": [
+      "malacca",
+      "taiwan_strait",
+      "hormuz"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "coal", "electronics", "food_products"],
-    "energy_mix": {"gas": 0.30, "coal": 0.27, "renewables": 0.13, "nuclear": 0.10, "hydro": 0.08, "oil": 0.05, "other": 0.07},
-    "risk_factors": ["demographic_decline", "sovereign_debt", "energy_import_dependence", "natural_disasters"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "coal",
+      "electronics",
+      "food_products"
+    ],
+    "energy_mix": {
+      "gas": 0.3,
+      "coal": 0.27,
+      "renewables": 0.13,
+      "nuclear": 0.1,
+      "hydro": 0.08,
+      "oil": 0.05,
+      "other": 0.07
+    },
+    "risk_factors": [
+      "demographic_decline",
+      "sovereign_debt",
+      "energy_import_dependence",
+      "natural_disasters"
+    ]
   },
   "ratings": {
     "credit": "A+",
@@ -23,9 +64,72 @@
     "press_freedom_rank": 68,
     "corruption_perception": 73
   },
-  "tags": ["G7", "OECD", "APEC", "reserve_currency"],
+  "neighbors": [
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Largest trade partner; Senkaku dispute; supply chain entanglement"
+    },
+    {
+      "id": "KOR",
+      "name": "South Korea",
+      "relevance": "Historical tensions; semiconductor competition; shared US alliance"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Northern Territories/Kuril dispute; LNG imports; sanctions alignment"
+    },
+    {
+      "id": "TWN",
+      "name": "Taiwan",
+      "relevance": "Critical semiconductor supplier; Japan's southwestern defense perimeter"
+    },
+    {
+      "id": "PRK",
+      "name": "North Korea",
+      "relevance": "Missile threat; abduction issue; nuclear proliferation concern"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Treaty ally; hosts US military bases; anchor of Indo-Pacific strategy"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Deep manufacturing interdependence despite strategic rivalry"
+    },
+    {
+      "target": "AUS",
+      "type": "alliance",
+      "description": "Quad partner; LNG/coal/iron ore supplier; defense cooperation"
+    },
+    {
+      "target": "IND",
+      "type": "alliance",
+      "description": "Quad partner; infrastructure investment competitor to BRI"
+    },
+    {
+      "target": "ASEAN",
+      "type": "trade",
+      "description": "Major investor and development aid provider across Southeast Asia"
+    }
+  ],
+  "tags": [
+    "G7",
+    "OECD",
+    "APEC",
+    "reserve_currency"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

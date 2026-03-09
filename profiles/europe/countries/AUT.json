@@ -7,15 +7,43 @@
   "capital": "Vienna",
   "population": 9100000,
   "trade": {
-    "top_exports": ["machinery", "vehicles", "pharmaceuticals", "iron_steel", "electronics"],
-    "top_partners": ["DEU", "ITA", "USA", "CHE", "FRA"],
+    "top_exports": [
+      "machinery",
+      "vehicles",
+      "pharmaceuticals",
+      "iron_steel",
+      "electronics"
+    ],
+    "top_partners": [
+      "DEU",
+      "ITA",
+      "USA",
+      "CHE",
+      "FRA"
+    ],
     "major_ports": [],
     "chokepoint_exposure": []
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "vehicles", "machinery"],
-    "energy_mix": {"hydro": 0.55, "gas": 0.15, "renewables": 0.14, "oil": 0.03, "coal": 0.05, "other": 0.08},
-    "risk_factors": ["russian_gas_dependence", "banking_cee_exposure", "tourism_concentration"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "vehicles",
+      "machinery"
+    ],
+    "energy_mix": {
+      "hydro": 0.55,
+      "gas": 0.15,
+      "renewables": 0.14,
+      "oil": 0.03,
+      "coal": 0.05,
+      "other": 0.08
+    },
+    "risk_factors": [
+      "russian_gas_dependence",
+      "banking_cee_exposure",
+      "tourism_concentration"
+    ]
   },
   "ratings": {
     "credit": "AA+",
@@ -23,9 +51,71 @@
     "press_freedom_rank": 29,
     "corruption_perception": 71
   },
-  "tags": ["EU", "eurozone", "OECD"],
+  "neighbors": [
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "relevance": "Largest trade partner; shared language; deep industrial integration"
+    },
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "relevance": "South Tyrol ties; Alpine transit corridors; tourism flows"
+    },
+    {
+      "id": "CHE",
+      "name": "Switzerland",
+      "relevance": "Financial center neighbor; Alpine transit; hydropower"
+    },
+    {
+      "id": "CZE",
+      "name": "Czech Republic",
+      "relevance": "Automotive supply chains; Visegrad proximity"
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "relevance": "EU policy friction; migration route; historical ties"
+    },
+    {
+      "id": "SVK",
+      "name": "Slovakia",
+      "relevance": "Bratislava-Vienna twin cities; automotive corridor"
+    },
+    {
+      "id": "SVN",
+      "name": "Slovenia",
+      "relevance": "Adriatic access; Alpine corridor"
+    }
+  ],
+  "links": [
+    {
+      "target": "DEU",
+      "type": "dependency",
+      "description": "German economy drives Austrian exports; banking sector interlinked"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Historical gas dependency via OMV; slow diversification"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member; eurozone; Schengen area"
+    }
+  ],
+  "tags": [
+    "EU",
+    "eurozone",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

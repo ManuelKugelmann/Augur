@@ -7,15 +7,52 @@
   "capital": "Islamabad",
   "population": 230000000,
   "trade": {
-    "top_exports": ["textiles", "rice", "leather", "sports_goods", "surgical_instruments"],
-    "top_partners": ["USA", "CHN", "GBR", "DEU", "ARE"],
-    "major_ports": ["Karachi", "Gwadar", "Port Qasim"],
-    "chokepoint_exposure": ["hormuz"]
+    "top_exports": [
+      "textiles",
+      "rice",
+      "leather",
+      "sports_goods",
+      "surgical_instruments"
+    ],
+    "top_partners": [
+      "USA",
+      "CHN",
+      "GBR",
+      "DEU",
+      "ARE"
+    ],
+    "major_ports": [
+      "Karachi",
+      "Gwadar",
+      "Port Qasim"
+    ],
+    "chokepoint_exposure": [
+      "hormuz"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "machinery", "palm_oil", "iron_steel"],
-    "energy_mix": {"gas": 0.35, "oil": 0.15, "hydro": 0.25, "coal": 0.10, "nuclear": 0.08, "renewables": 0.04, "other": 0.03},
-    "risk_factors": ["debt_sustainability", "political_instability", "water_stress", "climate_vulnerability"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "machinery",
+      "palm_oil",
+      "iron_steel"
+    ],
+    "energy_mix": {
+      "gas": 0.35,
+      "oil": 0.15,
+      "hydro": 0.25,
+      "coal": 0.1,
+      "nuclear": 0.08,
+      "renewables": 0.04,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "debt_sustainability",
+      "political_instability",
+      "water_stress",
+      "climate_vulnerability"
+    ]
   },
   "ratings": {
     "credit": "CCC+",
@@ -23,9 +60,57 @@
     "press_freedom_rank": 157,
     "corruption_perception": 27
   },
+  "neighbors": [
+    {
+      "id": "IND",
+      "name": "India",
+      "relevance": "Kashmir dispute; nuclear rivalry; trade embargo; water treaties (Indus)"
+    },
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "All-weather friend; CPEC; Karakoram Highway; defense supplier"
+    },
+    {
+      "id": "AFG",
+      "name": "Afghanistan",
+      "relevance": "Durand Line; Taliban relations; refugee host; cross-border militancy"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Baluchistan border; pipeline projects; sectarian dynamics"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "alliance",
+      "description": "CPEC ($62B); Gwadar port; defense supplier; diplomatic shield at UN"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Post-Afghanistan reset; F-16 legacy; counterterrorism; IMF coordination"
+    },
+    {
+      "target": "SAU",
+      "type": "alliance",
+      "description": "Military cooperation; remittances; oil on deferred payment; Islamic solidarity"
+    },
+    {
+      "target": "TUR",
+      "type": "alliance",
+      "description": "Defense cooperation; diplomatic support on Kashmir; cultural ties"
+    }
+  ],
   "tags": [],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

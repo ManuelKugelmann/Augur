@@ -7,15 +7,52 @@
   "capital": "Ankara",
   "population": 85000000,
   "trade": {
-    "top_exports": ["vehicles", "machinery", "steel", "textiles", "electronics"],
-    "top_partners": ["DEU", "GBR", "IRQ", "USA", "ITA"],
-    "major_ports": ["Istanbul (Ambarli)", "Mersin", "Izmir (Aliaga)"],
-    "chokepoint_exposure": ["turkish_straits", "suez"]
+    "top_exports": [
+      "vehicles",
+      "machinery",
+      "steel",
+      "textiles",
+      "electronics"
+    ],
+    "top_partners": [
+      "DEU",
+      "GBR",
+      "IRQ",
+      "USA",
+      "ITA"
+    ],
+    "major_ports": [
+      "Istanbul (Ambarli)",
+      "Mersin",
+      "Izmir (Aliaga)"
+    ],
+    "chokepoint_exposure": [
+      "turkish_straits",
+      "suez"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "gold", "iron_steel"],
-    "energy_mix": {"gas": 0.22, "coal": 0.32, "hydro": 0.20, "renewables": 0.16, "oil": 0.01, "nuclear": 0.04, "other": 0.05},
-    "risk_factors": ["lira_depreciation", "high_inflation", "geopolitical_tensions", "current_account_deficit"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "gold",
+      "iron_steel"
+    ],
+    "energy_mix": {
+      "gas": 0.22,
+      "coal": 0.32,
+      "hydro": 0.2,
+      "renewables": 0.16,
+      "oil": 0.01,
+      "nuclear": 0.04,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "lira_depreciation",
+      "high_inflation",
+      "geopolitical_tensions",
+      "current_account_deficit"
+    ]
   },
   "ratings": {
     "credit": "B+",
@@ -23,9 +60,71 @@
     "press_freedom_rank": 165,
     "corruption_perception": 36
   },
-  "tags": ["NATO", "G20", "OECD"],
+  "neighbors": [
+    {
+      "id": "GRC",
+      "name": "Greece",
+      "relevance": "Aegean disputes; Cyprus; NATO friction; migration gateway"
+    },
+    {
+      "id": "SYR",
+      "name": "Syria",
+      "relevance": "Longest Middle East border; refugee host; military operations"
+    },
+    {
+      "id": "IRQ",
+      "name": "Iraq",
+      "relevance": "Kurdish issue; cross-border operations; oil pipeline"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Gas imports; sanctions navigation; regional rivalry"
+    },
+    {
+      "id": "GEO",
+      "name": "Georgia",
+      "relevance": "BTC pipeline; South Caucasus corridor"
+    },
+    {
+      "id": "BGR",
+      "name": "Bulgaria",
+      "relevance": "EU border; Thrace region; migration route"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "NATO ally; Incirlik base; S-400 friction; complex bilateral dynamics"
+    },
+    {
+      "target": "RUS",
+      "type": "trade",
+      "description": "Gas dependency; TurkStream pipeline; defense procurement (S-400); tourism"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Customs union; accession frozen; migration deal; trade interdependence"
+    },
+    {
+      "target": "AZE",
+      "type": "alliance",
+      "description": "One nation, two states; BTC/TANAP energy corridor; military support"
+    }
+  ],
+  "tags": [
+    "NATO",
+    "G20",
+    "OECD"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

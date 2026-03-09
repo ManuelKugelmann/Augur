@@ -7,15 +7,46 @@
   "capital": "Kuwait City",
   "population": 4300000,
   "trade": {
-    "top_exports": ["petroleum", "petrochemicals", "fertilizers"],
-    "top_partners": ["CHN", "IND", "JPN", "KOR", "USA"],
-    "major_ports": ["Shuwaikh", "Shuaiba", "Mina Al-Ahmadi"],
-    "chokepoint_exposure": ["hormuz"]
+    "top_exports": [
+      "petroleum",
+      "petrochemicals",
+      "fertilizers"
+    ],
+    "top_partners": [
+      "CHN",
+      "IND",
+      "JPN",
+      "KOR",
+      "USA"
+    ],
+    "major_ports": [
+      "Shuwaikh",
+      "Shuaiba",
+      "Mina Al-Ahmadi"
+    ],
+    "chokepoint_exposure": [
+      "hormuz"
+    ]
   },
   "exposure": {
-    "commodities_import": ["vehicles", "machinery", "food_products", "electronics"],
-    "energy_mix": {"oil": 0.45, "gas": 0.50, "renewables": 0.02, "other": 0.03},
-    "risk_factors": ["oil_price_dependence", "water_scarcity", "expatriate_labor", "regional_tensions"]
+    "commodities_import": [
+      "vehicles",
+      "machinery",
+      "food_products",
+      "electronics"
+    ],
+    "energy_mix": {
+      "oil": 0.45,
+      "gas": 0.5,
+      "renewables": 0.02,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "oil_price_dependence",
+      "water_scarcity",
+      "expatriate_labor",
+      "regional_tensions"
+    ]
   },
   "ratings": {
     "credit": "A+",
@@ -23,9 +54,45 @@
     "press_freedom_rank": 152,
     "corruption_perception": 46
   },
-  "tags": ["OPEC", "GCC"],
+  "neighbors": [
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "GCC partner; shared Neutral Zone; dominant regional power"
+    },
+    {
+      "id": "IRQ",
+      "name": "Iraq",
+      "relevance": "Gulf War trauma; border security; shared oilfields"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Liberation in 1991; major military base; defense umbrella"
+    },
+    {
+      "target": "OPEC",
+      "type": "alliance",
+      "description": "Founding OPEC member; production quota coordination"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Growing oil export destination; infrastructure investment"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "GCC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

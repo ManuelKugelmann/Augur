@@ -7,15 +7,56 @@
   "capital": "New Delhi",
   "population": 1430000000,
   "trade": {
-    "top_exports": ["petroleum_products", "pharmaceuticals", "jewelry", "textiles", "rice"],
-    "top_partners": ["USA", "ARE", "NLD", "CHN", "GBR"],
-    "major_ports": ["Mumbai (JNPT)", "Mundra", "Chennai", "Visakhapatnam", "Kandla"],
-    "chokepoint_exposure": ["hormuz", "malacca", "bab_el_mandeb"]
+    "top_exports": [
+      "petroleum_products",
+      "pharmaceuticals",
+      "jewelry",
+      "textiles",
+      "rice"
+    ],
+    "top_partners": [
+      "USA",
+      "ARE",
+      "NLD",
+      "CHN",
+      "GBR"
+    ],
+    "major_ports": [
+      "Mumbai (JNPT)",
+      "Mundra",
+      "Chennai",
+      "Visakhapatnam",
+      "Kandla"
+    ],
+    "chokepoint_exposure": [
+      "hormuz",
+      "malacca",
+      "bab_el_mandeb"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "gold", "electronics", "coal", "palm_oil"],
-    "energy_mix": {"coal": 0.50, "renewables": 0.12, "gas": 0.06, "hydro": 0.10, "nuclear": 0.03, "oil": 0.02, "other": 0.17},
-    "risk_factors": ["oil_import_dependence", "water_stress", "border_tensions", "monsoon_variability"]
+    "commodities_import": [
+      "petroleum",
+      "gold",
+      "electronics",
+      "coal",
+      "palm_oil"
+    ],
+    "energy_mix": {
+      "coal": 0.5,
+      "renewables": 0.12,
+      "gas": 0.06,
+      "hydro": 0.1,
+      "nuclear": 0.03,
+      "oil": 0.02,
+      "other": 0.17
+    },
+    "risk_factors": [
+      "oil_import_dependence",
+      "water_stress",
+      "border_tensions",
+      "monsoon_variability"
+    ]
   },
   "ratings": {
     "credit": "BBB-",
@@ -23,9 +64,80 @@
     "press_freedom_rank": 150,
     "corruption_perception": 39
   },
-  "tags": ["BRICS", "G20"],
+  "neighbors": [
+    {
+      "id": "PAK",
+      "name": "Pakistan",
+      "relevance": "Kashmir dispute; nuclear rivalry; cross-border terrorism; trade embargo"
+    },
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "LAC border disputes; Doklam/Galwan clashes; trade deficit; BRI encirclement concern"
+    },
+    {
+      "id": "BGD",
+      "name": "Bangladesh",
+      "relevance": "Enclave exchange; water sharing; migration; textile competition"
+    },
+    {
+      "id": "NPL",
+      "name": "Nepal",
+      "relevance": "Open border; hydropower; buffer between India and China"
+    },
+    {
+      "id": "LKA",
+      "name": "Sri Lanka",
+      "relevance": "Indian Ocean neighbor; China port (Hambantota); Tamil ties; debt crisis"
+    },
+    {
+      "id": "MMR",
+      "name": "Myanmar",
+      "relevance": "Northeast border; insurgency spillover; Act East corridor"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Quad partner; defense cooperation; tech partnership; strategic convergence on China"
+    },
+    {
+      "target": "CHN",
+      "type": "rivalry",
+      "description": "Border standoffs; trade deficit ($100B+); BRI vs corridor competition"
+    },
+    {
+      "target": "RUS",
+      "type": "trade",
+      "description": "Legacy defense supplier; discounted oil imports; strategic autonomy partner"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "FTA negotiations; third-largest trade partner; tech and green energy"
+    },
+    {
+      "target": "JPN",
+      "type": "alliance",
+      "description": "Quad partner; infrastructure investment; bullet train; defense cooperation"
+    },
+    {
+      "target": "ARE",
+      "type": "trade",
+      "description": "Largest diaspora host; oil imports; CEPA; remittances ($20B+)"
+    }
+  ],
+  "tags": [
+    "BRICS",
+    "G20"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

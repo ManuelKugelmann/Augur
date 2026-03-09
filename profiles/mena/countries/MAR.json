@@ -7,15 +7,49 @@
   "capital": "Rabat",
   "population": 37000000,
   "trade": {
-    "top_exports": ["phosphates", "vehicles", "textiles", "food_products", "electronics"],
-    "top_partners": ["ESP", "FRA", "IND", "BRA", "ITA"],
-    "major_ports": ["Tanger Med", "Casablanca", "Jorf Lasfar"],
-    "chokepoint_exposure": ["gibraltar"]
+    "top_exports": [
+      "phosphates",
+      "vehicles",
+      "textiles",
+      "food_products",
+      "electronics"
+    ],
+    "top_partners": [
+      "ESP",
+      "FRA",
+      "IND",
+      "BRA",
+      "ITA"
+    ],
+    "major_ports": [
+      "Tanger Med",
+      "Casablanca",
+      "Jorf Lasfar"
+    ],
+    "chokepoint_exposure": [
+      "gibraltar"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "natural_gas", "cereals", "machinery"],
-    "energy_mix": {"coal": 0.35, "gas": 0.10, "oil": 0.10, "renewables": 0.25, "hydro": 0.05, "other": 0.15},
-    "risk_factors": ["drought_vulnerability", "energy_import_dependence", "youth_unemployment"]
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "cereals",
+      "machinery"
+    ],
+    "energy_mix": {
+      "coal": 0.35,
+      "gas": 0.1,
+      "oil": 0.1,
+      "renewables": 0.25,
+      "hydro": 0.05,
+      "other": 0.15
+    },
+    "risk_factors": [
+      "drought_vulnerability",
+      "energy_import_dependence",
+      "youth_unemployment"
+    ]
   },
   "ratings": {
     "credit": "BB+",
@@ -23,9 +57,55 @@
     "press_freedom_rank": 144,
     "corruption_perception": 38
   },
-  "tags": ["AU", "Arab_League"],
+  "neighbors": [
+    {
+      "id": "ESP",
+      "name": "Spain",
+      "relevance": "Strait of Gibraltar; Ceuta/Melilla; migration; trade"
+    },
+    {
+      "id": "DZA",
+      "name": "Algeria",
+      "relevance": "Closed border since 1994; Western Sahara rivalry; gas pipeline"
+    },
+    {
+      "id": "MRT",
+      "name": "Mauritania",
+      "relevance": "Western Sahara southern border; fisheries; Atlantic coast"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Largest trade partner; agriculture/fisheries/phosphates; migration cooperation"
+    },
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Major non-NATO ally; FTA; counterterrorism; Western Sahara recognition"
+    },
+    {
+      "target": "ISR",
+      "type": "alliance",
+      "description": "Abraham Accords normalization; defense cooperation; trade"
+    },
+    {
+      "target": "FRA",
+      "type": "trade",
+      "description": "Historical ties; diaspora; investment; automotive sector"
+    }
+  ],
+  "tags": [
+    "AU",
+    "Arab_League"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

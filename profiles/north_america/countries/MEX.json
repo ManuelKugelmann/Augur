@@ -7,15 +7,51 @@
   "capital": "Mexico City",
   "population": 130000000,
   "trade": {
-    "top_exports": ["vehicles", "electronics", "petroleum", "machinery", "medical_instruments"],
-    "top_partners": ["USA", "CHN", "DEU", "JPN", "KOR"],
-    "major_ports": ["Manzanillo", "Lazaro Cardenas", "Veracruz", "Altamira"],
-    "chokepoint_exposure": ["panama"]
+    "top_exports": [
+      "vehicles",
+      "electronics",
+      "petroleum",
+      "machinery",
+      "medical_instruments"
+    ],
+    "top_partners": [
+      "USA",
+      "CHN",
+      "DEU",
+      "JPN",
+      "KOR"
+    ],
+    "major_ports": [
+      "Manzanillo",
+      "Lazaro Cardenas",
+      "Veracruz",
+      "Altamira"
+    ],
+    "chokepoint_exposure": [
+      "panama"
+    ]
   },
   "exposure": {
-    "commodities_import": ["electronics", "petroleum_products", "machinery", "steel"],
-    "energy_mix": {"gas": 0.50, "oil": 0.10, "renewables": 0.17, "hydro": 0.10, "nuclear": 0.03, "coal": 0.07, "other": 0.03},
-    "risk_factors": ["us_trade_dependence", "cartel_violence", "energy_reform_uncertainty"]
+    "commodities_import": [
+      "electronics",
+      "petroleum_products",
+      "machinery",
+      "steel"
+    ],
+    "energy_mix": {
+      "gas": 0.5,
+      "oil": 0.1,
+      "renewables": 0.17,
+      "hydro": 0.1,
+      "nuclear": 0.03,
+      "coal": 0.07,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "us_trade_dependence",
+      "cartel_violence",
+      "energy_reform_uncertainty"
+    ]
   },
   "ratings": {
     "credit": "BBB",
@@ -23,9 +59,57 @@
     "press_freedom_rank": 127,
     "corruption_perception": 31
   },
-  "tags": ["USMCA", "OECD", "G20", "Pacific_Alliance"],
+  "neighbors": [
+    {
+      "id": "USA",
+      "name": "United States",
+      "relevance": "3,100km border; $800B+ trade; migration; fentanyl; nearshoring boom"
+    },
+    {
+      "id": "GTM",
+      "name": "Guatemala",
+      "relevance": "Southern border; migration transit; trade"
+    },
+    {
+      "id": "BLZ",
+      "name": "Belize",
+      "relevance": "Caribbean coast neighbor; limited trade; border demarcation"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "dependency",
+      "description": "~80% of exports; USMCA; automotive supply chain; remittances ($60B+)"
+    },
+    {
+      "target": "CHN",
+      "type": "rivalry",
+      "description": "Manufacturing competition; nearshoring beneficiary as China alternative"
+    },
+    {
+      "target": "CAN",
+      "type": "trade",
+      "description": "USMCA trilateral; automotive supply chain; agricultural trade"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Modernized FTA; automotive (VW, BMW plants); tequila/agriculture"
+    }
+  ],
+  "tags": [
+    "USMCA",
+    "OECD",
+    "G20",
+    "Pacific_Alliance"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

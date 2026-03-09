@@ -7,15 +7,49 @@
   "capital": "Lima",
   "population": 34000000,
   "trade": {
-    "top_exports": ["copper", "gold", "zinc", "petroleum", "fishmeal"],
-    "top_partners": ["CHN", "USA", "KOR", "JPN", "CAN"],
-    "major_ports": ["Callao", "Paita", "Matarani"],
-    "chokepoint_exposure": ["panama"]
+    "top_exports": [
+      "copper",
+      "gold",
+      "zinc",
+      "petroleum",
+      "fishmeal"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "KOR",
+      "JPN",
+      "CAN"
+    ],
+    "major_ports": [
+      "Callao",
+      "Paita",
+      "Matarani"
+    ],
+    "chokepoint_exposure": [
+      "panama"
+    ]
   },
   "exposure": {
-    "commodities_import": ["petroleum", "machinery", "vehicles", "electronics"],
-    "energy_mix": {"hydro": 0.50, "gas": 0.35, "oil": 0.05, "renewables": 0.06, "coal": 0.02, "other": 0.02},
-    "risk_factors": ["mining_dependence", "political_instability", "el_nino_vulnerability"]
+    "commodities_import": [
+      "petroleum",
+      "machinery",
+      "vehicles",
+      "electronics"
+    ],
+    "energy_mix": {
+      "hydro": 0.5,
+      "gas": 0.35,
+      "oil": 0.05,
+      "renewables": 0.06,
+      "coal": 0.02,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "mining_dependence",
+      "political_instability",
+      "el_nino_vulnerability"
+    ]
   },
   "ratings": {
     "credit": "BBB",
@@ -23,9 +57,60 @@
     "press_freedom_rank": 110,
     "corruption_perception": 36
   },
-  "tags": ["Pacific_Alliance", "APEC"],
+  "neighbors": [
+    {
+      "id": "BRA",
+      "name": "Brazil",
+      "relevance": "Amazon border; Interoceanic Highway; trade"
+    },
+    {
+      "id": "CHL",
+      "name": "Chile",
+      "relevance": "Pacific Alliance; mining corridor; maritime cooperation"
+    },
+    {
+      "id": "COL",
+      "name": "Colombia",
+      "relevance": "Amazon/Pacific neighbor; drug interdiction; trade"
+    },
+    {
+      "id": "ECU",
+      "name": "Ecuador",
+      "relevance": "Former border conflict (resolved); Pacific coast trade"
+    },
+    {
+      "id": "BOL",
+      "name": "Bolivia",
+      "relevance": "Lake Titicaca; gas corridor; Andean community"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; copper and mineral exports; Chancay mega-port"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "FTA; mining investment; counter-narcotics cooperation"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "FTA; agricultural and mineral exports"
+    }
+  ],
+  "tags": [
+    "Pacific_Alliance",
+    "APEC"
+  ],
   "_updated": "2026-03-09",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }
