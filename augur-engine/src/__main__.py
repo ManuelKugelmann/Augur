@@ -73,9 +73,9 @@ async def run_cycle(brand_key: str, horizon_key: str, dry_run: bool) -> None:
         " (dry-run)" if dry_run else "",
     )
 
-    # Step 1: Collect signals
-    log.info("step 1: collecting signals...")
-    signals = await collect_signals(brand.osint_sources)
+    # Step 1: Collect signals via MCP tools (agentic, like plan generation)
+    log.info("step 1: collecting signals via MCP tools...")
+    signals = await collect_signals(brand, horizon_key)
     if len(signals) < MIN_SIGNALS:
         log.error(
             "abort: only %d signals collected (need %d+)", len(signals), MIN_SIGNALS

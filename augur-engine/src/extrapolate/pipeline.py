@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from ..config.types import BrandConfig, BrandKey, HorizonKey, Prediction, Signal
+from ..config.types import BrandConfig, HorizonKey, Prediction, Signal
 from ..config.horizons import compute_fictive_date
 from .prompts import (
     system_prompt_pass1,
@@ -89,7 +89,7 @@ async def extrapolate(
     Returns (prediction, captions_dict).
     """
     fictive_date = compute_fictive_date(horizon)
-    signal_data = [{"source": s.source, "data": s.content} for s in signals]
+    signal_data = [{"tool": s.tool, "args": s.arguments, "data": s.result} for s in signals]
 
     # Pass 1: Signals → prediction
     log.info("pass 1: generating prediction...")

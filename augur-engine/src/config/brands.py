@@ -1,6 +1,6 @@
 """Brand configurations for all 4 Augur brands."""
 
-from .types import BrandConfig, HorizonConfig, PaletteConfig, SourceConfig
+from .types import BrandConfig, HorizonConfig, McpEndpoint, PaletteConfig
 
 _EN_GENERAL_HORIZONS = [
     HorizonConfig("tomorrow", "tomorrow", "Tomorrow", "0 */6 * * *", "+1d"),
@@ -16,6 +16,9 @@ _DE_GENERAL_HORIZONS = [
 
 _IMG_GENERAL = "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. "
 _IMG_FINANCIAL = "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. "
+
+# Default MCP endpoint — the trading server with 50+ tools across 12 domains
+_TRADING_MCP = McpEndpoint(url="http://localhost:8071/mcp", name="trading")
 
 BRANDS: dict[str, BrandConfig] = {
     "the": BrandConfig(
@@ -34,12 +37,13 @@ BRANDS: dict[str, BrandConfig] = {
             "Never fabricate solutions. If no credible solution exists, say so. Write in AP/Reuters style."
         ),
         legal_disclaimer="AI-generated speculation — not news. Not financial advice.",
-        osint_sources=[
-            SourceConfig("tavily", query="top geopolitical developments today"),
-            SourceConfig("gdelt"),
-            SourceConfig("rss", url="https://feeds.bbci.co.uk/news/world/rss.xml"),
-            SourceConfig("rss", url="https://rss.nytimes.com/services/xml/rss/nyt/World.xml"),
-        ],
+        mcp_endpoints=[_TRADING_MCP],
+        research_prompt=(
+            "Research the most significant geopolitical, environmental, or humanitarian "
+            "development happening right now. Use weather, conflict, disaster, health, "
+            "humanitarian, and macro-economic tools to gather concrete data points. "
+            "Focus on events with measurable impact."
+        ),
         social_targets=["x", "bluesky", "facebook"],
     ),
     "der": BrandConfig(
@@ -59,12 +63,13 @@ BRANDS: dict[str, BrandConfig] = {
             "Schreibe im Stil von Reuters/DPA."
         ),
         legal_disclaimer="KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung.",
-        osint_sources=[
-            SourceConfig("tavily", query="wichtigste geopolitische Entwicklungen heute"),
-            SourceConfig("gdelt"),
-            SourceConfig("rss", url="https://www.tagesschau.de/xml/rss2/"),
-            SourceConfig("rss", url="https://www.spiegel.de/schlagzeilen/tops/index.rss"),
-        ],
+        mcp_endpoints=[_TRADING_MCP],
+        research_prompt=(
+            "Recherchiere die bedeutendste geopolitische, umweltbezogene oder humanitäre "
+            "Entwicklung, die gerade stattfindet. Nutze Wetter-, Konflikt-, Katastrophen-, "
+            "Gesundheits-, humanitäre und makroökonomische Tools, um konkrete Datenpunkte "
+            "zu sammeln. Fokussiere auf Ereignisse mit messbarem Impact."
+        ),
         social_targets=["x", "mastodon", "linkedin"],
     ),
     "financial": BrandConfig(
@@ -87,14 +92,15 @@ BRANDS: dict[str, BrandConfig] = {
             "Never recommend specific trades. Frame as sector-level opinion only."
         ),
         legal_disclaimer="AI-generated opinion — not financial advice. The Augur may hold positions in discussed sectors.",
-        osint_sources=[
-            SourceConfig("tavily", query="financial markets major developments today"),
-            SourceConfig("yahoo"),
-            SourceConfig("rss", url="https://feeds.bloomberg.com/markets/news.rss"),
-            SourceConfig("trade"),
-        ],
+        mcp_endpoints=[_TRADING_MCP],
+        research_prompt=(
+            "Research current market-moving developments. Use macro-economic tools (FRED, "
+            "World Bank, ECB), commodity price tools, and technical indicator tools to gather "
+            "data on sector rotations, rate expectations, and supply chain disruptions. "
+            "Check recent events for geopolitical risks impacting markets."
+        ),
         social_targets=["x", "linkedin", "bluesky"],
-        trade_system_feed="/tmp/sentiment.json",
+        trade_system_feed="store_recent_events",
     ),
     "finanz": BrandConfig(
         name="Finanz Augur",
@@ -116,13 +122,14 @@ BRANDS: dict[str, BrandConfig] = {
             "Empfehle niemals spezifische Trades. Formuliere als Sektormeinung."
         ),
         legal_disclaimer="KI-generierte Einschätzung — keine Finanzberatung. Der Augur kann Positionen in besprochenen Sektoren halten.",
-        osint_sources=[
-            SourceConfig("tavily", query="Finanzmärkte wichtigste Entwicklungen heute"),
-            SourceConfig("yahoo"),
-            SourceConfig("rss", url="https://www.handelsblatt.com/contentexport/feed/top"),
-            SourceConfig("trade"),
-        ],
+        mcp_endpoints=[_TRADING_MCP],
+        research_prompt=(
+            "Recherchiere aktuelle marktbewegende Entwicklungen. Nutze makroökonomische "
+            "Tools (FRED, Weltbank, EZB), Rohstoffpreis-Tools und technische Indikator-Tools "
+            "für Daten zu Sektorrotationen, Zinserwartungen und Lieferkettenstörungen. "
+            "Prüfe aktuelle Ereignisse auf geopolitische Marktrisiken."
+        ),
         social_targets=["x", "mastodon", "linkedin"],
-        trade_system_feed="/tmp/sentiment.json",
+        trade_system_feed="store_recent_events",
     ),
 }

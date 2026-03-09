@@ -32,7 +32,8 @@ class TestBrandsConfig:
         assert brand.image_style_prefix
         assert brand.tone_prompt
         assert brand.legal_disclaimer
-        assert len(brand.osint_sources) > 0
+        assert len(brand.mcp_endpoints) > 0
+        assert brand.research_prompt
         assert len(brand.social_targets) > 0
 
     def test_en_brands_have_en_locale(self):
@@ -69,10 +70,10 @@ class TestBrandsConfig:
             assert re.match(r"^[\d*/,\s]+$", h.refresh_cron)
 
     @pytest.mark.parametrize("key", BRAND_KEYS)
-    def test_all_osint_sources_have_valid_type(self, key):
-        valid_types = {"tavily", "gdelt", "rss", "yahoo", "trade"}
-        for src in BRANDS[key].osint_sources:
-            assert src.type in valid_types
+    def test_all_mcp_endpoints_have_url(self, key):
+        for ep in BRANDS[key].mcp_endpoints:
+            assert ep.url.startswith("http")
+            assert ep.name
 
 
 class TestComputeFictiveDate:

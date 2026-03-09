@@ -31,10 +31,10 @@ class PaletteConfig:
 
 
 @dataclass
-class SourceConfig:
-    type: Literal["tavily", "gdelt", "rss", "yahoo", "trade"]
-    query: str | None = None
-    url: str | None = None
+class McpEndpoint:
+    """An MCP server endpoint the agent can connect to for signal collection."""
+    url: str
+    name: str = ""
 
 
 @dataclass
@@ -50,17 +50,18 @@ class BrandConfig:
     image_style_prefix: str
     tone_prompt: str
     legal_disclaimer: str
-    osint_sources: list[SourceConfig]
+    mcp_endpoints: list[McpEndpoint]
     social_targets: list[SocialPlatform]
+    research_prompt: str = ""
     trade_system_feed: str | None = None
 
 
 @dataclass
 class Signal:
-    source: str
-    fetched_at: str
-    content: object
-    query: str | None = None
+    """A signal collected via MCP tool call during the agentic research phase."""
+    tool: str
+    arguments: dict
+    result: object
 
 
 @dataclass

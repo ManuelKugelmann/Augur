@@ -60,9 +60,9 @@ class TestUserPromptPass1:
         assert "2026-03-10" in prompt
 
     def test_includes_serialized_signals(self):
-        signals = [{"source": "tavily", "data": "test data"}]
+        signals = [{"tool": "weather_forecast", "args": {"lat": 50}, "data": "test data"}]
         prompt = user_prompt_pass1(signals, "tomorrow", "2026-03-10", "en")
-        assert "tavily" in prompt
+        assert "weather_forecast" in prompt
         assert "test data" in prompt
 
 
