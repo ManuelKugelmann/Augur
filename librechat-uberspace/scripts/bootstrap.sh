@@ -9,7 +9,6 @@ for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
 done
 
 REPO="${LIBRECHAT_REPO:-${GH_USER:-ManuelKugelmann}/${GH_REPO:-TradingAssistant}}"
-API="https://api.github.com/repos/${REPO}/releases/latest"
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC} $1"; }
@@ -24,10 +23,22 @@ echo -e "${CYAN} LibreChat Lite → ${UBER_HOST:-Uberspace}${NC}"
 echo -e "${CYAN}═══════════════════════════════════════${NC}"
 echo ""
 
-log "Fetching latest release from ${REPO}..."
-JSON=$(gh_curl "$API") || die "Failed to fetch release info"
+# Resolve release: RELEASE_TAG="" → latest, "prerelease" → newest, else specific tag
+JSON=""
+if [[ -z "${RELEASE_TAG:-}" ]]; then
+    log "Fetching latest release from ${REPO}..."
+    JSON=$(gh_curl "https://api.github.com/repos/${REPO}/releases/latest") || die "Failed to fetch release info"
+elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
+    log "Fetching newest release (incl. prereleases) from ${REPO}..."
+    RAW=$(gh_curl "https://api.github.com/repos/${REPO}/releases?per_page=1") || die "Failed to fetch releases"
+    JSON=$(echo "$RAW" | sed -n 's/^\[//;s/\]$//;p' | head -1)
+else
+    log "Fetching release ${RELEASE_TAG} from ${REPO}..."
+    JSON=$(gh_curl "https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}") || die "Failed to fetch release ${RELEASE_TAG}"
+fi
 
-URL=$(echo "$JSON" | grep -o '"browser_download_url":[^"]*"[^"]*librechat-bundle.tar.gz"' | cut -d'"' -f4)
+# Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
+URL=$(echo "$JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
 VER=$(echo "$JSON" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4)
 [[ -z "$URL" ]] && die "No bundle found in release"
 
