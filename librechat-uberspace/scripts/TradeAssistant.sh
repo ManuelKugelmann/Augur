@@ -294,28 +294,53 @@ SVCEOF
         fi
     fi
 
-    # ── 12. Auto-setup data repo (if SSH key exists) ──
-    if [[ ! -d "${DATA}/.git" ]] && [[ -f "$HOME/.ssh/id_ed25519" || -f "$HOME/.ssh/id_rsa" ]]; then
-        if [[ -f "$STACK/librechat-uberspace/scripts/setup-data-repo.sh" ]]; then
-            log "Setting up data repo..."
-            bash "$STACK/librechat-uberspace/scripts/setup-data-repo.sh" \
-                "${GH_USER:-ManuelKugelmann}/${GH_REPO_DATA:-TradeAssistant_Data}" 2>&1 || \
-                warn "Data repo setup failed (run manually: bash $STACK/librechat-uberspace/scripts/setup-data-repo.sh)"
-        fi
-    fi
-
-    # ── 13. Rebuild profile indexes ───────────────
+    # ── 12. Seed profile data into MongoDB (no overwrites) ──
     if [[ -x "$STACK/venv/bin/python" ]]; then
-        PROFILES_DIR="$STACK/profiles" "$STACK/venv/bin/python" -c "
+        log "Seeding profiles from disk into MongoDB..."
+        PROFILES_DIR="$STACK/profiles" MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
+        "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
+from dotenv import load_dotenv
+load_dotenv(os.path.join('$STACK', '.env'))
 try:
-    from server import rebuild_index
-    result = rebuild_index()
-    print(f'Profile indexes rebuilt: {result}')
+    from server import seed_profiles
+    result = seed_profiles()
+    if 'error' in result:
+        print(f'Seed skipped: {result[\"error\"]}')
+    else:
+        total_seeded = sum(v.get('seeded', 0) for v in result.values())
+        total_skipped = sum(v.get('skipped', 0) for v in result.values())
+        print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
+        for kind, counts in sorted(result.items()):
+            print(f'  {kind}: {counts[\"seeded\"]} seeded, {counts[\"skipped\"]} skipped')
 except Exception as e:
-    print(f'Index rebuild skipped: {e}')
+    print(f'Seed skipped: {e}')
 " 2>&1 | while read -r line; do log "$line"; done
+    fi
+
+    # ── 13. Bootstrap profile data via agent (if credentials available) ──
+    if [[ -n "${TA_AGENTS_API_KEY:-}" ]] && [[ -n "${TA_BOOTSTRAP_AGENT_ID:-}" ]]; then
+        local LC_URL="http://localhost:${LC_PORT:-3080}"
+        local LC_READY=false
+        for i in $(seq 1 15); do
+            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                LC_READY=true
+                break
+            fi
+            sleep 2
+        done
+        if [[ "$LC_READY" == true ]]; then
+            log "Bootstrapping profile data via agent..."
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
+                --api-key "$TA_AGENTS_API_KEY" \
+                --agent-id "$TA_BOOTSTRAP_AGENT_ID" \
+                --base-url "$LC_URL" \
+                --timeseries 2>&1 | while read -r line; do log "bootstrap: $line"; done \
+                || warn "Bootstrap failed (run manually: ta bootstrap)"
+        else
+            warn "LibreChat not ready — run bootstrap manually: ta bootstrap"
+        fi
     fi
 
     # ── Done ────────────────────────────────────
@@ -482,19 +507,8 @@ case "$CMD" in
         fi
         ;;
     sync)
-        if [[ -d "$DATA/.git" ]]; then
-            cd "$DATA"
-            git add -A
-            if ! git diff --cached --quiet; then
-                git commit -m "sync $(date -Is)"
-                git push
-                echo -e "${GREEN}✓${NC} Data synced to GitHub"
-            else
-                echo -e "${YELLOW}⚠${NC} No changes to sync"
-            fi
-        else
-            echo -e "${RED}✗${NC} Data repo not initialized. Run: bash $APP/scripts/setup-data-repo.sh"
-        fi
+        echo -e "${YELLOW}⚠${NC} Data file sync removed — all data lives in MongoDB now."
+        echo "  Use 'ta backup' for MongoDB backups."
         ;;
     cron)
         # ── Unified cron hook (every 15 min) ─────────────────────
@@ -509,19 +523,8 @@ case "$CMD" in
         # Random jitter (0–90s) so cron tasks don't all fire at exact :00/:15/:30/:45
         _jitter() { sleep "$((RANDOM % 90))"; }
 
-        # ── Every 15 min: data sync ──
-        _jitter
-        if [[ -d "$DATA/.git" ]]; then
-            cd "$DATA"
-            git add -A
-            if ! git diff --cached --quiet; then
-                git commit -m "sync $(date -Is)"
-                git push && _cron_log "data synced" || _cron_log "data sync push failed"
-            fi
-            cd - >/dev/null
-        fi
-
         # ── Every 15 min: profile auto-commit ──
+        _jitter
         if [[ -d "$STACK/.git" ]]; then
             cd "$STACK"
             git add -A profiles/
