@@ -1,14 +1,24 @@
-# Build pre-built LibreChat bundle and create GitHub release on tag push.
+# Build pre-built LibreChat bundle and create GitHub release.
 # The bundle is a vanilla LibreChat build + MCP node packages + our config/scripts.
 # Versioned by LibreChat's package.json version + commit hash.
 # Uberspace gets a ready-to-run app — no build step on the host.
-# Usage: git tag v0.1.0 && git push --tags
+#
+# Triggers:
+#   - Tag push:    git tag v0.1.0 && git push --tags
+#   - Manual:      Actions → Release LibreChat Bundle → Run workflow
+#                  (optional version input, defaults to "dev-<sha>")
 name: Release LibreChat Bundle
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. v0.1.0-rc1). Leave empty for dev-<sha>."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -22,6 +32,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            # Tag push — use the tag as-is
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            # Manual with explicit version
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            # Manual without version — dev build
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            echo "tag=dev-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Clone and build LibreChat
         run: |
@@ -72,6 +97,9 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
           files: |
             librechat-bundle.tar.gz
           generate_release_notes: true
+          prerelease: ${{ github.event_name == 'workflow_dispatch' }}

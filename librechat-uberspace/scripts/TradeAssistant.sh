@@ -160,12 +160,26 @@ SVCEOF
     local NEED_LC_SETUP=false
     local LC_TMP=""
 
-    # Fetch latest release info from GitHub
-    local RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
-    local RELEASE_JSON="" BUNDLE_URL=""
-    RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
+    # Fetch release info from GitHub
+    # RELEASE_TAG="" → /releases/latest (production)
+    # RELEASE_TAG="prerelease" → newest prerelease
+    # RELEASE_TAG="v0.1.0" or "dev-abc1234" → specific tag
+    local RELEASE_URL="" RELEASE_JSON="" BUNDLE_URL=""
+    if [[ -z "${RELEASE_TAG:-}" ]]; then
+        RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
+        RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
+    elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
+        # Pick the first (newest) release, which includes prereleases
+        RELEASE_JSON=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1" 2>/dev/null) || RELEASE_JSON=""
+        # API returns an array for /releases, extract first element
+        RELEASE_JSON=$(echo "$RELEASE_JSON" | sed -n 's/^\[//;s/\]$//;p' | head -1)
+    else
+        RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}"
+        RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
+    fi
     if [[ -n "$RELEASE_JSON" ]]; then
-        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url":[^"]*"[^"]*librechat-bundle.tar.gz"' | cut -d'"' -f4 || true)
+        # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
+        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
     fi
 
     # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")
@@ -217,7 +231,7 @@ SVCEOF
 
         bash "$STACK/librechat-uberspace/scripts/setup.sh" "$LC_TMP/app" "$VER"
     else
-        die "No prebuilt LibreChat release found. Create one with: git tag v0.x.0 && git push --tags"
+        die "No prebuilt LibreChat release found. Create one via: Actions → Release LibreChat Bundle → Run workflow (or: git tag v0.x.0 && git push --tags)"
     fi
 
     if [[ "$NEED_LC_SETUP" == false ]]; then
