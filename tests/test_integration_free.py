@@ -290,5 +290,4 @@ class TestTransportFree:
         # Small bounding box over Frankfurt airport
         result = run(self.m.flights_in_area(
             lat_min=50.0, lat_max=50.1, lon_min=8.5, lon_max=8.6))
-        assert "count" in result
-        assert "states" in result
+        _check_upstream(result, "count", "states")
