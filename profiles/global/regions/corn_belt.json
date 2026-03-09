@@ -21,6 +21,20 @@
     "Pacific Northwest grain elevators",
     "Rail corridors to ports"
   ],
+  "neighbors": [
+    {"id": "rust_belt", "name": "US Rust Belt", "relevance": "Adjacent industrial region; farm equipment manufacturing and agricultural processing overlap"},
+    {"id": "nafta_usmca", "name": "USMCA", "relevance": "Corn Belt is a core USMCA agricultural engine; corn and soybean exports to Mexico and Canada"},
+    {"id": "silicon_valley", "name": "Silicon Valley", "relevance": "Ag-tech innovation (precision farming, satellite monitoring) increasingly drives Corn Belt productivity"},
+    {"id": "mercosur", "name": "Mercosur", "relevance": "Brazil and Argentina are direct soybean and corn competitors in global export markets"}
+  ],
+  "links": [
+    {"target": "nafta_usmca", "type": "overlap", "description": "Corn Belt sits within USMCA territory; Mexico is the top export market for US corn"},
+    {"target": "rust_belt", "type": "trade", "description": "Great Lakes industrial corridor processes Corn Belt output; ethanol plants and food processing"},
+    {"target": "panama_canal", "type": "corridor", "description": "Gulf export terminals ship grain through the Panama Canal to Asian buyers"},
+    {"target": "mercosur", "type": "rivalry", "description": "Brazil and US compete for global soybean market share; trade war shifts redirect flows"},
+    {"target": "rcep", "type": "trade", "description": "RCEP members (China, Japan, South Korea) are top destinations for US corn and soybean exports"},
+    {"target": "g20", "type": "trade", "description": "G20 agricultural trade policies and biofuel mandates directly affect Corn Belt commodity prices"}
+  ],
   "exposure": {
     "commodities": [
       "corn",

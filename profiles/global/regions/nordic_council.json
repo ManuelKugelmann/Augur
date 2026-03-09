@@ -7,6 +7,21 @@
   "climate": "Subarctic to maritime temperate; Gulf Stream moderates Norwegian coast; continental cold in Finland and interior Sweden; sub-polar in Iceland",
   "hazards": ["volcanic_eruption", "extreme_cold", "storm_surge", "sea_ice", "geomagnetic_storm", "avalanche"],
   "chokepoints": ["Danish_Straits", "GIUK_Gap", "Baltic_Sea_entrance"],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Denmark, Finland, Sweden are EU members; Norway and Iceland in EEA; deeply integrated single market"},
+    {"id": "baltic_sea", "name": "Baltic Sea Region", "relevance": "Sweden, Finland, Denmark are Baltic littoral states; shared maritime security and trade routes"},
+    {"id": "arctic_sea_route", "name": "Arctic Sea Route", "relevance": "Norway, Iceland, Finland, Sweden have Arctic territories; resource extraction and shipping route access"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Finland and Norway share land borders with Russia; direct security and energy implications"},
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "Close intelligence cooperation with anglophone allies on Arctic and NATO security"}
+  ],
+  "links": [
+    {"target": "eu", "type": "overlap", "description": "Three Nordic members in EU; Norway contributes to EU budget via EEA agreement"},
+    {"target": "baltic_sea", "type": "overlap", "description": "Nordic states anchor the western and northern Baltic; joint maritime patrol and energy infrastructure"},
+    {"target": "arctic_sea_route", "type": "corridor", "description": "Nordic nations control key Arctic shipping access points and resource claims"},
+    {"target": "eurozone", "type": "trade", "description": "Finland uses the euro; Denmark pegs its krone to EUR; Sweden's krona floats but trade is eurozone-oriented"},
+    {"target": "ruhr_area", "type": "trade", "description": "Norwegian gas and Swedish iron ore supply German industry; major bilateral trade corridor"},
+    {"target": "cis", "type": "rivalry", "description": "NATO's northern flank faces Russia across the Finnish and Norwegian borders"}
+  ],
   "exposure": {
     "commodities": ["crude_oil", "natural_gas", "fish", "timber", "iron_ore", "aluminum", "hydropower", "rare_earths", "wind_energy"],
     "risk_factors": ["Arctic_geopolitics", "NATO_frontline", "Russian_border_proximity", "energy_transition_leadership", "small_open_economies", "submarine_cable_vulnerability"]

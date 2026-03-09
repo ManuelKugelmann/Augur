@@ -21,6 +21,21 @@
     "Lake Victoria waterways",
     "Nile River headwaters"
   ],
+  "neighbors": [
+    {"id": "horn_of_africa", "name": "Horn of Africa", "relevance": "Adjacent conflict-prone region; refugee flows and trade routes via Djibouti and Somalia"},
+    {"id": "sadc", "name": "Southern African Development Community", "relevance": "Tanzania and DRC are members of both; overlapping trade and development agendas"},
+    {"id": "african_union", "name": "African Union", "relevance": "Parent continental body; EAC is a recognized AU regional economic community"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Access via Djibouti and Eritrea; key export corridor for landlocked EAC members"},
+    {"id": "indian_ocean", "name": "Indo-Pacific", "relevance": "Indian Ocean trade routes connect Mombasa and Dar es Salaam to Asian markets"}
+  ],
+  "links": [
+    {"target": "african_union", "type": "overlap", "description": "All EAC members are AU members; EAC customs union is a building block for AfCFTA"},
+    {"target": "sadc", "type": "overlap", "description": "Tanzania and DRC hold dual membership; creates coordination challenges and trade overlap"},
+    {"target": "horn_of_africa", "type": "trade", "description": "Djibouti port serves as key export corridor for Ethiopian and South Sudanese goods"},
+    {"target": "belt_and_road", "type": "dependency", "description": "Chinese-built Standard Gauge Railway in Kenya and port projects across the region"},
+    {"target": "indo_pacific", "type": "corridor", "description": "Port of Mombasa is East Africa's gateway to Indo-Pacific trade; containerized exports to Asia"},
+    {"target": "red_sea", "type": "corridor", "description": "Red Sea access via Djibouti critical for regional exports; disruptions reroute through Mombasa"}
+  ],
   "exposure": {
     "commodities": [
       "coffee",

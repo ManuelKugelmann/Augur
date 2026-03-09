@@ -7,6 +7,20 @@
   "climate": "Tropical maritime; hot and humid year-round; pronounced wet season (May-December); annual rainfall ~2500mm; El Nino-sensitive",
   "hazards": ["drought", "low_water_levels", "flooding", "El_Nino_disruption", "landslide", "tropical_storm"],
   "chokepoints": ["Panama_Canal", "Gatun_Lake"],
+  "neighbors": [
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "US and Mexico are top canal users; Gulf Coast ports feed Atlantic transit"},
+    {"id": "mercosur", "name": "Mercosur", "relevance": "South American east coast trade relies on canal for Pacific access"},
+    {"id": "cape_of_good_hope", "name": "Cape of Good Hope", "relevance": "Alternative route when canal faces restrictions or congestion"},
+    {"id": "suez_canal", "name": "Suez Canal", "relevance": "Complementary global chokepoint; disruption to either redirects traffic"}
+  ],
+  "links": [
+    {"target": "suez_canal", "type": "corridor", "description": "Twin global canal chokepoints; disruption spillover affects container rates worldwide"},
+    {"target": "nafta_usmca", "type": "trade", "description": "US Gulf-to-Asia trade and grain exports transit the canal heavily"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "Fallback route for oversized vessels and during drought-driven transit restrictions"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Combined chokepoint chain for Asia-US East Coast container trade"},
+    {"target": "corn_belt", "type": "trade", "description": "US Midwest grain exports to Asia transit via Gulf ports through the canal"},
+    {"target": "indo_pacific", "type": "trade", "description": "Canal links Atlantic economies to Indo-Pacific markets"}
+  ],
   "exposure": {
     "commodities": ["container_goods", "grain", "LNG", "LPG", "crude_oil", "dry_bulk", "vehicles"],
     "risk_factors": ["water_level_dependency", "El_Nino_drought_restrictions", "transit_slot_limitations", "capacity_constraints", "climate_change_water_stress", "Atlantic-Pacific_trade_disruption", "canal_fee_increases"]

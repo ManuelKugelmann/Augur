@@ -28,6 +28,24 @@
     "Luzon Strait",
     "Bab el-Mandeb"
   ],
+  "neighbors": [
+    {"id": "asean", "name": "ASEAN", "relevance": "ASEAN centrality is a core organizing principle of Indo-Pacific strategy for all major powers"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Primary contested maritime space within the Indo-Pacific; drives freedom of navigation operations"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "Highest-stakes flashpoint in the Indo-Pacific; semiconductor supply chain concentration risk"},
+    {"id": "strait_of_malacca", "name": "Strait of Malacca", "relevance": "Most critical chokepoint in the Indo-Pacific; links Indian Ocean and Pacific trade flows"},
+    {"id": "quad", "name": "Quad", "relevance": "Quad (US, Japan, Australia, India) is the primary security alignment within the Indo-Pacific"},
+    {"id": "rcep", "name": "RCEP", "relevance": "RCEP is the dominant trade framework spanning Indo-Pacific economies"}
+  ],
+  "links": [
+    {"target": "quad", "type": "alliance", "description": "Quad is the principal security grouping advancing a free and open Indo-Pacific"},
+    {"target": "aukus", "type": "alliance", "description": "AUKUS submarine and technology sharing pact aims to maintain Indo-Pacific deterrence"},
+    {"target": "asean", "type": "trade", "description": "ASEAN is the geographic center and diplomatic anchor of Indo-Pacific engagement"},
+    {"target": "south_china_sea", "type": "overlap", "description": "SCS disputes are the central maritime security challenge within the Indo-Pacific"},
+    {"target": "taiwan_strait", "type": "overlap", "description": "Taiwan Strait contingency planning is the defining military scenario for Indo-Pacific powers"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Malacca is the critical energy and trade chokepoint connecting Indo-Pacific's two oceans"},
+    {"target": "rcep", "type": "trade", "description": "RCEP trade bloc overlaps substantially with the Indo-Pacific strategic region"},
+    {"target": "five_eyes", "type": "alliance", "description": "Three Five Eyes members (US, AUS, NZL) are Indo-Pacific nations driving regional intelligence cooperation"}
+  ],
   "exposure": {
     "commodities": [
       "semiconductors",

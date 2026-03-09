@@ -26,6 +26,23 @@
     "Turkish Straits",
     "Gulf of Guinea"
   ],
+  "neighbors": [
+    {"id": "opec", "name": "OPEC", "relevance": "Core bloc within OPEC+; 13 OPEC members form the foundation of the alliance"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "GCC states hold most OPEC+ spare capacity and swing production capability"},
+    {"id": "cis", "name": "CIS", "relevance": "Russia, Kazakhstan, Azerbaijan are OPEC+ non-OPEC members from the post-Soviet space"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Malaysia and Brunei are OPEC+ members; Southeast Asia is a growing oil demand center"},
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Gulf producers dominate OPEC+ output and policy direction"}
+  ],
+  "links": [
+    {"target": "opec", "type": "overlap", "description": "All 13 OPEC members are part of OPEC+; OPEC forms the core decision-making group"},
+    {"target": "gcc", "type": "overlap", "description": "GCC states lead OPEC+ policy; Saudi Arabia sets baseline for production cuts"},
+    {"target": "cis", "type": "alliance", "description": "Russia is the most important non-OPEC member; Saudi-Russia coordination defines OPEC+ effectiveness"},
+    {"target": "g20", "type": "trade", "description": "OPEC+ production decisions directly impact G20 economies and inflation"},
+    {"target": "strait_of_hormuz", "type": "dependency", "description": "Gulf OPEC+ members depend on Hormuz; Russia uses alternative pipelines and Arctic routes"},
+    {"target": "nafta_usmca", "type": "rivalry", "description": "US shale production competes directly with OPEC+ for market share"},
+    {"target": "brics", "type": "alliance", "description": "Several OPEC+ members are BRICS members; coordinating energy and economic policy"},
+    {"target": "arctic_sea_route", "type": "corridor", "description": "Russia's Arctic LNG exports provide alternative supply outside traditional OPEC+ chokepoints"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

@@ -21,6 +21,22 @@
     "English Channel",
     "Strait of Sicily"
   ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Eurozone is a subset of the EU; non-euro EU members (Poland, Sweden, etc.) are key trade partners"},
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Finland is a eurozone member; Denmark pegs to the euro; Sweden trades heavily with the zone"},
+    {"id": "visegrad", "name": "Visegrád Group", "relevance": "Slovakia is a eurozone member; Poland, Czechia, Hungary are deeply integrated via supply chains"},
+    {"id": "mediterranean", "name": "Mediterranean Sea Basin", "relevance": "Southern eurozone members (Spain, Italy, Greece) face Mediterranean-specific risks"},
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "USD-EUR exchange rate dynamics; transatlantic capital flows and trade"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Energy import dependency; sanctions impact on eurozone banks and trade"}
+  ],
+  "links": [
+    {"target": "eu", "type": "overlap", "description": "All eurozone members are EU members; single market integration amplifies monetary union"},
+    {"target": "visegrad", "type": "trade", "description": "German-Central European automotive supply chain is the eurozone's industrial backbone"},
+    {"target": "ruhr_area", "type": "overlap", "description": "Germany's industrial heartland drives eurozone manufacturing output and exports"},
+    {"target": "mediterranean", "type": "dependency", "description": "Southern eurozone members depend on Mediterranean shipping lanes for energy and trade"},
+    {"target": "g7", "type": "alliance", "description": "ECB coordinates with G7 central banks on monetary policy and financial stability"},
+    {"target": "belt_and_road", "type": "trade", "description": "Chinese investment in eurozone ports and infrastructure raises strategic dependency concerns"}
+  ],
   "exposure": {
     "commodities": [
       "natural_gas",

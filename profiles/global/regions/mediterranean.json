@@ -28,6 +28,23 @@
     "Bosphorus Strait",
     "Dardanelles"
   ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Northern Mediterranean states are EU members; EU migration and trade policy shapes the basin"},
+    {"id": "black_sea", "name": "Black Sea Region", "relevance": "Connected via Turkish Straits; grain and energy flows transit between both basins"},
+    {"id": "suez_canal", "name": "Suez Canal", "relevance": "Eastern gateway linking Mediterranean to Red Sea and Indo-Pacific shipping"},
+    {"id": "levant", "name": "Levant", "relevance": "Eastern Mediterranean states; East Med gas discoveries and regional instability"},
+    {"id": "sahel", "name": "Sahel", "relevance": "Sub-Saharan migration routes terminate at North African Mediterranean coasts"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Suez-Red Sea corridor is the primary Europe-Asia shipping lane entering the Mediterranean"}
+  ],
+  "links": [
+    {"target": "eu", "type": "overlap", "description": "Spain, France, Italy, Greece, Croatia, Slovenia, Malta, Cyprus are EU members on the Mediterranean"},
+    {"target": "bosphorus", "type": "corridor", "description": "Turkish Straits connect Mediterranean to Black Sea; critical for grain and energy transit"},
+    {"target": "suez_canal", "type": "corridor", "description": "Suez Canal handles 12-15% of global trade entering the Mediterranean from the east"},
+    {"target": "levant", "type": "overlap", "description": "Eastern Mediterranean gas fields (Leviathan, Zohr) involve Cyprus, Israel, Egypt, Lebanon"},
+    {"target": "black_sea", "type": "trade", "description": "Ukrainian and Russian grain and energy exports flow through Turkish Straits into the Med"},
+    {"target": "opec", "type": "dependency", "description": "North African OPEC members (Algeria, Libya) supply oil and gas to southern European markets"},
+    {"target": "african_union", "type": "trade", "description": "North African AU members are key trade and migration partners for EU Mediterranean states"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

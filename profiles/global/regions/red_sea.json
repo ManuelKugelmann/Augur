@@ -19,6 +19,22 @@
     "Suez Canal",
     "Strait of Tiran"
   ],
+  "neighbors": [
+    {"id": "suez_canal", "name": "Suez Canal", "relevance": "Northern terminus; Red Sea traffic feeds directly into Suez for Europe-bound trade"},
+    {"id": "horn_of_africa", "name": "Horn of Africa", "relevance": "Southern coast; Djibouti and Eritrea control Bab el-Mandeb approaches"},
+    {"id": "levant", "name": "Levant", "relevance": "Northeastern neighbor; Israel and Jordan have Red Sea port access at Eilat/Aqaba"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Saudi Arabia's western coast dominates the eastern Red Sea shore"},
+    {"id": "sahel", "name": "Sahel Belt", "relevance": "Instability in Sudan and Chad spills into Red Sea coastal areas"},
+    {"id": "mediterranean", "name": "Mediterranean", "relevance": "Connected via Suez; Red Sea disruption reroutes Mediterranean-bound shipping"}
+  ],
+  "links": [
+    {"target": "suez_canal", "type": "corridor", "description": "Red Sea is the mandatory southern approach to the Suez Canal for Asia-Europe trade"},
+    {"target": "horn_of_africa", "type": "dependency", "description": "Bab el-Mandeb chokepoint controlled by Horn of Africa states; piracy and Houthi threats originate here"},
+    {"target": "strait_of_hormuz", "type": "corridor", "description": "Gulf oil transits Hormuz then enters the Red Sea en route to Suez and Europe"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "When Red Sea is unsafe, shipping reroutes around the Cape adding 10-14 days"},
+    {"target": "persian_gulf", "type": "trade", "description": "Saudi pipelines connect Gulf oil fields to Red Sea export terminals at Yanbu"},
+    {"target": "gcc", "type": "trade", "description": "Saudi NEOM and Red Sea tourism megaprojects drive regional economic development"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

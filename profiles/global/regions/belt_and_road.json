@@ -29,6 +29,24 @@
     "Piraeus Port (Greece)",
     "Hambantota Port (Sri Lanka)"
   ],
+  "neighbors": [
+    {"id": "sco", "name": "Shanghai Cooperation Organisation", "relevance": "Heavy membership overlap; SCO provides security framework alongside BRI economic corridors"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Southeast Asian BRI recipients; ports, railways, and digital infrastructure across the region"},
+    {"id": "african_union", "name": "African Union", "relevance": "BRI extends into East and West Africa; Kenya-Ethiopia railway and port projects"},
+    {"id": "eu", "name": "European Union", "relevance": "BRI western terminus; Italy, Greece, Hungary participate despite EU screening concerns"},
+    {"id": "central_asia", "name": "Central Asia", "relevance": "Core overland corridor through Kazakhstan, Uzbekistan, Turkmenistan; China-Europe rail links"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Saudi Arabia and UAE are BRI partners; Gulf ports and energy infrastructure investments"}
+  ],
+  "links": [
+    {"target": "brics", "type": "overlap", "description": "China uses BRI to deepen ties with BRICS partners; infrastructure finance complements BRICS development bank"},
+    {"target": "sco", "type": "overlap", "description": "SCO member states host major BRI corridors; shared China-Russia strategic interest in Central Asian connectivity"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Maritime Silk Road transits Malacca; BRI port investments in Malaysia and Singapore"},
+    {"target": "suez_canal", "type": "corridor", "description": "Maritime Silk Road routes through Suez; Egypt is a BRI partner with canal zone investments"},
+    {"target": "rcep", "type": "trade", "description": "BRI infrastructure supports RCEP trade flows; China links both initiatives for Asia-Pacific integration"},
+    {"target": "persian_gulf", "type": "trade", "description": "China-Pakistan Economic Corridor provides alternative to Malacca for Gulf energy imports"},
+    {"target": "g7", "type": "rivalry", "description": "G7 launched competing infrastructure initiatives (PGII) to counter BRI influence"},
+    {"target": "red_sea", "type": "corridor", "description": "Djibouti naval base and port investments secure BRI maritime route through Red Sea"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

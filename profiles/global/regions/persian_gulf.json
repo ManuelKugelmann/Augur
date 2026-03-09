@@ -7,6 +7,22 @@
   "climate": "Hyper-arid desert; extremely hot summers exceeding 50C; mild winters; minimal rainfall; high humidity along coastal areas",
   "hazards": ["extreme_heat", "dust_storms", "drought", "sea_level_rise", "cyclone", "seismic_activity", "oil_spill"],
   "chokepoints": ["Strait_of_Hormuz", "Shatt_al-Arab_waterway", "Bab_el-Mandeb_access"],
+  "neighbors": [
+    {"id": "strait_of_hormuz", "name": "Strait of Hormuz", "relevance": "Sole maritime exit from the Gulf; all seaborne oil exports must transit this chokepoint"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Six of eight Gulf littoral states form the GCC economic bloc"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Connected via Saudi Arabia's dual coastline; alternative energy export corridor"},
+    {"id": "levant", "name": "Levant", "relevance": "Northern neighbor via Iraq; pipeline routes and geopolitical spillover"},
+    {"id": "opec", "name": "OPEC", "relevance": "Gulf states dominate OPEC production and spare capacity"}
+  ],
+  "links": [
+    {"target": "strait_of_hormuz", "type": "dependency", "description": "All Gulf seaborne crude and LNG exports funnel through the Strait of Hormuz"},
+    {"target": "gcc", "type": "overlap", "description": "GCC members comprise the Arab side of the Persian Gulf littoral"},
+    {"target": "opec", "type": "overlap", "description": "SAU, IRN, IRQ, KWT, ARE are OPEC members accounting for most Gulf production"},
+    {"target": "indo_pacific", "type": "trade", "description": "East Asia is the dominant buyer of Gulf crude oil and LNG"},
+    {"target": "belt_and_road", "type": "trade", "description": "China is the largest single buyer of Gulf oil; BRI infrastructure investments across the region"},
+    {"target": "red_sea", "type": "corridor", "description": "Saudi East-West pipeline and Red Sea ports provide partial bypass of Hormuz"},
+    {"target": "suez_canal", "type": "corridor", "description": "Gulf oil and gas bound for Europe transits Red Sea and Suez Canal"}
+  ],
   "exposure": {
     "commodities": ["crude_oil", "natural_gas", "LNG", "petrochemicals", "aluminum", "desalinated_water", "dates", "fish"],
     "risk_factors": ["oil_price_dependency", "Iran-Saudi_rivalry", "Strait_of_Hormuz_closure_risk", "water_scarcity", "migrant_labor_dependency", "nuclear_proliferation", "drone_and_missile_attacks", "economic_diversification_pressure"]

@@ -20,6 +20,23 @@
     "SFO/SJC airports",
     "Pacific submarine cable landings"
   ],
+  "neighbors": [
+    {"id": "nafta_usmca", "name": "USMCA", "relevance": "Silicon Valley sits within USMCA territory; digital trade provisions and IP rules shaped by tech industry lobbying"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "Pacific Rim is the primary market and supply chain partner; semiconductor fabs in Taiwan, assembly in China and Southeast Asia"},
+    {"id": "corn_belt", "name": "US Corn Belt", "relevance": "Ag-tech innovation from Silicon Valley (precision farming, satellite monitoring) transforms Corn Belt productivity"},
+    {"id": "rust_belt", "name": "US Rust Belt", "relevance": "EV and autonomous vehicle tech developed in Silicon Valley is manufactured in Rust Belt factories"},
+    {"id": "greater_bay_area", "name": "Greater Bay Area (Shenzhen)", "relevance": "Primary global competitor in hardware, AI, and consumer electronics; talent and capital competition"}
+  ],
+  "links": [
+    {"target": "nafta_usmca", "type": "overlap", "description": "Silicon Valley drives USMCA digital trade chapters; tech firms operate across all three member countries"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "TSMC and other Taiwan fabs produce the advanced chips Silicon Valley designs; strait tensions are existential risk"},
+    {"target": "greater_bay_area", "type": "rivalry", "description": "Shenzhen tech ecosystem competes in AI, 5G, and consumer hardware; US-China tech decoupling reshapes supply chains"},
+    {"target": "rust_belt", "type": "trade", "description": "EV batteries, autonomous driving systems, and industrial automation flow from Valley R&D to Midwest manufacturing"},
+    {"target": "five_eyes", "type": "alliance", "description": "Five Eyes intelligence sharing shapes tech export controls, cybersecurity standards, and data governance"},
+    {"target": "rcep", "type": "trade", "description": "RCEP members are major markets for cloud services, semiconductors, and consumer tech; regulatory divergence rising"},
+    {"target": "eu", "type": "trade", "description": "EU digital regulation (GDPR, AI Act, DMA) directly constrains Silicon Valley business models and market access"},
+    {"target": "cptpp", "type": "trade", "description": "CPTPP digital trade rules affect tech IP and data flow across Pacific markets where Valley firms operate"}
+  ],
   "exposure": {
     "commodities": [
       "semiconductors",

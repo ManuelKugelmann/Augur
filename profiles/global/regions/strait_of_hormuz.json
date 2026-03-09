@@ -7,6 +7,21 @@
   "climate": "Hyper-arid; extreme summer heat; high humidity; occasional shamal dust storms",
   "hazards": ["naval_confrontation", "mine_warfare", "oil_spill", "extreme_heat", "dust_storms", "piracy"],
   "chokepoints": ["Strait_of_Hormuz"],
+  "neighbors": [
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Hormuz is the sole exit from the Persian Gulf to open ocean"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "GCC oil exports depend entirely on Hormuz passage"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Alternative routing via pipelines to Red Sea ports if Hormuz is blocked"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "Oil tankers exiting Hormuz head east to Asian markets via Indian Ocean"}
+  ],
+  "links": [
+    {"target": "persian_gulf", "type": "corridor", "description": "Sole maritime exit for all Persian Gulf seaborne trade"},
+    {"target": "gcc", "type": "dependency", "description": "GCC economies depend on unimpeded Hormuz transit for oil revenue"},
+    {"target": "opec", "type": "dependency", "description": "~21% of global oil supply transits Hormuz; disruption would shock OPEC output delivery"},
+    {"target": "suez_canal", "type": "corridor", "description": "Gulf-to-Europe oil route runs Hormuz to Red Sea to Suez"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "Fallback route for Gulf oil to Europe/Americas if Suez is also disrupted"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Gulf crude bound for East Asia transits Hormuz then Malacca to reach China, Japan, Korea"},
+    {"target": "red_sea", "type": "corridor", "description": "Saudi East-West pipeline to Yanbu offers partial Hormuz bypass via Red Sea"}
+  ],
   "exposure": {
     "commodities": ["crude_oil", "LNG", "condensates", "petrochemicals", "refined_products"],
     "risk_factors": ["oil_transit_disruption", "Iran_military_posture", "tanker_seizures", "naval_escalation", "global_oil_price_shock", "insurance_premium_spikes", "IRGC_naval_forces", "mine_threat"]

@@ -22,6 +22,21 @@
     "GIUK Gap",
     "Northwest Passage"
   ],
+  "neighbors": [
+    {"id": "g7", "name": "Group of Seven", "relevance": "USA, UK, Canada overlap; Five Eyes intelligence informs G7 sanctions and policy"},
+    {"id": "aukus", "name": "AUKUS", "relevance": "USA, UK, Australia overlap; AUKUS is the defense-tech subset of Five Eyes"},
+    {"id": "quad", "name": "Quadrilateral Security Dialogue", "relevance": "USA and Australia overlap; Quad extends Five Eyes reach into Indo-Pacific"},
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "USA and Canada are both USMCA and Five Eyes; trade and security interlinked"},
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Close intelligence partners; Nordic states share signals intelligence with Five Eyes"}
+  ],
+  "links": [
+    {"target": "aukus", "type": "alliance", "description": "Three of five members form AUKUS; nuclear submarine and advanced tech sharing"},
+    {"target": "g7", "type": "alliance", "description": "Five Eyes intelligence underpins G7 economic security and sanctions coordination"},
+    {"target": "quad", "type": "alliance", "description": "USA and Australia bridge Five Eyes and Quad; Indo-Pacific intelligence sharing"},
+    {"target": "indo_pacific", "type": "dependency", "description": "Five Eyes maritime surveillance covers Indo-Pacific sea lanes and chokepoints"},
+    {"target": "arctic_sea_route", "type": "dependency", "description": "Canada and USA have Arctic sovereignty interests; monitoring Russian Northern Sea Route"},
+    {"target": "cptpp", "type": "trade", "description": "Canada, Australia, New Zealand in CPTPP; Five Eyes trade screening affects market access"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

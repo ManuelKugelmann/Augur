@@ -22,6 +22,22 @@
     "Tsushima Strait",
     "Strait of Sicily"
   ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "France, Germany, Italy are EU members; G7 and EU policy closely aligned"},
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "USA, UK, Canada overlap; intelligence sharing underpins G7 security coordination"},
+    {"id": "g20", "name": "Group of Twenty", "relevance": "G7 is a subset of G20; advanced economies caucus within broader forum"},
+    {"id": "eurozone", "name": "Eurozone", "relevance": "France, Germany, Italy share the euro; ECB monetary policy affects G7 coordination"},
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "USA, Canada are G7 members and USMCA partners; North American trade integration"}
+  ],
+  "links": [
+    {"target": "brics", "type": "rivalry", "description": "G7 and BRICS represent competing visions for global governance and financial architecture"},
+    {"target": "g20", "type": "overlap", "description": "All G7 members sit in G20; G7 coordinates positions ahead of G20 summits"},
+    {"target": "quad", "type": "alliance", "description": "USA and Japan bridge G7 to Quad; Indo-Pacific strategy alignment"},
+    {"target": "eu", "type": "overlap", "description": "Three G7 members are EU states; shared trade, climate, and regulatory policy"},
+    {"target": "five_eyes", "type": "alliance", "description": "Three G7 members in Five Eyes; intelligence informs G7 sanctions and security policy"},
+    {"target": "indo_pacific", "type": "trade", "description": "G7 supply chain resilience agenda focused on reducing Indo-Pacific chokepoint risks"},
+    {"target": "aukus", "type": "alliance", "description": "USA and UK in both G7 and AUKUS; defense technology sharing"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

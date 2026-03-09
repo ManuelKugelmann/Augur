@@ -18,6 +18,21 @@
     "Rio de la Plata",
     "Parana River waterway"
   ],
+  "neighbors": [
+    {"id": "nafta_usmca", "name": "USMCA", "relevance": "US is a major trade partner; agricultural and energy exports flow north; tariff policies affect Mercosur competitiveness"},
+    {"id": "eu", "name": "European Union", "relevance": "EU-Mercosur trade deal (agreed 2019, ratification ongoing) would create one of the world's largest free trade zones"},
+    {"id": "brics", "name": "BRICS", "relevance": "Brazil and Argentina are BRICS members; South-South trade and investment growing"},
+    {"id": "cptpp", "name": "CPTPP", "relevance": "Chile (associate member) is in CPTPP; Mercosur countries exploring Pacific trade links"},
+    {"id": "cape_of_good_hope", "name": "Cape of Good Hope Sea Route", "relevance": "South Atlantic shipping connects Brazilian ports to southern Africa and Asia via the Cape"}
+  ],
+  "links": [
+    {"target": "eu", "type": "trade", "description": "EU-Mercosur agreement covers beef, auto parts, and industrial goods; decades of negotiation"},
+    {"target": "nafta_usmca", "type": "trade", "description": "US is Brazil's second-largest trade partner; soybeans, steel, and aircraft are key exports"},
+    {"target": "brics", "type": "alliance", "description": "Brazil is a founding BRICS member; Argentina joined in 2024; alternative development finance via NDB"},
+    {"target": "g20", "type": "alliance", "description": "Brazil and Argentina are G20 members; Brazil hosted 2024 G20 summit"},
+    {"target": "panama_canal", "type": "corridor", "description": "Brazilian and Argentine grain exports transit the Panama Canal to reach Asian markets"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "Iron ore and soybean shipments from Brazil to China often route via the Cape"}
+  ],
   "exposure": {
     "commodities": [
       "soybeans",

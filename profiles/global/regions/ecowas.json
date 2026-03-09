@@ -23,6 +23,21 @@
     "Niger River delta",
     "Strait of Gibraltar approaches"
   ],
+  "neighbors": [
+    {"id": "sahel", "name": "Sahel", "relevance": "Northern ECOWAS members (Mali, Niger, Burkina Faso) overlap with the Sahel; security and climate risks spill over"},
+    {"id": "african_union", "name": "African Union", "relevance": "Parent continental body; ECOWAS is a recognized AU regional economic community"},
+    {"id": "eu", "name": "European Union", "relevance": "Major trade partner and development donor; Economic Partnership Agreements govern trade terms"},
+    {"id": "mediterranean", "name": "Mediterranean Sea", "relevance": "Proximity drives migration routes and trade links to North Africa and Europe"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Chinese infrastructure investment in ports (Lekki, Kribi) and railways across West Africa"}
+  ],
+  "links": [
+    {"target": "african_union", "type": "overlap", "description": "All ECOWAS members are AU members; AfCFTA integration builds on ECOWAS trade liberalization"},
+    {"target": "sahel", "type": "overlap", "description": "Mali, Niger, Burkina Faso span both blocs; Sahel security crisis drives ECOWAS intervention"},
+    {"target": "opec", "type": "trade", "description": "Nigeria is a major OPEC producer; oil revenues dominate regional economics"},
+    {"target": "eu", "type": "trade", "description": "EU is the largest export destination; cocoa, oil, and minerals flow north under EPA frameworks"},
+    {"target": "eac", "type": "trade", "description": "Intra-African trade corridor; West-to-East trade growing under AfCFTA"},
+    {"target": "gulf_of_guinea", "type": "corridor", "description": "Coastal shipping lane for oil and container exports; piracy hotspot requiring naval cooperation"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

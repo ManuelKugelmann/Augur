@@ -7,6 +7,21 @@
   "climate": "Mediterranean transitioning to humid subtropical; mild wet winters and warm dry summers; fog common in the strait",
   "hazards": ["ship_collision", "oil_spill", "seismic_activity", "fog", "strong_currents", "geopolitical_blockade"],
   "chokepoints": ["Bosphorus", "Dardanelles", "Sea_of_Marmara"],
+  "neighbors": [
+    {"id": "black_sea", "name": "Black Sea Region", "relevance": "Sole maritime exit for all Black Sea states; grain and energy flows depend on strait transit"},
+    {"id": "mediterranean", "name": "Mediterranean Sea Basin", "relevance": "Western outlet of the straits; connects Black Sea trade to global shipping lanes"},
+    {"id": "eu", "name": "European Union", "relevance": "EU members Romania and Bulgaria depend on strait access for Black Sea exports"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Russia's warm-water naval access and energy exports transit the straits"},
+    {"id": "levant", "name": "Levant", "relevance": "Eastern Mediterranean proximity; Turkey's role in regional energy hub plans"}
+  ],
+  "links": [
+    {"target": "black_sea", "type": "corridor", "description": "All Black Sea maritime trade must transit the Turkish Straits under the Montreux Convention"},
+    {"target": "mediterranean", "type": "corridor", "description": "Straits connect Black Sea grain and energy exports to Mediterranean shipping routes"},
+    {"target": "suez_canal", "type": "corridor", "description": "Black Sea cargo transiting the straits continues through Suez Canal to reach Asian markets"},
+    {"target": "cis", "type": "dependency", "description": "Russian oil and gas exports via Black Sea depend on Turkish Strait access"},
+    {"target": "eu", "type": "trade", "description": "EU-bound Ukrainian and Romanian commodities transit the straits to reach southern European ports"},
+    {"target": "persian_gulf", "type": "corridor", "description": "BTC and TANAP pipelines bypass the straits but connect to the same Caspian-to-Europe energy corridor"}
+  ],
   "exposure": {
     "commodities": ["crude_oil", "grain", "coal", "steel", "sunflower_oil", "LPG", "fertilizer"],
     "risk_factors": ["Montreux_Convention_politics", "Russia_Black_Sea_access", "congestion", "Istanbul_seismic_risk", "Ukraine_war_grain_transit", "Turkey_leverage", "naval_access_control"]

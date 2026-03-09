@@ -7,6 +7,21 @@
   "climate": "Oceanic (Cfb), mild winters, cool summers",
   "hazards": ["flooding", "industrial pollution", "heat waves"],
   "chokepoints": ["Rhine-Ruhr inland waterways", "Duisburg inland port"],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Ruhr is embedded in the EU single market; EU industrial and climate policy directly shapes its economy"},
+    {"id": "eurozone", "name": "Euro Area", "relevance": "Germany is the eurozone's largest economy; Ruhr industrial output is a key eurozone GDP component"},
+    {"id": "visegrad", "name": "Visegrád Group", "relevance": "V4 supplies automotive components and labor to Ruhr-connected supply chains"},
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Norwegian gas and Swedish iron ore are critical Ruhr industrial inputs"},
+    {"id": "baltic_sea", "name": "Baltic Sea Region", "relevance": "Hamburg and Baltic ports handle Ruhr export logistics; energy imports arrive via Baltic pipelines"}
+  ],
+  "links": [
+    {"target": "eu", "type": "overlap", "description": "EU emissions trading and Green Deal policies directly impact Ruhr steel and chemical producers"},
+    {"target": "eurozone", "type": "overlap", "description": "Ruhr industrial exports are a pillar of Germany's trade surplus within the eurozone"},
+    {"target": "visegrad", "type": "trade", "description": "Integrated automotive and machinery supply chain between Ruhr OEMs and V4 component factories"},
+    {"target": "nordic_council", "type": "dependency", "description": "Ruhr industry depends on Norwegian natural gas and Swedish iron ore for steel production"},
+    {"target": "mediterranean", "type": "corridor", "description": "Rhine-Rhone corridor connects Ruhr to Mediterranean ports for southern export routes"},
+    {"target": "belt_and_road", "type": "trade", "description": "Duisburg inland port is the primary European terminus of China-Europe rail freight"}
+  ],
   "exposure": {
     "commodities": ["steel", "chemicals", "coal", "natural gas", "electricity"],
     "risk_factors": ["energy transition costs", "industrial restructuring", "aging infrastructure", "labor market shifts", "EU carbon pricing"]

@@ -26,6 +26,23 @@
     "Lombok Strait",
     "Torres Strait"
   ],
+  "neighbors": [
+    {"id": "asean", "name": "ASEAN", "relevance": "ASEAN is the founding bloc and institutional anchor of RCEP"},
+    {"id": "cptpp", "name": "CPTPP", "relevance": "Overlapping membership and competing trade liberalization framework in Asia-Pacific"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "RCEP membership largely coincides with the Indo-Pacific strategic region"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Key maritime trade corridor connecting RCEP economies; disputes affect member relations"},
+    {"id": "strait_of_malacca", "name": "Strait of Malacca", "relevance": "Primary shipping lane for intra-RCEP trade between East Asia and Southeast Asia/Oceania"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "Critical semiconductor supply chain corridor; Taiwan not an RCEP member but deeply integrated"}
+  ],
+  "links": [
+    {"target": "asean", "type": "trade", "description": "ASEAN's 10 members form the institutional core that initiated and hosts RCEP"},
+    {"target": "cptpp", "type": "trade", "description": "Seven nations belong to both RCEP and CPTPP, creating overlapping trade liberalization"},
+    {"target": "quad", "type": "alliance", "description": "Three Quad members (AUS, JPN, IND observer) are RCEP parties, blending security with trade"},
+    {"target": "belt_and_road", "type": "trade", "description": "China uses RCEP to complement BRI economic integration across Asia-Pacific"},
+    {"target": "south_china_sea", "type": "corridor", "description": "Maritime trade routes through the South China Sea carry the bulk of intra-RCEP shipping"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Energy and goods transit between RCEP's Northeast and Southeast Asian members"},
+    {"target": "indo_pacific", "type": "overlap", "description": "RCEP membership substantially overlaps with Indo-Pacific strategic frameworks"}
+  ],
   "exposure": {
     "commodities": [
       "semiconductors",

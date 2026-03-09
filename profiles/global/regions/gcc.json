@@ -18,6 +18,23 @@
     "Bab el-Mandeb",
     "Suez Canal approaches"
   ],
+  "neighbors": [
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "GCC members border the Persian Gulf; shared maritime space and oil export routes"},
+    {"id": "strait_of_hormuz", "name": "Strait of Hormuz", "relevance": "Primary oil and LNG export chokepoint for GCC producers"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Saudi Arabia's western coast; alternative export route and NEOM development corridor"},
+    {"id": "levant", "name": "Levant", "relevance": "Northern neighbor; GCC investment destination and refugee crisis spillover"},
+    {"id": "horn_of_africa", "name": "Horn of Africa", "relevance": "Across the Red Sea; GCC military bases in Djibouti and Eritrea, labor migration source"},
+    {"id": "opec", "name": "OPEC", "relevance": "SAU, ARE, KWT are core OPEC members; production quota coordination"}
+  ],
+  "links": [
+    {"target": "opec", "type": "alliance", "description": "Saudi Arabia leads OPEC; UAE and Kuwait are key members setting global oil policy"},
+    {"target": "opec_plus", "type": "alliance", "description": "GCC states anchor OPEC+ production coordination with Russia and other producers"},
+    {"target": "strait_of_hormuz", "type": "dependency", "description": "Over 80% of GCC oil exports transit the Strait of Hormuz"},
+    {"target": "red_sea", "type": "corridor", "description": "Saudi Red Sea coast provides alternative export route and Vision 2030 development axis"},
+    {"target": "brics", "type": "alliance", "description": "SAU and ARE joined BRICS in 2024, diversifying geopolitical alignments"},
+    {"target": "belt_and_road", "type": "trade", "description": "Major BRI partners; Chinese infrastructure investment and oil-for-development deals"},
+    {"target": "indo_pacific", "type": "trade", "description": "Asia is the primary destination for GCC oil and gas exports"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

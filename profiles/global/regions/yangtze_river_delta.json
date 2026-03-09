@@ -21,6 +21,21 @@
     "Port of Ningbo-Zhoushan",
     "Nanjing Yangtze crossings"
   ],
+  "neighbors": [
+    {"id": "pearl_river_delta", "name": "Pearl River Delta", "relevance": "China's other major manufacturing cluster; competes in electronics, complements in heavy industry"},
+    {"id": "greater_bay_area", "name": "Greater Bay Area", "relevance": "GBA and YRD are China's twin economic engines with interlinked supply chains"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Shanghai and Ningbo ports route significant trade through the South China Sea"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "YRD semiconductor and electronics sectors depend on Taiwan supply; shipping lanes pass nearby"},
+    {"id": "rcep", "name": "RCEP", "relevance": "YRD is the primary Chinese hub for RCEP intra-regional trade and investment"}
+  ],
+  "links": [
+    {"target": "pearl_river_delta", "type": "trade", "description": "Complementary manufacturing clusters with extensive domestic supply chain linkages"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "YRD chip fabs and electronics assemblers rely on Taiwan foundry output and IP"},
+    {"target": "south_china_sea", "type": "corridor", "description": "Container and energy shipments from Shanghai/Ningbo transit through South China Sea routes"},
+    {"target": "rcep", "type": "trade", "description": "Shanghai is China's primary port for RCEP trade with Japan, Korea, and ASEAN"},
+    {"target": "belt_and_road", "type": "corridor", "description": "Shanghai serves as maritime Silk Road hub; Yangtze connects inland BRI rail corridors"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Energy imports from the Middle East and trade with Europe transit via Malacca to YRD ports"}
+  ],
   "exposure": {
     "commodities": [
       "semiconductors",

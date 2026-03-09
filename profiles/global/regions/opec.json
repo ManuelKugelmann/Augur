@@ -23,6 +23,23 @@
     "Gulf of Guinea",
     "Strait of Gibraltar"
   ],
+  "neighbors": [
+    {"id": "opec_plus", "name": "OPEC+", "relevance": "Extended alliance adding Russia, Kazakhstan, and others for broader production coordination"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "SAU, ARE, KWT are both OPEC and GCC members; Gulf states hold most spare capacity"},
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Five OPEC members border the Gulf; largest concentration of OPEC production"},
+    {"id": "strait_of_hormuz", "name": "Strait of Hormuz", "relevance": "Critical export chokepoint for Gulf-based OPEC members"},
+    {"id": "ecowas", "name": "ECOWAS", "relevance": "Nigeria is both an OPEC and ECOWAS member; Gulf of Guinea oil production"}
+  ],
+  "links": [
+    {"target": "opec_plus", "type": "alliance", "description": "OPEC+ extends coordination to non-OPEC producers for greater market control"},
+    {"target": "gcc", "type": "overlap", "description": "SAU, ARE, KWT are core members of both OPEC and GCC; Saudi Arabia leads both"},
+    {"target": "strait_of_hormuz", "type": "dependency", "description": "Gulf OPEC members depend on Hormuz for seaborne oil exports"},
+    {"target": "g20", "type": "trade", "description": "G20 nations are the primary consumers of OPEC oil; price negotiations affect global economy"},
+    {"target": "brics", "type": "alliance", "description": "SAU, ARE, IRN joined BRICS; aligning OPEC interests with emerging economy bloc"},
+    {"target": "belt_and_road", "type": "trade", "description": "China is the largest single buyer of OPEC crude; BRI investments flow to OPEC members"},
+    {"target": "red_sea", "type": "corridor", "description": "OPEC oil bound for Europe transits the Red Sea and Suez Canal"},
+    {"target": "african_union", "type": "overlap", "description": "Seven OPEC members are African states; AU energy policy intersects with OPEC quotas"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

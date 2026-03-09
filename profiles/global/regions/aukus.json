@@ -20,6 +20,21 @@
     "GIUK Gap",
     "Lombok Strait"
   ],
+  "neighbors": [
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "All three AUKUS members are Five Eyes partners; intelligence sharing foundation"},
+    {"id": "quad", "name": "Quadrilateral Security Dialogue", "relevance": "USA and Australia overlap; AUKUS defense tech supports Quad strategic goals"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "AUKUS is explicitly designed for Indo-Pacific deterrence and security"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Primary operational theater for AUKUS submarine and maritime capabilities"},
+    {"id": "asean", "name": "ASEAN", "relevance": "ASEAN nations are concerned about AUKUS impact on regional arms dynamics"}
+  ],
+  "links": [
+    {"target": "five_eyes", "type": "alliance", "description": "AUKUS is the defense-industrial subset of the broader Five Eyes alliance"},
+    {"target": "quad", "type": "alliance", "description": "USA and Australia in both; AUKUS military capabilities enable Quad strategic posture"},
+    {"target": "south_china_sea", "type": "dependency", "description": "AUKUS submarine patrols and advanced capabilities focused on South China Sea deterrence"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "AUKUS deterrence posture supports Taiwan Strait stability and semiconductor access"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "AUKUS maritime domain awareness covers Malacca Strait, critical for regional trade"},
+    {"target": "g7", "type": "alliance", "description": "USA and UK bridge AUKUS to G7 technology and security policy coordination"}
+  ],
   "exposure": {
     "commodities": [
       "nuclear_submarine_technology",

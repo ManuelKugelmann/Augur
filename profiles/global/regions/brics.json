@@ -23,6 +23,24 @@
     "Bab el-Mandeb",
     "Cape of Good Hope"
   ],
+  "neighbors": [
+    {"id": "sco", "name": "Shanghai Cooperation Organisation", "relevance": "Heavy membership overlap with Russia, China, India, Iran; shared security and economic agenda"},
+    {"id": "g20", "name": "Group of Twenty", "relevance": "All BRICS members are G20 members; competing visions for global economic governance"},
+    {"id": "opec_plus", "name": "OPEC+", "relevance": "Saudi Arabia, UAE, Russia, Iran are both BRICS+ and OPEC+; energy policy coordination"},
+    {"id": "african_union", "name": "African Union", "relevance": "Ethiopia, Egypt, South Africa bridge BRICS to the African continent"},
+    {"id": "asean", "name": "ASEAN", "relevance": "China and India are major ASEAN trade partners; BRICS expansion targets Southeast Asia"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Saudi Arabia and UAE membership links BRICS to Gulf petrodollar economies"}
+  ],
+  "links": [
+    {"target": "g7", "type": "rivalry", "description": "BRICS positions itself as counterweight to G7-led global order; dedollarization agenda"},
+    {"target": "sco", "type": "overlap", "description": "Shared members (China, Russia, India, Iran) and parallel summit diplomacy"},
+    {"target": "opec_plus", "type": "trade", "description": "BRICS energy producers coordinate oil output; influence global energy pricing"},
+    {"target": "belt_and_road", "type": "dependency", "description": "China's BRI infrastructure spans BRICS member states; development finance linkage"},
+    {"target": "strait_of_hormuz", "type": "corridor", "description": "Iran, Saudi Arabia, UAE energy exports transit Hormuz; critical for BRICS oil trade"},
+    {"target": "rcep", "type": "trade", "description": "China bridges BRICS and RCEP; overlapping trade liberalization frameworks"},
+    {"target": "suez_canal", "type": "corridor", "description": "Egypt membership gives BRICS direct stake in Suez transit chokepoint"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "South Africa controls alternative route for BRICS commodity shipments"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

@@ -22,6 +22,22 @@
     "Sunda Strait",
     "South China Sea"
   ],
+  "neighbors": [
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Core maritime space for ASEAN members; territorial disputes with China shape defense and trade policy"},
+    {"id": "strait_of_malacca", "name": "Strait of Malacca", "relevance": "Primary shipping chokepoint for ASEAN trade; Malaysia, Singapore, and Indonesia are littoral states"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "ASEAN centrality is a key pillar of Indo-Pacific strategy for all major powers"},
+    {"id": "rcep", "name": "Regional Comprehensive Economic Partnership", "relevance": "ASEAN-led mega trade agreement integrating ASEAN with major Asian economies"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Major recipient of BRI infrastructure investment in ports, rail, and industrial zones"}
+  ],
+  "links": [
+    {"target": "rcep", "type": "trade", "description": "ASEAN initiated and hosts RCEP, the world's largest free trade agreement"},
+    {"target": "south_china_sea", "type": "rivalry", "description": "Multiple ASEAN members contest China's nine-dash line claims"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Critical energy and goods transit route connecting ASEAN to global markets"},
+    {"target": "quad", "type": "alliance", "description": "ASEAN is a focal point of Quad engagement and Indo-Pacific strategy"},
+    {"target": "cptpp", "type": "trade", "description": "Several ASEAN members (BRN, MYS, SGP, VNM) are CPTPP signatories"},
+    {"target": "belt_and_road", "type": "dependency", "description": "BRI infrastructure financing in ASEAN creates economic ties and debt exposure to China"},
+    {"target": "indo_pacific", "type": "overlap", "description": "ASEAN sits at the geographic and strategic center of the Indo-Pacific framework"}
+  ],
   "exposure": {
     "commodities": [
       "palm_oil",

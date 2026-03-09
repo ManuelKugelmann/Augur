@@ -7,6 +7,22 @@
   "climate": "Humid continental with warm summers and cold winters; transitional between maritime and continental influences",
   "hazards": ["flooding", "drought", "heatwave", "severe_storms"],
   "chokepoints": ["Danube_River_corridor", "Suwalki_Gap"],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "All V4 members are EU states; EU cohesion funds are a major economic driver"},
+    {"id": "eurozone", "name": "Euro Area", "relevance": "Slovakia is in the eurozone; others closely tied via supply chains to euro-denominated trade"},
+    {"id": "ruhr_area", "name": "Ruhr Area", "relevance": "German automotive OEMs source heavily from V4 factories; tightly coupled industrial corridor"},
+    {"id": "baltic_sea", "name": "Baltic Sea Region", "relevance": "Poland is a Baltic littoral state; Suwalki Gap is a shared NATO security concern"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Eastern border with Ukraine and Belarus; historical energy dependency on Russian pipelines"},
+    {"id": "black_sea", "name": "Black Sea Region", "relevance": "Romania (EU neighbor) and Ukraine grain corridors feed through V4 logistics networks"}
+  ],
+  "links": [
+    {"target": "eu", "type": "overlap", "description": "All V4 states receive EU structural funds and participate in single market and Schengen"},
+    {"target": "ruhr_area", "type": "trade", "description": "V4 automotive plants supply German OEMs; Poland and Czechia are top suppliers of auto components"},
+    {"target": "eurozone", "type": "dependency", "description": "V4 exports are predominantly euro-denominated; ECB policy affects V4 competitiveness"},
+    {"target": "baltic_sea", "type": "alliance", "description": "Joint NATO eastern flank defense; Poland leads Suwalki Gap security planning"},
+    {"target": "cis", "type": "dependency", "description": "Legacy pipeline infrastructure for Russian gas transits through V4 territory"},
+    {"target": "nordic_council", "type": "trade", "description": "Nordic firms invest heavily in V4 manufacturing and shared services sectors"}
+  ],
   "exposure": {
     "commodities": ["automotive_parts", "coal", "wheat", "corn", "steel", "copper", "natural_gas"],
     "risk_factors": ["EU_integration_tensions", "Russian_energy_dependency", "automotive_supply_chain", "demographic_decline", "NATO_eastern_flank", "migration_politics", "rule_of_law_disputes"]

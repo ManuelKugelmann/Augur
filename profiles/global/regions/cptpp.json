@@ -22,6 +22,22 @@
     "Torres Strait",
     "Tsushima Strait"
   ],
+  "neighbors": [
+    {"id": "rcep", "name": "RCEP", "relevance": "Overlapping Asia-Pacific membership (Japan, Australia, Malaysia, Vietnam, etc.); competing trade frameworks"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Four ASEAN members (Brunei, Malaysia, Singapore, Vietnam) are CPTPP signatories"},
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "Canada and Mexico are in both CPTPP and USMCA; US absence is notable"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "CPTPP is the primary trade architecture for the Indo-Pacific region"},
+    {"id": "mercosur", "name": "Mercosur", "relevance": "Chile and Peru bridge CPTPP to South American trade networks"}
+  ],
+  "links": [
+    {"target": "rcep", "type": "overlap", "description": "Seven members in both blocs; CPTPP has higher standards, RCEP has broader coverage"},
+    {"target": "asean", "type": "overlap", "description": "Four ASEAN states are CPTPP members; CPTPP rules influence ASEAN trade standards"},
+    {"target": "nafta_usmca", "type": "trade", "description": "Canada and Mexico link North American and Pacific Rim trade frameworks"},
+    {"target": "quad", "type": "trade", "description": "Japan and Australia in both; CPTPP provides economic arm to Quad security agenda"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Critical shipping lane connecting CPTPP's Southeast Asian and Pacific members"},
+    {"target": "panama_canal", "type": "corridor", "description": "Links CPTPP Pacific members to Atlantic markets; Chile/Peru to Canada/Mexico east coast"},
+    {"target": "south_china_sea", "type": "dependency", "description": "Key shipping lane for intra-CPTPP trade between Southeast Asian and East Asian members"}
+  ],
   "exposure": {
     "commodities": [
       "copper",

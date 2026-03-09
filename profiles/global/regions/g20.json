@@ -27,6 +27,24 @@
     "Bosphorus",
     "English Channel"
   ],
+  "neighbors": [
+    {"id": "g7", "name": "Group of Seven", "relevance": "G7 is core advanced-economy caucus within G20; sets agenda on many issues"},
+    {"id": "brics", "name": "BRICS+", "relevance": "Major emerging-economy bloc within G20; counterweight to G7 positions"},
+    {"id": "eu", "name": "European Union", "relevance": "EU has its own G20 seat alongside individual European member states"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Indonesia is G20 member; ASEAN economies are systemic trade partners"},
+    {"id": "opec_plus", "name": "OPEC+", "relevance": "Saudi Arabia and Russia in both G20 and OPEC+; energy prices dominate G20 macro agenda"},
+    {"id": "african_union", "name": "African Union", "relevance": "AU gained permanent G20 seat; South Africa represents broader African interests"}
+  ],
+  "links": [
+    {"target": "g7", "type": "overlap", "description": "All G7 members are G20 members; G7 coordinates positions within G20 framework"},
+    {"target": "brics", "type": "overlap", "description": "All original BRICS members are in G20; competing governance visions within the forum"},
+    {"target": "rcep", "type": "trade", "description": "Several G20 members (China, Japan, Korea, Australia, Indonesia) are in RCEP"},
+    {"target": "opec_plus", "type": "trade", "description": "G20 energy discussions directly shaped by OPEC+ production decisions"},
+    {"target": "nafta_usmca", "type": "trade", "description": "USA, Canada, Mexico all G20 members; North American trade bloc within G20"},
+    {"target": "mercosur", "type": "trade", "description": "Brazil and Argentina link G20 to South American trade integration"},
+    {"target": "eu", "type": "overlap", "description": "EU participates as institution plus France, Germany, Italy as individual members"},
+    {"target": "sco", "type": "overlap", "description": "China, Russia, India, Turkey bridge G20 and SCO membership"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",

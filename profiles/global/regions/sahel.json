@@ -7,6 +7,22 @@
   "climate": "Arid to semi-arid; hot dry season and short wet season; rainfall highly variable; Saharan influence in the north, savanna in the south",
   "hazards": ["drought", "desertification", "locust_swarms", "flooding", "heatwave", "dust_storms", "food_insecurity"],
   "chokepoints": ["Niger_River_basin", "Lake_Chad_basin", "Trans-Saharan_routes"],
+  "neighbors": [
+    {"id": "ecowas", "name": "ECOWAS", "relevance": "Most Sahel states are ECOWAS members; Mali, Niger, and Burkina Faso suspended after coups"},
+    {"id": "horn_of_africa", "name": "Horn of Africa", "relevance": "Eastern neighbor via Sudan and Chad; shared conflict dynamics and displacement corridors"},
+    {"id": "african_union", "name": "African Union", "relevance": "AU mediates Sahel conflicts and coordinates counter-terrorism operations"},
+    {"id": "mediterranean", "name": "Mediterranean", "relevance": "Sahel is the origin of major migration routes north through Libya and Algeria to Mediterranean"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Sudan connects the Sahel to the Red Sea coast; gold and commodity export route"}
+  ],
+  "links": [
+    {"target": "ecowas", "type": "rivalry", "description": "Mali, Niger, and Burkina Faso left ECOWAS after military coups; regional bloc fragmentation"},
+    {"target": "horn_of_africa", "type": "dependency", "description": "Instability flows between regions via Sudan; shared food insecurity and displacement crises"},
+    {"target": "african_union", "type": "alliance", "description": "AU and UN peacekeeping operations across Mali, Chad, and Sudan"},
+    {"target": "eu", "type": "dependency", "description": "EU is the largest aid donor and migration management partner for Sahel states"},
+    {"target": "belt_and_road", "type": "trade", "description": "Chinese mining investments in Niger uranium, Malian gold, and Chadian oil"},
+    {"target": "mediterranean", "type": "corridor", "description": "Trans-Saharan migration and trade routes connect Sahel to North African Mediterranean ports"},
+    {"target": "opec", "type": "trade", "description": "Nigeria is both a Sahel-bordering state and OPEC member; oil revenue and regional security intertwined"}
+  ],
   "exposure": {
     "commodities": ["gold", "uranium", "oil", "livestock", "millet", "sorghum", "cotton", "iron_ore", "phosphates"],
     "risk_factors": ["armed_conflict", "jihadist_insurgency", "military_coups", "food_insecurity", "population_growth", "climate_change_amplification", "displacement", "governance_fragility", "Wagner_Group_presence"]

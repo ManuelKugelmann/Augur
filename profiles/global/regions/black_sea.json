@@ -19,6 +19,23 @@
     "Kerch Strait",
     "Turkish Straits (combined)"
   ],
+  "neighbors": [
+    {"id": "bosphorus", "name": "Turkish Straits", "relevance": "Sole maritime exit from the Black Sea; Montreux Convention controls naval and commercial access"},
+    {"id": "mediterranean", "name": "Mediterranean Sea Basin", "relevance": "Black Sea trade flows enter the Mediterranean via the Turkish Straits"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Russia and Georgia are CIS members; Ukraine was formerly associated; conflict zone"},
+    {"id": "eu", "name": "European Union", "relevance": "Romania and Bulgaria are EU members on the Black Sea; EU sanctions affect the region"},
+    {"id": "levant", "name": "Levant", "relevance": "Eastern Mediterranean energy and security dynamics connect to Black Sea geopolitics"},
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Caspian-Black Sea energy pipelines (BTC, TANAP) link Gulf-adjacent producers to Black Sea ports"}
+  ],
+  "links": [
+    {"target": "bosphorus", "type": "corridor", "description": "All Black Sea maritime trade must transit the Turkish Straits; Turkey controls access under the Montreux Convention"},
+    {"target": "mediterranean", "type": "corridor", "description": "Grain, oil, and steel exports flow from Black Sea ports through the Straits to Mediterranean markets"},
+    {"target": "cis", "type": "rivalry", "description": "Russia-Ukraine war has militarized the Black Sea; grain corridor agreements are fragile"},
+    {"target": "eu", "type": "trade", "description": "Romania and Bulgaria connect Black Sea logistics to EU inland markets via Danube and rail"},
+    {"target": "visegrad", "type": "corridor", "description": "Ukrainian grain rerouted through Romania and Poland to V4 logistics networks during wartime"},
+    {"target": "baltic_sea", "type": "trade", "description": "Alternative grain export routes connect Black Sea origins to Baltic Sea ports via rail and river"},
+    {"target": "suez_canal", "type": "corridor", "description": "Black Sea grain shipments transit Turkish Straits and then Suez Canal to reach Asian markets"}
+  ],
   "exposure": {
     "commodities": [
       "wheat",

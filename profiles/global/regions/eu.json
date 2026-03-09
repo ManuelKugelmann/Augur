@@ -25,6 +25,24 @@
     "Strait of Sicily",
     "Bosphorus approaches"
   ],
+  "neighbors": [
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "Largest transatlantic trade partner; US-EU trade negotiations shape global standards"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Eastern neighbor; energy imports, sanctions regime, and security frontier"},
+    {"id": "mediterranean", "name": "Mediterranean Sea Basin", "relevance": "Southern maritime border; migration, energy transit, and trade routes"},
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Northern members and EEA partners; energy and Arctic cooperation"},
+    {"id": "brics", "name": "BRICS", "relevance": "Major emerging-market trade partners challenging EU regulatory influence"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Chinese infrastructure investment reaching into EU member states"}
+  ],
+  "links": [
+    {"target": "eurozone", "type": "overlap", "description": "20 of 27 EU members share the euro; ECB monetary policy binds the bloc"},
+    {"target": "visegrad", "type": "overlap", "description": "All V4 members are EU states; key automotive and manufacturing supply chains"},
+    {"target": "nordic_council", "type": "overlap", "description": "Denmark, Finland, Sweden are EU members; Norway and Iceland in EEA"},
+    {"target": "nafta_usmca", "type": "trade", "description": "EU-US goods trade exceeds EUR 800B annually; regulatory rivalry on tech and agriculture"},
+    {"target": "mediterranean", "type": "corridor", "description": "Southern maritime trade routes for energy, goods, and migration management"},
+    {"target": "cis", "type": "dependency", "description": "Historical reliance on Russian energy; sanctions regime reshaping trade flows"},
+    {"target": "rcep", "type": "trade", "description": "Asia-Pacific mega-bloc competing for supply chain investment and market access"},
+    {"target": "g7", "type": "alliance", "description": "France, Germany, Italy represent EU in G7 coordination on sanctions and finance"}
+  ],
   "exposure": {
     "commodities": [
       "natural_gas",

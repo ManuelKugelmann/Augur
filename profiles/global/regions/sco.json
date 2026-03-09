@@ -7,6 +7,23 @@
   "climate": "Ranges from tropical monsoon (South Asia) to subarctic (Siberia); arid continental in Central Asia; temperate in eastern China",
   "hazards": ["seismic_activity", "flooding", "drought", "extreme_cold", "cyclone", "desertification", "wildfire"],
   "chokepoints": ["Strait_of_Malacca", "Strait_of_Hormuz", "Karakoram_Highway", "China-Central_Asia_pipelines"],
+  "neighbors": [
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "BRI's overland corridors traverse SCO member states; SCO provides the security framework for BRI logistics"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Most Central Asian SCO members are also CIS members; overlapping post-Soviet integration"},
+    {"id": "brics", "name": "BRICS", "relevance": "China, Russia, and India are in both blocs; SCO and BRICS together form the core of multipolar institution-building"},
+    {"id": "opec_plus", "name": "OPEC+", "relevance": "Russia, Kazakhstan, and Iran are OPEC+ producers; energy policy coordination overlaps with SCO agenda"},
+    {"id": "strait_of_hormuz", "name": "Strait of Hormuz", "relevance": "Iran's SCO membership makes Hormuz energy transit a direct concern for the organization"},
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Iran's inclusion ties SCO to Gulf energy dynamics and regional security"}
+  ],
+  "links": [
+    {"target": "belt_and_road", "type": "corridor", "description": "SCO provides security and diplomatic framework for BRI's Central Asian overland corridors"},
+    {"target": "brics", "type": "alliance", "description": "China, Russia, India share membership; joint push for multipolar alternatives to Western institutions"},
+    {"target": "cis", "type": "overlap", "description": "Russia, Kazakhstan, Kyrgyzstan, Tajikistan, Uzbekistan are members of both SCO and CIS"},
+    {"target": "opec_plus", "type": "trade", "description": "SCO energy producers (Russia, Kazakhstan, Iran) coordinate output via OPEC+"},
+    {"target": "nato", "type": "rivalry", "description": "SCO is often viewed as a counterweight to NATO expansion in Eurasia"},
+    {"target": "strait_of_hormuz", "type": "dependency", "description": "Iran's membership links SCO energy security to Hormuz transit stability"},
+    {"target": "rcep", "type": "trade", "description": "China bridges SCO and RCEP, connecting Central Asian resources to Asia-Pacific markets"}
+  ],
   "exposure": {
     "commodities": ["crude_oil", "natural_gas", "rare_earths", "wheat", "cotton", "iron_ore", "copper", "uranium", "tea", "rice"],
     "risk_factors": ["border_disputes", "nuclear_proliferation", "terrorism", "great_power_rivalry", "water_scarcity", "sanctions_exposure", "Belt_and_Road_debt"]

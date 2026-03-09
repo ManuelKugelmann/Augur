@@ -31,6 +31,24 @@
     "Cape of Good Hope",
     "Gulf of Guinea"
   ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Largest trade partner and development aid source for Africa; EU-Africa summits set trade agendas"},
+    {"id": "brics", "name": "BRICS", "relevance": "China and India are top trade partners; BRICS expansion includes African members (Egypt, Ethiopia)"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Major investment flows, labor migration, and energy partnerships across North and East Africa"},
+    {"id": "mediterranean", "name": "Mediterranean Sea", "relevance": "Northern African members border the Mediterranean; key migration and trade corridor to Europe"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "East African coast and Suez Canal access critical for continental trade routes"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Chinese infrastructure investment across the continent; ports, railways, and special economic zones"}
+  ],
+  "links": [
+    {"target": "ecowas", "type": "overlap", "description": "ECOWAS members are a subset of AU; West African integration feeds into continental AfCFTA"},
+    {"target": "eac", "type": "overlap", "description": "EAC customs union operates within AU framework; East African integration pillar"},
+    {"target": "sadc", "type": "overlap", "description": "SADC members are AU members; southern African economic integration bloc"},
+    {"target": "sahel", "type": "overlap", "description": "Sahel security zone spans multiple AU member states; conflict and counterterrorism coordination"},
+    {"target": "horn_of_africa", "type": "overlap", "description": "Horn of Africa sub-region; strategic Red Sea access and ongoing conflict zones"},
+    {"target": "opec", "type": "alliance", "description": "Nigeria, Algeria, Libya, Angola, Congo are OPEC members; oil policy coordination"},
+    {"target": "suez_canal", "type": "corridor", "description": "Egypt controls the Suez Canal; critical chokepoint for Africa-Asia-Europe trade"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "Alternative shipping route around southern Africa when Suez is disrupted"}
+  ],
   "exposure": {
     "commodities": [
       "crude_oil",
