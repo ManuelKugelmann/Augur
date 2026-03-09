@@ -13,7 +13,6 @@
 ## Naming Conventions
 
 - **Repo**: `ManuelKugelmann/TradingAssistant`
-- **Data repo**: `ManuelKugelmann/TradeAssistant_Data` (private, git-synced every 15 min)
 - **Ops tool**: `TradeAssistant.sh` — single entry point for install + daily ops
   - `~/bin/ta` — primary shorthand (`ta help`, `ta status`, `ta install`, etc.)
   - `~/bin/TradeAssistant` — symlink to `ta`
@@ -26,7 +25,6 @@
 |------|---------|
 | `~/mcps/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
-| `~/TradeAssistant_Data/` | Git-versioned MCP data (files) |
 | `~/backups/mongo/` | Rolling MongoDB backups (daily/weekly/monthly gzipped JSON) |
 | `~/bin/ta` | Ops CLI tool |
 
@@ -86,7 +84,7 @@ TradingAssistant/
 │       ├── TradeAssistant.sh          ← ops CLI (installed as ~/bin/ta)
 │       ├── bootstrap.sh               ← release download entry point
 │       ├── setup.sh                   ← install/update with atomic swap
-│       └── setup-data-repo.sh         ← data repo init + cron sync
+│       └── claude-auth-daemon.sh       ← Claude Max auth daemon
 │
 ├── tests/
 │   ├── conftest.py                    ← pytest conftest (mocks pymongo/fastmcp)
@@ -95,17 +93,13 @@ TradingAssistant/
 │   ├── test_bootstrap.bats            ← syntax validation for all scripts
 │   ├── test_deploy_conf.bats          ← config loading, env overrides
 │   ├── test_install_lifecycle.bats    ← install → pull → update integration
-│   ├── test_nightly_commit.bats       ← profile staging, no-op when clean
 │   ├── test_setup.bats                ← install/update modes, .env generation
-│   ├── test_setup_data_repo.bats      ← data repo init, cron setup, idempotency
 │   ├── test_store.py                  ← pytest: profile CRUD, index, lint, search
-│   ├── test_ta_cron.bats              ← data sync, profile auto-commit
-│   ├── test_ta_dispatch.bats          ← help, status, version, restart, rollback
-│   └── test_ta_sync.bats             ← sync commit/push logic
+│   ├── test_ta_cron.bats              ← cron hook (compact scheduling)
+│   └── test_ta_dispatch.bats          ← help, status, version, restart, rollback
 │
 ├── scripts/
-│   ├── mongo-backup.py                ← rolling MongoDB backup/restore (pymongo + gzip)
-│   └── nightly-git-commit.sh          ← nightly profile commit
+│   └── mongo-backup.py                ← rolling MongoDB backup/restore (pymongo + gzip)
 │
 ├── docs/
 │   ├── librechat-uberspace-setup.md   ← step-by-step deployment guide
@@ -145,7 +139,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                            │   ├─ per-user: notes/plans (MongoDB user_notes), risk gate
                            │   └─ per-user: broker keys (headers, never stored)
                            │
-                           └─ cron (every 15 min) ──push──▶ GitHub (TradeAssistant_Data, private)
+                           └─ cron (daily at 02:00 UTC)
                                   │
                             ┌─────┼──────┐
                             ▼     ▼      ▼
@@ -189,8 +183,8 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 ### deploy.conf (Central Config)
 All scripts source this file. Key variables:
 - `UBER_USER=assist`, `UBER_HOST=assist.uber.space`
-- `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`, `GH_REPO_DATA=TradeAssistant_Data`
-- `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `DATA_DIR=$HOME/TradeAssistant_Data`, `BACKUP_DIR=$HOME/backups/mongo`
+- `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`
+- `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
 - `LC_PORT=3080`, `NODE_VERSION=22`
 
 ### Python Dependencies
@@ -240,7 +234,6 @@ ta rb|rollback rollback to previous version
 ta backup      backup MongoDB to ~/backups/mongo/ (rolling)
 ta restore [f] restore MongoDB from backup (latest if no file)
 ta backups     list available backups
-ta sync        force git sync of data to GitHub
 ta env         edit LibreChat .env
 ta yaml        edit librechat.yaml
 ta conf        edit deploy.conf
@@ -377,7 +370,7 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 
 ## Current Status (see TODO.md)
 
-**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation, code review fixes (security + correctness), chart tool + HTTP endpoint, profile INDEX.json, API keys doc, setup doc, test suite (87 tests: 45 bats + 42 pytest) + CI
+**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation, code review fixes (security + correctness), chart tool + HTTP endpoint, profile INDEX.json, API keys doc, setup doc, test suite (550+ tests: ~140 bats + ~420 pytest) + CI
 
 **Next priorities (P0)**:
 - Validate combined trading server runs without errors (store + 12 domains)
@@ -389,16 +382,16 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 ## Testing
 
 ### Frameworks
-- **Shell scripts**: [bats-core](https://github.com/bats-core/bats-core) (Bash Automated Testing System) — 45 tests across 8 `.bats` files
-- **Python**: [pytest](https://docs.pytest.org/) — 42 tests in `test_store.py` for profile CRUD, index, lint, search logic
-- **Total**: 87 tests
+- **Shell scripts**: [bats-core](https://github.com/bats-core/bats-core) (Bash Automated Testing System) — ~140 tests across `.bats` files
+- **Python**: [pytest](https://docs.pytest.org/) — ~420 tests across `test_*.py` files
+- **Total**: ~560 tests
 
 ### Running Tests
 ```bash
 # Run fast shell tests (no venv creation, runs in seconds)
-bats tests/test_bootstrap.bats tests/test_deploy_conf.bats tests/test_nightly_commit.bats \
-     tests/test_setup.bats tests/test_setup_data_repo.bats tests/test_ta_cron.bats \
-     tests/test_ta_dispatch.bats tests/test_ta_sync.bats
+bats tests/test_bootstrap.bats tests/test_deploy_conf.bats \
+     tests/test_setup.bats tests/test_ta_cron.bats \
+     tests/test_ta_dispatch.bats
 
 # Run slow install tests (creates venvs, runs full install scripts)
 bats tests/test_install_smoke.bats tests/test_install_lifecycle.bats
@@ -425,7 +418,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 - Each test gets a **sandboxed `$HOME`** via `mktemp -d` — no side effects on the real system
 - External commands (`supervisorctl`, `uberspace`, `hostname`, `crontab`) are **stubbed** with scripts prepended to `$PATH`
 - Git operations use **local bare repos** as fake remotes (no network needed)
-- SSH keys are pre-created to skip interactive prompts in `setup-data-repo.sh`
+- SSH keys may be needed for git operations in some test contexts
 - `$REAL_GIT` is saved before stubbing so git stubs can delegate non-intercepted calls
 
 **Python tests (pytest)**:
@@ -441,13 +434,10 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 | `test_indicators.py` | 7 | pytest | Composite signal logic (analyze_full), Yahoo OHLCV fetch, SMA(50) fallback, error handling |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 11 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check, uploads preservation, rollback |
-| `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |
-| `test_setup_data_repo.bats` | 6 | bats | Directory structure, `.gitignore`, cron setup, idempotency |
+| `test_ta_cron.bats` | 1 | bats | Cron hook done message |
 | `test_install_smoke.bats` | 6 | bats | Full install artifacts, idempotency, cron-after-install, LC bundle download (slow, path-filtered CI) |
 | `test_deploy_conf.bats` | 5 | bats | Config loading, env overrides, variable defaults |
 | `test_install_lifecycle.bats` | 4 | bats | Pull workflow, cron import check, full install→pull→update lifecycle (slow, path-filtered CI) |
-| `test_ta_sync.bats` | 3 | bats | Sync with/without git repo, commit + push behavior |
-| `test_nightly_commit.bats` | 3 | bats | Profile staging, no-op when clean, selective `git add` |
 | `test_bootstrap.bats` | 2 | bats | Syntax validation for all `.sh` files |
 
 ### CI Integration
@@ -482,7 +472,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 - Color output: green=success, yellow=warning, red=error, cyan=info
 - Profile files: uppercase ISO codes for countries (DEU, USA), uppercase tickers for entities (AAPL, NVDA)
 - Git tags: `vMAJOR.MINOR.PATCH` (triggers CI release)
-- Cron sync logger tag: `ta-data-sync`
+- Cron logger tag: `ta-cron`
 - `__HOME__` placeholder in `librechat.yaml` is replaced by `setup.sh` with actual `$HOME`
 - After editing any `.sh` file, always run `bash -n <file>` to verify syntax — especially for `TradeAssistant.sh` which must work when piped via `curl | bash` (avoid complex nested quoting in that context)
 - Use approximate tool counts (e.g. "50+ tools") instead of exact numbers — exact counts go stale as tools are added/removed

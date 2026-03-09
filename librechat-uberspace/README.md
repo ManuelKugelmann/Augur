@@ -39,10 +39,8 @@ cat deploy.conf
 | `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
 | `GH_REPO` | `TradingAssistant` | Signals stack repo |
-| `GH_REPO_DATA` | `TradeAssistant_Data` | Data repo (private) |
 | `STACK_DIR` | `$HOME/mcps` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
-| `DATA_DIR` | `$HOME/TradeAssistant_Data` | MCP data path |
 | `LC_PORT` | `3080` | LibreChat port |
 | `NODE_VERSION` | `22` | Node.js version |
 
@@ -111,13 +109,6 @@ https://assist.uber.space
 
 Register your first user → that becomes the admin account.
 
-### Step 6: Git-versioned data (optional, 5 min)
-
-```bash
-# Create a PRIVATE repo on GitHub: YourUser/TradeAssistant_Data
-bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
-```
-
 ## Multi-User
 
 The trading server runs as a single process on `:8071` via `streamable-http`.
@@ -138,12 +129,6 @@ Users configure their own settings in **LibreChat Settings → Plugins → tradi
 | Snapshots/events (tagged with user_id) | Risk gate (daily limit, live trading) |
 
 ## MCP Servers
-
-### Utility (stdio, always available)
-
-| MCP Server | Purpose | Storage |
-|---|---|---|
-| `filesystem` | File read/write | `~/TradeAssistant_Data/files/` |
 
 ### Trading (streamable-http, single process)
 

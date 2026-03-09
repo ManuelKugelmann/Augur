@@ -124,7 +124,6 @@ jobs:
             librechat-uberspace/scripts/TradeAssistant.sh \
             librechat-uberspace/scripts/setup.sh \
             librechat-uberspace/scripts/bootstrap.sh \
-            scripts/nightly-git-commit.sh \
             deploy.conf \
           || true
 
