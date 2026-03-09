@@ -344,6 +344,7 @@ class TestNearby:
         assert geo_near["near"]["coordinates"] == [13.4, 52.5]
         assert geo_near["maxDistance"] == 100_000
         assert geo_near["spherical"] is True
+        assert geo_near["key"] == "location"
 
     def test_events_uses_events_collection(self, mock_db):
         db, cols = mock_db

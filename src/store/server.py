@@ -639,6 +639,7 @@ def nearby(kind: str, lon: float, lat: float,
         "distanceField": "_dist_m",
         "maxDistance": max_km * 1000,
         "spherical": True,
+        "key": "location",
     }
     if type:
         geo_near["query"] = {"meta.type": type}
