@@ -22,12 +22,16 @@ pytestmark = pytest.mark.integration
 
 
 def run(coro):
-    """Run an async tool function synchronously."""
+    """Run an async tool function synchronously.
+
+    Only xfails on network-level exceptions (DNS, connection refused, timeout).
+    Tool-level errors ({"error": ...}) are NOT xfailed — they indicate a broken
+    API integration that should be fixed, not masked.
+    """
     try:
         return asyncio.get_event_loop().run_until_complete(coro)
-    except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ProxyError,
-            httpx.ConnectError) as exc:
-        pytest.xfail(f"External API unavailable: {exc}")
+    except (httpx.TimeoutException, httpx.ConnectError) as exc:
+        pytest.xfail(f"Network unavailable: {exc}")
 
 
 # ── weather_server (Open-Meteo, NOAA) ───────────────────
@@ -222,8 +226,6 @@ class TestHumanitarian:
 
     def test_reliefweb_reports(self):
         result = run(self.m.reliefweb_reports(query="drought", limit=3))
-        if "error" in result:
-            pytest.xfail(f"ReliefWeb API unavailable: {result['error']}")
         assert "data" in result
 
 
@@ -257,8 +259,6 @@ class TestWater:
 
     def test_drought(self):
         result = run(self.m.drought(area="CA", scope="StateStatistics"))
-        if isinstance(result, dict) and "error" in result:
-            pytest.xfail(f"Drought Monitor API unavailable: {result['error']}")
         assert isinstance(result, (dict, list))
 
 
@@ -275,7 +275,5 @@ class TestTransportFree:
         # Small bounding box over Frankfurt airport
         result = run(self.m.flights_in_area(
             lat_min=50.0, lat_max=50.1, lon_min=8.5, lon_max=8.6))
-        if "error" in result:
-            pytest.xfail(f"OpenSky API unavailable: {result['error']}")
         assert "count" in result
         assert "states" in result

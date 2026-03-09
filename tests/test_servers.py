@@ -547,22 +547,14 @@ class TestElectionsServer:
         params = client.get.call_args[1]["params"]
         assert params["year"] == "2024"
 
-    @pytest.mark.asyncio
-    async def test_us_representatives_missing_key(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "GOOGLE_KEY", "")
-        result = await self.mod.us_representatives("123 Main St")
-        assert result["error"] == "GOOGLE_API_KEY not set"
+    # us_representatives tests removed — Google Civic Representatives API was
+    # permanently shut down April 30, 2025. Tool removed from elections_server.py.
 
     @pytest.mark.asyncio
-    async def test_us_representatives_calls_google(self):
-        resp = _mock_response({"offices": [], "officials": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            result = await self.mod.us_representatives("1600 Pennsylvania Ave")
-        url = client.get.call_args[0][0]
-        assert "representatives" in url
-        params = client.get.call_args[1]["params"]
-        assert params["address"] == "1600 Pennsylvania Ave"
+    async def test_us_voter_info_missing_key(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "GOOGLE_KEY", "")
+        result = await self.mod.us_voter_info("123 Main St")
+        assert result["error"] == "GOOGLE_API_KEY not set"
 
 
 # ── Humanitarian Server (via conflict import — legacy) ──
