@@ -35,22 +35,49 @@ async def _acled_auth() -> str:
         return ""
 
 
-@mcp.tool()
-async def ucdp_conflicts(year: int = 2024, page: int = 1) -> dict:
-    """UCDP armed conflicts by year. Georeferenced events 1946-present.
-    Optional: set UCDP_ACCESS_TOKEN env var (request from UCDP)."""
-    headers: dict = {}
+_UCDP_BASE = "https://ucdpapi.pcr.uu.se/api"
+
+
+def _ucdp_headers() -> dict:
     if UCDP_TOKEN:
-        headers["x-ucdp-access-token"] = UCDP_TOKEN
+        return {"x-ucdp-access-token": UCDP_TOKEN}
+    return {}
+
+
+@mcp.tool()
+async def ucdp_conflicts(year: int = 2024, page: int = 1,
+                          version: str = "25.1") -> dict:
+    """UCDP georeferenced conflict events (GED). Data: 1989-2024.
+    version: API dataset version (default 25.1 = 2025 release covering through 2024).
+    Requires UCDP_ACCESS_TOKEN env var."""
     try:
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://ucdpapi.pcr.uu.se/api/gedevents/25.1",
+            r = await c.get(f"{_UCDP_BASE}/gedevents/{version}",
                             params={"pagesize": 100, "page": page, "Year": year},
-                            headers=headers)
+                            headers=_ucdp_headers())
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
         return {"error": f"UCDP request failed: {e}"}
+
+
+@mcp.tool()
+async def ucdp_candidate_events(page: int = 1, country: str = "",
+                                 version: str = "26.0.1") -> dict:
+    """UCDP candidate events — near-real-time monthly releases (more recent than
+    the stable GED dataset). Use for 2025+ conflict events. version default: 26.0.1.
+    Requires UCDP_ACCESS_TOKEN env var."""
+    params: dict = {"pagesize": 100, "page": page}
+    if country:
+        params["Country"] = country
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(f"{_UCDP_BASE}/gedevents/{version}",
+                            params=params, headers=_ucdp_headers())
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"UCDP candidate events request failed: {e}"}
 
 
 @mcp.tool()

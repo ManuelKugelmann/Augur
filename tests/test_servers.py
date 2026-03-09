@@ -396,6 +396,28 @@ class TestConflictServer:
         assert "25.1" in url
 
     @pytest.mark.asyncio
+    async def test_ucdp_custom_version(self):
+        resp = _mock_response({"Result": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ucdp_conflicts(year=2023, version="24.1")
+        url = client.get.call_args[0][0]
+        assert "24.1" in url
+
+    @pytest.mark.asyncio
+    async def test_ucdp_candidate_events(self):
+        resp = _mock_response({"Result": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ucdp_candidate_events(country="Syria")
+        params = client.get.call_args[1]["params"]
+        assert params["Country"] == "Syria"
+        url = client.get.call_args[0][0]
+        assert "26.0.1" in url
+        headers = client.get.call_args[1]["headers"]
+        assert headers["x-ucdp-access-token"] == "test_ucdp_token"
+
+    @pytest.mark.asyncio
     async def test_sanctions_search(self):
         resp = _mock_response({"results": []})
         patcher, client = _patch_httpx_get(resp)
