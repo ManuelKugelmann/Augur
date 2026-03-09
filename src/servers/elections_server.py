@@ -24,10 +24,13 @@ async def global_elections(country: str = "", year: str = "",
                            limit: int = 20) -> list[dict]:
     """Global elections (Wikidata). country: English name. year: e.g. '2025'."""
     filters = []
+    country_bind = ""
     if country:
         if not _SAFE_SPARQL_TEXT.match(country):
             return [{"error": "invalid country name (letters, spaces, digits only)"}]
-        filters.append(f'FILTER(CONTAINS(LCASE(?countryLabel), LCASE("{country}")))')
+        country_bind = ('?country rdfs:label ?cLabel .\n'
+                        '  FILTER(LANG(?cLabel) = "en")\n'
+                        f'  FILTER(CONTAINS(LCASE(?cLabel), LCASE("{country}")))')
     if year:
         if not _SAFE_YEAR.match(year):
             return [{"error": "invalid year (must be 4 digits, e.g. 2025)"}]
@@ -38,6 +41,7 @@ async def global_elections(country: str = "", year: str = "",
   ?election wdt:P17 ?country .
   ?election wdt:P585 ?date .
   OPTIONAL {{ ?election wdt:P31 ?type }}
+  {country_bind}
   {filter_block}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
 }} ORDER BY DESC(?date) LIMIT {limit}"""
@@ -60,11 +64,13 @@ async def global_elections(country: str = "", year: str = "",
 @mcp.tool()
 async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
     """Heads of state/government (Wikidata). country: English name."""
-    country_filter = ""
+    country_bind = ""
     if country:
         if not _SAFE_SPARQL_TEXT.match(country):
             return [{"error": "invalid country name (letters, spaces, digits only)"}]
-        country_filter = f'FILTER(CONTAINS(LCASE(?countryLabel), LCASE("{country}")))'
+        country_bind = ('?country rdfs:label ?cLabel .\n'
+                        '  FILTER(LANG(?cLabel) = "en")\n'
+                        f'  FILTER(CONTAINS(LCASE(?cLabel), LCASE("{country}")))')
     query = f"""SELECT ?person ?personLabel ?countryLabel ?positionLabel ?start ?end WHERE {{
   ?person wdt:P39 ?position .
   ?position wdt:P279* wd:Q48352 .
@@ -73,7 +79,7 @@ async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
   ?stmt pq:P580 ?start .
   OPTIONAL {{ ?stmt pq:P582 ?end }}
   ?position wdt:P17 ?country .
-  {country_filter}
+  {country_bind}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
 }} ORDER BY DESC(?start) LIMIT {limit}"""
     try:

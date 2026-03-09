@@ -20,6 +20,7 @@ All domain servers work partially without keys — tools that need a key return 
 | `ACLED_EMAIL` | ACLED (OAuth login) | conflict_server | research access | https://developer.acleddata.com/ |
 | `ACLED_PASSWORD` | ACLED (OAuth password) | conflict_server | — | same as above |
 | `UCDP_ACCESS_TOKEN` | UCDP (armed conflict) | conflict_server | free (request token) | https://ucdp.uu.se/apidocs/ |
+| `OPENSANCTIONS_API_KEY` | OpenSanctions (sanctions search) | conflict_server | free (self-service) | https://www.opensanctions.org/api/ |
 | `EIA_API_KEY` | EIA (US energy data) | commodities_server | unlimited | https://www.eia.gov/opendata/register.php |
 | `COMTRADE_API_KEY` | UN Comtrade (trade flows) | commodities_server | 100 req/day | https://comtradeplus.un.org/TradeFlow |
 | `GOOGLE_API_KEY` | Google Civic Info | elections_server | generous | https://console.cloud.google.com/apis/credentials |
@@ -65,7 +66,7 @@ These APIs require no authentication and work out of the box:
 | disasters | USGS Earthquakes, GDACS, NASA EONET |
 | macro | World Bank, IMF WEO (FRED needs key) |
 | agri | FAOSTAT (USDA NASS needs key) |
-| conflict | UCDP, OpenSanctions (ACLED needs OAuth, UCDP token optional) |
+| conflict | UCDP (ACLED needs OAuth, UCDP token optional, OpenSanctions needs key) |
 | health | WHO GHO, WHO Outbreaks, disease.sh, FDA |
 | humanitarian | UNHCR, OCHA HDX, ReliefWeb (IDMC needs key) |
 | elections | Wikidata, EU Parliament (Google Civic needs key) |
@@ -104,6 +105,7 @@ librechat.yaml           │ env: blocks pass keys explicitly
   ├─ ACLED_EMAIL ───────►│ conflict_server (OAuth login)
   ├─ ACLED_PASSWORD ────►│ conflict_server (OAuth password)
   ├─ UCDP_ACCESS_TOKEN ─►│ conflict_server
+  ├─ OPENSANCTIONS_API_KEY►│ conflict_server
   ├─ EIA_API_KEY ───────►│ commodities_server
   ├─ COMTRADE_API_KEY ──►│ commodities_server
   ├─ GOOGLE_API_KEY ────►│ elections_server

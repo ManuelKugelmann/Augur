@@ -79,6 +79,24 @@ class TestComtrade:
         assert "data" in result or "dataset" in result
 
 
+# ── OpenSanctions (conflict_server) ────────────────────
+
+@pytest.mark.skipif(not os.environ.get("OPENSANCTIONS_API_KEY"), reason="OPENSANCTIONS_API_KEY not set")
+class TestOpenSanctions:
+    @pytest.fixture(autouse=True)
+    def _load(self):
+        import conflict_server as mod
+        self.m = mod
+
+    def test_search_sanctions(self):
+        result = run(self.m.search_sanctions(query="Gazprom"))
+        assert "results" in result or "result" in result
+
+    def test_search_sanctions_result(self):
+        result = run(self.m.search_sanctions(query="Russia"))
+        assert isinstance(result, dict)
+
+
 # ── ACLED (conflict_server) ─────────────────────────────
 
 @pytest.mark.skipif(not os.environ.get("ACLED_API_KEY"), reason="ACLED_API_KEY not set")

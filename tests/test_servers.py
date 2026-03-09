@@ -444,13 +444,30 @@ class TestConflictServer:
 
     @pytest.mark.asyncio
     async def test_sanctions_search(self):
-        resp = _mock_response({"results": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.search_sanctions("Putin", schema="Person")
-        params = client.get.call_args[1]["params"]
-        assert params["q"] == "Putin"
-        assert params["schema"] == "Person"
+        old_key = self.mod.OPENSANCTIONS_KEY
+        self.mod.OPENSANCTIONS_KEY = "test-key"
+        try:
+            resp = _mock_response({"results": []})
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                await self.mod.search_sanctions("Putin", schema="Person")
+            params = client.get.call_args[1]["params"]
+            assert params["q"] == "Putin"
+            assert params["schema"] == "Person"
+            assert "ApiKey test-key" in client.get.call_args[1]["headers"]["Authorization"]
+        finally:
+            self.mod.OPENSANCTIONS_KEY = old_key
+
+    @pytest.mark.asyncio
+    async def test_sanctions_no_key(self):
+        old_key = self.mod.OPENSANCTIONS_KEY
+        self.mod.OPENSANCTIONS_KEY = ""
+        try:
+            result = await self.mod.search_sanctions("Putin")
+            assert "error" in result
+            assert "OPENSANCTIONS_API_KEY" in result["error"]
+        finally:
+            self.mod.OPENSANCTIONS_KEY = old_key
 
 
 # ── Elections Server ─────────────────────────────
