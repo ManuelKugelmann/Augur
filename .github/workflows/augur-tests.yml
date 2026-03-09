@@ -1,0 +1,115 @@
+name: Augur Engine Tests
+
+on:
+  push:
+    paths:
+      - 'augur-engine/**'
+      - 'augur-site/**'
+      - '.github/workflows/augur-tests.yml'
+  pull_request:
+    paths:
+      - 'augur-engine/**'
+      - 'augur-site/**'
+      - '.github/workflows/augur-tests.yml'
+
+jobs:
+  augur-engine-tests:
+    name: augur-engine unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: augur-engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npx tsx tests/run.ts
+
+  augur-site-validate:
+    name: augur-site Jekyll validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: augur-site
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate _config.yml is valid YAML
+        run: python3 -c "import yaml; yaml.safe_load(open('_config.yml'))"
+
+      - name: Validate _data/brands.yml is valid YAML
+        run: python3 -c "import yaml; yaml.safe_load(open('_data/brands.yml'))"
+
+      - name: Check all layouts referenced exist
+        run: |
+          for layout in article brand default horizon hub scorecard; do
+            if [ ! -f "_layouts/${layout}.html" ]; then
+              echo "FAIL: _layouts/${layout}.html missing"
+              exit 1
+            fi
+          done
+          echo "All layouts present"
+
+      - name: Check all includes referenced exist
+        run: |
+          for inc in head masthead disclaimer footer article-card sentiment-bar sources; do
+            if [ ! -f "_includes/${inc}.html" ]; then
+              echo "FAIL: _includes/${inc}.html missing"
+              exit 1
+            fi
+          done
+          echo "All includes present"
+
+      - name: Check sample post has valid front matter
+        run: |
+          post=$(find _posts -name "*.md" | head -1)
+          if [ -z "$post" ]; then
+            echo "FAIL: no sample posts found"
+            exit 1
+          fi
+          python3 -c "
+          import yaml, sys
+          with open('$post') as f:
+              content = f.read()
+          parts = content.split('---')
+          if len(parts) < 3:
+              print('FAIL: invalid front matter delimiters')
+              sys.exit(1)
+          fm = yaml.safe_load(parts[1])
+          required = ['layout', 'brand', 'horizon', 'headline', 'tags', 'sources']
+          missing = [k for k in required if k not in fm]
+          if missing:
+              print(f'FAIL: missing front matter keys: {missing}')
+              sys.exit(1)
+          print(f'OK: {post} has valid front matter')
+          "
+
+      - name: Check SCSS compiles (syntax check)
+        run: |
+          # Verify SCSS files have valid syntax by checking for obvious errors
+          for f in _sass/*.scss; do
+            if ! python3 -c "
+          import re, sys
+          with open('$f') as fh:
+              content = fh.read()
+          # Check balanced braces
+          opens = content.count('{')
+          closes = content.count('}')
+          if opens != closes:
+              print(f'FAIL: $f has unbalanced braces ({opens} open, {closes} close)')
+              sys.exit(1)
+          print(f'OK: $f')
+          "; then
+              exit 1
+            fi
+          done

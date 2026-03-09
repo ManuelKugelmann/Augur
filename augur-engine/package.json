@@ -13,7 +13,9 @@
     "dev": "tsx src/index.ts",
     "cycle": "tsx src/index.ts cycle",
     "post": "tsx src/index.ts post",
-    "scorecard": "tsx src/index.ts scorecard"
+    "scorecard": "tsx src/index.ts scorecard",
+    "test": "tsx tests/run.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "sharp": "^0.33.0",
