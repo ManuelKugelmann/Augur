@@ -389,14 +389,22 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 
 ### Running Tests
 ```bash
+# Run fast shell tests (no venv creation, runs in seconds)
+bats tests/test_bootstrap.bats tests/test_deploy_conf.bats tests/test_nightly_commit.bats \
+     tests/test_setup.bats tests/test_setup_data_repo.bats tests/test_ta_cron.bats \
+     tests/test_ta_dispatch.bats tests/test_ta_sync.bats
+
+# Run slow install tests (creates venvs, runs full install scripts)
+bats tests/test_install_smoke.bats tests/test_install_lifecycle.bats
+
 # Run all shell tests
 bats tests/*.bats
 
 # Run all Python tests
-python -m pytest tests/test_store.py -v
+python -m pytest tests/ -v
 
 # Run everything
-bats tests/*.bats && python -m pytest tests/test_store.py -v
+bats tests/*.bats && python -m pytest tests/ -v
 
 # Run a specific bats file
 bats tests/test_ta_cron.bats
@@ -426,20 +434,24 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 | `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
 | `test_indicators.py` | 7 | pytest | Composite signal logic (analyze_full), Yahoo OHLCV fetch, SMA(50) fallback, error handling |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
-| `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
+| `test_setup.bats` | 11 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check, uploads preservation, rollback |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |
 | `test_setup_data_repo.bats` | 6 | bats | Directory structure, `.gitignore`, cron setup, idempotency |
+| `test_install_smoke.bats` | 6 | bats | Full install artifacts, idempotency, cron-after-install, LC bundle download (slow, path-filtered CI) |
 | `test_deploy_conf.bats` | 5 | bats | Config loading, env overrides, variable defaults |
-| `test_install_lifecycle.bats` | 15 | bats | Install → pull → update lifecycle, setup.sh modes, rollback, crypto keys, cron import |
+| `test_install_lifecycle.bats` | 4 | bats | Pull workflow, cron import check, full install→pull→update lifecycle (slow, path-filtered CI) |
 | `test_ta_sync.bats` | 3 | bats | Sync with/without git repo, commit + push behavior |
 | `test_nightly_commit.bats` | 3 | bats | Profile staging, no-op when clean, selective `git add` |
 | `test_bootstrap.bats` | 2 | bats | Syntax validation for all `.sh` files |
 
-### CI Integration (`.github/workflows/tests.yml`)
-Runs on every push to `main` and on PRs:
-- **shell-tests** job: installs bats from git, runs `bash -n` on all `.sh` files, then `bats tests/*.bats`
-- **python-tests** job: sets up Python 3.11, installs pytest, runs `pytest tests/test_store.py`
+### CI Integration
+**`tests.yml`** — Runs on every push to `main` and on PRs:
+- **shell-tests** job: installs bats, runs `bash -n` on all `.sh` files, then fast bats tests (excludes install tests)
+- **python-tests** job: sets up Python 3.11, installs pytest, runs `pytest tests/`
 - **shellcheck** job: runs ShellCheck at error severity on all scripts
+
+**`tests-install.yml`** — Runs only when install-related files change (`librechat-uberspace/scripts/**`, `deploy.conf`, `requirements.txt`, `tests/test_install_*`):
+- **install-tests** job: runs `test_install_smoke.bats` + `test_install_lifecycle.bats` (creates real venvs, slow)
 
 ### Writing New Tests
 
