@@ -234,7 +234,7 @@ if [[ "$MODE" == "install" ]]; then
 
     # Register librechat service (U7: supervisord, U8: systemd)
     if _is_u8; then
-        local SVC_DIR="$HOME/.config/systemd/user"
+        SVC_DIR="$HOME/.config/systemd/user"
         mkdir -p "$SVC_DIR"
         cat > "$SVC_DIR/librechat.service" <<EOF
 [Install]
@@ -250,7 +250,7 @@ EOF
         systemctl --user daemon-reload
         systemctl --user enable librechat 2>/dev/null || true
     else
-        local SVC="$HOME/etc/services.d/librechat.ini"
+        SVC="$HOME/etc/services.d/librechat.ini"
         mkdir -p "$(dirname "$SVC")"
         cat > "$SVC" <<EOF
 [program:librechat]

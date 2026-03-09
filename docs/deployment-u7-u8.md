@@ -393,8 +393,7 @@ If Uberspace migrates your account from U7 to U8 (or you create a new U8 account
 
 4. **Start services:**
    ```bash
-   supervisorctl start librechat
-   supervisorctl start trading
+   ta restart
    ta status
    ```
 
