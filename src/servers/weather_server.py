@@ -8,13 +8,16 @@ mcp = FastMCP("weather", instructions="Weather forecasts, historical climate, sp
 @mcp.tool()
 async def forecast(lat: float, lon: float, days: int = 7) -> dict:
     """Weather forecast (daily temp, precip, wind)."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.open-meteo.com/v1/forecast", params={
-            "latitude": lat, "longitude": lon, "forecast_days": days,
-            "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max",
-            "timezone": "auto"})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://api.open-meteo.com/v1/forecast", params={
+                "latitude": lat, "longitude": lon, "forecast_days": days,
+                "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max",
+                "timezone": "auto"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"Open-Meteo forecast request failed: {e}"}
 
 
 @mcp.tool()
@@ -22,25 +25,31 @@ async def historical_weather(lat: float, lon: float,
                               start: str = "2024-01-01",
                               end: str = "2024-12-31") -> dict:
     """Historical weather since 1940. start/end: YYYY-MM-DD."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://archive-api.open-meteo.com/v1/archive", params={
-            "latitude": lat, "longitude": lon,
-            "start_date": start, "end_date": end,
-            "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum",
-            "timezone": "auto"})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://archive-api.open-meteo.com/v1/archive", params={
+                "latitude": lat, "longitude": lon,
+                "start_date": start, "end_date": end,
+                "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum",
+                "timezone": "auto"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"Open-Meteo archive request failed: {e}"}
 
 
 @mcp.tool()
 async def flood_forecast(lat: float, lon: float, days: int = 7) -> dict:
     """River discharge forecast (flood risk)."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://flood-api.open-meteo.com/v1/flood", params={
-            "latitude": lat, "longitude": lon, "forecast_days": days,
-            "daily": "river_discharge"})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://flood-api.open-meteo.com/v1/flood", params={
+                "latitude": lat, "longitude": lon, "forecast_days": days,
+                "daily": "river_discharge"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"Open-Meteo flood request failed: {e}"}
 
 
 @mcp.tool()

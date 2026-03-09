@@ -18,11 +18,16 @@ pytestmark = pytest.mark.integration
 
 
 def run(coro):
+    """Run an async tool function synchronously.
+
+    Only xfails on network-level exceptions (DNS, connection refused, timeout).
+    Tool-level errors ({"error": ...}) are NOT xfailed — they indicate a broken
+    API integration that should be fixed, not masked.
+    """
     try:
         return asyncio.get_event_loop().run_until_complete(coro)
-    except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ProxyError,
-            httpx.ConnectError) as exc:
-        pytest.xfail(f"External API unavailable: {exc}")
+    except (httpx.TimeoutException, httpx.ConnectError) as exc:
+        pytest.xfail(f"Network unavailable: {exc}")
 
 
 # ── FRED (macro_server) ─────────────────────────────────
@@ -107,18 +112,8 @@ class TestUSDA:
 
 
 # ── Google Civic (elections_server) ──────────────────────
-
-@pytest.mark.skipif(not os.environ.get("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set")
-class TestGoogleCivic:
-    @pytest.fixture(autouse=True)
-    def _load(self):
-        import elections_server as mod
-        self.m = mod
-
-    def test_us_representatives(self):
-        result = run(self.m.us_representatives(address="1600 Pennsylvania Ave NW, Washington DC"))
-        assert isinstance(result, dict)
-        assert "offices" in result or "officials" in result
+# us_representatives removed — Google Civic Representatives API was permanently
+# shut down April 30, 2025. us_voter_info still works but requires active elections.
 
 
 # ── Cloudflare Radar (infra_server) ─────────────────────

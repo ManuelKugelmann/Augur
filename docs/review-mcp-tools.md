@@ -177,10 +177,10 @@ Tool count stays the same, but **LLM decision quality improves** — the routers
 
 ## 5. Recommended Actions
 
-### Immediate (P0)
+### Immediate (P0) — ✅ DONE
 
-1. **Remove `politics_election_reports`** from `elections_server.py` — pure duplication
-2. **Remove `conflict_military_spending`** from `conflict_server.py` — add indicator code to `worldbank_indicator` docstring instead
+1. ~~**Remove `politics_election_reports`** from `elections_server.py`~~ — removed (was never implemented)
+2. ~~**Remove `conflict_military_spending`** from `conflict_server.py`~~ — removed; `MS.MIL.XPND.GD.ZS` documented in `worldbank_indicator` docstring + available via `indicator(concept="military_spending")`
 
 ### Short-term (P1)
 

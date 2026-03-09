@@ -12,6 +12,9 @@
 set -euo pipefail
 
 # ── Defaults (work before repo/config exist) ──
+# These defaults are needed for the curl|bash one-liner where deploy.conf
+# doesn't exist yet.  Once the repo is cloned, deploy.conf is sourced below
+# and its values take effect for all subsequent variable expansions.
 GH_USER="${GH_USER:-ManuelKugelmann}"
 GH_REPO="${GH_REPO:-TradingAssistant}"
 STACK_DIR="${STACK_DIR:-$HOME/mcps}"
@@ -423,6 +426,30 @@ case "$CMD" in
         supervisorctl start librechat
         echo -e "${GREEN}✓${NC} Rolled back to $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         ;;
+    backup)
+        if [[ -f "$STACK/venv/bin/python" ]]; then
+            STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" backup
+        else
+            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            exit 1
+        fi
+        ;;
+    restore)
+        if [[ -f "$STACK/venv/bin/python" ]]; then
+            STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" restore "${2:-}"
+        else
+            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            exit 1
+        fi
+        ;;
+    backups)
+        if [[ -f "$STACK/venv/bin/python" ]]; then
+            STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" list
+        else
+            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            exit 1
+        fi
+        ;;
     sync)
         if [[ -d "$DATA/.git" ]]; then
             cd "$DATA"
@@ -509,6 +536,13 @@ for kind in VALID_KINDS:
 PYEOF
             else
                 _cron_log "python venv not found, skipping compact"
+            fi
+
+            # ── Daily at 02:00 UTC: MongoDB backup (rolling) ──
+            _cron_log "running daily backup"
+            if [[ -f "$STACK/venv/bin/python" ]] && [[ -f "$STACK/scripts/mongo-backup.py" ]]; then
+                STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" backup 2>&1 \
+                    | while read -r line; do _cron_log "backup: $line"; done
             fi
         fi
 
@@ -1078,6 +1112,9 @@ SVCEOF
         echo "  ta install      Re-run full installer (idempotent, uses prebuilt release)"
         echo "  ta rb|rollback  Rollback to previous version"
         echo ""
+        echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
+        echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
+        echo "  ta backups      List available backups"
         echo "  ta sync         Force git sync of data dir"
         echo "  ta cron         Run cron hook (sync + profiles + compact + agent invocation)"
         echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"

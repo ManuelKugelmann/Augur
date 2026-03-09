@@ -1,7 +1,7 @@
 # Code Review — TradingAssistant
 
 Full security and quality audit of the entire codebase. Date: 2026-03-06.
-Updated: 2026-03-09 (11 of 19 fixed, all critical security issues resolved).
+Updated: 2026-03-09 (14 of 19 fixed, all critical security issues resolved).
 
 ---
 
@@ -47,11 +47,11 @@ Regex validation `^[A-Za-z0-9_-]+$` added for `country` parameter. Injection blo
 ### 8. ~~`datetime.utcnow()` Deprecated~~ ✅ FIXED
 **File:** `disasters_server.py` — uses `datetime.now(timezone.utc)`.
 
-### 9. No Timeout on Most HTTP Clients — PARTIALLY FIXED
-Many servers now have explicit timeouts (health, weather, disasters, conflict, commodities). Some may still use httpx defaults.
+### 9. ~~No Timeout on Most HTTP Clients~~ ✅ FIXED
+All 12 domain servers + store now have explicit `timeout=` on every `httpx.AsyncClient()` call (15–30s depending on API).
 
-### 10. No Error Handling on Domain Servers — PARTIALLY FIXED
-Some servers have try/except (weather, conflict). Others still use bare `raise_for_status()`.
+### 10. ~~No Error Handling on Domain Servers~~ ✅ FIXED
+All 12 domain servers now wrap HTTP calls in `try/except httpx.HTTPError`, returning `{"error": ...}` instead of crashing.
 
 ### 11. ~~CI References Non-Existent `install.sh`~~ ✅ FIXED
 Dead config removed from `.github/workflows/release.yml`.
@@ -85,8 +85,8 @@ O(n) disk reads per query. Will degrade at scale. Mitigated by INDEX files for `
 
 Domain servers run inside the combined trading server process (not as separate LibreChat-launched MCPs). The combined server is a supervisord service that sources `.env`. API keys are available via the process environment.
 
-### 19. `deploy.conf` Variable Not Used by Ops Script — OPEN (low priority)
-`TradeAssistant.sh` sets `GH_REPO` default before sourcing config. Config value is effectively dead.
+### 19. ~~`deploy.conf` Variable Not Used by Ops Script~~ ✅ CLARIFIED
+`TradeAssistant.sh` sets `GH_REPO` default before sourcing config — intentional for `curl|bash` one-liner where config doesn't exist yet. Comment added to explain.
 
 ---
 
@@ -110,7 +110,7 @@ Prevents reproducible builds. Each install fetches latest minor versions.
 
 | Status | Count | Details |
 |--------|-------|---------|
-| ✅ Fixed | 11 | #1-5, #7-8, #11-13, #15 |
-| ⚠️ Mitigated | 2 | #6 (regex), #9 (most servers) |
+| ✅ Fixed | 14 | #1-5, #7-13, #15, #19 |
+| ⚠️ Mitigated | 1 | #6 (regex) |
 | ℹ️ Accepted | 3 | #14, #16, #18 (not applicable) |
-| 🔲 Open | 3 | #10 (error handling), #17 (perf), #19+#23 (low priority) |
+| 🔲 Open | 2 | #17 (perf at scale), #23 (low priority) |
