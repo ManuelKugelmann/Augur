@@ -110,7 +110,13 @@ mcpServers:
     command: uvx
     args: ["mcp-server-fetch"]
     chatMenu: false
-    serverInstructions: "Fetch any URL and extract contents as markdown. Use for reading web pages, SEC filings, press releases, API docs, or any public URL."
+    serverInstructions: "Fetch any URL and extract contents as markdown. Use for reading web pages, SEC filings, press releases, API docs, or any public URL. No API key needed."
+
+  webresearch:
+    command: npx
+    args: ["-y", "@mzxrai/mcp-webresearch@latest"]
+    chatMenu: false
+    serverInstructions: "Google web search + page scraping. Use search_google for queries, visit_page to read/extract content, take_screenshot for visual capture. No API key needed. Best for real-time news, company research, regulatory updates, and any question requiring current web data."
 
   tavily:
     type: streamable-http
@@ -120,7 +126,7 @@ mcpServers:
       TAVILY_API_KEY:
         title: "Tavily API Key"
         description: "Web search API key (free: 1000 searches/month). Get one at tavily.com."
-    serverInstructions: "Web search via Tavily. Use for real-time web search, news, company info, regulatory filings, or any question requiring current web data. Free tier: 1000 searches/month."
+    serverInstructions: "Web search via Tavily API. Higher-quality search results than Google scraping. Use for precise research queries. Free tier: 1000 searches/month. Requires API key in Settings > Plugins."
 
   # ── External MCPs (Tier 2 — additive analytics & signals) ──
 
