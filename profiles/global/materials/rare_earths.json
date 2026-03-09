@@ -1,0 +1,17 @@
+{
+  "id": "rare_earths",
+  "name": "Rare Earth Elements",
+  "category": "minerals",
+  "producers": ["CHN", "MMR", "AUS", "USA", "THA"],
+  "reserves": ["CHN", "VNM", "BRA", "RUS", "IND"],
+  "processing": ["CHN", "MYS", "EST", "JPN"],
+  "end_uses": ["permanent magnets", "wind turbines", "EV motors", "electronics", "defense"],
+  "substitutes": ["ferrite magnets (weaker)", "induction motors (no magnets)"],
+  "exposure": {
+    "countries": ["CHN", "MMR", "AUS", "USA"],
+    "risk_factors": ["china_dominance", "export_controls", "environmental_processing_costs", "defense_dependency"]
+  },
+  "tags": ["critical_mineral", "strategic", "defense", "clean_energy"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "IEA", "Adamas Intelligence"]
+}

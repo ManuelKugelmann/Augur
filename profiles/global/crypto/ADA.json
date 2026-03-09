@@ -1,0 +1,15 @@
+{
+  "id": "ADA",
+  "name": "Cardano",
+  "type": "crypto",
+  "network": "Cardano",
+  "consensus": "PoS",
+  "max_supply": 45000000000,
+  "exposure": {
+    "countries": ["USA", "JPN", "DEU", "GBR"],
+    "risk_factors": ["regulatory_risk", "volatility", "adoption_risk", "development_pace"]
+  },
+  "tags": ["smart_contracts", "layer1", "pos", "peer_reviewed", "academic"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

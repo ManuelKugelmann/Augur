@@ -1,0 +1,31 @@
+{
+  "id": "GRC",
+  "name": "Greece",
+  "iso2": "GR",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Athens",
+  "population": 10400000,
+  "trade": {
+    "top_exports": ["petroleum_products", "aluminum", "pharmaceuticals", "food_products", "shipping_services"],
+    "top_partners": ["ITA", "DEU", "TUR", "BGR", "CYP"],
+    "major_ports": ["Piraeus", "Thessaloniki"],
+    "chokepoint_exposure": ["suez", "turkish_straits"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "vehicles", "machinery"],
+    "energy_mix": {"gas": 0.35, "renewables": 0.30, "coal": 0.10, "oil": 0.05, "hydro": 0.08, "other": 0.12},
+    "risk_factors": ["sovereign_debt", "tourism_dependence", "turkey_tensions", "demographic_decline"]
+  },
+  "ratings": {
+    "credit": "BBB-",
+    "democracy_index": 7.56,
+    "press_freedom_rank": 88,
+    "corruption_perception": 49
+  },
+  "tags": ["EU", "NATO", "eurozone", "OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

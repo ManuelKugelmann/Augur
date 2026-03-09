@@ -1,0 +1,17 @@
+{
+  "id": "tin",
+  "name": "Tin",
+  "category": "metals",
+  "producers": ["CHN", "IDN", "MMR", "PER", "COD"],
+  "reserves": ["CHN", "IDN", "MMR", "AUS", "BRA"],
+  "processing": ["CHN", "IDN", "MYS", "THA", "BEL"],
+  "end_uses": ["solder (electronics)", "tinplate (food cans)", "chemicals", "alloys"],
+  "substitutes": ["aluminum (packaging)", "lead-free solder alternatives"],
+  "exposure": {
+    "countries": ["CHN", "IDN", "MMR", "PER", "COD"],
+    "risk_factors": ["indonesia_export_regulation", "myanmar_instability", "electronics_cycle", "artisanal_mining"]
+  },
+  "tags": ["industrial_metal", "electronics", "solder"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "LME", "ITA"]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "wheat",
+  "name": "Wheat",
+  "category": "grains",
+  "growing_season": "Winter wheat: Oct-Jul; Spring wheat: Apr-Sep",
+  "producers": ["CHN", "IND", "RUS", "USA", "FRA", "CAN", "UKR", "AUS"],
+  "exporters": ["RUS", "CAN", "USA", "AUS", "UKR", "FRA"],
+  "water_intensity": "medium",
+  "climate_sensitivity": ["drought", "frost", "heat_stress", "excessive_rain"],
+  "exposure": {
+    "countries": ["RUS", "UKR", "USA", "CAN", "AUS", "FRA", "EGY"],
+    "commodities": [],
+    "risk_factors": ["black_sea_conflict", "export_bans", "drought", "food_security"]
+  },
+  "tags": ["grains", "food", "staple"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT", "IGC"]
+}

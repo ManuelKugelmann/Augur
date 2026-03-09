@@ -1,0 +1,31 @@
+{
+  "id": "AUS",
+  "name": "Australia",
+  "iso2": "AU",
+  "region": "Oceania",
+  "currency": "AUD",
+  "capital": "Canberra",
+  "population": 26500000,
+  "trade": {
+    "top_exports": ["iron_ore", "coal", "natural_gas", "gold", "wheat"],
+    "top_partners": ["CHN", "JPN", "KOR", "IND", "USA"],
+    "major_ports": ["Melbourne", "Sydney", "Brisbane", "Fremantle", "Port Hedland"],
+    "chokepoint_exposure": ["malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["vehicles", "petroleum", "electronics", "machinery"],
+    "energy_mix": {"coal": 0.42, "gas": 0.18, "renewables": 0.25, "hydro": 0.06, "oil": 0.02, "other": 0.07},
+    "risk_factors": ["china_trade_dependence", "bushfire_risk", "water_scarcity", "housing_bubble"]
+  },
+  "ratings": {
+    "credit": "AAA",
+    "democracy_index": 8.71,
+    "press_freedom_rank": 27,
+    "corruption_perception": 75
+  },
+  "tags": ["G20", "OECD", "Five_Eyes", "APEC", "AUKUS"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

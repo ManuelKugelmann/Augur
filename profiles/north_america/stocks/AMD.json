@@ -1,0 +1,22 @@
+{
+  "id": "AMD",
+  "name": "Advanced Micro Devices Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1969,
+    "employees": 26000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "TWN", "JPN", "KOR"],
+    "commodities": ["silicon", "rare_earths"],
+    "supply_chain": ["TSMC", "ASE Technology", "GlobalFoundries"],
+    "risk_factors": ["nvidia_competition", "china_export_controls", "semiconductor_cyclicality", "data_center_demand"]
+  },
+  "tags": ["large_cap", "semiconductors", "ai", "gpu", "data_center", "gaming"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

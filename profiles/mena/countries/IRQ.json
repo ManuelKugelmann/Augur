@@ -1,0 +1,31 @@
+{
+  "id": "IRQ",
+  "name": "Iraq",
+  "iso2": "IQ",
+  "region": "Middle East & North Africa",
+  "currency": "IQD",
+  "capital": "Baghdad",
+  "population": 43000000,
+  "trade": {
+    "top_exports": ["petroleum"],
+    "top_partners": ["CHN", "IND", "KOR", "USA", "GRC"],
+    "major_ports": ["Basra", "Umm Qasr"],
+    "chokepoint_exposure": ["hormuz"]
+  },
+  "exposure": {
+    "commodities_import": ["food_products", "machinery", "vehicles", "electronics"],
+    "energy_mix": {"oil": 0.40, "gas": 0.55, "hydro": 0.03, "other": 0.02},
+    "risk_factors": ["oil_dependence", "political_instability", "water_scarcity", "sectarian_tensions"]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 3.13,
+    "press_freedom_rank": 167,
+    "corruption_perception": 23
+  },
+  "tags": ["OPEC", "Arab_League"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

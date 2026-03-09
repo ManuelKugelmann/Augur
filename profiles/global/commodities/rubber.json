@@ -1,0 +1,18 @@
+{
+  "id": "rubber",
+  "name": "Natural Rubber",
+  "category": "agricultural",
+  "unit": "metric_ton",
+  "benchmark": "SICOM TSR20 / TOCOM RSS3",
+  "producers": ["THA", "IDN", "VNM", "CHN", "IND", "MYS"],
+  "consumers": ["CHN", "USA", "IND", "JPN", "EU"],
+  "chokepoints": ["malacca"],
+  "seasonality": "Wintering (Feb-Apr) reduces supply; monsoon affects tapping Jun-Oct",
+  "exposure": {
+    "countries": ["THA", "IDN", "VNM", "CHN", "IND"],
+    "risk_factors": ["tire_demand", "automotive_production", "leaf_disease", "synthetic_rubber_competition"]
+  },
+  "tags": ["agricultural", "industrial", "automotive"],
+  "_updated": "2026-03-09",
+  "_sources": ["IRSG", "ANRPC", "USGS"]
+}

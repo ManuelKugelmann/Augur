@@ -1,0 +1,31 @@
+{
+  "id": "KAZ",
+  "name": "Kazakhstan",
+  "iso2": "KZ",
+  "region": "Central Asia",
+  "currency": "KZT",
+  "capital": "Astana",
+  "population": 19800000,
+  "trade": {
+    "top_exports": ["petroleum", "uranium", "iron_ore", "wheat", "copper"],
+    "top_partners": ["CHN", "ITA", "RUS", "NLD", "FRA"],
+    "major_ports": ["Aktau (Caspian)"],
+    "chokepoint_exposure": ["turkish_straits"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "pharmaceuticals", "electronics"],
+    "energy_mix": {"gas": 0.20, "coal": 0.45, "oil": 0.15, "hydro": 0.10, "renewables": 0.05, "nuclear": 0.0, "other": 0.05},
+    "risk_factors": ["oil_price_dependence", "russia_dependence", "authoritarian_governance", "water_scarcity"]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 2.76,
+    "press_freedom_rank": 134,
+    "corruption_perception": 36
+  },
+  "tags": ["EAEU"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

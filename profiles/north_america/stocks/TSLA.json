@@ -1,0 +1,22 @@
+{
+  "id": "TSLA",
+  "name": "Tesla Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Consumer Discretionary",
+  "industry": "Automobile Manufacturers",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 2003,
+    "employees": 140473
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "DEU", "JPN", "AUS"],
+    "commodities": ["lithium", "cobalt", "nickel", "copper", "steel"],
+    "supply_chain": ["Panasonic", "CATL", "LG Energy Solution", "BHP"],
+    "risk_factors": ["ev_competition", "battery_supply", "china_geopolitics", "regulatory_credits", "ceo_risk"]
+  },
+  "tags": ["mega_cap", "ev", "energy_storage", "autonomous_vehicles", "ai", "magnificent_seven"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

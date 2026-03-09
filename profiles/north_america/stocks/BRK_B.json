@@ -1,0 +1,22 @@
+{
+  "id": "BRK_B",
+  "name": "Berkshire Hathaway Inc. Class B",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Financials",
+  "industry": "Multi-Sector Holdings",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1839,
+    "employees": 396500
+  },
+  "exposure": {
+    "countries": ["USA", "JPN", "GBR", "CAN", "ISR"],
+    "commodities": ["crude_oil", "natural_gas"],
+    "supply_chain": ["GEICO", "BNSF Railway", "Berkshire Hathaway Energy"],
+    "risk_factors": ["interest_rate_sensitivity", "insurance_catastrophe", "succession_risk", "equity_market_exposure"]
+  },
+  "tags": ["mega_cap", "conglomerate", "insurance", "value_investing"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

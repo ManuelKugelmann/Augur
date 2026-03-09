@@ -1,0 +1,18 @@
+{
+  "id": "sorghum",
+  "name": "Sorghum",
+  "category": "grains",
+  "growing_season": "May-Oct (US); varies in tropics",
+  "producers": ["USA", "NGA", "ETH", "IND", "MEX", "SDN", "CHN"],
+  "exporters": ["USA", "ARG", "AUS"],
+  "water_intensity": "low",
+  "climate_sensitivity": ["drought_tolerant", "heat_tolerant", "frost_sensitive"],
+  "exposure": {
+    "countries": ["USA", "CHN", "NGA", "ETH", "IND"],
+    "commodities": ["ethanol"],
+    "risk_factors": ["china_feed_demand", "corn_substitution", "african_food_security"]
+  },
+  "tags": ["grains", "feed", "food", "drought_resistant"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT"]
+}

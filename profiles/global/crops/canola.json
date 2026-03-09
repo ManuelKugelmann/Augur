@@ -1,0 +1,18 @@
+{
+  "id": "canola",
+  "name": "Canola (Rapeseed)",
+  "category": "oilseeds",
+  "growing_season": "Spring canola: Apr-Sep (Canada); Winter rapeseed: Aug-Jul (Europe)",
+  "producers": ["CAN", "CHN", "IND", "FRA", "DEU", "AUS"],
+  "exporters": ["CAN", "AUS", "UKR", "RUS"],
+  "water_intensity": "medium",
+  "climate_sensitivity": ["drought", "frost", "heat_during_flowering"],
+  "exposure": {
+    "countries": ["CAN", "CHN", "EU", "AUS", "JPN"],
+    "commodities": ["canola_oil", "canola_meal"],
+    "risk_factors": ["canada_china_trade", "biodiesel_mandates", "prairie_drought", "flea_beetle"]
+  },
+  "tags": ["oilseeds", "vegetable_oil", "biofuel"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT", "Canola Council of Canada"]
+}

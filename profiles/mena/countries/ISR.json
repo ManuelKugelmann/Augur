@@ -1,0 +1,31 @@
+{
+  "id": "ISR",
+  "name": "Israel",
+  "iso2": "IL",
+  "region": "Middle East & North Africa",
+  "currency": "ILS",
+  "capital": "Jerusalem",
+  "population": 9800000,
+  "trade": {
+    "top_exports": ["electronics", "diamonds", "pharmaceuticals", "chemicals", "machinery"],
+    "top_partners": ["USA", "CHN", "GBR", "IRL", "IND"],
+    "major_ports": ["Haifa", "Ashdod", "Eilat"],
+    "chokepoint_exposure": ["suez", "bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "diamonds", "vehicles", "machinery"],
+    "energy_mix": {"gas": 0.65, "coal": 0.15, "renewables": 0.10, "oil": 0.05, "other": 0.05},
+    "risk_factors": ["regional_conflict", "political_polarization", "water_scarcity"]
+  },
+  "ratings": {
+    "credit": "A+",
+    "democracy_index": 7.53,
+    "press_freedom_rank": 101,
+    "corruption_perception": 62
+  },
+  "tags": ["OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

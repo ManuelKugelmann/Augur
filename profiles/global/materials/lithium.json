@@ -1,0 +1,17 @@
+{
+  "id": "lithium",
+  "name": "Lithium",
+  "category": "minerals",
+  "producers": ["AUS", "CHL", "CHN", "ARG"],
+  "reserves": ["CHL", "AUS", "ARG", "CHN"],
+  "processing": ["CHN", "CHL", "ARG", "AUS"],
+  "end_uses": ["EV batteries", "consumer electronics", "ceramics", "glass"],
+  "substitutes": ["sodium-ion batteries", "solid-state alternatives"],
+  "exposure": {
+    "countries": ["AUS", "CHL", "CHN", "ARG"],
+    "risk_factors": ["china_processing_dominance", "supply_concentration", "ev_demand_growth", "brine_vs_hardrock_economics"]
+  },
+  "tags": ["critical_mineral", "battery", "ev"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "IEA"]
+}

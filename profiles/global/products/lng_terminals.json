@@ -1,0 +1,18 @@
+{
+  "id": "lng_terminals",
+  "name": "LNG Terminals",
+  "category": "energy_infrastructure",
+  "hs_codes": ["2711.11"],
+  "manufacturers": ["USA", "QAT", "AUS", "RUS", "MYS"],
+  "inputs": ["steel", "compressors", "cryogenic_equipment"],
+  "trade_volume": "$150B annual",
+  "exposure": {
+    "countries": ["USA", "QAT", "AUS", "RUS", "MYS", "NGA", "TTO"],
+    "materials": ["steel"],
+    "commodities": ["natural_gas"],
+    "risk_factors": ["long_term_contracts", "regasification_capacity", "geopolitical_rerouting"]
+  },
+  "tags": ["energy_security", "infrastructure"],
+  "_updated": "2026-03-09",
+  "_sources": ["IGU", "EIA", "GIIGNL"]
+}

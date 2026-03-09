@@ -1,0 +1,16 @@
+{
+  "id": "XLV",
+  "name": "Health Care Select Sector SPDR Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "State Street Global Advisors",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Healthcare"],
+    "risk_factors": ["regulatory_risk", "drug_pricing", "patent_cliffs"]
+  },
+  "tags": ["healthcare", "sector", "pharma", "biotech", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["State Street Global Advisors", "Yahoo Finance"]
+}

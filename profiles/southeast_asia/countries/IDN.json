@@ -1,0 +1,31 @@
+{
+  "id": "IDN",
+  "name": "Indonesia",
+  "iso2": "ID",
+  "region": "Southeast Asia",
+  "currency": "IDR",
+  "capital": "Jakarta",
+  "population": 277000000,
+  "trade": {
+    "top_exports": ["palm_oil", "coal", "petroleum", "iron_steel", "rubber"],
+    "top_partners": ["CHN", "USA", "JPN", "IND", "MYS"],
+    "major_ports": ["Tanjung Priok (Jakarta)", "Tanjung Perak (Surabaya)", "Belawan"],
+    "chokepoint_exposure": ["malacca", "lombok_strait", "sunda_strait"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "electronics", "iron_steel"],
+    "energy_mix": {"coal": 0.45, "gas": 0.18, "oil": 0.10, "hydro": 0.07, "renewables": 0.10, "other": 0.10},
+    "risk_factors": ["commodity_price_exposure", "deforestation", "natural_disasters", "capital_relocation"]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 6.71,
+    "press_freedom_rank": 111,
+    "corruption_perception": 34
+  },
+  "tags": ["G20", "ASEAN", "APEC", "OPEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

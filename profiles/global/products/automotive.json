@@ -1,0 +1,18 @@
+{
+  "id": "automotive",
+  "name": "Automotive",
+  "category": "transportation",
+  "hs_codes": ["8703", "8704"],
+  "manufacturers": ["CHN", "JPN", "DEU", "KOR", "USA", "IND"],
+  "inputs": ["steel", "aluminum", "semiconductors", "rubber", "glass", "ev_batteries"],
+  "trade_volume": "$1.5T annual",
+  "exposure": {
+    "countries": ["CHN", "JPN", "DEU", "KOR", "USA", "MEX", "IND"],
+    "materials": ["steel", "aluminum", "lithium", "copper"],
+    "commodities": ["crude_oil", "natural_gas", "rubber"],
+    "risk_factors": ["ev_transition", "chip_shortage", "tariff_escalation"]
+  },
+  "tags": ["manufacturing", "ev_transition"],
+  "_updated": "2026-03-09",
+  "_sources": ["OICA", "IHS Markit"]
+}

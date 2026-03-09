@@ -1,0 +1,22 @@
+{
+  "id": "MMM",
+  "name": "3M Company",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Industrials",
+  "industry": "Industrial Conglomerates",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1902,
+    "employees": 85000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "DEU", "JPN", "BRA", "IND"],
+    "commodities": ["petroleum", "fluorochemicals", "aluminum"],
+    "supply_chain": ["BASF", "DuPont", "Honeywell"],
+    "risk_factors": ["pfas_litigation", "industrial_demand", "restructuring_costs", "regulatory_compliance"]
+  },
+  "tags": ["conglomerate", "industrial", "materials", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

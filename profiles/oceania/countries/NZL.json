@@ -1,0 +1,31 @@
+{
+  "id": "NZL",
+  "name": "New Zealand",
+  "iso2": "NZ",
+  "region": "Oceania",
+  "currency": "NZD",
+  "capital": "Wellington",
+  "population": 5200000,
+  "trade": {
+    "top_exports": ["dairy", "meat", "wood", "wine", "fruit"],
+    "top_partners": ["CHN", "AUS", "USA", "JPN", "KOR"],
+    "major_ports": ["Auckland", "Tauranga", "Lyttelton"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "electronics"],
+    "energy_mix": {"hydro": 0.55, "renewables": 0.25, "gas": 0.10, "coal": 0.03, "oil": 0.02, "other": 0.05},
+    "risk_factors": ["china_trade_dependence", "earthquake_risk", "dairy_price_volatility", "small_open_economy"]
+  },
+  "ratings": {
+    "credit": "AAA",
+    "democracy_index": 9.37,
+    "press_freedom_rank": 13,
+    "corruption_perception": 85
+  },
+  "tags": ["OECD", "Five_Eyes", "APEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

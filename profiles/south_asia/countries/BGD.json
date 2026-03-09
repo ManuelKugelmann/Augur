@@ -1,0 +1,31 @@
+{
+  "id": "BGD",
+  "name": "Bangladesh",
+  "iso2": "BD",
+  "region": "South Asia",
+  "currency": "BDT",
+  "capital": "Dhaka",
+  "population": 172000000,
+  "trade": {
+    "top_exports": ["garments", "textiles", "jute", "footwear", "shrimp"],
+    "top_partners": ["USA", "DEU", "GBR", "FRA", "ESP"],
+    "major_ports": ["Chittagong", "Mongla"],
+    "chokepoint_exposure": ["malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "cotton", "iron_steel", "machinery", "food_grains"],
+    "energy_mix": {"gas": 0.65, "oil": 0.10, "coal": 0.05, "renewables": 0.05, "hydro": 0.01, "other": 0.14},
+    "risk_factors": ["climate_vulnerability", "garment_dependence", "flood_risk", "political_instability"]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 5.99,
+    "press_freedom_rank": 163,
+    "corruption_perception": 25
+  },
+  "tags": ["LDC_graduating"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

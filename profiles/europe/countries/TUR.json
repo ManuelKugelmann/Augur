@@ -1,0 +1,31 @@
+{
+  "id": "TUR",
+  "name": "Turkey",
+  "iso2": "TR",
+  "region": "Europe",
+  "currency": "TRY",
+  "capital": "Ankara",
+  "population": 85000000,
+  "trade": {
+    "top_exports": ["vehicles", "machinery", "steel", "textiles", "electronics"],
+    "top_partners": ["DEU", "GBR", "IRQ", "USA", "ITA"],
+    "major_ports": ["Istanbul (Ambarli)", "Mersin", "Izmir (Aliaga)"],
+    "chokepoint_exposure": ["turkish_straits", "suez"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "gold", "iron_steel"],
+    "energy_mix": {"gas": 0.22, "coal": 0.32, "hydro": 0.20, "renewables": 0.16, "oil": 0.01, "nuclear": 0.04, "other": 0.05},
+    "risk_factors": ["lira_depreciation", "high_inflation", "geopolitical_tensions", "current_account_deficit"]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 4.35,
+    "press_freedom_rank": 165,
+    "corruption_perception": 36
+  },
+  "tags": ["NATO", "G20", "OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

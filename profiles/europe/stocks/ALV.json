@@ -1,0 +1,22 @@
+{
+  "id": "ALV",
+  "name": "Allianz SE",
+  "type": "stock",
+  "exchange": "XETRA",
+  "sector": "Financials",
+  "industry": "Multi-line Insurance",
+  "country": "DEU",
+  "fundamentals": {
+    "founded": 1890,
+    "employees": 159000
+  },
+  "exposure": {
+    "countries": ["DEU", "USA", "FRA", "ITA", "GBR", "AUS"],
+    "commodities": [],
+    "supply_chain": ["PIMCO", "Allianz Global Investors", "Euler Hermes"],
+    "risk_factors": ["interest_rate_sensitivity", "catastrophe_losses", "investment_returns", "regulatory_solvency"]
+  },
+  "tags": ["insurance", "asset_management", "financials", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

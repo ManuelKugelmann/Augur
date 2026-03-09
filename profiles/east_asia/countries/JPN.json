@@ -1,0 +1,31 @@
+{
+  "id": "JPN",
+  "name": "Japan",
+  "iso2": "JP",
+  "region": "East Asia",
+  "currency": "JPY",
+  "capital": "Tokyo",
+  "population": 124000000,
+  "trade": {
+    "top_exports": ["vehicles", "machinery", "electronics", "steel", "chemicals"],
+    "top_partners": ["CHN", "USA", "KOR", "TWN", "THA"],
+    "major_ports": ["Tokyo", "Yokohama", "Nagoya", "Kobe", "Osaka"],
+    "chokepoint_exposure": ["malacca", "taiwan_strait", "hormuz"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "coal", "electronics", "food_products"],
+    "energy_mix": {"gas": 0.30, "coal": 0.27, "renewables": 0.13, "nuclear": 0.10, "hydro": 0.08, "oil": 0.05, "other": 0.07},
+    "risk_factors": ["demographic_decline", "sovereign_debt", "energy_import_dependence", "natural_disasters"]
+  },
+  "ratings": {
+    "credit": "A+",
+    "democracy_index": 8.33,
+    "press_freedom_rank": 68,
+    "corruption_perception": 73
+  },
+  "tags": ["G7", "OECD", "APEC", "reserve_currency"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

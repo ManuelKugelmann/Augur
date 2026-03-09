@@ -1,0 +1,31 @@
+{
+  "id": "UKR",
+  "name": "Ukraine",
+  "iso2": "UA",
+  "region": "Europe",
+  "currency": "UAH",
+  "capital": "Kyiv",
+  "population": 37000000,
+  "trade": {
+    "top_exports": ["cereals", "iron_ore", "sunflower_oil", "steel", "machinery"],
+    "top_partners": ["POL", "ROU", "TUR", "CHN", "DEU"],
+    "major_ports": ["Odesa", "Mykolaiv", "Chornomorsk"],
+    "chokepoint_exposure": ["turkish_straits"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "machinery", "vehicles"],
+    "energy_mix": {"nuclear": 0.55, "gas": 0.15, "coal": 0.12, "hydro": 0.06, "renewables": 0.08, "oil": 0.01, "other": 0.03},
+    "risk_factors": ["active_conflict", "infrastructure_destruction", "economic_contraction", "grain_export_disruption"]
+  },
+  "ratings": {
+    "credit": "CC",
+    "democracy_index": 5.42,
+    "press_freedom_rank": 79,
+    "corruption_perception": 33
+  },
+  "tags": ["EU_candidate"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "SPY",
+  "name": "SPDR S&P 500 ETF Trust",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "State Street Global Advisors",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Technology", "Healthcare", "Financials", "Consumer Discretionary", "Communication Services", "Industrials", "Consumer Staples", "Energy", "Utilities", "Real Estate", "Materials"],
+    "risk_factors": ["us_market_risk", "large_cap_concentration", "tech_overweight"]
+  },
+  "tags": ["sp500", "large_cap", "us_equity", "benchmark", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["State Street Global Advisors", "Yahoo Finance"]
+}

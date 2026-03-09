@@ -1,0 +1,31 @@
+{
+  "id": "ESP",
+  "name": "Spain",
+  "iso2": "ES",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Madrid",
+  "population": 48000000,
+  "trade": {
+    "top_exports": ["vehicles", "machinery", "food_products", "pharmaceuticals", "chemicals"],
+    "top_partners": ["FRA", "DEU", "PRT", "ITA", "GBR"],
+    "major_ports": ["Valencia", "Algeciras", "Barcelona", "Bilbao"],
+    "chokepoint_exposure": ["suez", "gibraltar"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "vehicles", "electronics"],
+    "energy_mix": {"renewables": 0.35, "nuclear": 0.20, "gas": 0.25, "oil": 0.03, "coal": 0.03, "hydro": 0.10, "other": 0.04},
+    "risk_factors": ["youth_unemployment", "regional_separatism", "tourism_dependence"]
+  },
+  "ratings": {
+    "credit": "A",
+    "democracy_index": 7.94,
+    "press_freedom_rank": 32,
+    "corruption_perception": 60
+  },
+  "tags": ["EU", "NATO", "eurozone", "OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

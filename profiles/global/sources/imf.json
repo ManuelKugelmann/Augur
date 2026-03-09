@@ -1,0 +1,16 @@
+{
+  "id": "imf",
+  "name": "International Monetary Fund",
+  "mcp": "macro",
+  "tool": "imf_weo",
+  "api_base": "https://www.imf.org/external/datamapper/api/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "quarterly",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 90,
+  "_updated": "2026-03-09",
+  "_sources": ["IMF Data Mapper Docs"]
+}

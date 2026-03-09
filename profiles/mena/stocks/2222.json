@@ -1,0 +1,22 @@
+{
+  "id": "2222",
+  "name": "Saudi Arabian Oil Company (Saudi Aramco)",
+  "type": "stock",
+  "exchange": "Tadawul",
+  "sector": "Energy",
+  "industry": "Integrated Oil & Gas",
+  "country": "SAU",
+  "fundamentals": {
+    "founded": 1933,
+    "employees": 73000
+  },
+  "exposure": {
+    "countries": ["SAU", "CHN", "JPN", "KOR", "IND", "USA"],
+    "commodities": ["crude_oil", "natural_gas", "petrochemicals"],
+    "supply_chain": ["SABIC", "Schlumberger", "Halliburton", "Baker Hughes"],
+    "risk_factors": ["oil_price_volatility", "opec_policy", "energy_transition", "geopolitical_middle_east", "saudi_diversification"]
+  },
+  "tags": ["energy", "oil_gas", "mega_cap", "state_owned"],
+  "_updated": "2026-03-09",
+  "_sources": ["Tadawul", "Yahoo Finance"]
+}

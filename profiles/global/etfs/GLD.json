@@ -1,0 +1,16 @@
+{
+  "id": "GLD",
+  "name": "SPDR Gold Shares",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "State Street Global Advisors",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "commodities": ["gold"],
+    "risk_factors": ["commodity_price_risk", "currency_risk", "inflation_sensitivity"]
+  },
+  "tags": ["gold", "commodity", "safe_haven", "inflation_hedge", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["State Street Global Advisors", "Yahoo Finance"]
+}

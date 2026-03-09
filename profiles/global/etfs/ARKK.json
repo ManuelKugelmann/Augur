@@ -1,0 +1,16 @@
+{
+  "id": "ARKK",
+  "name": "ARK Innovation ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "ARK Invest",
+  "strategy": "active",
+  "exposure": {
+    "countries": ["USA", "CHN", "CAN", "JPN"],
+    "sectors": ["Technology", "Healthcare", "Communication Services", "Financials"],
+    "risk_factors": ["concentration_risk", "growth_factor", "high_volatility", "active_management_risk"]
+  },
+  "tags": ["innovation", "disruptive_tech", "active", "growth", "high_conviction"],
+  "_updated": "2026-03-09",
+  "_sources": ["ARK Invest", "Yahoo Finance"]
+}

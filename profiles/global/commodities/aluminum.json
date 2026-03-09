@@ -1,0 +1,18 @@
+{
+  "id": "aluminum",
+  "name": "Aluminum",
+  "category": "base_metals",
+  "unit": "metric_ton",
+  "benchmark": "LME Aluminum",
+  "producers": ["CHN", "IND", "RUS", "CAN", "ARE", "AUS"],
+  "consumers": ["CHN", "USA", "DEU", "JPN", "IND"],
+  "chokepoints": [],
+  "seasonality": "Construction and automotive production cycles; beverage can demand peaks in summer",
+  "exposure": {
+    "countries": ["CHN", "RUS", "AUS", "CAN", "IND", "GIN"],
+    "risk_factors": ["energy_costs", "china_overcapacity", "sanctions_russia", "bauxite_supply"]
+  },
+  "tags": ["base_metal", "industrial", "packaging", "transport"],
+  "_updated": "2026-03-09",
+  "_sources": ["IAI", "USGS", "LME"]
+}

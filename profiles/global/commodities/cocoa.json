@@ -1,0 +1,18 @@
+{
+  "id": "cocoa",
+  "name": "Cocoa",
+  "category": "agricultural",
+  "unit": "metric_ton",
+  "benchmark": "ICE Cocoa (NY) / ICE Cocoa (London)",
+  "producers": ["CIV", "GHA", "ECU", "CMR", "NGA", "IDN"],
+  "consumers": ["EU", "USA", "CHN", "BRA", "RUS"],
+  "chokepoints": [],
+  "seasonality": "Main crop Oct-Mar (West Africa); mid-crop May-Aug; Harmattan wind risk Dec-Feb",
+  "exposure": {
+    "countries": ["CIV", "GHA", "ECU", "CMR", "NLD", "DEU"],
+    "risk_factors": ["west_africa_concentration", "climate_change", "swollen_shoot_virus", "child_labor_regulation"]
+  },
+  "tags": ["agricultural", "soft", "food", "chocolate"],
+  "_updated": "2026-03-09",
+  "_sources": ["ICCO", "USDA", "FAOSTAT"]
+}

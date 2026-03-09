@@ -1,0 +1,31 @@
+{
+  "id": "CHL",
+  "name": "Chile",
+  "iso2": "CL",
+  "region": "Latin America",
+  "currency": "CLP",
+  "capital": "Santiago",
+  "population": 19500000,
+  "trade": {
+    "top_exports": ["copper", "lithium", "fruit", "salmon", "wine"],
+    "top_partners": ["CHN", "USA", "JPN", "KOR", "BRA"],
+    "major_ports": ["San Antonio", "Valparaiso", "Mejillones"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "electronics"],
+    "energy_mix": {"renewables": 0.35, "gas": 0.15, "coal": 0.18, "hydro": 0.20, "oil": 0.07, "other": 0.05},
+    "risk_factors": ["copper_price_dependence", "water_scarcity", "social_inequality"]
+  },
+  "ratings": {
+    "credit": "A",
+    "democracy_index": 8.28,
+    "press_freedom_rank": 52,
+    "corruption_perception": 67
+  },
+  "tags": ["OECD", "Pacific_Alliance", "APEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "PFE",
+  "name": "Pfizer Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1849,
+    "employees": 88000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "JPN", "DEU", "GBR", "BRA"],
+    "commodities": [],
+    "supply_chain": ["BioNTech", "Catalent", "Lonza"],
+    "risk_factors": ["patent_cliffs", "drug_pricing_regulation", "fda_approval", "pipeline_risk"]
+  },
+  "tags": ["large_cap", "pharma", "vaccines", "oncology"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

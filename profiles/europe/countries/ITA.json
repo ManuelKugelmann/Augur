@@ -1,0 +1,31 @@
+{
+  "id": "ITA",
+  "name": "Italy",
+  "iso2": "IT",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Rome",
+  "population": 59000000,
+  "trade": {
+    "top_exports": ["machinery", "pharmaceuticals", "vehicles", "clothing", "food_products"],
+    "top_partners": ["DEU", "FRA", "USA", "ESP", "CHE"],
+    "major_ports": ["Genoa", "Trieste", "Gioia Tauro", "La Spezia"],
+    "chokepoint_exposure": ["suez"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "vehicles", "chemicals"],
+    "energy_mix": {"gas": 0.40, "renewables": 0.22, "hydro": 0.11, "oil": 0.05, "coal": 0.05, "other": 0.17},
+    "risk_factors": ["sovereign_debt", "demographic_decline", "north_south_divide"]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 7.69,
+    "press_freedom_rank": 41,
+    "corruption_perception": 56
+  },
+  "tags": ["EU", "G7", "NATO", "eurozone", "OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

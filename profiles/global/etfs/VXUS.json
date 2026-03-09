@@ -1,0 +1,16 @@
+{
+  "id": "VXUS",
+  "name": "Vanguard Total International Stock ETF",
+  "type": "etf",
+  "exchange": "NASDAQ",
+  "issuer": "Vanguard",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["JPN", "GBR", "CHN", "CAN", "FRA", "CHE", "DEU", "AUS", "KOR", "IND", "TWN"],
+    "sectors": ["Financials", "Technology", "Industrials", "Consumer Discretionary", "Healthcare", "Consumer Staples"],
+    "risk_factors": ["currency_risk", "geopolitical_risk", "em_exposure"]
+  },
+  "tags": ["international", "ex_us", "all_cap", "diversified", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Vanguard", "Yahoo Finance"]
+}

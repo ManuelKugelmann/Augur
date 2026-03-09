@@ -1,0 +1,16 @@
+{
+  "id": "XLK",
+  "name": "Technology Select Sector SPDR Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "State Street Global Advisors",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Technology"],
+    "risk_factors": ["tech_concentration", "valuation_risk", "regulatory_risk"]
+  },
+  "tags": ["technology", "sector", "large_cap", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["State Street Global Advisors", "Yahoo Finance"]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "VNQ",
+  "name": "Vanguard Real Estate ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "Vanguard",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Real Estate"],
+    "risk_factors": ["interest_rate_sensitivity", "real_estate_cycle", "occupancy_risk"]
+  },
+  "tags": ["real_estate", "reits", "income", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Vanguard", "Yahoo Finance"]
+}

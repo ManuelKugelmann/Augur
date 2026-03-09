@@ -1,0 +1,31 @@
+{
+  "id": "PER",
+  "name": "Peru",
+  "iso2": "PE",
+  "region": "Latin America",
+  "currency": "PEN",
+  "capital": "Lima",
+  "population": 34000000,
+  "trade": {
+    "top_exports": ["copper", "gold", "zinc", "petroleum", "fishmeal"],
+    "top_partners": ["CHN", "USA", "KOR", "JPN", "CAN"],
+    "major_ports": ["Callao", "Paita", "Matarani"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "electronics"],
+    "energy_mix": {"hydro": 0.50, "gas": 0.35, "oil": 0.05, "renewables": 0.06, "coal": 0.02, "other": 0.02},
+    "risk_factors": ["mining_dependence", "political_instability", "el_nino_vulnerability"]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 5.86,
+    "press_freedom_rank": 110,
+    "corruption_perception": 36
+  },
+  "tags": ["Pacific_Alliance", "APEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

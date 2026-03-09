@@ -1,0 +1,22 @@
+{
+  "id": "TCS",
+  "name": "Tata Consultancy Services Limited",
+  "type": "stock",
+  "exchange": "BSE",
+  "sector": "Information Technology",
+  "industry": "IT Consulting & Other Services",
+  "country": "IND",
+  "fundamentals": {
+    "founded": 1968,
+    "employees": 614000
+  },
+  "exposure": {
+    "countries": ["IND", "USA", "GBR", "DEU", "JPN", "AUS"],
+    "commodities": [],
+    "supply_chain": ["Tata Group", "Microsoft", "AWS", "Google Cloud"],
+    "risk_factors": ["us_visa_policy", "rupee_volatility", "enterprise_spending", "ai_disruption", "talent_attrition"]
+  },
+  "tags": ["it_services", "consulting", "outsourcing", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["BSE India", "Yahoo Finance"]
+}

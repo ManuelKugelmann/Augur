@@ -1,0 +1,31 @@
+{
+  "id": "ROU",
+  "name": "Romania",
+  "iso2": "RO",
+  "region": "Europe",
+  "currency": "RON",
+  "capital": "Bucharest",
+  "population": 19000000,
+  "trade": {
+    "top_exports": ["vehicles", "machinery", "electronics", "cereals", "furniture"],
+    "top_partners": ["DEU", "ITA", "FRA", "HUN", "BGR"],
+    "major_ports": ["Constanta"],
+    "chokepoint_exposure": ["turkish_straits"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "vehicles", "machinery"],
+    "energy_mix": {"gas": 0.30, "hydro": 0.22, "nuclear": 0.18, "coal": 0.15, "renewables": 0.12, "oil": 0.01, "other": 0.02},
+    "risk_factors": ["brain_drain", "corruption", "ukraine_war_proximity"]
+  },
+  "ratings": {
+    "credit": "BBB-",
+    "democracy_index": 6.40,
+    "press_freedom_rank": 53,
+    "corruption_perception": 46
+  },
+  "tags": ["EU", "NATO"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

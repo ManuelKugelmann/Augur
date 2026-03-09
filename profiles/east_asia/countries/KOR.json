@@ -1,0 +1,31 @@
+{
+  "id": "KOR",
+  "name": "South Korea",
+  "iso2": "KR",
+  "region": "East Asia",
+  "currency": "KRW",
+  "capital": "Seoul",
+  "population": 52000000,
+  "trade": {
+    "top_exports": ["semiconductors", "vehicles", "petroleum_products", "ships", "electronics"],
+    "top_partners": ["CHN", "USA", "VNM", "JPN", "HKG"],
+    "major_ports": ["Busan", "Incheon", "Ulsan", "Gwangyang"],
+    "chokepoint_exposure": ["malacca", "taiwan_strait"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "coal", "iron_ore", "semiconductors"],
+    "energy_mix": {"gas": 0.27, "coal": 0.28, "nuclear": 0.28, "renewables": 0.08, "oil": 0.03, "hydro": 0.01, "other": 0.05},
+    "risk_factors": ["north_korea_risk", "china_dependence", "demographic_crisis", "semiconductor_cycle"]
+  },
+  "ratings": {
+    "credit": "AA",
+    "democracy_index": 8.03,
+    "press_freedom_rank": 47,
+    "corruption_perception": 63
+  },
+  "tags": ["OECD", "G20", "APEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

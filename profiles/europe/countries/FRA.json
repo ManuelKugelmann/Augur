@@ -1,0 +1,31 @@
+{
+  "id": "FRA",
+  "name": "France",
+  "iso2": "FR",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Paris",
+  "population": 68000000,
+  "trade": {
+    "top_exports": ["aircraft", "pharmaceuticals", "vehicles", "wine", "machinery"],
+    "top_partners": ["DEU", "USA", "ITA", "ESP", "BEL"],
+    "major_ports": ["Le Havre", "Marseille", "Dunkirk"],
+    "chokepoint_exposure": ["suez", "dover_strait"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "vehicles", "electronics"],
+    "energy_mix": {"nuclear": 0.65, "renewables": 0.14, "gas": 0.07, "hydro": 0.10, "coal": 0.01, "oil": 0.01, "other": 0.02},
+    "risk_factors": ["fiscal_deficit", "social_unrest", "pension_reform_tensions"]
+  },
+  "ratings": {
+    "credit": "AA-",
+    "democracy_index": 8.07,
+    "press_freedom_rank": 24,
+    "corruption_perception": 72
+  },
+  "tags": ["EU", "G7", "NATO", "eurozone", "OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

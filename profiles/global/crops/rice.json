@@ -1,0 +1,18 @@
+{
+  "id": "rice",
+  "name": "Rice",
+  "category": "grains",
+  "growing_season": "Varies by region; monsoon-dependent in South/Southeast Asia (Jun-Nov)",
+  "producers": ["CHN", "IND", "IDN", "BGD", "VNM", "THA", "MMR"],
+  "exporters": ["IND", "THA", "VNM", "PAK", "USA"],
+  "water_intensity": "high",
+  "climate_sensitivity": ["drought", "flooding", "monsoon_disruption", "salinity"],
+  "exposure": {
+    "countries": ["IND", "THA", "VNM", "CHN", "PHL", "NGA"],
+    "commodities": [],
+    "risk_factors": ["export_bans", "monsoon_failure", "el_nino", "food_security"]
+  },
+  "tags": ["grains", "food", "staple"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT", "IRRI"]
+}

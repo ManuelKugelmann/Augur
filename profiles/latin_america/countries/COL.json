@@ -1,0 +1,31 @@
+{
+  "id": "COL",
+  "name": "Colombia",
+  "iso2": "CO",
+  "region": "Latin America",
+  "currency": "COP",
+  "capital": "Bogota",
+  "population": 52000000,
+  "trade": {
+    "top_exports": ["petroleum", "coal", "coffee", "gold", "flowers"],
+    "top_partners": ["USA", "CHN", "PAN", "ECU", "BRA"],
+    "major_ports": ["Cartagena", "Buenaventura", "Barranquilla", "Santa Marta"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "chemicals", "vehicles", "electronics"],
+    "energy_mix": {"hydro": 0.65, "gas": 0.15, "oil": 0.03, "coal": 0.08, "renewables": 0.06, "other": 0.03},
+    "risk_factors": ["commodity_dependence", "armed_conflict_legacy", "coca_economy"]
+  },
+  "ratings": {
+    "credit": "BB+",
+    "democracy_index": 7.04,
+    "press_freedom_rank": 130,
+    "corruption_perception": 39
+  },
+  "tags": ["OECD", "Pacific_Alliance"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

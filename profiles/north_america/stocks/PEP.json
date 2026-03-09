@@ -1,0 +1,22 @@
+{
+  "id": "PEP",
+  "name": "PepsiCo Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Consumer Staples",
+  "industry": "Soft Drinks & Non-alcoholic Beverages",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1898,
+    "employees": 318000
+  },
+  "exposure": {
+    "countries": ["USA", "MEX", "RUS", "GBR", "CHN", "BRA"],
+    "commodities": ["corn", "potatoes", "sugar", "palm_oil", "aluminum"],
+    "supply_chain": ["Frito-Lay suppliers", "Ball Corporation", "Ardagh Group"],
+    "risk_factors": ["commodity_input_costs", "fx_risk", "health_trends", "sugar_tax"]
+  },
+  "tags": ["mega_cap", "beverages", "snacks", "consumer_staples", "dividend_aristocrat", "defensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

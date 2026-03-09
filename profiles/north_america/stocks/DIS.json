@@ -1,0 +1,22 @@
+{
+  "id": "DIS",
+  "name": "The Walt Disney Company",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Communication Services",
+  "industry": "Movies & Entertainment",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1923,
+    "employees": 225000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "JPN", "GBR", "FRA", "IND"],
+    "commodities": [],
+    "supply_chain": ["Pixar", "Marvel", "Lucasfilm", "ESPN", "Hulu"],
+    "risk_factors": ["streaming_competition", "theme_park_cyclicality", "content_costs", "cord_cutting", "china_regulatory"]
+  },
+  "tags": ["media", "entertainment", "streaming", "theme_parks", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

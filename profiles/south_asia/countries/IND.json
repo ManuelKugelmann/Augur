@@ -1,0 +1,31 @@
+{
+  "id": "IND",
+  "name": "India",
+  "iso2": "IN",
+  "region": "South Asia",
+  "currency": "INR",
+  "capital": "New Delhi",
+  "population": 1430000000,
+  "trade": {
+    "top_exports": ["petroleum_products", "pharmaceuticals", "jewelry", "textiles", "rice"],
+    "top_partners": ["USA", "ARE", "NLD", "CHN", "GBR"],
+    "major_ports": ["Mumbai (JNPT)", "Mundra", "Chennai", "Visakhapatnam", "Kandla"],
+    "chokepoint_exposure": ["hormuz", "malacca", "bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "gold", "electronics", "coal", "palm_oil"],
+    "energy_mix": {"coal": 0.50, "renewables": 0.12, "gas": 0.06, "hydro": 0.10, "nuclear": 0.03, "oil": 0.02, "other": 0.17},
+    "risk_factors": ["oil_import_dependence", "water_stress", "border_tensions", "monsoon_variability"]
+  },
+  "ratings": {
+    "credit": "BBB-",
+    "democracy_index": 7.18,
+    "press_freedom_rank": 150,
+    "corruption_perception": 39
+  },
+  "tags": ["BRICS", "G20"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

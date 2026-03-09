@@ -1,0 +1,18 @@
+{
+  "id": "ev_batteries",
+  "name": "EV Batteries",
+  "category": "energy_storage",
+  "hs_codes": ["8507.60"],
+  "manufacturers": ["CHN", "KOR", "JPN", "USA", "DEU"],
+  "inputs": ["lithium", "cobalt", "nickel", "manganese", "graphite"],
+  "trade_volume": "$130B annual",
+  "exposure": {
+    "countries": ["CHN", "KOR", "JPN", "USA", "DEU", "COD", "AUS", "CHL"],
+    "materials": ["lithium", "cobalt", "nickel", "graphite"],
+    "commodities": ["copper"],
+    "risk_factors": ["china_dominance", "cobalt_supply_chain", "lithium_price_volatility"]
+  },
+  "tags": ["green_transition", "critical_minerals"],
+  "_updated": "2026-03-09",
+  "_sources": ["BloombergNEF", "IEA"]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "IRL",
+  "name": "Ireland",
+  "iso2": "IE",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Dublin",
+  "population": 5200000,
+  "trade": {
+    "top_exports": ["pharmaceuticals", "chemicals", "medical_devices", "software", "food_products"],
+    "top_partners": ["USA", "GBR", "BEL", "DEU", "NLD"],
+    "major_ports": ["Dublin", "Cork"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "electronics"],
+    "energy_mix": {"gas": 0.45, "renewables": 0.35, "oil": 0.03, "coal": 0.05, "other": 0.12},
+    "risk_factors": ["multinational_tax_dependence", "housing_crisis", "brexit_spillover"]
+  },
+  "ratings": {
+    "credit": "AA-",
+    "democracy_index": 8.90,
+    "press_freedom_rank": 8,
+    "corruption_perception": 77
+  },
+  "tags": ["EU", "eurozone", "OECD"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

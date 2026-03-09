@@ -1,0 +1,31 @@
+{
+  "id": "MEX",
+  "name": "Mexico",
+  "iso2": "MX",
+  "region": "North America",
+  "currency": "MXN",
+  "capital": "Mexico City",
+  "population": 130000000,
+  "trade": {
+    "top_exports": ["vehicles", "electronics", "petroleum", "machinery", "medical_instruments"],
+    "top_partners": ["USA", "CHN", "DEU", "JPN", "KOR"],
+    "major_ports": ["Manzanillo", "Lazaro Cardenas", "Veracruz", "Altamira"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["electronics", "petroleum_products", "machinery", "steel"],
+    "energy_mix": {"gas": 0.50, "oil": 0.10, "renewables": 0.17, "hydro": 0.10, "nuclear": 0.03, "coal": 0.07, "other": 0.03},
+    "risk_factors": ["us_trade_dependence", "cartel_violence", "energy_reform_uncertainty"]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 5.57,
+    "press_freedom_rank": 127,
+    "corruption_perception": 31
+  },
+  "tags": ["USMCA", "OECD", "G20", "Pacific_Alliance"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

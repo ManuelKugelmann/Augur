@@ -1,0 +1,16 @@
+{
+  "id": "USO",
+  "name": "United States Oil Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "USCF Investments",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "commodities": ["oil"],
+    "risk_factors": ["oil_price_risk", "contango_risk", "roll_yield", "geopolitical_risk"]
+  },
+  "tags": ["oil", "commodity", "futures_based", "wti", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["USCF Investments", "Yahoo Finance"]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "ZAF",
+  "name": "South Africa",
+  "iso2": "ZA",
+  "region": "Sub-Saharan Africa",
+  "currency": "ZAR",
+  "capital": "Pretoria",
+  "population": 60000000,
+  "trade": {
+    "top_exports": ["gold", "platinum", "iron_ore", "vehicles", "coal"],
+    "top_partners": ["CHN", "USA", "DEU", "GBR", "IND"],
+    "major_ports": ["Durban", "Cape Town", "Richards Bay", "Port Elizabeth"],
+    "chokepoint_exposure": ["cape_of_good_hope"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "electronics", "vehicles"],
+    "energy_mix": {"coal": 0.70, "renewables": 0.10, "nuclear": 0.05, "gas": 0.03, "hydro": 0.02, "oil": 0.02, "other": 0.08},
+    "risk_factors": ["load_shedding", "inequality", "unemployment", "state_enterprise_debt"]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 7.05,
+    "press_freedom_rank": 25,
+    "corruption_perception": 43
+  },
+  "tags": ["BRICS", "G20", "AU"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

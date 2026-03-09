@@ -1,0 +1,17 @@
+{
+  "id": "N225",
+  "name": "Nikkei 225",
+  "type": "index",
+  "country": "JPN",
+  "exchange": "TSE",
+  "components": 225,
+  "methodology": "price-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Consumer Discretionary", "Industrials", "Healthcare", "Financials", "Communication Services"],
+    "countries": ["JPN"],
+    "risk_factors": ["jpy_currency_risk", "price_weighting_bias", "demographic_risk", "boj_policy"]
+  },
+  "tags": ["benchmark", "japanese_equity", "price_weighted"],
+  "_updated": "2026-03-09",
+  "_sources": ["Nikkei"]
+}

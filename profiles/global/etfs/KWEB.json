@@ -1,0 +1,16 @@
+{
+  "id": "KWEB",
+  "name": "KraneShares CSI China Internet ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "KraneShares",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["CHN", "HKG"],
+    "sectors": ["Communication Services", "Consumer Discretionary", "Technology"],
+    "risk_factors": ["china_regulatory_risk", "vie_structure_risk", "geopolitical_risk", "currency_risk"]
+  },
+  "tags": ["china", "internet", "tech", "emerging_markets", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["KraneShares", "Yahoo Finance"]
+}

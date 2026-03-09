@@ -1,0 +1,21 @@
+{
+  "id": "mercadolibre",
+  "name": "MercadoLibre",
+  "country": "ARG",
+  "sector": "Consumer Discretionary",
+  "industry": "E-commerce & Fintech",
+  "revenue": 14000000000,
+  "employees": 52000,
+  "publicly_traded": true,
+  "ticker": "MELI",
+  "subsidiaries": ["Mercado Pago", "Mercado Envios", "Mercado Credito"],
+  "exposure": {
+    "countries": ["ARG", "BRA", "MEX", "COL", "CHL"],
+    "products": [],
+    "materials": [],
+    "risk_factors": ["latam_currency_volatility", "regulatory_fragmentation", "fintech_competition"]
+  },
+  "tags": ["ecommerce", "fintech", "latam_tech"],
+  "_updated": "2026-03-09",
+  "_sources": ["MercadoLibre Annual Report", "SEC Filings"]
+}

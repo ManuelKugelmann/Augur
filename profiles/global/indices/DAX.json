@@ -1,0 +1,17 @@
+{
+  "id": "DAX",
+  "name": "DAX 40",
+  "type": "index",
+  "country": "DEU",
+  "exchange": "XETRA",
+  "components": 40,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Industrials", "Technology", "Healthcare", "Financials", "Consumer Discretionary", "Materials", "Utilities"],
+    "countries": ["DEU"],
+    "risk_factors": ["eur_currency_risk", "export_dependence", "china_exposure"]
+  },
+  "tags": ["benchmark", "german_equity", "large_cap", "export_oriented"],
+  "_updated": "2026-03-09",
+  "_sources": ["Deutsche Boerse"]
+}

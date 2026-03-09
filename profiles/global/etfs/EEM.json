@@ -1,0 +1,16 @@
+{
+  "id": "EEM",
+  "name": "iShares MSCI Emerging Markets ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["CHN", "TWN", "IND", "KOR", "BRA", "SAU", "ZAF", "MEX", "THA", "IDN"],
+    "sectors": ["Technology", "Financials", "Consumer Discretionary", "Communication Services", "Energy", "Materials"],
+    "risk_factors": ["em_currency_risk", "china_exposure", "geopolitical_risk", "liquidity_risk"]
+  },
+  "tags": ["emerging_markets", "diversified", "passive", "international"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

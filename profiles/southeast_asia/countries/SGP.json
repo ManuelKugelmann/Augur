@@ -1,0 +1,31 @@
+{
+  "id": "SGP",
+  "name": "Singapore",
+  "iso2": "SG",
+  "region": "Southeast Asia",
+  "currency": "SGD",
+  "capital": "Singapore",
+  "population": 5900000,
+  "trade": {
+    "top_exports": ["electronics", "petroleum_products", "machinery", "pharmaceuticals", "chemicals"],
+    "top_partners": ["CHN", "HKG", "MYS", "USA", "IDN"],
+    "major_ports": ["Port of Singapore"],
+    "chokepoint_exposure": ["malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "electronics", "machinery", "food_products"],
+    "energy_mix": {"gas": 0.92, "renewables": 0.03, "oil": 0.02, "other": 0.03},
+    "risk_factors": ["trade_hub_dependence", "water_import_dependence", "sea_level_rise"]
+  },
+  "ratings": {
+    "credit": "AAA",
+    "democracy_index": 6.02,
+    "press_freedom_rank": 129,
+    "corruption_perception": 83
+  },
+  "tags": ["ASEAN", "APEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "aramco",
+  "name": "Saudi Aramco",
+  "country": "SAU",
+  "sector": "Energy",
+  "industry": "Oil & Gas Integrated",
+  "revenue": 535000000000,
+  "employees": 70000,
+  "publicly_traded": true,
+  "ticker": "2222.SR",
+  "subsidiaries": ["Aramco Trading Company", "SABIC", "Motiva Enterprises", "S-Oil"],
+  "exposure": {
+    "countries": ["SAU", "USA", "CHN", "JPN", "KOR", "IND"],
+    "products": ["lng_terminals", "fertilizers"],
+    "materials": [],
+    "risk_factors": ["oil_price_volatility", "energy_transition", "geopolitical_instability"]
+  },
+  "tags": ["state_owned", "energy_supermajor", "opec"],
+  "_updated": "2026-03-09",
+  "_sources": ["Saudi Aramco Annual Report", "Reuters"]
+}

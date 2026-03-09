@@ -1,0 +1,31 @@
+{
+  "id": "EGY",
+  "name": "Egypt",
+  "iso2": "EG",
+  "region": "Middle East & North Africa",
+  "currency": "EGP",
+  "capital": "Cairo",
+  "population": 105000000,
+  "trade": {
+    "top_exports": ["petroleum", "natural_gas", "fertilizers", "textiles", "food_products"],
+    "top_partners": ["TUR", "ITA", "USA", "SAU", "IND"],
+    "major_ports": ["Alexandria", "Port Said", "Damietta", "Suez"],
+    "chokepoint_exposure": ["suez"]
+  },
+  "exposure": {
+    "commodities_import": ["wheat", "petroleum_products", "machinery", "iron_steel"],
+    "energy_mix": {"gas": 0.55, "oil": 0.25, "renewables": 0.10, "hydro": 0.07, "other": 0.03},
+    "risk_factors": ["food_import_dependence", "water_scarcity", "population_growth", "currency_devaluation"]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 2.93,
+    "press_freedom_rank": 168,
+    "corruption_perception": 30
+  },
+  "tags": ["AU", "Arab_League"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

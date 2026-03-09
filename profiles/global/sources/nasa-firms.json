@@ -1,0 +1,16 @@
+{
+  "id": "nasa-firms",
+  "name": "NASA Fire Information for Resource Management System",
+  "mcp": "disasters",
+  "tool": "firms_hotspots",
+  "api_base": "https://firms.modaps.eosdis.nasa.gov/api/",
+  "auth": "api_key",
+  "refresh": {
+    "frequency": "continuous",
+    "snapshot_type": "hotspots",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["NASA FIRMS API Docs"]
+}

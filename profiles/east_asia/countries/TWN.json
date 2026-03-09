@@ -1,0 +1,31 @@
+{
+  "id": "TWN",
+  "name": "Taiwan",
+  "iso2": "TW",
+  "region": "East Asia",
+  "currency": "TWD",
+  "capital": "Taipei",
+  "population": 23500000,
+  "trade": {
+    "top_exports": ["semiconductors", "electronics", "machinery", "plastics", "chemicals"],
+    "top_partners": ["CHN", "USA", "JPN", "HKG", "KOR"],
+    "major_ports": ["Kaohsiung", "Keelung", "Taichung"],
+    "chokepoint_exposure": ["taiwan_strait", "malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "coal", "iron_ore", "machinery"],
+    "energy_mix": {"gas": 0.35, "coal": 0.33, "nuclear": 0.09, "renewables": 0.10, "oil": 0.05, "hydro": 0.02, "other": 0.06},
+    "risk_factors": ["cross_strait_tensions", "energy_import_dependence", "semiconductor_concentration", "earthquake_risk"]
+  },
+  "ratings": {
+    "credit": "AA+",
+    "democracy_index": 8.99,
+    "press_freedom_rank": 35,
+    "corruption_perception": 68
+  },
+  "tags": ["APEC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

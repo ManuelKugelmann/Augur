@@ -1,0 +1,31 @@
+{
+  "id": "KEN",
+  "name": "Kenya",
+  "iso2": "KE",
+  "region": "Sub-Saharan Africa",
+  "currency": "KES",
+  "capital": "Nairobi",
+  "population": 55000000,
+  "trade": {
+    "top_exports": ["tea", "coffee", "flowers", "vegetables", "petroleum_products"],
+    "top_partners": ["USA", "UGA", "NLD", "PAK", "GBR"],
+    "major_ports": ["Mombasa"],
+    "chokepoint_exposure": ["bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "iron_steel", "vehicles"],
+    "energy_mix": {"renewables": 0.45, "hydro": 0.25, "oil": 0.12, "gas": 0.05, "other": 0.13},
+    "risk_factors": ["drought_vulnerability", "debt_sustainability", "political_tension"]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 5.11,
+    "press_freedom_rank": 102,
+    "corruption_perception": 31
+  },
+  "tags": ["AU", "EAC"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

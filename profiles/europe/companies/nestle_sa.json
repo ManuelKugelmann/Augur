@@ -1,0 +1,21 @@
+{
+  "id": "nestle_sa",
+  "name": "Nestle S.A.",
+  "country": "CHE",
+  "sector": "Consumer Staples",
+  "industry": "Food & Beverage",
+  "revenue": 100000000000,
+  "employees": 270000,
+  "publicly_traded": true,
+  "ticker": "NESN.SW",
+  "subsidiaries": ["Nespresso", "Purina", "Gerber", "S.Pellegrino", "Nescafe"],
+  "exposure": {
+    "countries": ["CHE", "USA", "BRA", "CHN", "IND", "MEX", "GBR"],
+    "products": ["fertilizers"],
+    "materials": [],
+    "risk_factors": ["commodity_price_inflation", "water_scarcity", "regulatory_pressure"]
+  },
+  "tags": ["consumer_staples", "defensive", "dividend"],
+  "_updated": "2026-03-09",
+  "_sources": ["Nestle Annual Report", "Bloomberg"]
+}

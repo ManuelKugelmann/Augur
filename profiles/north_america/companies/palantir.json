@@ -1,0 +1,21 @@
+{
+  "id": "palantir",
+  "name": "Palantir Technologies",
+  "country": "USA",
+  "sector": "Information Technology",
+  "industry": "Software & Data Analytics",
+  "revenue": 2800000000,
+  "employees": 3800,
+  "publicly_traded": true,
+  "ticker": "PLTR",
+  "subsidiaries": ["Palantir USG", "Palantir Technologies UK"],
+  "exposure": {
+    "countries": ["USA", "GBR", "UKR", "ISR"],
+    "products": ["drones"],
+    "materials": [],
+    "risk_factors": ["government_contract_dependence", "privacy_concerns", "valuation_risk"]
+  },
+  "tags": ["defense_tech", "ai", "government_contractor"],
+  "_updated": "2026-03-09",
+  "_sources": ["Palantir Annual Report", "SEC Filings"]
+}

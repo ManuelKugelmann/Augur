@@ -1,0 +1,18 @@
+{
+  "id": "tea",
+  "name": "Tea",
+  "category": "beverages",
+  "growing_season": "Year-round in tropics; March-November in subtropical regions",
+  "producers": ["CHN", "IND", "KEN", "LKA", "TUR"],
+  "exporters": ["CHN", "KEN", "LKA", "IND", "VNM"],
+  "water_intensity": "high",
+  "climate_sensitivity": ["temperature_shift", "rainfall_variability", "frost", "drought"],
+  "exposure": {
+    "countries": ["CHN", "IND", "KEN", "LKA", "TUR", "VNM"],
+    "commodities": [],
+    "risk_factors": ["climate_change", "labor_costs", "currency_fluctuation", "pest_outbreaks"]
+  },
+  "tags": ["beverages", "plantation_crop", "cash_crop"],
+  "_updated": "2026-03-09",
+  "_sources": ["FAOSTAT", "ITC"]
+}
