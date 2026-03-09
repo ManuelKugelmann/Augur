@@ -69,12 +69,15 @@ if [[ ! -f "$APP/api/server/index.js" ]]; then
     die "LibreChat app code missing from bundle. Use a release built with CI (git tag + push)."
 fi
 
-# ── Copy default config if missing ──────────
-if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$APP/config/librechat.yaml" ]]; then
-    cp "$APP/config/librechat.yaml" "$APP/librechat.yaml"
-    # Replace __HOME__ placeholder with actual home directory
+# ── Copy default config from mcps repo if missing ──
+# The LibreChat bundle is vanilla — config lives in the mcps repo.
+_LC_YAML_SRC="$STACK/librechat-uberspace/config/librechat.yaml"
+if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$_LC_YAML_SRC" ]]; then
+    cp "$_LC_YAML_SRC" "$APP/librechat.yaml"
     sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
-    log "Copied default librechat.yaml (paths adjusted to $HOME)"
+    log "Copied default librechat.yaml from mcps repo (paths adjusted to $HOME)"
+elif [[ ! -f "$APP/librechat.yaml" ]]; then
+    warn "librechat.yaml not found in mcps repo — configure manually"
 fi
 
 # ── Data directory ──────────────────────────
@@ -153,10 +156,11 @@ fi
 
 # ── First install ───────────────────────────
 if [[ "$MODE" == "install" ]]; then
-    # Generate .env from example
+    # Generate .env from example (source from mcps repo, not the bundle)
     if [[ ! -f "$APP/.env" ]]; then
-        if [[ -f "$APP/config/.env.example" ]]; then
-            cp "$APP/config/.env.example" "$APP/.env"
+        _ENV_SRC="$STACK/librechat-uberspace/config/.env.example"
+        if [[ -f "$_ENV_SRC" ]]; then
+            cp "$_ENV_SRC" "$APP/.env"
         elif [[ -f "$APP/.env.example" ]]; then
             cp "$APP/.env.example" "$APP/.env"
         else
@@ -232,9 +236,9 @@ EOF
     # Web backend
     uberspace web backend set / --http --port $PORT 2>/dev/null || true
 
-    # Install ops shortcut
+    # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
-    cp "$APP/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
+    cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
     chmod +x "$HOME/bin/ta" 2>/dev/null || true
     ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
@@ -255,7 +259,7 @@ EOF
     echo "     nano $APP/librechat.yaml"
     echo ""
     echo -e "  ${YELLOW}3.${NC} Set up git-versioned data (optional):"
-    echo "     bash $APP/scripts/setup-data-repo.sh ${GH_USER:-YOUR_USER}/${GH_REPO_DATA:-TradeAssistant_Data}"
+    echo "     bash $STACK/librechat-uberspace/scripts/setup-data-repo.sh ${GH_USER:-YOUR_USER}/${GH_REPO_DATA:-TradeAssistant_Data}"
     echo ""
     echo -e "  ${YELLOW}4.${NC} Start:"
     echo "     supervisorctl start librechat"

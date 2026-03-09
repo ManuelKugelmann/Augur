@@ -1,0 +1,80 @@
+# Build vanilla LibreChat for Uberspace deployment.
+# Pure pre-built LibreChat — no TradingAssistant-specific config inside.
+# The installer (ta install) overlays config/scripts from the mcps repo.
+#
+# Trigger: Actions → Build LibreChat → Run workflow
+# Uploads to a single rolling release tagged "librechat-build".
+name: Build LibreChat
+
+on:
+  workflow_dispatch:
+    inputs:
+      librechat_ref:
+        description: "LibreChat git ref to build (branch, tag, or commit). Default: main."
+        required: false
+        default: "main"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Clone and build LibreChat
+        run: |
+          git clone --depth 1 --branch "${{ inputs.librechat_ref || 'main' }}" \
+            https://github.com/danny-avila/LibreChat.git librechat-src
+          cd librechat-src
+          LC_PKG_VER=$(node -p "require('./package.json').version" 2>/dev/null || echo "unknown")
+          LC_COMMIT=$(git rev-parse --short HEAD)
+          echo "LC_PKG_VER=${LC_PKG_VER}" >> "$GITHUB_ENV"
+          echo "LC_COMMIT=${LC_COMMIT}" >> "$GITHUB_ENV"
+          echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
+          npm ci
+          npm run frontend
+          cd ..
+
+      - name: Assemble bundle
+        run: |
+          mkdir -p bundle
+
+          # Copy built LibreChat app (server + client + node_modules)
+          cp -r librechat-src/api          bundle/api
+          cp -r librechat-src/client       bundle/client
+          cp -r librechat-src/packages     bundle/packages 2>/dev/null || true
+          cp -r librechat-src/node_modules bundle/node_modules
+          cp    librechat-src/package.json bundle/package.json
+
+          # Install MCP Node packages needed at runtime
+          cd bundle
+          npm install --save @modelcontextprotocol/server-filesystem
+          rm -f package-lock.json
+          cd ..
+
+          # Embed LibreChat version
+          echo "${LC_VERSION}" > bundle/.version
+
+          tar czf librechat-build.tar.gz -C bundle .
+
+      - name: Upload to rolling release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: librechat-build
+          name: "LibreChat ${{ env.LC_VERSION }}"
+          body: |
+            Vanilla pre-built LibreChat for Uberspace deployment.
+
+            **LibreChat**: ${{ env.LC_PKG_VER }} ([`${{ env.LC_COMMIT }}`](https://github.com/danny-avila/LibreChat/commit/${{ env.LC_COMMIT }}))
+            **Built from ref**: `${{ inputs.librechat_ref || 'main' }}`
+
+            Usage: `RELEASE_TAG=librechat-build ta install`
+          files: librechat-build.tar.gz
+          prerelease: true
+          make_latest: false
