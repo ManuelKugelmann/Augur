@@ -76,7 +76,7 @@ def _get_user_id() -> str:
 def _db():
     global _client
     if not _client:
-        uri = os.environ.get("MONGO_URI_SIGNALS", "")
+        uri = os.environ.get("MONGO_URI_SIGNALS") or os.environ.get("MONGO_URI", "")
         if not uri:
             raise RuntimeError(
                 "MONGO_URI_SIGNALS not set — set it in .env or environment. "
@@ -117,15 +117,19 @@ def _profiles_col(kind: str):
     name = f"profiles_{kind}"
     if name not in _cols_ready:
         col = _db()[name]
-        col.create_index("_id_str", unique=True, background=True)
-        col.create_index([("location", "2dsphere")], background=True, sparse=True)
-        col.create_index([
-            ("name", "text"),
-            ("tags", "text"),
-            ("sector", "text"),
-        ], background=True, default_language="english")
-        col.create_index("region", background=True)
-        col.create_index("tags", background=True)
+        try:
+            col.create_index("_id_str", unique=True, background=True)
+            col.create_index([("location", "2dsphere")],
+                             background=True, sparse=True)
+            col.create_index([
+                ("name", "text"),
+                ("tags", "text"),
+                ("sector", "text"),
+            ], background=True, default_language="english")
+            col.create_index("region", background=True)
+            col.create_index("tags", background=True)
+        except Exception:
+            pass  # index creation may fail on some Atlas tiers
         _cols_ready.add(name)
         return col
     return _db()[name]
@@ -137,8 +141,10 @@ def _snap_col(kind: str):
     _ensure_ts(name, ttl=SNAPSHOTS_TTL)
     col = _db()[name]
     if f"{name}_geo" not in _cols_ready:
-        col.create_index([("location", "2dsphere")],
-                         background=True)
+        try:
+            col.create_index([("location", "2dsphere")], background=True)
+        except Exception:
+            pass  # time-series collections may reject certain index options
         _cols_ready.add(f"{name}_geo")
     return col
 
@@ -155,8 +161,10 @@ def _events_col():
     _ensure_ts("events", ttl=SNAPSHOTS_TTL)
     col = _db().events
     if "events_geo" not in _cols_ready:
-        col.create_index([("location", "2dsphere")],
-                         background=True)
+        try:
+            col.create_index([("location", "2dsphere")], background=True)
+        except Exception:
+            pass  # time-series collections may reject certain index options
         _cols_ready.add("events_geo")
     return col
 

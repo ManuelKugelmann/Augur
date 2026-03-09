@@ -41,6 +41,61 @@ jobs:
             tests/test_ta_sync.bats \
             tests/test_uberspace.bats
 
+  install-tests:
+    name: Install integration tests (bats, slow)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for install-related changes
+        id: changes
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            DIFF_TARGET="HEAD~1"
+          else
+            DIFF_TARGET="origin/${{ github.event.pull_request.base.ref }}"
+            git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          fi
+          CHANGED=$(git diff --name-only "$DIFF_TARGET" -- \
+            'librechat-uberspace/scripts/' \
+            'deploy.conf' \
+            'requirements.txt' \
+            '.env.example' \
+            'tests/install/' \
+            'tests/helpers/' \
+            '.github/workflows/tests.yml' \
+          2>/dev/null || echo "FORCE")
+          if [[ -n "$CHANGED" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Install-related files changed:"
+            echo "$CHANGED"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No install-related changes — skipping install tests"
+          fi
+
+      - name: Set up Python
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        if: steps.changes.outputs.run == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Install bats
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
+          sudo /tmp/bats/install.sh /usr/local
+
+      - name: Run install integration tests
+        if: steps.changes.outputs.run == 'true'
+        run: bats tests/install/*.bats
+
   python-tests:
     name: Python tests (pytest)
     runs-on: ubuntu-latest
@@ -97,6 +152,7 @@ jobs:
 
   integration-keyed:
     name: Integration tests (keyed APIs)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests]
     steps:
@@ -122,9 +178,10 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+          OPENSANCTIONS_API_KEY: ${{ secrets.OPENSANCTIONS_API_KEY }}
         run: |
           echo "=== API Key Availability ==="
-          for key in FRED_API_KEY EIA_API_KEY COMTRADE_API_KEY ACLED_API_KEY ACLED_EMAIL USDA_NASS_API_KEY GOOGLE_API_KEY CF_API_TOKEN AISSTREAM_API_KEY; do
+          for key in FRED_API_KEY EIA_API_KEY COMTRADE_API_KEY ACLED_API_KEY ACLED_EMAIL USDA_NASS_API_KEY GOOGLE_API_KEY CF_API_TOKEN AISSTREAM_API_KEY OPENSANCTIONS_API_KEY; do
             val=$(printenv "$key" 2>/dev/null || true)
             if [ -n "$val" ]; then
               echo "  $key: SET (${#val} chars)"
@@ -144,10 +201,12 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+          OPENSANCTIONS_API_KEY: ${{ secrets.OPENSANCTIONS_API_KEY }}
         run: python -m pytest tests/test_integration_keyed.py -v -m integration --timeout=60
 
   integration-llm-keys:
     name: Integration tests (LLM key validation)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests]
     steps:
@@ -225,6 +284,7 @@ jobs:
 
   smoke-combined:
     name: Smoke test (combined server + Atlas)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests]
     steps:
@@ -268,6 +328,7 @@ jobs:
 
   e2e-smoke:
     name: E2E smoke (LibreChat + trading server)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests, smoke-combined]
     steps:
