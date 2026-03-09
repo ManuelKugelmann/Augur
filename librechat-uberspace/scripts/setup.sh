@@ -121,10 +121,15 @@ if ! command -v uvx &>/dev/null; then
 fi
 
 # ── Install signals stack (Python MCP servers) ──
-# Resolve Python binary: prefer python$PYTHON_VERSION, fall back to python3
+# Resolve Python binary: try explicit PYTHON_VERSION first, then scan
+# descending 3.13→3.10, then bare python3 (works on U7 + U8 + generic Linux)
 _PYTHON_BIN=""
-for _py in "python${PYTHON_VERSION:-3.12}" python3; do
-    if command -v "$_py" &>/dev/null; then _PYTHON_BIN="$_py"; break; fi
+for _py in "python${PYTHON_VERSION:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+    [[ -z "$_py" || "$_py" == "python" ]] && continue
+    if command -v "$_py" &>/dev/null && \
+       "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+        _PYTHON_BIN="$_py"; break
+    fi
 done
 
 if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then

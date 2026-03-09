@@ -90,19 +90,19 @@ _do_install() {
     [[ -f "$STACK/deploy.conf" ]] && source "$STACK/deploy.conf"
 
     # ── 3. Python venv ──────────────────────────
-    # Resolve Python binary: prefer python$PYTHON_VERSION, fall back to python3
+    # Resolve Python binary: try explicit PYTHON_VERSION first, then scan
+    # descending 3.13→3.10, then bare python3 (works on U7 + U8 + generic Linux)
     PYTHON_BIN=""
-    for _py in "python${PYTHON_VERSION:-3.12}" python3; do
-        if command -v "$_py" &>/dev/null; then PYTHON_BIN="$_py"; break; fi
+    for _py in "python${PYTHON_VERSION:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+        [[ -z "$_py" || "$_py" == "python" ]] && continue
+        if command -v "$_py" &>/dev/null && \
+           "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+            PYTHON_BIN="$_py"; break
+        fi
     done
-    [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. Install python3 or set PYTHON_VERSION."
+    [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. On U7: check python3.12 --version. On U8: check python3 --version."
     _pyver=$("$PYTHON_BIN" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
     log "Using $PYTHON_BIN (Python $_pyver)"
-    if "$PYTHON_BIN" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
-        :
-    else
-        die "Python 3.10+ required (got $_pyver). Set PYTHON_VERSION to an available 3.10+ version."
-    fi
 
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
