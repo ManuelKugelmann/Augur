@@ -393,10 +393,10 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 
 | Asset | Existing Source | Reuse |
 |-------|----------------|-------|
-| Uberspace + supervisord | mkbc-mcp, LibreChat | Pipeline engine (cron + scripts) |
+| Uberspace + supervisord | LibreChat | Pipeline engine (cron + scripts) |
 | GitHub Pages + Jekyll | — | Static site hosting (free, CDN) |
 | GitHub deploy (CI/CD) | LibreChat bootstrap | Deployment |
-| ntfy | mkbc-mcp | Pipeline alerts, failure notifications |
+| ntfy | TradingAssistant | Pipeline alerts, failure notifications |
 | Tavily API | Trading system MCP | News OSINT source |
 | GDELT Cloud | Trading system MCP | Geopolitical OSINT |
 | Yahoo Finance API | Trading system MCP | Financial data |
