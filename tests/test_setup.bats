@@ -14,7 +14,21 @@ setup() {
     stub_command "node" 'echo "v22.0.0"'
     stub_command "npm" 'echo "stubbed npm $*"'
     stub_command "hostname" 'echo "test.uber.space"'
-    stub_command "python3" 'echo "stubbed python3 $*"'
+    # Stub all python versions setup.sh scans (prevent real python from being used)
+    stub_command "python3.13" 'exit 1'
+    stub_command "python3.12" 'exit 1'
+    stub_command "python3.11" 'exit 1'
+    stub_command "python3.10" 'exit 1'
+    stub_command "python3" 'exit 1'
+    stub_command "curl" 'echo "stubbed curl $*"'
+    # Stub uvx so setup.sh skips the uv install step
+    stub_command "uvx" 'echo "stubbed uvx $*"'
+
+    # Create mcps repo structure that setup.sh expects
+    mkdir -p "$STACK_DIR/librechat-uberspace/config"
+    mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
+    # Provide a minimal TradeAssistant.sh for the ops shortcut install
+    echo '#!/bin/bash' > "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
 }
 
 # Helper: create a minimal source directory that passes setup.sh validation
@@ -43,8 +57,8 @@ teardown() {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
 
-    # Create .env.example
-    cat > "$src/config/.env.example" <<'EOF'
+    # Create .env.example where setup.sh looks for it (mcps repo config)
+    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -67,7 +81,7 @@ EOF
 @test "setup.sh install mode generates .env with crypto keys" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
-    cat > "$src/config/.env.example" <<'EOF'
+    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -118,7 +132,7 @@ EOF
 @test "setup.sh creates supervisord service file on install" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
-    cat > "$src/config/.env.example" <<'EOF'
+    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -138,8 +152,9 @@ EOF
 @test "setup.sh copies librechat.yaml and replaces __HOME__" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
-    echo "path: __HOME__/data" > "$src/config/librechat.yaml"
-    cat > "$src/config/.env.example" <<'EOF'
+    # Place librechat.yaml where setup.sh looks for it (mcps repo config)
+    echo "path: __HOME__/data" > "$STACK_DIR/librechat-uberspace/config/librechat.yaml"
+    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
