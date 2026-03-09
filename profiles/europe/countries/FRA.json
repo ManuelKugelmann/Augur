@@ -111,6 +111,11 @@
       "target": "sub_saharan_africa",
       "type": "dependency",
       "description": "Françafrique legacy; CFA franc zone; uranium from Niger; military presence"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions regime; Mistral deal cancelled; frozen Russian assets; Ukraine support"
     }
   ],
   "tags": [

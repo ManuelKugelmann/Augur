@@ -91,6 +91,11 @@
       "target": "AUS",
       "type": "alliance",
       "description": "AUKUS; Five Eyes; Commonwealth; FTA signed"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Aggressive sanctions; oligarch asset freezes; Salisbury poisoning; Ukraine aid"
     }
   ],
   "tags": [

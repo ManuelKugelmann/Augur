@@ -95,6 +95,11 @@
       "target": "DEU",
       "type": "dependency",
       "description": "Largest export market; manufacturing supply chain integration"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Broke neutrality precedent; adopted EU sanctions; frozen Russian assets"
     }
   ],
   "tags": [

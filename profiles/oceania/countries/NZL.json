@@ -83,6 +83,11 @@
       "target": "Pacific Islands",
       "type": "alliance",
       "description": "Pacific Reset policy; development aid; climate solidarity; countering China influence"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Aligned sanctions with Five Eyes; travel bans; export controls"
     }
   ],
   "tags": [

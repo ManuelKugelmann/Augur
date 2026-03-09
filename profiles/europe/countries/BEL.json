@@ -95,6 +95,11 @@
       "target": "DEU",
       "type": "trade",
       "description": "Largest bilateral trade partner; automotive and chemical supply chains"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; SWIFT hub (Euroclear holds frozen Russian assets)"
     }
   ],
   "tags": [

@@ -101,6 +101,11 @@
       "target": "TWN",
       "type": "alliance",
       "description": "Strategic ambiguity; TSMC semiconductor leverage; arms sales"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Comprehensive sanctions; frozen assets; export controls on tech; Ukraine military aid"
     }
   ],
   "tags": [

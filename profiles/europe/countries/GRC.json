@@ -100,6 +100,11 @@
       "target": "EGY",
       "type": "trade",
       "description": "EEZ delimitation; gas pipeline prospects; maritime cooperation"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions despite historical Orthodox ties; shipping sector impact"
     }
   ],
   "tags": [

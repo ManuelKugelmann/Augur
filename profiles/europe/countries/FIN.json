@@ -90,6 +90,11 @@
       "target": "SWE",
       "type": "alliance",
       "description": "Joint Nordic defense; industrial cooperation (Nokia/Ericsson competition)"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; closed border crossings; NATO accession driven by Russia threat"
     }
   ],
   "tags": [

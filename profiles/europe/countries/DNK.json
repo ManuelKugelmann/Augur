@@ -88,6 +88,11 @@
       "target": "GRL",
       "type": "dependency",
       "description": "Greenland autonomy; rare earth minerals; Arctic shipping routes"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; Nord Stream sabotage investigation; Arctic/Greenland security"
     }
   ],
   "tags": [

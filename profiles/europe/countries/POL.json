@@ -109,6 +109,11 @@
       "target": "DEU",
       "type": "dependency",
       "description": "~28% of exports to Germany; automotive and manufacturing integration"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Strongest sanctions advocate in EU; military buildup; ended gas imports; Ukraine hub"
     }
   ],
   "tags": [

@@ -93,6 +93,11 @@
       "target": "USA",
       "type": "alliance",
       "description": "NATO ally; intelligence cooperation; Arctic strategy partner"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Aligned with EU sanctions; Arctic border tension; Svalbard security concerns"
     }
   ],
   "tags": [

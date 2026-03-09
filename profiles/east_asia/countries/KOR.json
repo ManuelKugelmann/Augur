@@ -99,6 +99,11 @@
       "target": "ARE",
       "type": "trade",
       "description": "Oil imports; nuclear plant construction (Barakah); defense sales"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Joined Western sanctions; export controls; North Korea-Russia arms concern"
     }
   ],
   "tags": [

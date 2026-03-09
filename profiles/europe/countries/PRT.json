@@ -84,6 +84,11 @@
       "target": "AGO",
       "type": "trade",
       "description": "Former colony; energy investment; Lusophone trade"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; NATO solidarity; golden visa program ended partly due to Russian flows"
     }
   ],
   "tags": [

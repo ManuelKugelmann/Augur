@@ -89,6 +89,11 @@
       "target": "KOR",
       "type": "trade",
       "description": "Hyundai/Kia manufacturing presence; electronics assembly"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; expelled diplomats; Vrbetice ammunition depot incident"
     }
   ],
   "tags": [

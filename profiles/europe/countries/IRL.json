@@ -75,6 +75,11 @@
       "target": "GBR",
       "type": "dependency",
       "description": "Agri-food exports; land bridge transit; Northern Ireland peace process"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; Shannon airport transit scrutiny; financial sector compliance"
     }
   ],
   "tags": [

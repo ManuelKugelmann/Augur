@@ -114,11 +114,6 @@
       "description": "Largest trade partner overall; automotive and machinery exports; decoupling pressure"
     },
     {
-      "target": "RUS",
-      "type": "dependency",
-      "description": "Former gas dependency; Nordstream destruction; ongoing economic decoupling"
-    },
-    {
       "target": "EU",
       "type": "alliance",
       "description": "Largest EU economy; eurozone anchor; drives EU industrial and fiscal policy"
@@ -127,6 +122,11 @@
       "target": "FRA",
       "type": "alliance",
       "description": "Franco-German axis drives EU integration; Airbus, defense cooperation"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Former gas dependency; Nordstream destruction; full EU sanctions regime; economic decoupling"
     }
   ],
   "tags": [

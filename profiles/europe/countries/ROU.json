@@ -98,6 +98,11 @@
       "target": "UKR",
       "type": "corridor",
       "description": "Ukrainian grain transit via Constanta port; Black Sea cooperation"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; Black Sea NATO flank; increased defense spending"
     }
   ],
   "tags": [

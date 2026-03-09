@@ -102,6 +102,11 @@
       "target": "IND",
       "type": "alliance",
       "description": "Quad partner; growing trade; shared China concern"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Aligned sanctions with G7; MH17 accountability; export controls"
     }
   ],
   "tags": [

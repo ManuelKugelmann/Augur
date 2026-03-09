@@ -116,6 +116,11 @@
       "target": "ASEAN",
       "type": "trade",
       "description": "Major investor and development aid provider across Southeast Asia"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Sanctions aligned with G7; frozen assets; Northern Territories dispute unresolved"
     }
   ],
   "tags": [

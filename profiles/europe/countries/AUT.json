@@ -95,14 +95,14 @@
       "description": "German economy drives Austrian exports; banking sector interlinked"
     },
     {
-      "target": "RUS",
-      "type": "dependency",
-      "description": "Historical gas dependency via OMV; slow diversification"
-    },
-    {
       "target": "EU",
       "type": "alliance",
       "description": "EU member; eurozone; Schengen area"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Historical gas dependency via OMV; EU sanctions regime; slow diversification"
     }
   ],
   "tags": [

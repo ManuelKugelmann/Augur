@@ -94,6 +94,11 @@
       "target": "GBR",
       "type": "trade",
       "description": "Major trade partner; defense industry cooperation (Gripen)"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions; NATO accession driven by Russia threat; Baltic Sea security"
     }
   ],
   "tags": [

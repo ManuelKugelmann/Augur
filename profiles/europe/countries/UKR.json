@@ -113,14 +113,14 @@
       "description": "Strongest European supporter; defense cooperation; grain trade friction"
     },
     {
-      "target": "RUS",
-      "type": "rivalry",
-      "description": "Full-scale war; Crimea/Donbas occupation; energy infrastructure destruction"
-    },
-    {
       "target": "CHN",
       "type": "trade",
       "description": "Former trade partner; positioning on Russia complicates relations"
+    },
+    {
+      "target": "RUS",
+      "type": "rivalry",
+      "description": "Full-scale war since 2022; Crimea/Donbas occupation; Western sanctions coordination"
     }
   ],
   "tags": [

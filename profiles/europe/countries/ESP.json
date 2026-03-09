@@ -92,6 +92,11 @@
       "target": "MAR",
       "type": "dependency",
       "description": "Migration management; gas pipeline transit; agricultural competition"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions regime; limited direct exposure; NATO solidarity"
     }
   ],
   "tags": [

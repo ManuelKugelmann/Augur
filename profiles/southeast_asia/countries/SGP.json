@@ -85,6 +85,11 @@
       "target": "IND",
       "type": "trade",
       "description": "CECA; diaspora; financial services; growing tech corridor"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Rare unilateral sanctions for Singapore; export controls; financial restrictions"
     }
   ],
   "tags": [

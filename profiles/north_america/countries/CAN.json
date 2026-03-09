@@ -91,6 +91,11 @@
       "target": "NATO",
       "type": "alliance",
       "description": "Founding member; Arctic sovereignty; NORAD partnership with US"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Comprehensive sanctions; Magnitsky Act; frozen assets; Ukraine military aid"
     }
   ],
   "tags": [
