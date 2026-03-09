@@ -1,0 +1,170 @@
+[
+  {
+    "id": "cobalt",
+    "kind": "materials",
+    "name": "Cobalt",
+    "region": "global",
+    "tags": [
+      "critical_mineral",
+      "battery",
+      "conflict_mineral"
+    ]
+  },
+  {
+    "id": "graphite",
+    "kind": "materials",
+    "name": "Graphite",
+    "region": "global",
+    "tags": [
+      "critical_mineral",
+      "battery",
+      "ev"
+    ]
+  },
+  {
+    "id": "lithium",
+    "kind": "materials",
+    "name": "Lithium",
+    "region": "global",
+    "tags": [
+      "critical_mineral",
+      "battery",
+      "ev"
+    ]
+  },
+  {
+    "id": "manganese",
+    "kind": "materials",
+    "name": "Manganese",
+    "region": "global",
+    "tags": [
+      "industrial_metal",
+      "steel",
+      "battery"
+    ]
+  },
+  {
+    "id": "molybdenum",
+    "kind": "materials",
+    "name": "Molybdenum",
+    "region": "global",
+    "tags": [
+      "industrial_metal",
+      "steel",
+      "refining"
+    ]
+  },
+  {
+    "id": "nickel",
+    "kind": "materials",
+    "name": "Nickel",
+    "region": "global",
+    "tags": [
+      "industrial_metal",
+      "battery",
+      "stainless_steel"
+    ]
+  },
+  {
+    "id": "phosphate",
+    "kind": "materials",
+    "name": "Phosphate Rock",
+    "region": "global",
+    "tags": [
+      "fertilizer",
+      "agriculture",
+      "food_security"
+    ]
+  },
+  {
+    "id": "potash",
+    "kind": "materials",
+    "name": "Potash",
+    "region": "global",
+    "tags": [
+      "fertilizer",
+      "agriculture",
+      "food_security"
+    ]
+  },
+  {
+    "id": "rare_earths",
+    "kind": "materials",
+    "name": "Rare Earth Elements",
+    "region": "global",
+    "tags": [
+      "critical_mineral",
+      "strategic",
+      "defense",
+      "clean_energy"
+    ]
+  },
+  {
+    "id": "silicon",
+    "kind": "materials",
+    "name": "Silicon",
+    "region": "global",
+    "tags": [
+      "semiconductor",
+      "solar",
+      "industrial"
+    ]
+  },
+  {
+    "id": "tin",
+    "kind": "materials",
+    "name": "Tin",
+    "region": "global",
+    "tags": [
+      "industrial_metal",
+      "electronics",
+      "solder"
+    ]
+  },
+  {
+    "id": "titanium",
+    "kind": "materials",
+    "name": "Titanium",
+    "region": "global",
+    "tags": [
+      "strategic",
+      "aerospace",
+      "defense",
+      "industrial_metal"
+    ]
+  },
+  {
+    "id": "tungsten",
+    "kind": "materials",
+    "name": "Tungsten",
+    "region": "global",
+    "tags": [
+      "critical_mineral",
+      "strategic",
+      "defense",
+      "industrial"
+    ]
+  },
+  {
+    "id": "vanadium",
+    "kind": "materials",
+    "name": "Vanadium",
+    "region": "global",
+    "tags": [
+      "critical_mineral",
+      "steel",
+      "energy_storage"
+    ]
+  },
+  {
+    "id": "zinc",
+    "kind": "materials",
+    "name": "Zinc",
+    "region": "global",
+    "tags": [
+      "industrial_metal",
+      "base_metal",
+      "galvanizing"
+    ]
+  }
+]
