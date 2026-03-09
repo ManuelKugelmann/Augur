@@ -169,10 +169,10 @@ class TestTools:
             assert len(trading_tools) > 0, (
                 f"{a['_name']}: must have trading MCP tools")
 
-    def test_l1_market_has_yahoo_finance(self, agents):
+    def test_l1_market_has_finance(self, agents):
         market = next(a for a in agents if a["_name"] == "market-data")
-        yf = [t for t in market["tools"] if "yahoo-finance" in t]
-        assert len(yf) > 0, "market-data should have yahoo-finance MCP"
+        fin = [t for t in market["tools"] if "finance" in t]
+        assert len(fin) > 0, "market-data should have finance MCP"
 
     def test_l1_osint_has_gdelt(self, agents):
         osint = next(a for a in agents if a["_name"] == "osint-data")

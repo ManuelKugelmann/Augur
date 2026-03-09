@@ -17,7 +17,7 @@ if _store_dir not in sys.path:
 from fastmcp import FastMCP  # noqa: E402
 
 mcp = FastMCP("trading",
-    instructions="Trading signals: store (profiles, snapshots, notes, risk gate) + 12 OSINT data domains (75+ sources)")
+    instructions="Trading signals: store (profiles, snapshots, notes, risk gate) + 12 OSINT data domains (75+ sources) + technical indicators (SMA, RSI, Bollinger, MACD)")
 
 # Signals store (profiles, snapshots, charts, archival)
 from server import mcp as store  # noqa: E402 — src/store/server.py
@@ -35,6 +35,7 @@ from transport_server import mcp as transport  # noqa: E402
 from water_server import mcp as water  # noqa: E402
 from humanitarian_server import mcp as humanitarian  # noqa: E402
 from infra_server import mcp as infra  # noqa: E402
+from indicators_server import mcp as indicators  # noqa: E402
 
 mcp.mount(store, namespace="store")
 mcp.mount(weather, namespace="weather")
@@ -49,6 +50,7 @@ mcp.mount(transport, namespace="transport")
 mcp.mount(water, namespace="water")
 mcp.mount(humanitarian, namespace="humanitarian")
 mcp.mount(infra, namespace="infra")
+mcp.mount(indicators, namespace="ta")
 
 if __name__ == "__main__":
     import os

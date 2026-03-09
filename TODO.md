@@ -30,6 +30,18 @@ Global roadmap and task list. Updated 2026-03-09.
 - [x] **Build periodic ingest scheduler (cron-planner agent)**
       Cron-planner agent invoked every 6 hours via `ta cron` using LibreChat Agents API.
       Agent reads plans/watchlists, delegates to L1 data agents, triggers L2 analysis.
+- [ ] **Wire price ingestion for indicator computation**
+      Indicators server (`ta_*` namespace) is pure math — needs OHLCV input.
+      Options: (a) yahoo-finance MCP → snapshot → feed to indicators, or
+      (b) direct tool chaining in LLM context. Start with (b), add (a) in scheduler.
+- [ ] **Add Volume-Weighted Average Price (VWAP) indicator**
+      Requires volume data. Add once price ingestion is in place.
+- [ ] **Add ATR (Average True Range) indicator**
+      Requires high/low/close. Useful for position sizing and stop-loss placement.
+- [ ] **Build periodic ingest scheduler**
+      Cron or lightweight scheduler that calls domain MCP servers → stores snapshots.
+      E.g., weekly: fetch prices for all entity profiles; monthly: fetch macro indicators
+      for all country profiles; continuous: poll disaster/event feeds.
 - [ ] **Wire up profile ↔ snapshot cross-references**
       When a snapshot is stored for entity "AAPL", auto-link to the profile's risk factors,
       supply chain deps, and country exposures.
@@ -120,6 +132,10 @@ Global roadmap and task list. Updated 2026-03-09.
 
 ## Completed
 
+- [x] **Technical indicators server** — pure-math computation layer (SMA, EMA, RSI,
+      Bollinger Bands, MACD, composite trend filter). Mounted as `ta_*` namespace.
+      Based on NexusTrade 114K-backtest study: 200-day SMA trend filter (Layer 2) +
+      RSI/Bollinger/MACD entry/exit timing (Layer 3). 34 tests. (2026-03-09)
 - [x] **Repo init** — initial structure, 12 domain servers, signals store, profiles
 - [x] **Repo cleanup** — add .gitignore, .env.example, fix nested dirs, align filenames,
       fix scripts, create TODO.md (2026-03-03)
