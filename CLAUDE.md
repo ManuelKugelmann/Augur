@@ -3,10 +3,11 @@
 ## Rules
 
 - **Never circumvent or exclude failing tests.** Always find and fix the root cause. If not possible, discuss the problem with the user before proceeding.
+- **Run tests locally before pushing.** Always run `python -m pytest tests/ -v` (and `bats tests/*.bats` if shell scripts changed) before committing and pushing. Do not push code that fails tests.
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (yahoo-finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -35,13 +36,14 @@ TradingAssistant/
 ├── README.md                          ← project overview
 ├── TODO.md                            ← roadmap (P0–P5)
 ├── deploy.conf                        ← central config, sourced by all scripts
-├── requirements.txt                   ← Python deps: fastmcp, httpx, pymongo, python-dotenv
+├── requirements.txt                   ← Python deps: fastmcp, httpx, pymongo, python-dotenv, pandas, ta
 ├── .env.example                       ← signals stack env vars template
 │
 ├── src/
 │   ├── store/
 │   │   └── server.py                  ← signals store (FastMCP, profiles + MongoDB snapshots)
 │   └── servers/
+│       ├── indicators_server.py       ← SMA, EMA, RSI, MACD, Bollinger + Yahoo-integrated analyze_* tools
 │       ├── agri_server.py             ← FAOSTAT, USDA NASS/FAS, GIEWS, WASDE
 │       ├── commodities_server.py      ← UN Comtrade, EIA, LME metals
 │       ├── conflict_server.py         ← UCDP, ACLED, OpenSanctions, SIPRI
@@ -128,7 +130,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                            Uberspace (assist.uber.space)
                            ├─ LibreChat (:3080, Node.js)
                            │   ├─ MCP: trading ──streamable-http──▶ :8071/mcp
-                           │   ├─ MCP: Tier 1 external (yahoo-finance, gdelt-cloud,
+                           │   ├─ MCP: Tier 1 external (finance, gdelt-cloud,
                            │   │       prediction-markets, rss, reddit)
                            │   ├─ MCP: Tier 2 external (alphavantage, hackernews,
                            │   │       arxiv, math, regression, crypto-sentiment)
@@ -151,10 +153,10 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 ## Key Technical Details
 
 ### Combined Trading Server (`src/servers/combined_server.py`)
-- **Architecture**: Signals store + 12 data domains combined via FastMCP `mount(namespace=)`
+- **Architecture**: Signals store + 12 data domains + technical indicators combined via FastMCP `mount(namespace=)`
 - **Transport**: streamable-http on `:8071/mcp` (`stateless_http=True`), falls back to stdio for dev/testing
 - **Entry point**: `combined_server.py` mounts `store/server.py` as `store` namespace + 12 domain servers
-- **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, etc.
+- **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, `ta_analyze_full`, etc.
 - **Multi-user**: LibreChat injects `X-User-ID` / `X-User-Email` headers per request; `_get_user_id()` reads them via `fastmcp.server.dependencies.get_http_headers()`
 - **Per-user isolation**: notes/plans scoped by `user_id` in MongoDB; broker keys passed as headers (never stored); snapshots/events tagged with `user_id` in meta
 - **Risk gate**: `_risk_check()` enforces user identification, dry_run default, daily action limits before any external trading API call
@@ -194,6 +196,8 @@ fastmcp>=3.1
 httpx>=0.27
 pymongo>=4.7
 python-dotenv>=1.0
+pandas>=2.0
+ta>=0.10
 ```
 
 ## Dev & Deploy Workflow
@@ -420,6 +424,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
 | `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
+| `test_indicators.py` | 7 | pytest | Composite signal logic (analyze_full), Yahoo OHLCV fetch, SMA(50) fallback, error handling |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |

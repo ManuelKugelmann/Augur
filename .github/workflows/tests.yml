@@ -48,7 +48,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest pytest-asyncio httpx python-dotenv pyyaml
+        run: pip install pytest pytest-asyncio httpx python-dotenv pyyaml pandas ta
 
       - name: Run pytest
         run: python -m pytest tests/ -v

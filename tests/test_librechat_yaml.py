@@ -49,7 +49,7 @@ class TestYAMLSyntax:
 
 class TestMCPServers:
     REQUIRED = ["trading"]
-    EXTERNAL = ["yahoo-finance", "gdelt-cloud", "prediction-markets", "rss", "reddit"]
+    EXTERNAL = ["finance", "gdelt-cloud", "prediction-markets", "rss", "reddit"]
     REMOVED = ["filesystem"]
 
     def test_required_servers_present(self, cfg):
