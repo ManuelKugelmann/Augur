@@ -205,6 +205,7 @@ jobs:
 
   integration-llm-keys:
     name: Integration tests (LLM key validation)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests]
     steps:
