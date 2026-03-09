@@ -42,6 +42,7 @@ TradingAssistant/
 │   ├── store/
 │   │   └── server.py                  ← signals store (FastMCP, profiles + MongoDB snapshots)
 │   └── servers/
+│       ├── indicators_server.py       ← SMA, EMA, RSI, MACD, Bollinger + Yahoo-integrated analyze_* tools
 │       ├── agri_server.py             ← FAOSTAT, USDA NASS/FAS, GIEWS, WASDE
 │       ├── commodities_server.py      ← UN Comtrade, EIA, LME metals
 │       ├── conflict_server.py         ← UCDP, ACLED, OpenSanctions, SIPRI
@@ -151,10 +152,10 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 ## Key Technical Details
 
 ### Combined Trading Server (`src/servers/combined_server.py`)
-- **Architecture**: Signals store + 12 data domains combined via FastMCP `mount(namespace=)`
+- **Architecture**: Signals store + 12 data domains + technical indicators combined via FastMCP `mount(namespace=)`
 - **Transport**: streamable-http on `:8071/mcp` (`stateless_http=True`), falls back to stdio for dev/testing
 - **Entry point**: `combined_server.py` mounts `store/server.py` as `store` namespace + 12 domain servers
-- **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, etc.
+- **Tool namespacing**: `store_get_profile`, `weather_forecast`, `econ_fred_series`, `ta_analyze_full`, etc.
 - **Multi-user**: LibreChat injects `X-User-ID` / `X-User-Email` headers per request; `_get_user_id()` reads them via `fastmcp.server.dependencies.get_http_headers()`
 - **Per-user isolation**: notes/plans scoped by `user_id` in MongoDB; broker keys passed as headers (never stored); snapshots/events tagged with `user_id` in meta
 - **Risk gate**: `_risk_check()` enforces user identification, dry_run default, daily action limits before any external trading API call
@@ -420,6 +421,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
 | `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
+| `test_indicators.py` | 46 | pytest | SMA, EMA, RSI, Bollinger, MACD, composite trend filter, Yahoo-integrated analyze_* tools (mocked), price fetching edge cases |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |
