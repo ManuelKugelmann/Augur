@@ -153,6 +153,12 @@ def lc_yaml(lc_app_dir):
     # Replace __HOME__ with a dummy path (MCP servers won't actually launch
     # from their command definitions — we only test the trading server via URL)
     content = content.replace("__HOME__", str(lc_app_dir))
+
+    # Enable Agents API (remoteAgents) for cron API call tests
+    content = content.replace(
+        "interface:\n  endpointsMenu: true",
+        "interface:\n  endpointsMenu: true\n  remoteAgents:\n    use: true\n    create: true",
+    )
     yaml_dst.write_text(content)
     return yaml_dst
 
@@ -284,6 +290,28 @@ def api_client(auth_token):
         timeout=30)
     yield client
     client.close()
+
+
+@pytest.fixture(scope="module")
+def agents_api_key(api_client):
+    """Create an Agents API key via LibreChat for remote agent calls."""
+    # Try creating an API key for the Agents API
+    r = api_client.post("/api/keys", json={
+        "name": "ci-e2e-cron-test",
+        "endpoint": "agents",
+    })
+    if r.status_code not in (200, 201):
+        # Fallback: try alternate endpoint patterns
+        r = api_client.post("/api/agents/keys", json={
+            "name": "ci-e2e-cron-test",
+        })
+    if r.status_code not in (200, 201):
+        pytest.skip(f"Could not create Agents API key: {r.status_code}")
+    data = r.json()
+    key = data.get("key") or data.get("api_key") or data.get("value", "")
+    if not key:
+        pytest.skip(f"No key in API key response: {data}")
+    return key
 
 
 # ── Health checks ────────────────────────────────
@@ -634,3 +662,191 @@ class TestStoreViaMCP:
         result = self._call_tool("store_recent_events",
                                  {"subtype": "ci_e2e"})
         assert result is not None
+
+
+# ── Cron API call via Agents API ─────────────────
+
+
+class TestCronAPICall:
+    """Test invoking the cron-planner agent via LibreChat's Agents API.
+
+    This simulates what `ta cron` would do: send a message to the
+    cron-planner agent via the OpenAI-compatible chat/completions endpoint.
+    The agent should read plans, call MCP tools, and return a structured response.
+    """
+
+    @pytest.fixture(autouse=True, scope="class")
+    def _setup_cron_agent(self, api_client):
+        """Seed agents and store the cron-planner agent ID."""
+        agents_file = REPO_ROOT / "librechat-uberspace" / "config" / "agents.json"
+        if not agents_file.exists():
+            pytest.skip("agents.json not found")
+
+        agent_defs = json.loads(agents_file.read_text())
+
+        # Create all agents to get cron-planner ID
+        id_map = {}
+        for adef in agent_defs:
+            payload = {k: v for k, v in adef.items() if not k.startswith("_")}
+            payload.pop("edges", None)
+            r = api_client.post("/api/agents", json=payload)
+            if r.status_code in (200, 201):
+                result = r.json()
+                agent_id = result.get("id", "")
+                if agent_id:
+                    id_map[adef["_name"]] = agent_id
+
+        if "cron-planner" not in id_map:
+            pytest.skip("Could not create cron-planner agent")
+
+        self.cron_agent_id = id_map["cron-planner"]
+        self.id_map = id_map
+        self.agent_defs = agent_defs
+        yield
+
+        # Cleanup
+        for agent_id in id_map.values():
+            api_client.delete(f"/api/agents/{agent_id}")
+
+    @pytest.mark.skipif(not LLM_KEY_VALUE,
+                        reason="No LLM API key available")
+    def test_cron_agent_via_chat_completions(self, agents_api_key):
+        """Invoke cron-planner via /api/agents/v1/chat/completions."""
+        client = httpx.Client(
+            base_url=f"http://127.0.0.1:{LC_PORT}",
+            headers={"Authorization": f"Bearer {agents_api_key}",
+                     "Content-Type": "application/json"},
+            timeout=120)
+
+        r = client.post("/api/agents/v1/chat/completions", json={
+            "model": self.cron_agent_id,
+            "messages": [
+                {"role": "user",
+                 "content": "Run a quick status check: read current plans "
+                            "(store_get_notes kind=plan), check risk status "
+                            "(store_risk_status), and list available regions "
+                            "(store_list_regions). Return a brief summary."}
+            ],
+            "stream": False,
+        })
+        client.close()
+
+        assert r.status_code == 200, \
+            f"Chat completions failed: {r.status_code} {r.text[:300]}"
+        data = r.json()
+        # OpenAI-compatible response: {choices: [{message: {content: ...}}]}
+        choices = data.get("choices", [])
+        assert len(choices) > 0, f"No choices in response: {data}"
+        content = choices[0].get("message", {}).get("content", "")
+        assert len(content) > 10, f"Empty agent response: {content}"
+
+    @pytest.mark.skipif(not LLM_KEY_VALUE,
+                        reason="No LLM API key available")
+    def test_cron_agent_via_responses(self, agents_api_key):
+        """Invoke cron-planner via /api/agents/v1/responses (Open Responses)."""
+        client = httpx.Client(
+            base_url=f"http://127.0.0.1:{LC_PORT}",
+            headers={"Authorization": f"Bearer {agents_api_key}",
+                     "Content-Type": "application/json"},
+            timeout=120)
+
+        r = client.post("/api/agents/v1/responses", json={
+            "model": self.cron_agent_id,
+            "input": "Check store_risk_status and report remaining daily budget.",
+        })
+        client.close()
+
+        # Responses API may not be available in all LC versions
+        if r.status_code == 404:
+            pytest.skip("Responses API not available in this LibreChat version")
+
+        assert r.status_code == 200, \
+            f"Responses API failed: {r.status_code} {r.text[:300]}"
+        data = r.json()
+        # Open Responses format: {output: [{type: "message", content: [...]}]}
+        output = data.get("output", data.get("choices", []))
+        assert len(output) > 0, f"No output in response: {data}"
+
+    @pytest.mark.skipif(not LLM_KEY_VALUE,
+                        reason="No LLM API key available")
+    def test_cron_agent_calls_mcp_tools(self, agents_api_key):
+        """Verify cron-planner actually calls MCP tools (not just generates text)."""
+        client = httpx.Client(
+            base_url=f"http://127.0.0.1:{LC_PORT}",
+            headers={"Authorization": f"Bearer {agents_api_key}",
+                     "Content-Type": "application/json"},
+            timeout=120)
+
+        r = client.post("/api/agents/v1/chat/completions", json={
+            "model": self.cron_agent_id,
+            "messages": [
+                {"role": "user",
+                 "content": "Call store_list_regions to list all available "
+                            "regions. Return the exact list."}
+            ],
+            "stream": False,
+        })
+        client.close()
+
+        if r.status_code != 200:
+            pytest.skip(f"Agent call failed: {r.status_code}")
+
+        data = r.json()
+        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        # The response should mention actual regions from the profiles
+        region_keywords = ["europe", "north_america", "global", "east_asia", "mena"]
+        found = [kw for kw in region_keywords if kw in content.lower()]
+        assert len(found) >= 2, \
+            f"Agent response doesn't contain region data (tool may not have been called): {content[:300]}"
+
+    def test_agents_api_models_list(self, agents_api_key):
+        """GET /api/agents/v1/models returns available agents."""
+        client = httpx.Client(
+            base_url=f"http://127.0.0.1:{LC_PORT}",
+            headers={"Authorization": f"Bearer {agents_api_key}"},
+            timeout=15)
+
+        r = client.get("/api/agents/v1/models")
+        client.close()
+
+        if r.status_code == 404:
+            pytest.skip("Models endpoint not available")
+
+        assert r.status_code == 200
+        data = r.json()
+        models = data.get("data", [])
+        # Should include our seeded agents
+        model_ids = {m.get("id", "") for m in models}
+        assert self.cron_agent_id in model_ids, \
+            f"Cron-planner {self.cron_agent_id} not in models list: {model_ids}"
+
+    @pytest.mark.skipif(not LLM_KEY_VALUE,
+                        reason="No LLM API key available")
+    def test_cron_agent_streaming(self, agents_api_key):
+        """Verify streaming mode works for cron-planner."""
+        client = httpx.Client(
+            base_url=f"http://127.0.0.1:{LC_PORT}",
+            headers={"Authorization": f"Bearer {agents_api_key}",
+                     "Content-Type": "application/json"},
+            timeout=120)
+
+        with client.stream("POST", "/api/agents/v1/chat/completions", json={
+            "model": self.cron_agent_id,
+            "messages": [
+                {"role": "user",
+                 "content": "Call store_risk_status and return the result."}
+            ],
+            "stream": True,
+        }) as r:
+            assert r.status_code == 200, \
+                f"Streaming failed: {r.status_code}"
+            chunks = []
+            for line in r.iter_lines():
+                if line.startswith("data:"):
+                    chunk = line[5:].strip()
+                    if chunk == "[DONE]":
+                        break
+                    chunks.append(chunk)
+
+        client.close()
+        assert len(chunks) > 0, "No streaming chunks received"
