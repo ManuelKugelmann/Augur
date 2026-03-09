@@ -191,12 +191,57 @@ def profiles_dir(tmp_path, monkeypatch):
 
     # Wire up mock collections for profiles_{kind}
     if _USE_MONGOMOCK:
-        # CI: use mongomock (full pymongo API compatibility)
+        # CI: use mongomock with $text search wrapper (mongomock doesn't
+        # implement $text queries, so we intercept them with a simple
+        # name/tags/sector substring search, same as _FakeCollection).
         mock_client = mongomock.MongoClient()
         mock_db = mock_client["test_profiles"]
 
+        class _TextSearchWrapper:
+            """Thin wrapper adding $text query support on top of mongomock."""
+
+            def __init__(self, col):
+                self._col = col
+
+            def __getattr__(self, name):
+                return getattr(self._col, name)
+
+            def find(self, filter_=None, projection=None, **kw):
+                filter_ = filter_ or {}
+                text_q = filter_.pop("$text", None)
+                if text_q:
+                    # Manual text search: match against name/tags/sector
+                    search = text_q.get("$search", "").lower()
+                    all_docs = list(self._col.find(filter_))
+                    matched = []
+                    for d in all_docs:
+                        name_val = (d.get("name") or "").lower()
+                        tags_val = " ".join(d.get("tags") or []).lower()
+                        sector_val = (d.get("sector") or "").lower()
+                        if (search in name_val or search in tags_val
+                                or search in sector_val):
+                            if projection:
+                                d = {k: d[k] for k in d if k in projection
+                                     or (k == "_id" and projection.get("_id", 1))}
+                            matched.append(d)
+                    return _MongomockCursor(matched)
+                return self._col.find(filter_, projection, **kw)
+
+        class _MongomockCursor:
+            def __init__(self, docs):
+                self._docs = docs
+
+            def sort(self, *a, **kw):
+                return self
+
+            def limit(self, n):
+                return self._docs[:n]
+
+            def __iter__(self):
+                return iter(self._docs)
+
         def fake_profiles_col(kind):
-            return mock_db[f"profiles_{kind}"]
+            return _TextSearchWrapper(mock_db[f"profiles_{kind}"])
     else:
         # Sandbox fallback: lightweight custom mock
         _profile_cols: dict[str, _FakeCollection] = {}
