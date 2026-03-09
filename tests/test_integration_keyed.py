@@ -79,6 +79,24 @@ class TestComtrade:
         assert "data" in result or "dataset" in result
 
 
+# ── OpenSanctions (conflict_server) ────────────────────
+
+@pytest.mark.skipif(not os.environ.get("OPENSANCTIONS_API_KEY"), reason="OPENSANCTIONS_API_KEY not set")
+class TestOpenSanctions:
+    @pytest.fixture(autouse=True)
+    def _load(self):
+        import conflict_server as mod
+        self.m = mod
+
+    def test_search_sanctions(self):
+        result = run(self.m.search_sanctions(query="Gazprom"))
+        assert "results" in result or "result" in result
+
+    def test_search_sanctions_result(self):
+        result = run(self.m.search_sanctions(query="Russia"))
+        assert isinstance(result, dict)
+
+
 # ── ACLED (conflict_server) ─────────────────────────────
 
 @pytest.mark.skipif(not os.environ.get("ACLED_API_KEY"), reason="ACLED_API_KEY not set")
@@ -109,6 +127,24 @@ class TestUSDA:
     def test_usda_crop_progress(self):
         result = run(self.m.usda_crop_progress(commodity="CORN", year=2023))
         assert "data" in result or "error" not in result
+
+
+# ── ReliefWeb (humanitarian_server) ─────────────────────
+
+@pytest.mark.skipif(not os.environ.get("RELIEFWEB_APPNAME"), reason="RELIEFWEB_APPNAME not set")
+class TestReliefWeb:
+    @pytest.fixture(autouse=True)
+    def _load(self):
+        import humanitarian_server as mod
+        self.m = mod
+
+    def test_reliefweb_reports(self):
+        result = run(self.m.reliefweb_reports(query="drought", limit=3))
+        assert "data" in result
+
+    def test_reliefweb_disasters(self):
+        result = run(self.m.reliefweb_disasters(limit=3))
+        assert "data" in result
 
 
 # ── Google Civic (elections_server) ──────────────────────

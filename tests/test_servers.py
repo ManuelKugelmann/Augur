@@ -444,13 +444,30 @@ class TestConflictServer:
 
     @pytest.mark.asyncio
     async def test_sanctions_search(self):
-        resp = _mock_response({"results": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.search_sanctions("Putin", schema="Person")
-        params = client.get.call_args[1]["params"]
-        assert params["q"] == "Putin"
-        assert params["schema"] == "Person"
+        old_key = self.mod.OPENSANCTIONS_KEY
+        self.mod.OPENSANCTIONS_KEY = "test-key"
+        try:
+            resp = _mock_response({"results": []})
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                await self.mod.search_sanctions("Putin", schema="Person")
+            params = client.get.call_args[1]["params"]
+            assert params["q"] == "Putin"
+            assert params["schema"] == "Person"
+            assert "ApiKey test-key" in client.get.call_args[1]["headers"]["Authorization"]
+        finally:
+            self.mod.OPENSANCTIONS_KEY = old_key
+
+    @pytest.mark.asyncio
+    async def test_sanctions_no_key(self):
+        old_key = self.mod.OPENSANCTIONS_KEY
+        self.mod.OPENSANCTIONS_KEY = ""
+        try:
+            result = await self.mod.search_sanctions("Putin")
+            assert "error" in result
+            assert "OPENSANCTIONS_API_KEY" in result["error"]
+        finally:
+            self.mod.OPENSANCTIONS_KEY = old_key
 
 
 # ── Elections Server ─────────────────────────────
@@ -467,12 +484,14 @@ class TestElectionsServer:
 
     @pytest.mark.asyncio
     async def test_heads_of_state_country(self):
-        resp = _mock_response({"results": {"bindings": []}})
-        patcher, client = _patch_httpx_get(resp)
+        search_resp = _mock_response({"search": [{"id": "Q183"}]})
+        sparql_resp = _mock_response({"results": {"bindings": []}})
+        patcher, client = _patch_httpx_get(search_resp)
+        client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             await self.mod.heads_of_state(country="Germany", limit=5)
-        params = client.get.call_args[1]["params"]
-        assert "Germany" in params["query"]
+        sparql_call = client.get.call_args_list[1]
+        assert "Q183" in sparql_call[1]["params"]["query"]
 
     @pytest.mark.asyncio
     async def test_voter_info_missing_key(self, monkeypatch):
@@ -500,29 +519,33 @@ class TestElectionsServer:
 
     @pytest.mark.asyncio
     async def test_global_elections_wikidata(self):
-        resp = _mock_response({"results": {"bindings": [
+        search_resp = _mock_response({"search": [{"id": "Q183"}]})
+        sparql_resp = _mock_response({"results": {"bindings": [
             {"electionLabel": {"value": "2025 German federal election"},
              "countryLabel": {"value": "Germany"},
              "date": {"value": "2025-02-23"},
              "typeLabel": {"value": "general election"}}
         ]}})
-        patcher, client = _patch_httpx_get(resp)
+        patcher, client = _patch_httpx_get(search_resp)
+        client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             result = await self.mod.global_elections(country="Germany", year="2025")
         assert len(result) == 1
         assert result[0]["country"] == "Germany"
-        url = client.get.call_args[0][0]
-        assert "wikidata.org" in url
+        sparql_url = client.get.call_args_list[1][0][0]
+        assert "wikidata.org" in sparql_url
 
     @pytest.mark.asyncio
     async def test_heads_of_state_params(self):
-        resp = _mock_response({"results": {"bindings": [
+        search_resp = _mock_response({"search": [{"id": "Q183"}]})
+        sparql_resp = _mock_response({"results": {"bindings": [
             {"personLabel": {"value": "Friedrich Merz"},
              "countryLabel": {"value": "Germany"},
              "positionLabel": {"value": "Chancellor"},
              "start": {"value": "2025-05-06"}}
         ]}})
-        patcher, client = _patch_httpx_get(resp)
+        patcher, client = _patch_httpx_get(search_resp)
+        client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             result = await self.mod.heads_of_state(country="Germany")
         assert result[0]["person"] == "Friedrich Merz"
@@ -581,15 +604,20 @@ class TestHumanitarianViaConflict:
 
     @pytest.mark.asyncio
     async def test_reliefweb_uses_post(self):
-        resp = _mock_response({"data": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.reliefweb_reports(query="flood", country="Bangladesh")
-        # Should use POST
-        client.post.assert_called_once()
-        body = client.post.call_args[1]["json"]
-        assert body["query"]["value"] == "flood"
-        assert body["filter"]["value"] == ["Bangladesh"]
+        old = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = "test-app"
+        try:
+            resp = _mock_response({"data": []})
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                await self.mod.reliefweb_reports(query="flood", country="Bangladesh")
+            # Should use POST
+            client.post.assert_called_once()
+            body = client.post.call_args[1]["json"]
+            assert body["query"]["value"] == "flood"
+            assert body["filter"]["value"] == ["Bangladesh"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old
 
 
 # ── Transport Server ─────────────────────────────
@@ -936,14 +964,30 @@ class TestHumanitarianServer:
         assert params["q"] == "displacement"
 
     @pytest.mark.asyncio
+    async def test_reliefweb_reports_missing_appname(self):
+        old = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = ""
+        try:
+            result = await self.mod.reliefweb_reports(query="drought")
+            assert "error" in result
+            assert "RELIEFWEB_APPNAME" in result["error"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old
+
+    @pytest.mark.asyncio
     async def test_reliefweb_reports_country_filter(self):
-        resp = _mock_response({"data": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.reliefweb_reports(country="Syria")
-        body = client.post.call_args[1]["json"]
-        assert body["filter"]["field"] == "country.name"
-        assert "Syria" in body["filter"]["value"]
+        old = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = "test-app"
+        try:
+            resp = _mock_response({"data": []})
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                await self.mod.reliefweb_reports(country="Syria")
+            body = client.post.call_args[1]["json"]
+            assert body["filter"]["field"] == "country.name"
+            assert "Syria" in body["filter"]["value"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old
 
     @pytest.mark.asyncio
     async def test_idmc_missing_key(self, monkeypatch):

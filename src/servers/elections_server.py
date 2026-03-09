@@ -14,6 +14,26 @@ _WD_HEADERS = {"User-Agent": "TradingAssistant/1.0 (https://github.com/ManuelKug
 # Sanitize inputs for SPARQL queries to prevent injection
 _SAFE_SPARQL_TEXT = re.compile(r'^[A-Za-z0-9 .\'()-]+$')
 _SAFE_YEAR = re.compile(r'^\d{4}$')
+_SAFE_QID = re.compile(r'^Q\d+$')
+
+
+async def _resolve_country_qid(name: str) -> str | None:
+    """Resolve a country name to its Wikidata Q-ID via entity search."""
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get("https://www.wikidata.org/w/api.php", params={
+                "action": "wbsearchentities", "search": name,
+                "language": "en", "type": "item", "limit": "5",
+                "format": "json"}, headers=_WD_HEADERS)
+            r.raise_for_status()
+            for hit in r.json().get("search", []):
+                # Accept items that look like countries (Q-ID exists)
+                qid = hit.get("id", "")
+                if _SAFE_QID.match(qid):
+                    return qid
+    except httpx.HTTPError:
+        pass
+    return None
 
 
 # ── Wikidata (global elections, no key) ──────────────────
@@ -24,16 +44,21 @@ async def global_elections(country: str = "", year: str = "",
                            limit: int = 20) -> list[dict]:
     """Global elections (Wikidata). country: English name. year: e.g. '2025'."""
     filters = []
+    country_filter = ""
     if country:
         if not _SAFE_SPARQL_TEXT.match(country):
             return [{"error": "invalid country name (letters, spaces, digits only)"}]
-        filters.append(f'FILTER(CONTAINS(LCASE(?countryLabel), LCASE("{country}")))')
+        qid = await _resolve_country_qid(country)
+        if not qid:
+            return [{"error": f"Could not resolve country '{country}' on Wikidata"}]
+        country_filter = f"VALUES ?country {{ wd:{qid} }}"
     if year:
         if not _SAFE_YEAR.match(year):
             return [{"error": "invalid year (must be 4 digits, e.g. 2025)"}]
         filters.append(f"FILTER(YEAR(?date) = {year})")
     filter_block = "\n    ".join(filters)
     query = f"""SELECT ?election ?electionLabel ?countryLabel ?date ?typeLabel WHERE {{
+  {country_filter}
   ?election wdt:P31/wdt:P279* wd:Q40231 .
   ?election wdt:P17 ?country .
   ?election wdt:P585 ?date .
@@ -64,8 +89,12 @@ async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
     if country:
         if not _SAFE_SPARQL_TEXT.match(country):
             return [{"error": "invalid country name (letters, spaces, digits only)"}]
-        country_filter = f'FILTER(CONTAINS(LCASE(?countryLabel), LCASE("{country}")))'
+        qid = await _resolve_country_qid(country)
+        if not qid:
+            return [{"error": f"Could not resolve country '{country}' on Wikidata"}]
+        country_filter = f"VALUES ?country {{ wd:{qid} }}"
     query = f"""SELECT ?person ?personLabel ?countryLabel ?positionLabel ?start ?end WHERE {{
+  {country_filter}
   ?person wdt:P39 ?position .
   ?position wdt:P279* wd:Q48352 .
   ?person p:P39 ?stmt .
@@ -73,7 +102,6 @@ async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
   ?stmt pq:P580 ?start .
   OPTIONAL {{ ?stmt pq:P582 ?end }}
   ?position wdt:P17 ?country .
-  {country_filter}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
 }} ORDER BY DESC(?start) LIMIT {limit}"""
     try:
