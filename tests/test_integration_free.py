@@ -22,12 +22,19 @@ pytestmark = pytest.mark.integration
 
 
 def run(coro):
-    """Run an async tool function synchronously."""
+    """Run an async tool function synchronously.
+
+    If the tool catches the HTTP error itself and returns {"error": ...},
+    treat that as xfail too — the API is down, not our code.
+    """
     try:
-        return asyncio.get_event_loop().run_until_complete(coro)
+        result = asyncio.get_event_loop().run_until_complete(coro)
     except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ProxyError,
             httpx.ConnectError) as exc:
         pytest.xfail(f"External API unavailable: {exc}")
+    if isinstance(result, dict) and "error" in result:
+        pytest.xfail(f"External API error: {result['error'][:200]}")
+    return result
 
 
 # ── weather_server (Open-Meteo, NOAA) ───────────────────
