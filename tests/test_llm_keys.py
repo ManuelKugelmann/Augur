@@ -100,17 +100,6 @@ class TestGemini:
         assert r.status_code == 200, f"Gemini /models failed: {r.status_code} {r.text[:200]}"
 
 
-# ── xAI / Grok ───────────────────────────────────────────
-
-@pytest.mark.skipif(not os.environ.get("XAI_API_KEY"), reason="XAI_API_KEY not set")
-class TestXAI:
-    BASE = "https://api.x.ai/v1"
-
-    def test_list_models(self):
-        r = _list_models(self.BASE, os.environ["XAI_API_KEY"])
-        assert r.status_code == 200, f"xAI /models failed: {r.status_code} {r.text[:200]}"
-
-
 # ── Mistral ──────────────────────────────────────────────
 
 @pytest.mark.skipif(not os.environ.get("MISTRAL_API_KEY"), reason="MISTRAL_API_KEY not set")

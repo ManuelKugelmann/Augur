@@ -44,16 +44,6 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 | **Env var** | `GEMINI_API_KEY=AI...` |
 | **Notes** | Very generous token limits. 1M context on paid tier. |
 
-### xAI / Grok -- Free Grok access
-
-| | |
-|---|---|
-| **Signup** | https://console.x.ai |
-| **Free limits** | 30 RPM, free tier with monthly credit |
-| **Best models** | `grok-3-mini`, `grok-3-mini-fast` |
-| **Env var** | `XAI_API_KEY=xai-...` |
-| **Notes** | Strong reasoning model. Free $25/month credit (as of early 2025). |
-
 ### Mistral -- Best European provider
 
 | | |
@@ -227,7 +217,6 @@ Go to: **Settings > Secrets and variables > Actions > New repository secret**
 | `GROQ_API_KEY` | LLM key check CI job |
 | `GEMINI_API_KEY` | LLM key check CI job |
 | `MISTRAL_API_KEY` | LLM key check CI job |
-| `XAI_API_KEY` | LLM key check CI job |
 
 All are optional -- the CI job skips providers whose secrets aren't set.
 
@@ -246,7 +235,6 @@ All are optional -- the CI job skips providers whose secrets aren't set.
 # ── Free providers (uncomment the ones you signed up for) ──
 GROQ_API_KEY=gsk_abc123...
 GEMINI_API_KEY=AIza...
-XAI_API_KEY=xai-abc123...
 # MISTRAL_API_KEY=...
 # CEREBRAS_API_KEY=csk-...
 # COHERE_API_KEY=...

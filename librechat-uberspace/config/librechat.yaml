@@ -242,20 +242,6 @@ endpoints:
 #       titleModel: "gemini-2.0-flash-lite"
 #       modelDisplayLabel: "Gemini"
 #
-#     # ── xAI / Grok (free tier, 30 RPM) ──
-#     # Key: https://console.x.ai
-#     - name: "Grok"
-#       apiKey: "${XAI_API_KEY}"
-#       baseURL: "https://api.x.ai/v1"
-#       models:
-#         default:
-#           - grok-3-mini
-#           - grok-3-mini-fast
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "grok-3-mini-fast"
-#       modelDisplayLabel: "Grok"
-#
 #     # ── Mistral (free tier: mistral-small, codestral) ──
 #     # Key: https://console.mistral.ai/api-keys
 #     - name: "Mistral"
