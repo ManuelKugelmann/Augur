@@ -313,8 +313,10 @@ def _lint_one(kind: str, id: str, data: dict, schema: dict | None) -> list[str]:
 
 
 def _strip_mongo_id(doc: dict) -> dict:
-    """Remove MongoDB _id from a profile doc for clean output."""
+    """Remove MongoDB _id and rename _id_str→id for clean output."""
     doc.pop("_id", None)
+    if "_id_str" in doc:
+        doc["id"] = doc.pop("_id_str")
     return doc
 
 
@@ -463,16 +465,18 @@ def nearby_profiles(kind: str, lon: float, lat: float,
     """Geo proximity search for profiles with location data."""
     if kind not in VALID_KINDS:
         return [{"error": f"unknown kind: {kind}"}]
-    q: dict = {
-        "location": {
-            "$nearSphere": {
-                "$geometry": {"type": "Point", "coordinates": [lon, lat]},
-                "$maxDistance": max_km * 1000,
-            }
-        }
-    }
+    pipeline: list[dict] = [
+        {"$geoNear": {
+            "near": {"type": "Point", "coordinates": [lon, lat]},
+            "distanceField": "_dist_m",
+            "maxDistance": max_km * 1000,
+            "spherical": True,
+        }},
+        {"$limit": limit},
+        {"$project": {"_id": 0}},
+    ]
     col = _profiles_col(kind)
-    return [_strip_mongo_id(d) for d in col.find(q, {"_id": 0}).limit(limit)]
+    return [_strip_mongo_id(d) for d in col.aggregate(pipeline)]
 
 
 @mcp.tool()
@@ -630,23 +634,25 @@ def nearby(kind: str, lon: float, lat: float,
            max_km: float = 500, type: str = "",
            limit: int = 50) -> list[dict]:
     """Geo proximity search. kind: profile kind or 'events'."""
-    q: dict = {
-        "location": {
-            "$nearSphere": {
-                "$geometry": {"type": "Point", "coordinates": [lon, lat]},
-                "$maxDistance": max_km * 1000,
-            }
-        }
+    geo_near: dict = {
+        "near": {"type": "Point", "coordinates": [lon, lat]},
+        "distanceField": "_dist_m",
+        "maxDistance": max_km * 1000,
+        "spherical": True,
     }
     if type:
-        q["meta.type"] = type
+        geo_near["query"] = {"meta.type": type}
     if kind == "events":
         col = _events_col()
     elif kind in VALID_KINDS:
         col = _snap_col(kind)
     else:
         return [{"error": f"unknown kind: {kind}"}]
-    return [_ser(r) for r in col.find(q).limit(limit)]
+    pipeline: list[dict] = [
+        {"$geoNear": geo_near},
+        {"$limit": limit},
+    ]
+    return [_ser(r) for r in col.aggregate(pipeline)]
 
 
 @mcp.tool()

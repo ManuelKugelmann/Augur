@@ -339,22 +339,23 @@ class TestNearby:
     def test_builds_geo_query(self, mock_db):
         db, cols = mock_db
         server.nearby(kind="countries", lon=13.4, lat=52.5, max_km=100)
-        q = cols["snap_countries"].find.call_args[0][0]
-        assert "$nearSphere" in q["location"]
-        geo = q["location"]["$nearSphere"]
-        assert geo["$geometry"]["coordinates"] == [13.4, 52.5]
-        assert geo["$maxDistance"] == 100_000
+        pipeline = cols["snap_countries"].aggregate.call_args[0][0]
+        geo_near = pipeline[0]["$geoNear"]
+        assert geo_near["near"]["coordinates"] == [13.4, 52.5]
+        assert geo_near["maxDistance"] == 100_000
+        assert geo_near["spherical"] is True
 
     def test_events_uses_events_collection(self, mock_db):
         db, cols = mock_db
         server.nearby(kind="events", lon=0, lat=0)
-        cols["events"].find.assert_called_once()
+        cols["events"].aggregate.assert_called_once()
 
     def test_type_filter(self, mock_db):
         db, cols = mock_db
         server.nearby(kind="stocks", lon=0, lat=0, type="price")
-        q = cols["snap_stocks"].find.call_args[0][0]
-        assert q["meta.type"] == "price"
+        pipeline = cols["snap_stocks"].aggregate.call_args[0][0]
+        geo_near = pipeline[0]["$geoNear"]
+        assert geo_near["query"]["meta.type"] == "price"
 
 
 # ── trend tool ────────────────────────────────────
