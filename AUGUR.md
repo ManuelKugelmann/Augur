@@ -392,7 +392,8 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 | Asset | Existing Source | Reuse |
 |-------|----------------|-------|
 | Uberspace + supervisord | LibreChat | Pipeline engine (cron + scripts) |
-| GitHub Pages + Jekyll | — | Static site hosting (free, CDN) |
+| GitHub Pages + Jekyll | — | Static site hosting (free, CDN, Actions-based build) |
+| GitHub Actions | — | Jekyll build + deploy to Pages on push |
 | GitHub deploy (CI/CD) | LibreChat bootstrap | Deployment |
 | ntfy | TradingAssistant | Pipeline alerts, failure notifications |
 | Tavily API | Trading system MCP | News OSINT source |
@@ -431,7 +432,7 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 │  │              │                                       │   │
 │  │  Publisher                                           │   │
 │  │     ├── Write Markdown + images to augur_news branch │   │
-│  │     ├── git push → GitHub Pages auto-builds Jekyll   │   │
+│  │     ├── git push → Actions workflow builds Jekyll    │   │
 │  │     ├── Social queue → JSON files → platform APIs    │   │
 │  │     └── ntfy → pipeline status alerts                │   │
 │  │                                                      │   │
@@ -467,7 +468,7 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 │  │      └── cards/         (social sharing cards)       │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
-│  GitHub Pages auto-build on push → CDN                      │
+│  GitHub Actions: jekyll-build-pages → deploy-pages → CDN    │
 │                                                             │
 └────────────────────────┬────────────────────────────────────┘
                          │ serves
@@ -520,10 +521,11 @@ cron triggers: augur-cycle --brand=the --horizon=tomorrow
   │    sharp: apply watermark text overlay
   │    sharp: composite social cards (3 ratios) with headline + branding
   │
-  ├── PUBLISH (git push → GitHub Pages)
+  ├── PUBLISH (git push → Actions → GitHub Pages)
   │    Write Markdown: _posts/{brand}/{horizon}/{date}-{slug}.md
   │      └── YAML front matter: all structured data (headline, sections, tags, etc.)
-  │    git commit + push to augur_news branch → GitHub Pages auto-builds Jekyll
+  │    git commit + push to augur_news branch
+  │      → Actions workflow: jekyll-build-pages → deploy-pages
   │    Write social queue: _data/social/pending/{brand}-{date}-{platform}.json
   │
   └── NOTIFY
@@ -749,6 +751,8 @@ augur-engine/
 
 ```
 / (augur_news branch root)
+├── .github/workflows/
+│   └── pages.yml                   # Actions: jekyll-build-pages → deploy-pages
 ├── _config.yml                     # Jekyll config (collections, defaults, plugins)
 ├── CNAME                           # augur.news (GitHub Pages custom domain)
 ├── Gemfile                         # jekyll, jekyll-feed, jekyll-seo-tag
@@ -827,6 +831,42 @@ augur-engine/
 ├── datenschutz/index.html          # Privacy policy (DSGVO)
 └── 404.html                        # Custom 404
 ```
+
+### GitHub Actions Workflow (augur_news branch)
+
+`.github/workflows/pages.yml` — builds Jekyll and deploys to GitHub Pages on every push to `augur_news`:
+
+```yaml
+name: Deploy Jekyll to Pages
+on:
+  push:
+    branches: [augur_news]
+permissions:
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/jekyll-build-pages@v1
+      - uses: actions/upload-pages-artifact@v3
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Why Actions over legacy branch-based publishing:
+- **Any Jekyll version** — not locked to GitHub's pinned version
+- **Any gem plugins** — not restricted to the whitelist
+- **Build logs** — visible in Actions tab for debugging
+- **Future-proof** — legacy branch publishing is deprecated-trajectory
 
 ---
 
