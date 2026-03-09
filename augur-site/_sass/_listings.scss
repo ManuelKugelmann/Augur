@@ -1,0 +1,72 @@
+// Horizon and brand listing pages
+
+.listing {
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__items {
+    list-style: none;
+    padding: 0;
+  }
+
+  &__item {
+    padding: 1.2rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+    &:first-child {
+      padding-top: 0;
+    }
+  }
+}
+
+.card {
+  &__horizon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+  }
+
+  &__headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1.25;
+    margin-bottom: 0.3rem;
+
+    a {
+      color: var(--ink);
+
+      &:hover {
+        color: var(--accent);
+        text-decoration: none;
+      }
+    }
+  }
+
+  &__date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--meta);
+  }
+
+  &__tags {
+    margin-top: 0.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  &__tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--meta);
+
+    &::before {
+      content: "#";
+    }
+  }
+}

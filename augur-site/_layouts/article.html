@@ -1,0 +1,56 @@
+---
+layout: default
+---
+{% assign brand = site.data.brands[page.brand] %}
+{% assign horizon_label = "" %}
+{% for h in brand.horizons %}
+  {% if h.key == page.horizon %}
+    {% assign horizon_label = h.label %}
+  {% endif %}
+{% endfor %}
+{% assign is_de = false %}
+{% if brand.locale == "de" %}{% assign is_de = true %}{% endif %}
+
+<article class="article">
+  <div class="article__horizon">{{ horizon_label }}</div>
+  <div class="dateline">
+    {% if is_de %}Vorhergesagt für{% else %}Foreseen for{% endif %}: {{ page.fictive_date | default: page.date | date: "%Y-%m-%d" }}
+  </div>
+  <hr class="rule">
+
+  <h1 class="article__headline">{{ page.headline | default: page.title }}</h1>
+
+  {% if page.image_paths %}
+  <div class="article__image">
+    <img src="{{ page.image_paths[0] | relative_url }}" alt="{{ page.headline | default: page.title }}">
+    <div class="article__image-disclaimer">AI-GENERATED &middot; NOT A PHOTO</div>
+  </div>
+  {% endif %}
+
+  <div class="article__body">
+    {{ content }}
+  </div>
+
+  {% include sentiment-bar.html %}
+  {% include sources.html %}
+
+  {% if page.tags.size > 0 %}
+  <div class="article__tags">
+    {% for tag in page.tags %}
+    <span class="article__tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="article__meta">
+    {% if is_de %}Erstellt{% else %}Divined{% endif %}: {{ page.created_at | default: page.date | date: "%Y-%m-%dT%H:%M:%SZ" }}<br>
+    Model: {{ page.model | default: "claude-sonnet-4-5" }}<br>
+    {{ site.url }}{{ page.url }}
+  </div>
+
+  <div class="rule--ornament"></div>
+
+  <div style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--meta); text-transform: uppercase; letter-spacing: 0.1em; padding: 0.5rem; background: repeating-linear-gradient(90deg, var(--meta) 0, var(--meta) 2px, transparent 2px, transparent 6px); background-size: 6px 1px; background-position: bottom; background-repeat: repeat-x;">
+    AI-GENERATED SPECULATION
+  </div>
+</article>

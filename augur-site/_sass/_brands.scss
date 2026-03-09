@@ -1,0 +1,26 @@
+// Brand palettes as CSS custom properties
+// Applied via data-brand attribute on <body>
+
+// Default: The Augur
+:root {
+  --bg: #f4f0e8;
+  --ink: #1a1a1a;
+  --accent: #8b0000;
+  --meta: #6b5b4f;
+}
+
+[data-brand="der"] {
+  --accent: #1a3a5c;
+}
+
+[data-brand="financial"] {
+  --bg: #f0f2f4;
+  --accent: #0a6e3a;
+  --meta: #5a6570;
+}
+
+[data-brand="finanz"] {
+  --bg: #f0f2f4;
+  --accent: #0a6e3a;
+  --meta: #5a6570;
+}
