@@ -506,10 +506,6 @@ case "$CMD" in
             exit 1
         fi
         ;;
-    sync)
-        echo -e "${YELLOW}⚠${NC} Data file sync removed — all data lives in MongoDB now."
-        echo "  Use 'ta backup' for MongoDB backups."
-        ;;
     cron)
         # ── Unified cron hook (every 15 min) ─────────────────────
         # Install: crontab -e → */15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
@@ -1155,8 +1151,7 @@ SVCEOF
         echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
         echo "  ta backups      List available backups"
-        echo "  ta sync         Force git sync of data dir"
-        echo "  ta cron         Run cron hook (sync + profiles + compact + agent invocation)"
+        echo "  ta cron         Run cron hook (profiles + compact + agent invocation)"
         echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"

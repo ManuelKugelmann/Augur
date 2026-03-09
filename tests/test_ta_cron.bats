@@ -22,43 +22,6 @@ teardown() {
     teardown_sandbox
 }
 
-# Helper: init DATA_DIR as git repo with a "remote" (bare repo) so push works
-init_data_with_remote() {
-    local bare="$TEST_SANDBOX/data_remote.git"
-    git init -q --bare "$bare"
-    init_mock_git_repo "$DATA_DIR"
-    git -C "$DATA_DIR" remote add origin "$bare"
-    git -C "$DATA_DIR" push -u origin master -q 2>/dev/null || \
-        git -C "$DATA_DIR" push -u origin main -q 2>/dev/null || true
-}
-
-@test "cron: data sync commits when changes exist" {
-    init_data_with_remote
-
-    echo "new data" > "$DATA_DIR/test.txt"
-
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron
-    [[ "$status" -eq 0 ]]
-
-    cd "$DATA_DIR"
-    run git log --oneline -1
-    [[ "$output" == *"sync"* ]]
-}
-
-@test "cron: no data commit when nothing changed" {
-    init_data_with_remote
-
-    local before_hash
-    before_hash=$(git -C "$DATA_DIR" rev-parse HEAD)
-
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron
-    [[ "$status" -eq 0 ]]
-
-    local after_hash
-    after_hash=$(git -C "$DATA_DIR" rev-parse HEAD)
-    [[ "$before_hash" == "$after_hash" ]]
-}
-
 @test "cron: profile auto-commit when profiles changed" {
     echo '{"id":"TST"}' > "$STACK_DIR/profiles/TST.json"
 
@@ -80,14 +43,6 @@ init_data_with_remote() {
     local after_hash
     after_hash=$(git -C "$STACK_DIR" rev-parse HEAD)
     [[ "$before_hash" == "$after_hash" ]]
-}
-
-@test "cron: skips data sync when DATA_DIR has no git repo" {
-    mkdir -p "$DATA_DIR"
-    # no .git in DATA_DIR
-
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron
-    [[ "$status" -eq 0 ]]
 }
 
 @test "cron: outputs done message with hour and dow" {
