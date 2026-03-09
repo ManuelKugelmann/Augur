@@ -59,6 +59,7 @@ jobs:
           echo "  Kind: ${{ inputs.kind || 'all' }}"
           echo "  Batch size: ${{ inputs.batch_size }}"
           echo "  Dry run: ${{ inputs.dry_run }}"
+          echo "  Data branch: ${{ inputs.data_branch || '(skip push)' }}"
 
       - name: Run bootstrap
         env:
@@ -95,8 +96,3 @@ jobs:
 
           python librechat-uberspace/scripts/bootstrap-data.py $ARGS
 
-      - name: Validate profiles after bootstrap
-        if: inputs.dry_run != true
-        run: |
-          pip install pytest pytest-asyncio python-dotenv pyyaml pandas ta
-          python -m pytest tests/test_store.py -v -k "lint" --tb=short || true

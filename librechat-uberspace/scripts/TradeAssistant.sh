@@ -1079,7 +1079,7 @@ SVCEOF
         echo "  ta rb|rollback  Rollback to previous version"
         echo ""
         echo "  ta sync         Force git sync of data dir"
-        echo "  ta cron         Run cron hook (every 15min; sync + profiles + daily compact)"
+        echo "  ta cron         Run cron hook (sync + profiles + compact + agent invocation)"
         echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"
