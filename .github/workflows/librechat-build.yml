@@ -3,7 +3,10 @@
 # The installer (ta install) overlays config/scripts from the mcps repo.
 #
 # Trigger: Actions → Build LibreChat → Run workflow
-# Uploads to a single rolling release tagged "librechat-build".
+#
+# Creates two releases per build:
+#   - lc-<version> (e.g. lc-1.6.1)  — versioned, kept as history
+#   - librechat-build                — rolling pointer to latest build
 name: Build LibreChat
 
 on:
@@ -37,6 +40,7 @@ jobs:
           echo "LC_PKG_VER=${LC_PKG_VER}" >> "$GITHUB_ENV"
           echo "LC_COMMIT=${LC_COMMIT}" >> "$GITHUB_ENV"
           echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
+          echo "LC_TAG=lc-${LC_PKG_VER}" >> "$GITHUB_ENV"
           npm ci
           npm run frontend
           cd ..
@@ -63,10 +67,10 @@ jobs:
 
           tar czf librechat-build.tar.gz -C bundle .
 
-      - name: Upload to rolling release
+      - name: Create versioned release (lc-<version>)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: librechat-build
+          tag_name: ${{ env.LC_TAG }}
           name: "LibreChat ${{ env.LC_VERSION }}"
           body: |
             Vanilla pre-built LibreChat for Uberspace deployment.
@@ -74,7 +78,28 @@ jobs:
             **LibreChat**: ${{ env.LC_PKG_VER }} ([`${{ env.LC_COMMIT }}`](https://github.com/danny-avila/LibreChat/commit/${{ env.LC_COMMIT }}))
             **Built from ref**: `${{ inputs.librechat_ref || 'main' }}`
 
-            Usage: `RELEASE_TAG=librechat-build ta install`
+            Install: `RELEASE_TAG=${{ env.LC_TAG }} ta install`
           files: librechat-build.tar.gz
           prerelease: true
           make_latest: false
+
+      - name: Update rolling release (librechat-build → latest)
+        run: |
+          # Move the librechat-build tag to current commit
+          git tag -f librechat-build
+          git push -f origin librechat-build
+
+          # Delete existing release if present, then recreate
+          gh release delete librechat-build --yes 2>/dev/null || true
+          gh release create librechat-build \
+            --title "LibreChat ${{ env.LC_VERSION }} (latest)" \
+            --notes "Rolling pointer to the latest LibreChat build.
+
+          **LibreChat**: ${{ env.LC_PKG_VER }} ([\`${{ env.LC_COMMIT }}\`](https://github.com/danny-avila/LibreChat/commit/${{ env.LC_COMMIT }}))
+          **Versioned tag**: [\`${{ env.LC_TAG }}\`](https://github.com/${{ github.repository }}/releases/tag/${{ env.LC_TAG }})
+
+          Install: \`RELEASE_TAG=librechat-build ta install\`" \
+            --prerelease \
+            librechat-build.tar.gz
+        env:
+          GH_TOKEN: ${{ github.token }}
