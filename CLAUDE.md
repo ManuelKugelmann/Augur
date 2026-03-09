@@ -6,7 +6,7 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (yahoo-finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
@@ -35,7 +35,7 @@ TradingAssistant/
 ├── README.md                          ← project overview
 ├── TODO.md                            ← roadmap (P0–P5)
 ├── deploy.conf                        ← central config, sourced by all scripts
-├── requirements.txt                   ← Python deps: fastmcp, httpx, pymongo, python-dotenv
+├── requirements.txt                   ← Python deps: fastmcp, httpx, pymongo, python-dotenv, pandas, ta
 ├── .env.example                       ← signals stack env vars template
 │
 ├── src/
@@ -129,7 +129,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
                            Uberspace (assist.uber.space)
                            ├─ LibreChat (:3080, Node.js)
                            │   ├─ MCP: trading ──streamable-http──▶ :8071/mcp
-                           │   ├─ MCP: Tier 1 external (yahoo-finance, gdelt-cloud,
+                           │   ├─ MCP: Tier 1 external (finance, gdelt-cloud,
                            │   │       prediction-markets, rss, reddit)
                            │   ├─ MCP: Tier 2 external (alphavantage, hackernews,
                            │   │       arxiv, math, regression, crypto-sentiment)
@@ -195,6 +195,8 @@ fastmcp>=3.1
 httpx>=0.27
 pymongo>=4.7
 python-dotenv>=1.0
+pandas>=2.0
+ta>=0.10
 ```
 
 ## Dev & Deploy Workflow
@@ -421,7 +423,7 @@ bash -n librechat-uberspace/scripts/TradeAssistant.sh
 | File | Tests | Framework | Covers |
 |------|-------|-----------|--------|
 | `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
-| `test_indicators.py` | 46 | pytest | SMA, EMA, RSI, Bollinger, MACD, composite trend filter, Yahoo-integrated analyze_* tools (mocked), price fetching edge cases |
+| `test_indicators.py` | 7 | pytest | Composite signal logic (analyze_full), Yahoo OHLCV fetch, SMA(50) fallback, error handling |
 | `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 9 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check |
 | `test_ta_cron.bats` | 6 | bats | Data sync commits, profile auto-commit, schedule gating |

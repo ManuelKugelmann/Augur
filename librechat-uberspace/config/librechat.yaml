@@ -74,11 +74,17 @@ mcpServers:
 
   # ── External MCPs (Tier 1 — genuinely additive data) ──
 
-  yahoo-finance:
+  finance:
     command: python
-    args: ["-m", "yahoo_finance_mcp"]
+    args: ["-m", "finance_mcp"]
     chatMenu: false
-    serverInstructions: "Real-time stock quotes, financials, options chains via Yahoo Finance."
+    serverInstructions: |
+      Stock data + technical analysis via yfinance + ta library.
+      Key tools: get_technical_analysis (SMA, EMA, RSI, MACD, Bollinger, support/resistance),
+      get_comprehensive_stock_info, get_historical_data, get_options_data,
+      get_analyst_recommendations, get_financial_statements, get_sector_performance,
+      get_dividend_history, get_earnings_calendar, get_news.
+      Replaces yahoo-finance MCP. Install: pip install finance-mcp-server.
 
   gdelt-cloud:
     type: streamable-http
@@ -142,19 +148,6 @@ mcpServers:
     chatMenu: false
     serverInstructions: "Real-time + historical Crypto Fear & Greed Index. Sentiment signal for crypto markets."
 
-  # ── Optional: finance-mcp-server (pip install finance-mcp-server) ──
-  # Adds server-side TA indicators (SMA, EMA, RSI, MACD, Bollinger, support/resistance)
-  # via yfinance + pandas + ta library. ~28 MB deps (pandas+numpy).
-  # Our built-in ta_* tools cover the same indicators with zero extra deps,
-  # so only enable this if you want a second opinion or its extra tools
-  # (sector performance, dividend history, comprehensive stock info).
-  # Install: pip install finance-mcp-server
-  #
-  # finance:
-  #   command: python
-  #   args: ["-m", "finance_mcp_server"]
-  #   chatMenu: false
-  #   serverInstructions: "Technical analysis + stock data via yfinance. Overlaps with ta_* tools but adds sector perf, dividends, comprehensive info."
 
 # ── Agents Endpoint ─────────────────────────
 # Required for multi-agent handoffs and Agent Chain pipelines.
