@@ -26,6 +26,7 @@
 | `~/mcps/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
 | `~/TradeAssistant_Data/` | Git-versioned MCP data (files) |
+| `~/backups/mongo/` | Rolling MongoDB backups (daily/weekly/monthly gzipped JSON) |
 | `~/bin/ta` | Ops CLI tool |
 
 ## Directory Layout (Repo)
@@ -102,6 +103,7 @@ TradingAssistant/
 │   └── test_ta_sync.bats             ← sync commit/push logic
 │
 ├── scripts/
+│   ├── mongo-backup.py                ← rolling MongoDB backup/restore (pymongo + gzip)
 │   └── nightly-git-commit.sh          ← nightly profile commit
 │
 ├── docs/
@@ -187,7 +189,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 All scripts source this file. Key variables:
 - `UBER_USER=assist`, `UBER_HOST=assist.uber.space`
 - `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`, `GH_REPO_DATA=TradeAssistant_Data`
-- `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `DATA_DIR=$HOME/TradeAssistant_Data`
+- `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `DATA_DIR=$HOME/TradeAssistant_Data`, `BACKUP_DIR=$HOME/backups/mongo`
 - `LC_PORT=3080`, `NODE_VERSION=22`
 
 ### Python Dependencies
@@ -234,6 +236,9 @@ ta u|update    update from latest GitHub release
 ta pull        quick dev update via git pull
 ta install     re-run full installer (idempotent)
 ta rb|rollback rollback to previous version
+ta backup      backup MongoDB to ~/backups/mongo/ (rolling)
+ta restore [f] restore MongoDB from backup (latest if no file)
+ta backups     list available backups
 ta sync        force git sync of data to GitHub
 ta env         edit LibreChat .env
 ta yaml        edit librechat.yaml
