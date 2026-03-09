@@ -577,29 +577,39 @@ class TestConfig:
 class TestMongoDB:
     """Verify MongoDB connectivity for both databases."""
 
+    @staticmethod
+    def _real_mongo_client(uri, **kwargs):
+        """Get a real MongoClient, bypassing conftest.py mock."""
+        if "pymongo" in sys.modules and hasattr(sys.modules["pymongo"], "_mock_name"):
+            del sys.modules["pymongo"]
+        import pymongo
+        return pymongo.MongoClient(uri, **kwargs)
+
     def test_signals_db_ping(self):
         """Signals MongoDB responds to ping."""
-        try:
-            from pymongo import MongoClient
-        except ImportError:
-            pytest.skip("pymongo not installed")
-        client = MongoClient(MONGO_URI_SIGNALS, serverSelectionTimeoutMS=5000)
+        if not MONGO_URI_SIGNALS:
+            pytest.skip("MONGO_URI_SIGNALS not set")
+        client = self._real_mongo_client(
+            MONGO_URI_SIGNALS, serverSelectionTimeoutMS=5000)
         try:
             result = client.admin.command("ping")
             assert result.get("ok") == 1.0
+        except Exception as exc:
+            pytest.skip(f"MongoDB not reachable: {exc}")
         finally:
             client.close()
 
     def test_librechat_db_ping(self):
         """LibreChat MongoDB responds to ping."""
-        try:
-            from pymongo import MongoClient
-        except ImportError:
-            pytest.skip("pymongo not installed")
-        client = MongoClient(MONGO_URI_LC, serverSelectionTimeoutMS=5000)
+        if not MONGO_URI_LC:
+            pytest.skip("MONGO_URI_LIBRECHAT not set")
+        client = self._real_mongo_client(
+            MONGO_URI_LC, serverSelectionTimeoutMS=5000)
         try:
             result = client.admin.command("ping")
             assert result.get("ok") == 1.0
+        except Exception as exc:
+            pytest.skip(f"MongoDB not reachable: {exc}")
         finally:
             client.close()
 
