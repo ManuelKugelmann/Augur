@@ -70,101 +70,67 @@ teardown() {
     teardown_sandbox
 }
 
-# ── Tests ──────────────────────────────────────
+# ── Combined install outcome tests ───────────────
 
-@test "TradeAssistant.sh auto-detects fresh install when repo missing" {
+@test "install: creates all expected artifacts and is idempotent" {
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    [[ "$status" -eq 0 ]]
+
+    # Repo cloned to STACK_DIR
+    [[ -d "$STACK_DIR" ]]
+    [[ -f "$STACK_DIR/deploy.conf" ]]
+
+    # Python venv created
+    [[ -d "$STACK_DIR/venv" ]]
+    [[ -x "$STACK_DIR/venv/bin/python" ]]
+
+    # Signals .env from template
+    [[ -f "$STACK_DIR/.env" ]]
+
+    # Supervisord services registered
+    [[ -f "$HOME/etc/services.d/trading.ini" ]]
+    grep -q "program:trading" "$HOME/etc/services.d/trading.ini"
+    grep -q "combined_server.py" "$HOME/etc/services.d/trading.ini"
+
+    # ta shortcut in ~/bin
+    [[ -x "$HOME/bin/ta" ]]
+    [[ -L "$HOME/bin/TradeAssistant" ]]
+
+    # Data directory created
+    [[ -d "$DATA_DIR/files" ]]
+
+    # Completion banner printed
+    [[ "$output" == *"Installation complete"* ]]
+
+    # Idempotent: second install succeeds
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    [[ "$status" -eq 0 ]]
+}
+
+@test "install: auto-detects fresh host when repo missing" {
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" 2>&1
     [[ "$output" == *"TradingAssistant"* ]] || [[ "$output" == *"Cloning"* ]] || [[ "$output" == *"Repo"* ]]
 }
 
-@test "install clones repo to STACK_DIR" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -d "$STACK_DIR" ]]
-    [[ -f "$STACK_DIR/deploy.conf" ]]
-}
+# ── Combined cron tests (after install) ──────────
 
-@test "install creates python venv" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -d "$STACK_DIR/venv" ]]
-    [[ -x "$STACK_DIR/venv/bin/python" ]]
-}
-
-@test "install creates signals .env from template" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -f "$STACK_DIR/.env" ]]
-}
-
-@test "install registers supervisord services" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -f "$HOME/etc/services.d/trading.ini" ]]
-    run grep "program:trading" "$HOME/etc/services.d/trading.ini"
-    [[ "$status" -eq 0 ]]
-    run grep "combined_server.py" "$HOME/etc/services.d/trading.ini"
-    [[ "$status" -eq 0 ]]
-}
-
-@test "install creates ta shortcut in ~/bin" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -x "$HOME/bin/ta" ]]
-    [[ -L "$HOME/bin/TradeAssistant" ]]
-}
-
-@test "install creates data directory" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -d "$DATA_DIR/files" ]]
-}
-
-@test "install is idempotent (re-run succeeds)" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    # Second run (repo already exists → pull path)
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-}
-
-@test "install prints completion banner" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"Installation complete"* ]]
-}
-
-# ── Cron entrypoint tests ─────────────────────
-
-@test "cron: runs without error after install" {
-    # First install to set up STACK_DIR with .git
+@test "cron: runs correctly after install (no-op, profile commit, data sync)" {
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
     [[ "$status" -eq 0 ]]
 
-    # Now run cron — should succeed (no data changes, skips compact without venv python)
+    # --- No-op cron (no changes) ---
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"done (hour="* ]]
-}
 
-@test "cron: commits profile changes" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-
-    # Add a profile file
+    # --- Profile auto-commit ---
     mkdir -p "$STACK_DIR/profiles/global/countries"
     echo '{"id":"TST","name":"Testland"}' > "$STACK_DIR/profiles/global/countries/TST.json"
-
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"profiles committed"* ]]
-}
 
-@test "cron: data sync commits when data dir is a git repo" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-
-    # Init DATA_DIR as a git repo with a bare remote (so push works)
+    # --- Data sync with git repo ---
     local bare="$TEST_SANDBOX/data_remote.git"
     "$REAL_GIT" init -q --bare "$bare"
     "$REAL_GIT" -C "$DATA_DIR" init -q
@@ -176,10 +142,7 @@ teardown() {
     "$REAL_GIT" -C "$DATA_DIR" remote add origin "$bare"
     "$REAL_GIT" -C "$DATA_DIR" push -u origin main -q 2>/dev/null || \
         "$REAL_GIT" -C "$DATA_DIR" push -u origin master -q 2>/dev/null || true
-
-    # Add a data file
     echo "test data" > "$DATA_DIR/files/test.txt"
-
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"data synced"* ]]
@@ -256,7 +219,7 @@ CURLEOF
         fi
     '
 
-    # Run full install (no APP_DIR/.version → will download bundle)
+    # Run full install (no APP_DIR/.version -> will download bundle)
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
     echo "$output"
     [[ "$status" -eq 0 ]]

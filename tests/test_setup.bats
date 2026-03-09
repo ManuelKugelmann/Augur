@@ -189,3 +189,43 @@ EOF
     [[ "$status" -ne 0 ]]
     [[ "$output" == *"Node.js"* ]]
 }
+
+@test "setup.sh preserves uploads directory on update" {
+    # Create existing APP_DIR with uploads
+    mkdir -p "$APP_DIR/api/server" "$APP_DIR/uploads"
+    echo "// old" > "$APP_DIR/api/server/index.js"
+    echo "important-file" > "$APP_DIR/uploads/test.txt"
+    echo "v0.0.9" > "$APP_DIR/.version"
+    echo "MONGO_URI=test" > "$APP_DIR/.env"
+
+    # Create new source
+    local src="$TEST_SANDBOX/src_preserve"
+    create_src_app "$src"
+
+    bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v0.3.0" 2>&1
+
+    # Uploads should be preserved in new install
+    [ -d "$APP_DIR/uploads" ]
+    [ -f "$APP_DIR/uploads/test.txt" ]
+    grep -q "important-file" "$APP_DIR/uploads/test.txt"
+}
+
+@test "setup.sh rolls back on missing app code" {
+    # Create existing APP_DIR
+    mkdir -p "$APP_DIR/api/server"
+    echo "// working" > "$APP_DIR/api/server/index.js"
+    echo "v0.0.5" > "$APP_DIR/.version"
+    echo "KEEP_ME=yes" > "$APP_DIR/.env"
+
+    # Create bad source (missing api/server/index.js)
+    local src="$TEST_SANDBOX/src_bad"
+    mkdir -p "$src"
+    echo "incomplete" > "$src/README.md"
+
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v0.4.0-bad" 2>&1
+    [ "$status" -ne 0 ]
+
+    # Should have rolled back to previous version
+    [ -f "$APP_DIR/api/server/index.js" ]
+    grep -q "// working" "$APP_DIR/api/server/index.js"
+}
