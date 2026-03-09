@@ -10,8 +10,8 @@ IDMC_KEY = os.environ.get("IDMC_API_KEY", "")
 
 _RW_HEADERS = {
     "User-Agent": "TradingAssistant/1.0 (https://github.com/ManuelKugelmann/TradingAssistant)",
-    "Content-Type": "application/json",
 }
+_RW_APPNAME = {"appname": "TradingAssistant"}
 
 
 @mcp.tool()
@@ -100,7 +100,8 @@ async def reliefweb_reports(query: str = "", country: str = "",
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.post("https://api.reliefweb.int/v2/reports",
-                             json=body, headers=_RW_HEADERS)
+                             json=body, params=_RW_APPNAME,
+                             headers=_RW_HEADERS)
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
@@ -126,7 +127,8 @@ async def reliefweb_disasters(country: str = "", status: str = "ongoing",
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.post("https://api.reliefweb.int/v2/disasters",
-                             json=body, headers=_RW_HEADERS)
+                             json=body, params=_RW_APPNAME,
+                             headers=_RW_HEADERS)
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:

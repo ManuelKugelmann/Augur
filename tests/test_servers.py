@@ -484,12 +484,14 @@ class TestElectionsServer:
 
     @pytest.mark.asyncio
     async def test_heads_of_state_country(self):
-        resp = _mock_response({"results": {"bindings": []}})
-        patcher, client = _patch_httpx_get(resp)
+        search_resp = _mock_response({"search": [{"id": "Q183"}]})
+        sparql_resp = _mock_response({"results": {"bindings": []}})
+        patcher, client = _patch_httpx_get(search_resp)
+        client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             await self.mod.heads_of_state(country="Germany", limit=5)
-        params = client.get.call_args[1]["params"]
-        assert "Germany" in params["query"]
+        sparql_call = client.get.call_args_list[1]
+        assert "Q183" in sparql_call[1]["params"]["query"]
 
     @pytest.mark.asyncio
     async def test_voter_info_missing_key(self, monkeypatch):
@@ -517,29 +519,33 @@ class TestElectionsServer:
 
     @pytest.mark.asyncio
     async def test_global_elections_wikidata(self):
-        resp = _mock_response({"results": {"bindings": [
+        search_resp = _mock_response({"search": [{"id": "Q183"}]})
+        sparql_resp = _mock_response({"results": {"bindings": [
             {"electionLabel": {"value": "2025 German federal election"},
              "countryLabel": {"value": "Germany"},
              "date": {"value": "2025-02-23"},
              "typeLabel": {"value": "general election"}}
         ]}})
-        patcher, client = _patch_httpx_get(resp)
+        patcher, client = _patch_httpx_get(search_resp)
+        client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             result = await self.mod.global_elections(country="Germany", year="2025")
         assert len(result) == 1
         assert result[0]["country"] == "Germany"
-        url = client.get.call_args[0][0]
-        assert "wikidata.org" in url
+        sparql_url = client.get.call_args_list[1][0][0]
+        assert "wikidata.org" in sparql_url
 
     @pytest.mark.asyncio
     async def test_heads_of_state_params(self):
-        resp = _mock_response({"results": {"bindings": [
+        search_resp = _mock_response({"search": [{"id": "Q183"}]})
+        sparql_resp = _mock_response({"results": {"bindings": [
             {"personLabel": {"value": "Friedrich Merz"},
              "countryLabel": {"value": "Germany"},
              "positionLabel": {"value": "Chancellor"},
              "start": {"value": "2025-05-06"}}
         ]}})
-        patcher, client = _patch_httpx_get(resp)
+        patcher, client = _patch_httpx_get(search_resp)
+        client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             result = await self.mod.heads_of_state(country="Germany")
         assert result[0]["person"] == "Friedrich Merz"
