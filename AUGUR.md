@@ -57,8 +57,7 @@ augur.news                        ← hub/landing page
 └── finanz.augur.news             ← market sentiment, German (DACH)
 ```
 
-DNS: `*.augur.news` → single server IP (wildcard A record + wildcard TLS cert).
-One Node.js process handles all brands via `req.hostname` → brand config lookup.
+DNS: `*.augur.news` → GitHub Pages (CNAME). Path-based brand routing for MVP (`augur.news/the/`, `/der/`, etc.). Subdomain routing evaluable later via separate repos or Cloudflare proxy.
 
 ### Brand Configurations
 
@@ -89,9 +88,8 @@ One Node.js process handles all brands via `req.hostname` → brand config looku
 ```typescript
 interface BrandConfig {
   name: string                    // "The Augur"
-  subdomain: string               // "the"
+  slug: string                    // "the" (URL path prefix)
   locale: 'en' | 'de'
-  domain: string                  // "the.augur.news"
   module: 'general' | 'markets'
   masthead: string                // display name
   subtitle: string
@@ -522,10 +520,10 @@ cron triggers: augur-cycle --brand=the --horizon=tomorrow
   │    sharp: apply watermark text overlay
   │    sharp: composite social cards (3 ratios) with headline + branding
   │
-  ├── PUBLISH (Jekyll flat files)
+  ├── PUBLISH (git push → GitHub Pages)
   │    Write Markdown: _posts/{brand}/{horizon}/{date}-{slug}.md
   │      └── YAML front matter: all structured data (headline, sections, tags, etc.)
-  │    jekyll build → static HTML in _site/
+  │    git commit + push to augur_news branch → GitHub Pages auto-builds Jekyll
   │    Write social queue: _data/social/pending/{brand}-{date}-{platform}.json
   │
   └── NOTIFY
