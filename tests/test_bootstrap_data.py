@@ -5,7 +5,6 @@ Tests the script's logic without requiring a running LibreChat instance.
 
 import json
 import os
-import subprocess
 import sys
 import tempfile
 
@@ -407,73 +406,41 @@ class TestRebuildIndexes:
             assert idx_path.exists(), f"Missing INDEX_{kind}.json"
 
 
-# ── E2E: bootstrap → index → data branch push ───
+# ── E2E: bootstrap → index rebuild ───────────────
 
 
-class TestE2EDataBranch:
-    """End-to-end test: bootstrap dry-run, rebuild indexes, commit+push to data branch."""
+class TestE2EBootstrap:
+    """End-to-end test: bootstrap dry-run → rebuild indexes → verify output."""
 
     @pytest.fixture
-    def git_env(self, tmp_path):
-        """Set up a local git repo with profiles, plus a bare remote to push to."""
-        git_env = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null"}
+    def rich_profiles_dir(self, tmp_path):
+        """Profiles directory with multiple kinds for e2e testing."""
+        p = tmp_path
+        (p / "north_america" / "countries").mkdir(parents=True)
+        (p / "europe" / "stocks").mkdir(parents=True)
+        (p / "global" / "commodities").mkdir(parents=True)
 
-        def git(*args, **kw):
-            return subprocess.run(
-                ["git"] + list(args), check=True, capture_output=True, env=git_env, **kw,
-            )
-
-        # Create bare remote
-        remote = tmp_path / "remote.git"
-        remote.mkdir()
-        git("init", "--bare", "--initial-branch=main", str(remote))
-
-        # Create working repo
-        work = tmp_path / "work"
-        work.mkdir()
-        git("init", "--initial-branch=main", str(work))
-        git("-C", str(work), "remote", "add", "origin", str(remote))
-        git("-C", str(work), "config", "user.name", "test")
-        git("-C", str(work), "config", "user.email", "test@test.com")
-        git("-C", str(work), "config", "commit.gpgsign", "false")
-
-        # Create initial commit on main
-        readme = work / "README.md"
-        readme.write_text("# test")
-        git("-C", str(work), "add", ".")
-        git("-C", str(work), "commit", "-m", "init")
-        git("-C", str(work), "push", "-u", "origin", "main")
-
-        # Create profiles directory with sample data
-        profiles = work / "profiles"
-        (profiles / "north_america" / "countries").mkdir(parents=True)
-        (profiles / "europe" / "stocks").mkdir(parents=True)
-        (profiles / "global" / "commodities").mkdir(parents=True)
-
-        (profiles / "north_america" / "countries" / "USA.json").write_text(
+        (p / "north_america" / "countries" / "USA.json").write_text(
             json.dumps({"id": "USA", "name": "United States", "iso2": "US",
                          "region": "north_america", "tags": ["g7", "nato"]})
         )
-        (profiles / "north_america" / "countries" / "CAN.json").write_text(
+        (p / "north_america" / "countries" / "CAN.json").write_text(
             json.dumps({"id": "CAN", "name": "Canada", "iso2": "CA",
                          "region": "north_america", "tags": ["g7", "nato"]})
         )
-        (profiles / "europe" / "stocks" / "SAP.json").write_text(
+        (p / "europe" / "stocks" / "SAP.json").write_text(
             json.dumps({"id": "SAP", "name": "SAP SE", "type": "stock",
                          "sector": "Technology", "tags": ["dax", "tech"]})
         )
-        (profiles / "global" / "commodities" / "gold.json").write_text(
+        (p / "global" / "commodities" / "gold.json").write_text(
             json.dumps({"id": "gold", "name": "Gold", "category": "precious_metals",
                          "tags": ["safe_haven"]})
         )
+        return p
 
-        return {"work": work, "remote": remote, "profiles": profiles, "git": git}
-
-    def test_e2e_dry_run_rebuilds_indexes_and_pushes(self, git_env, targets):
-        """Full e2e: dry-run bootstrap, rebuild indexes, commit, push to data branch."""
-        work = git_env["work"]
-        profiles = git_env["profiles"]
-        git = git_env["git"]
+    def test_e2e_dry_run_then_rebuild_indexes(self, rich_profiles_dir, targets):
+        """Full e2e: dry-run bootstrap, rebuild indexes, verify INDEX files."""
+        profiles = rich_profiles_dir
 
         # 1. Run bootstrap in dry-run mode
         client = bootstrap.httpx.Client(base_url="http://localhost:1")
@@ -488,71 +455,45 @@ class TestE2EDataBranch:
         client.close()
         assert stats["errors"] == 0
 
-        # 2. Rebuild indexes (the new feature)
+        # 2. Rebuild indexes
         idx_results = bootstrap.rebuild_indexes(str(profiles))
         assert idx_results["countries"] == 2  # USA + CAN
         assert idx_results["stocks"] == 1     # SAP
         assert idx_results["commodities"] == 1  # gold
 
-        # Verify INDEX files exist and are valid
-        for kind in ("countries", "stocks", "commodities"):
+        # 3. Verify INDEX files exist and contain correct entries
+        for kind, expected_count in [("countries", 2), ("stocks", 1), ("commodities", 1)]:
             idx_path = profiles / f"INDEX_{kind}.json"
             assert idx_path.exists()
             index = json.loads(idx_path.read_text())
-            assert len(index) == idx_results[kind]
-            # Each entry has required fields
+            assert len(index) == expected_count
             for entry in index:
                 assert "id" in entry
                 assert "kind" in entry
                 assert "name" in entry
                 assert "region" in entry
 
-        # 3. Stage, commit, and push to data branch
-        data_branch = "data/bootstrap-test"
-        git("-C", str(work), "checkout", "-B", data_branch)
-        git("-C", str(work), "add", "profiles/")
+        # 4. Verify tag/sector propagation into indexes
+        stocks_idx = json.loads((profiles / "INDEX_stocks.json").read_text())
+        sap = stocks_idx[0]
+        assert sap["tags"] == ["dax", "tech"]
+        assert sap["sector"] == "Technology"
 
-        result = subprocess.run(
-            ["git", "-C", str(work), "diff", "--cached", "--quiet"],
-            capture_output=True,
+    def test_e2e_all_kinds_dry_run(self, rich_profiles_dir, targets):
+        """Dry-run all kinds and rebuild indexes."""
+        client = bootstrap.httpx.Client(base_url="http://localhost:1")
+        stats = bootstrap.run_bootstrap(
+            client=client,
+            agent_id="dry-run",
+            targets=targets,
+            profiles_dir=str(rich_profiles_dir),
+            dry_run=True,
         )
-        assert result.returncode != 0, "Expected staged changes"
+        client.close()
 
-        git("-C", str(work), "commit", "-m", "bootstrap: e2e test")
-        git("-C", str(work), "push", "-u", "origin", data_branch)
+        assert stats["kinds"] == len(targets)
+        assert stats["errors"] == 0
 
-        # 4. Verify the data branch exists on remote and contains profiles + indexes
-        result = git("-C", str(work), "ls-remote", "--heads", "origin", data_branch, text=True)
-        assert data_branch in result.stdout
-
-        # Verify committed files by listing the tree
-        result = git("-C", str(work), "ls-tree", "-r", "--name-only", data_branch, "--", "profiles/", text=True)
-        files = result.stdout.strip().split("\n")
-
-        # Profiles are committed
-        assert "profiles/north_america/countries/USA.json" in files
-        assert "profiles/north_america/countries/CAN.json" in files
-        assert "profiles/europe/stocks/SAP.json" in files
-        assert "profiles/global/commodities/gold.json" in files
-
-        # INDEX files are committed
-        assert "profiles/INDEX_countries.json" in files
-        assert "profiles/INDEX_stocks.json" in files
-        assert "profiles/INDEX_commodities.json" in files
-
-    def test_e2e_no_changes_skips_commit(self, git_env):
-        """If no profiles change, git diff --cached --quiet succeeds (no commit needed)."""
-        work = git_env["work"]
-        git = git_env["git"]
-
-        # Stage and commit everything first
-        git("-C", str(work), "add", "profiles/")
-        git("-C", str(work), "commit", "-m", "initial profiles")
-
-        # Now try staging again — nothing changed
-        git("-C", str(work), "add", "profiles/")
-        result = subprocess.run(
-            ["git", "-C", str(work), "diff", "--cached", "--quiet"],
-            capture_output=True,
-        )
-        assert result.returncode == 0, "Expected no staged changes"
+        idx_results = bootstrap.rebuild_indexes(str(rich_profiles_dir))
+        total = sum(idx_results.values())
+        assert total == 4  # USA, CAN, SAP, gold
