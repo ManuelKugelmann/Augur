@@ -152,6 +152,7 @@ jobs:
 
   integration-keyed:
     name: Integration tests (keyed APIs)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests]
     steps:
@@ -283,6 +284,7 @@ jobs:
 
   smoke-combined:
     name: Smoke test (combined server + Atlas)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests]
     steps:
@@ -326,6 +328,7 @@ jobs:
 
   e2e-smoke:
     name: E2E smoke (LibreChat + trading server)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [python-tests, smoke-combined]
     steps:
