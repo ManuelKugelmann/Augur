@@ -154,11 +154,7 @@ def lc_yaml(lc_app_dir):
     # from their command definitions — we only test the trading server via URL)
     content = content.replace("__HOME__", str(lc_app_dir))
 
-    # Enable Agents API (remoteAgents) for cron API call tests
-    content = content.replace(
-        "interface:\n  endpointsMenu: true",
-        "interface:\n  endpointsMenu: true\n  remoteAgents:\n    use: true\n    create: true",
-    )
+    # remoteAgents is enabled by default in librechat.yaml
     yaml_dst.write_text(content)
     return yaml_dst
 

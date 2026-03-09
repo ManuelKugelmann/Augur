@@ -10,6 +10,9 @@ registration:
 
 interface:
   endpointsMenu: true
+  remoteAgents:
+    use: true
+    create: true
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
