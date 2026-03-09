@@ -8,6 +8,21 @@ if "pymongo" not in sys.modules:
     mock_pymongo.MongoClient = MagicMock
     sys.modules["pymongo"] = mock_pymongo
 
+# Mock pandas + ta (indicators_server imports these at module level;
+# they're heavy C-extension packages that may not be installed in CI).
+# Only mock if the real package is not installed, so tests that need
+# real pandas/ta (e.g. test_indicators.py) still work when available.
+def _try_mock(mod_name):
+    if mod_name in sys.modules:
+        return
+    try:
+        __import__(mod_name)
+    except ImportError:
+        sys.modules[mod_name] = MagicMock()
+
+for _mod in ("pandas", "ta", "ta.trend", "ta.momentum", "ta.volatility"):
+    _try_mock(_mod)
+
 # Mock fastmcp (v3 API changes; we only need the @mcp.tool() decorator to be a no-op)
 if "fastmcp" not in sys.modules:
     mock_fastmcp = MagicMock()
