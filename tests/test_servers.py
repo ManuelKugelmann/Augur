@@ -564,11 +564,14 @@ class TestTransportServer:
             del sys.modules["transport_server"]
         import transport_server
         self.mod = transport_server
+        # Reset cached OAuth2 token between tests
+        self.mod._opensky_token = ""
+        self.mod._opensky_token_exp = 0
 
     @pytest.mark.asyncio
     async def test_flights_in_area_truncates(self):
         states = [[f"plane_{i}"] for i in range(100)]
-        resp = _mock_response({"states": states})
+        resp = _mock_response({"time": 1000, "states": states})
         patcher, client = _patch_httpx_get(resp)
         with patcher:
             result = await self.mod.flights_in_area(
@@ -576,6 +579,37 @@ class TestTransportServer:
             )
         assert result["count"] == 100
         assert len(result["states"]) == 50  # truncated
+        # States are labelled dicts now
+        assert isinstance(result["states"][0], dict)
+
+    @pytest.mark.asyncio
+    async def test_flights_in_area_extended(self):
+        resp = _mock_response({"time": 1000, "states": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.flights_in_area(
+                lat_min=40, lat_max=42, lon_min=-75, lon_max=-73, extended=True
+            )
+        params = client.get.call_args[1]["params"]
+        assert params["extended"] == 1
+
+    @pytest.mark.asyncio
+    async def test_flights_in_area_labels_states(self):
+        raw = ["abc123", "DLH123 ", "Germany", 1000, 1001,
+               8.5, 50.1, 10000, False, 250, 90, 0, None, 10100,
+               "1234", False, 0, 2]
+        resp = _mock_response({"time": 1000, "states": [raw]})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.flights_in_area(
+                lat_min=49, lat_max=51, lon_min=7, lon_max=9
+            )
+        s = result["states"][0]
+        assert s["icao24"] == "abc123"
+        assert s["callsign"] == "DLH123 "
+        assert s["latitude"] == 50.1
+        # None values are excluded
+        assert "sensors" not in s
 
     @pytest.mark.asyncio
     async def test_vessels_missing_key(self, monkeypatch):
@@ -586,15 +620,173 @@ class TestTransportServer:
         assert result["error"] == "AISSTREAM_API_KEY not set"
 
     @pytest.mark.asyncio
-    async def test_flight_history_params(self):
+    async def test_flight_history_lowercases_icao(self):
         resp = _mock_response([])
         patcher, client = _patch_httpx_get(resp)
         with patcher:
-            await self.mod.flight_history(icao24="abc123", begin=1000, end=2000)
+            await self.mod.flight_history(icao24="ABC123", begin=1000, end=2000)
         params = client.get.call_args[1]["params"]
         assert params["icao24"] == "abc123"
         assert params["begin"] == 1000
         assert params["end"] == 2000
+
+    @pytest.mark.asyncio
+    async def test_oauth2_with_secret(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "test-client")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "test-secret")
+        token_resp = _mock_response({"access_token": "tok123", "expires_in": 1800})
+        patcher, client = _patch_httpx_get(token_resp)
+        with patcher:
+            headers = await self.mod._opensky_headers()
+        assert headers == {"Authorization": "Bearer tok123"}
+        post_data = client.post.call_args[1]["data"]
+        assert post_data["client_id"] == "test-client"
+        assert post_data["client_secret"] == "test-secret"
+        assert post_data["grant_type"] == "client_credentials"
+
+    @pytest.mark.asyncio
+    async def test_oauth2_public_client(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "pub-client")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "")
+        token_resp = _mock_response({"access_token": "tok456", "expires_in": 1800})
+        patcher, client = _patch_httpx_get(token_resp)
+        with patcher:
+            headers = await self.mod._opensky_headers()
+        assert headers == {"Authorization": "Bearer tok456"}
+        post_data = client.post.call_args[1]["data"]
+        assert "client_secret" not in post_data
+
+    @pytest.mark.asyncio
+    async def test_oauth2_no_credentials(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
+        headers = await self.mod._opensky_headers()
+        assert headers == {}
+
+    @pytest.mark.asyncio
+    async def test_oauth2_caches_token(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "test-client")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "sec")
+        token_resp = _mock_response({"access_token": "cached", "expires_in": 1800})
+        patcher, client = _patch_httpx_get(token_resp)
+        with patcher:
+            h1 = await self.mod._opensky_headers()
+            h2 = await self.mod._opensky_headers()
+        assert h1 == h2 == {"Authorization": "Bearer cached"}
+        assert client.post.call_count == 1  # only one token request
+
+    @pytest.mark.asyncio
+    async def test_own_states_requires_auth(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
+        result = await self.mod.own_states()
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_own_states_params(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
+        states_resp = _mock_response({"time": 1, "states": []})
+        client = AsyncMock()
+        client.post.return_value = token_resp
+        client.get.return_value = states_resp
+        client.__aenter__ = AsyncMock(return_value=client)
+        client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=client):
+            await self.mod.own_states(icao24="abc", serials="123,456")
+        params = client.get.call_args[1]["params"]
+        assert params["icao24"] == "abc"
+        assert params["serials"] == "123,456"
+
+    @pytest.mark.asyncio
+    async def test_all_flights_requires_auth(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
+        result = await self.mod.all_flights(begin=1000, end=2000)
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_all_flights_params(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
+        flights_resp = _mock_response([{"icao24": "abc"}])
+        client = AsyncMock()
+        client.post.return_value = token_resp
+        client.get.return_value = flights_resp
+        client.__aenter__ = AsyncMock(return_value=client)
+        client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=client):
+            result = await self.mod.all_flights(begin=1000, end=2000)
+        params = client.get.call_args[1]["params"]
+        assert params["begin"] == 1000
+        assert params["end"] == 2000
+        assert "flights" in result
+
+    @pytest.mark.asyncio
+    async def test_airport_arrivals_requires_auth(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
+        result = await self.mod.airport_arrivals(
+            airport="EDDF", begin=1000, end=2000
+        )
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_airport_arrivals_uppercases(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
+        flights_resp = _mock_response([])
+        client = AsyncMock()
+        client.post.return_value = token_resp
+        client.get.return_value = flights_resp
+        client.__aenter__ = AsyncMock(return_value=client)
+        client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=client):
+            result = await self.mod.airport_arrivals(
+                airport="eddf", begin=1000, end=2000
+            )
+        params = client.get.call_args[1]["params"]
+        assert params["airport"] == "EDDF"
+        assert result["airport"] == "EDDF"
+
+    @pytest.mark.asyncio
+    async def test_airport_departures_requires_auth(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
+        result = await self.mod.airport_departures(
+            airport="KJFK", begin=1000, end=2000
+        )
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_flight_track_requires_auth(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
+        result = await self.mod.flight_track(icao24="abc123")
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_flight_track_waypoints(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
+        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
+        track_resp = _mock_response({
+            "icao24": "abc123", "callsign": "DLH123",
+            "startTime": 1000, "endTime": 2000,
+            "path": [[1000, 50.1, 8.5, 10000, 90, False]]
+        })
+        client = AsyncMock()
+        client.post.return_value = token_resp
+        client.get.return_value = track_resp
+        client.__aenter__ = AsyncMock(return_value=client)
+        client.__aexit__ = AsyncMock(return_value=False)
+        with patch("httpx.AsyncClient", return_value=client):
+            result = await self.mod.flight_track(icao24="ABC123", time_stamp=1000)
+        params = client.get.call_args[1]["params"]
+        assert params["icao24"] == "abc123"
+        assert params["time"] == 1000
+        assert result["icao24"] == "abc123"
+        assert len(result["waypoints"]) == 1
+        wp = result["waypoints"][0]
+        assert wp["latitude"] == 50.1
+        assert wp["on_ground"] is False
 
 
 # ── Water Server ─────────────────────────────────
