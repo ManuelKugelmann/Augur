@@ -2,16 +2,16 @@
 
 Automated AI-powered speculative content platform. OSINT signals → LLM extrapolation → generative images → multi-brand publication → social distribution. This document is the single source of truth for Claude Code implementation.
 
-## 1. Concept
+## Concept
 
 The Augur is not news. It is a Nostradamus-style prediction engine that:
 
-1. Collects real OSINT signals from multiple sources
-2. Extrapolates plausible near-future scenarios via LLM
-3. Illustrates predictions with AI-generated images
-4. Publishes as an auto-refreshing, classic newspaper-style website
-5. Auto-posts shareable cards to social media with link-back to source
-6. Archives every prediction permanently with outcome tracking
+- Collects real OSINT signals from multiple sources
+- Extrapolates plausible near-future scenarios via LLM
+- Illustrates predictions with AI-generated images
+- Publishes as an auto-refreshing, classic newspaper-style website
+- Auto-posts shareable cards to social media with link-back to source
+- Archives every prediction permanently with outcome tracking
 
 ### Editorial Voice
 
@@ -36,17 +36,16 @@ System prompt core directive:
 
 > "You are a clear-eyed analyst. Lead with the problem. Don't soften it. Then identify real, concrete, sourced efforts addressing it. Never fabricate solutions. If no credible solution exists, say so."
 
-Two-pass generation:
-1. Generate neutral extrapolation from signals
-2. Rewrite emphasizing constructive outcomes while keeping factual grounding
-
-Third pass: Generate platform-specific social captions.
+Multi-pass generation:
+- Pass 1: Generate neutral extrapolation from signals
+- Pass 2: Rewrite emphasizing constructive outcomes while keeping factual grounding
+- Pass 3: Generate platform-specific social captions
 
 ---
 
-## 2. Brand Architecture
+## Brand Architecture
 
-### 2.1 Domain Structure
+### Domain Structure
 
 Single domain with subdomain routing:
 
@@ -61,7 +60,7 @@ augur.news                        ← hub/landing page
 DNS: `*.augur.news` → single server IP (wildcard A record + wildcard TLS cert).
 One Node.js process handles all brands via `req.hostname` → brand config lookup.
 
-### 2.2 Brand Configurations
+### Brand Configurations
 
 | Brand | Subdomain | Locale | Module | Audience | Social Targets |
 |-------|-----------|--------|--------|----------|----------------|
@@ -70,7 +69,7 @@ One Node.js process handles all brands via `req.hostname` → brand config looku
 | Financial Augur | `financial.augur.news` | en | markets | Retail investors, EN | X, LinkedIn, Reddit |
 | Finanz Augur | `finanz.augur.news` | de | markets | Retail investors, DACH | X, LinkedIn DACH, Mastodon |
 
-### 2.3 Visual Identity
+### Visual Identity
 
 **The Augur / Der Augur** (classic broadsheet):
 - Fonts: Playfair Display (headings), Lora (body), JetBrains Mono (meta/dates)
@@ -85,7 +84,7 @@ One Node.js process handles all brands via `req.hostname` → brand config looku
 - Same typography
 - Additional: Sentiment bar with confidence meter
 
-### 2.4 Theme as Config
+### Theme as Config
 
 ```typescript
 interface BrandConfig {
@@ -114,9 +113,9 @@ Future spin-offs (different visual themes, same pipeline) are just additional co
 
 ---
 
-## 3. URL Scheme & Horizons
+## URL Scheme & Horizons
 
-### 3.1 Three Horizons
+### Three Horizons
 
 All dates are full ISO `YYYY-MM-DD`. Tomorrow (literal next day) is the anchor date. All horizons project from it.
 
@@ -136,7 +135,7 @@ All dates are full ISO `YYYY-MM-DD`. Tomorrow (literal next day) is the anchor d
 | soon | `/bald/` | Bald | +1 month from tomorrow | Daily |
 | future | `/zukunft/` | Zukunft | +1 year from tomorrow | Weekly |
 
-### 3.2 URL Format
+### URL Format
 
 Same URL serves as both permalink and archive entry:
 
@@ -177,7 +176,7 @@ Anchor date rolls forward each cycle: On March 4th:
 /future/2027-03-05
 ```
 
-### 3.3 Horizon Config
+### Horizon Config
 
 ```typescript
 interface HorizonConfig {
@@ -193,9 +192,9 @@ DB stores the `key`. Routing maps `slug ↔ key` per brand config.
 
 ---
 
-## 4. Article Structure
+## Article Structure
 
-### 4.1 General Predictions (The Augur / Der Augur)
+### General Predictions (The Augur / Der Augur)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -238,7 +237,7 @@ DB stores the `key`. Routing maps `slug ↔ key` per brand config.
 └─────────────────────────────────────────┘
 ```
 
-### 4.2 Financial Predictions (Financial Augur / Finanz Augur)
+### Financial Predictions (Financial Augur / Finanz Augur)
 
 Same as above, plus a sentiment block after "In The Works":
 
@@ -268,7 +267,7 @@ Sentiment comes from the trading system via `sentiment.json`:
 
 **Firewall**: trade.sh outputs sentiment summary only. No amounts, no tickers, no order details ever enter the content pipeline. Never expose exact positions. Frame as sector-level opinion only.
 
-### 4.3 German Sections
+### German Sections
 
 | EN | DE |
 |----|----|
@@ -282,9 +281,9 @@ Sentiment comes from the trading system via `sentiment.json`:
 
 ---
 
-## 5. Social Distribution
+## Social Distribution
 
-### 5.1 The Image Is the Distribution Unit
+### The Image Is the Distribution Unit
 
 Every prediction produces a standalone shareable card that works without context.
 
@@ -293,7 +292,7 @@ Generated per prediction, at generation time:
 - **9:16** — Instagram Stories/Reels, TikTok
 - **16:9** — X/Twitter, OpenGraph preview
 
-### 5.2 Shareable Card Format
+### Shareable Card Format
 
 ```
 ┌─────────────────────────────────┐
@@ -316,7 +315,7 @@ Generated per prediction, at generation time:
 └─────────────────────────────────┘
 ```
 
-### 5.3 Platform Strategy
+### Platform Strategy
 
 | Platform | Format | Hook | CTA |
 |----------|--------|------|-----|
@@ -333,13 +332,13 @@ Staggering: Don't post everywhere simultaneously. Stagger 2-4h apart. LLM genera
 - FB: Question-format hook, longer text
 - Bluesky/Mastodon: X-style but more earnest
 
-### 5.4 Engagement Amplifiers
+### Engagement Amplifiers
 
 - **Oracle Scorecard** — Monthly: "What the Augur got right/wrong" → huge engagement
 - **Polls** — "Do you think this will happen?" before revealing prediction
 - **Source threads** — "Here's WHY the Oracle sees this" → builds credibility
 
-### 5.5 Platform API Requirements
+### Platform API Requirements
 
 | Platform | API | Cost | Notes |
 |----------|-----|------|-------|
@@ -354,9 +353,9 @@ Launch order: X + Bluesky + Mastodon → Facebook → LinkedIn → Instagram (ha
 
 ---
 
-## 6. Archive & Accountability
+## Archive & Accountability
 
-### 6.1 Every Prediction Is Permanent
+### Every Prediction Is Permanent
 
 ```
 the.augur.news/tomorrow/               → all Tomorrow, reverse chrono
@@ -367,7 +366,7 @@ the.augur.news/feed.xml                → RSS feed
 the.augur.news/scorecard               → accuracy tracking page
 ```
 
-### 6.2 Outcome Tracking
+### Outcome Tracking
 
 Each prediction gets outcome tagged over time:
 
@@ -380,15 +379,15 @@ Each prediction gets outcome tagged over time:
 
 Semi-automated: LLM proposes outcome based on new OSINT, human confirms.
 
-### 6.3 Scorecard
+### Scorecard
 
 Running accuracy stats per horizon, per topic, per brand. Public page. Being publicly wrong and owning it is the brand differentiator.
 
 ---
 
-## 7. Technical Architecture
+## Technical Architecture
 
-### 7.1 Infrastructure Reuse
+### Infrastructure Reuse
 
 Built on same base as LibreChat + OSINT MCP-based trading system:
 
@@ -405,7 +404,7 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 | MongoDB Atlas | LibreChat (optional) | — |
 | Replicate API | Connected (HF MCP also available) | Image generation |
 
-### 7.2 System Architecture
+### System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -420,29 +419,29 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 │  New: augur-engine                                          │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                                                      │   │
-│  │  1. Signal Collector (cron-triggered)                │   │
+│  │  Signal Collector (cron-triggered)                   │   │
 │  │     ├── Tavily API (news search)                     │   │
 │  │     ├── GDELT Cloud API (geopolitical events)        │   │
 │  │     ├── RSS feeds (curated per brand/locale)         │   │
 │  │     ├── Yahoo Finance API (financial brands)         │   │
 │  │     └── trade.sh sentiment.json (financial brands)   │   │
 │  │              │                                       │   │
-│  │  2. Extrapolation Pipeline (Anthropic API)           │   │
+│  │  Extrapolation Pipeline (Anthropic API)              │   │
 │  │     ├── Pass 1: Signals → neutral extrapolation      │   │
 │  │     ├── Pass 2: Add "In The Works" + positive angle  │   │
 │  │     └── Pass 3: Social captions per platform         │   │
 │  │              │                                       │   │
-│  │  3. Asset Generator                                  │   │
-│  │     ├── Image gen (Replicate FLUX.2 klein 4B)           │   │
+│  │  Asset Generator                                     │   │
+│  │     ├── Image gen (Replicate FLUX.2 klein 4B)        │   │
 │  │     ├── Watermark overlay (sharp)                    │   │
 │  │     └── Social cards: 1:1, 9:16, 16:9 (sharp)       │   │
 │  │              │                                       │   │
-│  │  4. Publisher                                        │   │
+│  │  Publisher                                           │   │
 │  │     ├── Static HTML → ~/html/augur/{brand}/          │   │
 │  │     ├── Social queue → platform APIs                 │   │
 │  │     └── ntfy → pipeline status alerts                │   │
 │  │              │                                       │   │
-│  │  5. Data Store                                       │   │
+│  │  Data Store                                          │   │
 │  │     └── SQLite: predictions.db                       │   │
 │  │                                                      │   │
 │  └──────────────────────────────────────────────────────┘   │
@@ -458,41 +457,41 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 7.3 Pipeline Flow (one cycle)
+### Pipeline Flow (one cycle)
 
 ```
 cron triggers: augur-cycle --brand=the --horizon=tomorrow
   │
-  ├── 1. COLLECT signals
+  ├── COLLECT signals
   │    Tavily: search("top geopolitical developments today")
   │    GDELT: query(themes=["ENV_CLIMATECHANGE", "ECON_*"])
   │    RSS: fetch(brand.sources)
   │    [financial brands]: yahoo.news() + read sentiment.json
   │
-  ├── 2. EXTRAPOLATE (Anthropic API)
+  ├── EXTRAPOLATE (Anthropic API)
   │    → Pass 1: system=brand.tonePrompt, user=signals+fictiveDate
   │      Output: { headline, signal, extrapolation, in_the_works, sources }
   │    → Pass 2: rewrite with positive angle (keep factual grounding)
   │    → Pass 3: generate captions for X, FB, Bluesky, etc.
   │    → Generate image prompt from article content
   │
-  ├── 3. GENERATE assets
+  ├── GENERATE assets
   │    Replicate: flux-2-klein-4b with brand.imageStylePrefix + imagePrompt
   │    sharp: apply watermark text overlay
   │    sharp: composite social cards (3 ratios) with headline + branding
   │
-  ├── 4. PUBLISH
+  ├── PUBLISH
   │    SQLite: INSERT prediction record
   │    Template: render article HTML → write to static file path
   │    Template: update horizon index page + main index
   │    Template: update RSS feed
   │    Queue: INSERT social posts (staggered schedule per platform)
   │
-  └── 5. NOTIFY
+  └── NOTIFY
        ntfy: push pipeline status (success/failure/article count)
 ```
 
-### 7.4 Social Posting (separate process)
+### Social Posting (separate process)
 
 ```
 cron: */30 * * * *  augur-post
@@ -508,7 +507,7 @@ cron: */30 * * * *  augur-post
     → On failure: UPDATE status = 'failed', retry_count++
 ```
 
-### 7.5 Cron Schedule
+### Cron Schedule
 
 ```bash
 # ── Signal collection + generation ──
@@ -542,7 +541,7 @@ cron: */30 * * * *  augur-post
 
 ---
 
-## 8. Database Schema
+## Database Schema
 
 SQLite (`predictions.db`).
 
@@ -617,7 +616,7 @@ CREATE INDEX idx_signals_source_date ON signals(source, fetched_at);
 
 ---
 
-## 9. File Structure
+## File Structure
 
 ```
 augur-engine/
@@ -698,7 +697,7 @@ augur-engine/
 
 ---
 
-## 10. Dependencies
+## Dependencies
 
 ### Runtime
 
@@ -728,7 +727,7 @@ augur-engine/
 
 ---
 
-## 11. Legal & Compliance
+## Legal & Compliance
 
 ### All Brands
 
@@ -755,22 +754,22 @@ augur-engine/
 
 ---
 
-## 12. Site Requirements
+## Site Requirements
 
 The website is optimized as a landing page for social traffic, not a reading destination:
 
-- ⚡ Static HTML, CDN-served, <1s load target
-- 📱 Mobile-first (90%+ of social referral traffic is mobile)
-- 🏷️ Rich OpenGraph + Twitter Card meta tags per article
-- 📧 Email capture CTA: "Get the Oracle's visions before social" (builds owned audience, add later)
-- 🔗 Short, memorable URLs (the URL scheme above)
-- 📊 UTM tracking per platform per post
-- ♿ Semantic HTML, readable without JS
-- 🔍 SEO: dated URLs indexed, /latest is 302 not 301
+- Static HTML, CDN-served, <1s load target
+- Mobile-first (90%+ of social referral traffic is mobile)
+- Rich OpenGraph + Twitter Card meta tags per article
+- Email capture CTA: "Get the Oracle's visions before social" (builds owned audience, add later)
+- Short, memorable URLs (the URL scheme above)
+- UTM tracking per platform per post
+- Semantic HTML, readable without JS
+- SEO: dated URLs indexed, /latest is 302 not 301
 
 ---
 
-## 13. Build Phases
+## Build Phases
 
 | Phase | What | Depends on | Effort |
 |-------|------|------------|--------|
@@ -792,7 +791,7 @@ The website is optimized as a landing page for social traffic, not a reading des
 
 ---
 
-## 14. Costs (estimated per month)
+## Costs (estimated per month)
 
 | Item | Cost |
 |------|------|
@@ -807,7 +806,7 @@ The website is optimized as a landing page for social traffic, not a reading des
 
 ---
 
-## 15. Prototype
+## Prototype
 
 A working React prototype exists: `the-augur-prototype.jsx`
 
@@ -824,7 +823,7 @@ Use as visual reference for the static HTML templates.
 
 ---
 
-## 16. Future Ideas (post-MVP)
+## Future Ideas (post-MVP)
 
 - "Claim This Prediction" — users bet reputation points on predictions, leaderboard
 - Spin-off themes — SIGNAL (cyberpunk), The Solaris (solarpunk), The Iron Gazette (art deco) — same pipeline, different CSS + image style + tone prompt
