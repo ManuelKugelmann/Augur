@@ -1,0 +1,17 @@
+{
+  "id": "nickel",
+  "name": "Nickel",
+  "category": "metals",
+  "producers": ["IDN", "PHL", "RUS", "NCL", "AUS"],
+  "reserves": ["IDN", "AUS", "BRA", "RUS", "NCL"],
+  "processing": ["CHN", "IDN", "JPN", "CAN", "NOR"],
+  "end_uses": ["stainless steel", "EV batteries", "alloys", "plating"],
+  "substitutes": ["LFP batteries (nickel-free)", "aluminum alloys"],
+  "exposure": {
+    "countries": ["IDN", "PHL", "RUS", "CHN", "AUS"],
+    "risk_factors": ["indonesia_export_policy", "class_1_vs_class_2_split", "ev_battery_demand", "russian_sanctions"]
+  },
+  "tags": ["industrial_metal", "battery", "stainless_steel"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "LME", "Nickel Institute"]
+}

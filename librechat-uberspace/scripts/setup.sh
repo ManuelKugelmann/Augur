@@ -13,7 +13,6 @@ SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
 BAK="${APP}.prev"
-DATA="${DATA_DIR:-$HOME/TradeAssistant_Data}"
 STACK="${STACK_DIR:-$HOME/mcps}"
 SVC="$HOME/etc/services.d/librechat.ini"
 PORT="${LC_PORT:-3080}"
@@ -69,22 +68,16 @@ if [[ ! -f "$APP/api/server/index.js" ]]; then
     die "LibreChat app code missing from bundle. Use a release built with CI (git tag + push)."
 fi
 
-# ── Copy default config if missing ──────────
-if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$APP/config/librechat.yaml" ]]; then
-    cp "$APP/config/librechat.yaml" "$APP/librechat.yaml"
-    # Replace __HOME__ placeholder with actual home directory
+# ── Copy default config from mcps repo if missing ──
+# The LibreChat bundle is vanilla — config lives in the mcps repo.
+_LC_YAML_SRC="$STACK/librechat-uberspace/config/librechat.yaml"
+if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$_LC_YAML_SRC" ]]; then
+    cp "$_LC_YAML_SRC" "$APP/librechat.yaml"
     sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
-    log "Copied default librechat.yaml (paths adjusted to $HOME)"
+    log "Copied default librechat.yaml from mcps repo (paths adjusted to $HOME)"
+elif [[ ! -f "$APP/librechat.yaml" ]]; then
+    warn "librechat.yaml not found in mcps repo — configure manually"
 fi
-
-# ── Data directory ──────────────────────────
-mkdir -p "$DATA/files"
-[[ ! -f "$DATA/.gitignore" ]] && cat > "$DATA/.gitignore" <<'GITIGNORE'
-# Large binary uploads go here but don't sync
-*.bin
-*.zip
-*.tar.gz
-GITIGNORE
 
 # No additional MCP npm packages needed — trading server is Python-only.
 
@@ -121,13 +114,29 @@ if ! command -v uvx &>/dev/null; then
 fi
 
 # ── Install signals stack (Python MCP servers) ──
+# Resolve Python binary: try explicit PYTHON_VERSION first, then scan
+# descending 3.13→3.10, then bare python3 (works on U7 + U8 + generic Linux)
+_PYTHON_BIN=""
+for _py in "python${PYTHON_VERSION:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+    [[ -z "$_py" || "$_py" == "python" ]] && continue
+    if command -v "$_py" &>/dev/null && \
+       "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+        _PYTHON_BIN="$_py"; break
+    fi
+done
+
 if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
-    log "Setting up signals stack Python environment..."
-    cd "$STACK"
-    python3 -m venv venv
-    venv/bin/pip install -q -r requirements.txt
-    cd - >/dev/null
-    log "Signals stack ready"
+    if [[ -z "$_PYTHON_BIN" ]]; then
+        warn "Python 3.10+ not found — trading MCPs won't be available"
+    else
+        log "Setting up signals stack Python environment..."
+        cd "$STACK"
+        "$_PYTHON_BIN" -m venv venv
+        venv/bin/pip install -q --upgrade pip
+        venv/bin/pip install -q -r requirements.txt
+        cd - >/dev/null
+        log "Signals stack ready"
+    fi
 elif [[ -d "$STACK/venv" ]]; then
     log "Signals stack already set up"
 else
@@ -137,10 +146,11 @@ fi
 
 # ── First install ───────────────────────────
 if [[ "$MODE" == "install" ]]; then
-    # Generate .env from example
+    # Generate .env from example (source from mcps repo, not the bundle)
     if [[ ! -f "$APP/.env" ]]; then
-        if [[ -f "$APP/config/.env.example" ]]; then
-            cp "$APP/config/.env.example" "$APP/.env"
+        _ENV_SRC="$STACK/librechat-uberspace/config/.env.example"
+        if [[ -f "$_ENV_SRC" ]]; then
+            cp "$_ENV_SRC" "$APP/.env"
         elif [[ -f "$APP/.env.example" ]]; then
             cp "$APP/.env.example" "$APP/.env"
         else
@@ -214,11 +224,11 @@ EOF
     supervisorctl add librechat 2>/dev/null || true
 
     # Web backend
-    uberspace web backend set / --http --port $PORT 2>/dev/null || true
+    uberspace web backend set / --http --port $PORT || warn "Failed to set web backend on port $PORT"
 
-    # Install ops shortcut
+    # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
-    cp "$APP/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
+    cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
     chmod +x "$HOME/bin/ta" 2>/dev/null || true
     ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
@@ -238,10 +248,7 @@ EOF
     echo -e "  ${YELLOW}2.${NC} Configure MCP servers (optional, defaults are fine):"
     echo "     nano $APP/librechat.yaml"
     echo ""
-    echo -e "  ${YELLOW}3.${NC} Set up git-versioned data (optional):"
-    echo "     bash $APP/scripts/setup-data-repo.sh ${GH_USER:-YOUR_USER}/${GH_REPO_DATA:-TradeAssistant_Data}"
-    echo ""
-    echo -e "  ${YELLOW}4.${NC} Start:"
+    echo -e "  ${YELLOW}3.${NC} Start:"
     echo "     supervisorctl start librechat"
     echo ""
     echo -e "  ${YELLOW}5.${NC} Access:"

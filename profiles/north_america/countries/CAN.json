@@ -1,0 +1,116 @@
+{
+  "id": "CAN",
+  "name": "Canada",
+  "iso2": "CA",
+  "region": "North America",
+  "currency": "CAD",
+  "capital": "Ottawa",
+  "population": 40000000,
+  "trade": {
+    "top_exports": [
+      "petroleum",
+      "vehicles",
+      "gold",
+      "lumber",
+      "machinery"
+    ],
+    "top_partners": [
+      "USA",
+      "CHN",
+      "GBR",
+      "JPN",
+      "MEX"
+    ],
+    "major_ports": [
+      "Vancouver",
+      "Montreal",
+      "Halifax",
+      "Prince Rupert"
+    ],
+    "chokepoint_exposure": [
+      "panama"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "vehicles",
+      "machinery",
+      "electronics",
+      "pharmaceuticals"
+    ],
+    "energy_mix": {
+      "hydro": 0.6,
+      "gas": 0.11,
+      "nuclear": 0.13,
+      "oil": 0.01,
+      "coal": 0.05,
+      "renewables": 0.07,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "us_trade_dependence",
+      "housing_bubble",
+      "resource_economy"
+    ]
+  },
+  "ratings": {
+    "credit": "AAA",
+    "democracy_index": 8.88,
+    "press_freedom_rank": 15,
+    "corruption_perception": 74
+  },
+  "neighbors": [
+    {
+      "id": "USA",
+      "name": "United States",
+      "relevance": "World's longest border; $700B+ annual trade; energy integration"
+    },
+    {
+      "id": "DNK",
+      "name": "Denmark (Greenland)",
+      "relevance": "Arctic neighbor; Hans Island resolved; Northwest Passage disputes"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "dependency",
+      "description": "75%+ of exports go to US; energy (oil/gas/electricity), automotive, lumber"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Third-largest partner; canola, minerals, LNG; diplomatic tensions (Meng/two Michaels)"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "CETA trade agreement; investment; values alignment"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "Founding member; Arctic sovereignty; NORAD partnership with US"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Comprehensive sanctions; Magnitsky Act; frozen assets; Ukraine military aid"
+    }
+  ],
+  "tags": [
+    "G7",
+    "NATO",
+    "USMCA",
+    "OECD",
+    "Five_Eyes"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

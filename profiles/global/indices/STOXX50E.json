@@ -1,0 +1,17 @@
+{
+  "id": "STOXX50E",
+  "name": "Euro Stoxx 50",
+  "type": "index",
+  "country": "EUR",
+  "exchange": "Eurex",
+  "components": 50,
+  "methodology": "free-float-market-cap-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Healthcare", "Financials", "Industrials", "Consumer Discretionary", "Consumer Staples", "Energy", "Utilities"],
+    "countries": ["DEU", "FRA", "NLD", "ESP", "ITA", "BEL", "FIN", "IRL"],
+    "risk_factors": ["eur_currency_risk", "political_fragmentation", "energy_dependence"]
+  },
+  "tags": ["benchmark", "eurozone_equity", "large_cap", "blue_chip"],
+  "_updated": "2026-03-09",
+  "_sources": ["STOXX"]
+}

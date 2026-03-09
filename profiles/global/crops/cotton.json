@@ -1,0 +1,18 @@
+{
+  "id": "cotton",
+  "name": "Cotton",
+  "category": "fiber",
+  "growing_season": "Mar-Oct (Northern Hemisphere); varies by region",
+  "producers": ["CHN", "IND", "USA", "BRA", "PAK", "UZB"],
+  "exporters": ["USA", "BRA", "IND", "AUS", "BFA"],
+  "water_intensity": "high",
+  "climate_sensitivity": ["drought", "pest_infestation", "excessive_rain_at_harvest"],
+  "exposure": {
+    "countries": ["CHN", "IND", "USA", "BRA", "PAK", "BGD"],
+    "commodities": [],
+    "risk_factors": ["textile_demand", "synthetic_fiber_competition", "forced_labor_bans", "water_scarcity"]
+  },
+  "tags": ["fiber", "textile", "agricultural"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "ICAC", "FAOSTAT"]
+}

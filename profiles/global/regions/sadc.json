@@ -1,0 +1,70 @@
+{
+  "id": "sadc",
+  "name": "Southern African Development Community",
+  "type": "economic_zone",
+  "countries": [
+    "AGO", "BWA", "COM", "COD", "SWZ", "LSO", "MDG", "MWI", "MUS", "MOZ",
+    "NAM", "SYC", "ZAF", "TZA", "ZMB", "ZWE"
+  ],
+  "bbox": [11.7, -46.9, 63.5, 5.4],
+  "climate": "Tropical in the north, semi-arid in the interior, Mediterranean in the southwest, oceanic in island states",
+  "hazards": [
+    "tropical_cyclones",
+    "drought",
+    "flooding",
+    "locust_swarms",
+    "epidemics",
+    "volcanic_activity",
+    "desertification"
+  ],
+  "chokepoints": [
+    "Mozambique Channel",
+    "Cape of Good Hope",
+    "Strait of Madagascar"
+  ],
+  "neighbors": [
+    {"id": "eac", "name": "East African Community", "relevance": "Tanzania and DRC hold dual membership; trade corridor between southern and eastern Africa"},
+    {"id": "african_union", "name": "African Union", "relevance": "Parent continental body; SADC is a recognized AU regional economic community"},
+    {"id": "cape_of_good_hope", "name": "Cape of Good Hope Sea Route", "relevance": "South Africa anchors the Cape route; critical for SADC mineral and energy exports"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "Indian Ocean coast connects Mozambique, Tanzania, Madagascar to Asian trade routes"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Chinese mining investments and infrastructure projects across the region"}
+  ],
+  "links": [
+    {"target": "african_union", "type": "overlap", "description": "All SADC members are AU members; SADC free trade area feeds into AfCFTA"},
+    {"target": "eac", "type": "overlap", "description": "Tanzania and DRC are members of both; coordination on customs and transit"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "Cape route handles bulk mineral exports (platinum, iron ore, coal) from South Africa to Asia"},
+    {"target": "brics", "type": "alliance", "description": "South Africa is a BRICS member; diplomatic and trade bridge between SADC and emerging powers"},
+    {"target": "opec_plus", "type": "trade", "description": "Angola is an OPEC member; oil production and pricing affect regional revenues"},
+    {"target": "eu", "type": "trade", "description": "EU is a major trade partner; Economic Partnership Agreements govern market access for SADC exports"}
+  ],
+  "exposure": {
+    "commodities": [
+      "platinum",
+      "gold",
+      "diamonds",
+      "copper",
+      "cobalt",
+      "coal",
+      "iron_ore",
+      "chromium",
+      "natural_gas",
+      "tobacco",
+      "sugar",
+      "maize"
+    ],
+    "risk_factors": [
+      "political_instability",
+      "infrastructure_deficit",
+      "energy_shortages",
+      "water_scarcity",
+      "hiv_aids_prevalence",
+      "mining_sector_dependence",
+      "currency_volatility",
+      "food_insecurity",
+      "drc_conflict_spillover"
+    ]
+  },
+  "tags": ["sadc", "southern_africa", "regional_bloc", "mineral_wealth", "customs_union_overlap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SADC Secretariat", "CIA World Factbook", "World Bank"]
+}

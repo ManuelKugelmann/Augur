@@ -1,0 +1,22 @@
+{
+  "id": "PG",
+  "name": "Procter & Gamble Co.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Staples",
+  "industry": "Household Products",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1837,
+    "employees": 107000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "IND", "JPN", "DEU", "BRA"],
+    "commodities": ["palm_oil", "pulp", "petroleum_derivatives"],
+    "supply_chain": ["BASF", "Dow Chemical", "Packaging Corp"],
+    "risk_factors": ["commodity_input_costs", "fx_risk", "private_label_competition", "emerging_market_slowdown"]
+  },
+  "tags": ["mega_cap", "consumer_staples", "dividend_aristocrat", "defensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

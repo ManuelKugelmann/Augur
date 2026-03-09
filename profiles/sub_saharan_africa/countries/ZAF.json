@@ -1,0 +1,130 @@
+{
+  "id": "ZAF",
+  "name": "South Africa",
+  "iso2": "ZA",
+  "region": "Sub-Saharan Africa",
+  "currency": "ZAR",
+  "capital": "Pretoria",
+  "population": 60000000,
+  "trade": {
+    "top_exports": [
+      "gold",
+      "platinum",
+      "iron_ore",
+      "vehicles",
+      "coal"
+    ],
+    "top_partners": [
+      "CHN",
+      "USA",
+      "DEU",
+      "GBR",
+      "IND"
+    ],
+    "major_ports": [
+      "Durban",
+      "Cape Town",
+      "Richards Bay",
+      "Port Elizabeth"
+    ],
+    "chokepoint_exposure": [
+      "cape_of_good_hope"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "machinery",
+      "electronics",
+      "vehicles"
+    ],
+    "energy_mix": {
+      "coal": 0.7,
+      "renewables": 0.1,
+      "nuclear": 0.05,
+      "gas": 0.03,
+      "hydro": 0.02,
+      "oil": 0.02,
+      "other": 0.08
+    },
+    "risk_factors": [
+      "load_shedding",
+      "inequality",
+      "unemployment",
+      "state_enterprise_debt"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 7.05,
+    "press_freedom_rank": 25,
+    "corruption_perception": 43
+  },
+  "neighbors": [
+    {
+      "id": "MOZ",
+      "name": "Mozambique",
+      "relevance": "Eastern border; LNG (TotalEnergies); Maputo corridor; Eskom power"
+    },
+    {
+      "id": "BWA",
+      "name": "Botswana",
+      "relevance": "Northern border; diamond trade; SACU member"
+    },
+    {
+      "id": "NAM",
+      "name": "Namibia",
+      "relevance": "Atlantic coast neighbor; SACU; uranium; Orange River"
+    },
+    {
+      "id": "ZWE",
+      "name": "Zimbabwe",
+      "relevance": "Migration; Eskom power sharing; political spillover"
+    },
+    {
+      "id": "SWZ",
+      "name": "Eswatini",
+      "relevance": "Landlocked enclave-like; SACU; sugar trade"
+    },
+    {
+      "id": "LSO",
+      "name": "Lesotho",
+      "relevance": "Fully enclosed; Lesotho Highlands Water Project; SACU"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; minerals, automotive; BRICS partner"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "AGOA; automotive exports; platinum group metals; investment"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Major trade partner; automotive (BMW, VW); wine; minerals"
+    },
+    {
+      "target": "BRICS",
+      "type": "alliance",
+      "description": "BRICS host 2023; New Development Bank; Africa voice in emerging bloc"
+    }
+  ],
+  "tags": [
+    "BRICS",
+    "G20",
+    "AU"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

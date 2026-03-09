@@ -1,0 +1,34 @@
+{
+  "id": "horn_of_africa",
+  "name": "Horn of Africa",
+  "type": "subregion",
+  "countries": ["ETH", "ERI", "DJI", "SOM", "KEN", "SSD", "SDN"],
+  "bbox": [21.8, -4.7, 51.4, 23.1],
+  "climate": "Arid to semi-arid lowlands; tropical highland in Ethiopian plateau; hot and humid along Red Sea and Indian Ocean coasts; bimodal rainfall in equatorial south",
+  "hazards": ["drought", "famine", "flooding", "locust_swarms", "conflict", "displacement", "cyclone", "seismic_activity"],
+  "chokepoints": ["Bab_el-Mandeb", "Port_of_Djibouti", "Suez_Canal_southern_approach", "Nile_water_system"],
+  "neighbors": [
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Western and northern coastline; Bab el-Mandeb strait controls Red Sea's southern entrance"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "GCC states operate military bases in Djibouti and Eritrea; major source of investment and labor remittances"},
+    {"id": "sahel", "name": "Sahel Belt", "relevance": "Western neighbor; shared climate vulnerability, conflict spillover, and displacement corridors via Sudan and Chad"},
+    {"id": "eac", "name": "East African Community", "relevance": "Kenya and South Sudan are EAC members; regional trade integration and port access"},
+    {"id": "suez_canal", "name": "Suez Canal", "relevance": "Horn of Africa security directly affects Suez Canal traffic volume via Red Sea approaches"},
+    {"id": "african_union", "name": "African Union", "relevance": "AU headquarters in Addis Ababa; Horn conflicts are primary focus of AU peace operations"}
+  ],
+  "links": [
+    {"target": "red_sea", "type": "dependency", "description": "Djibouti and Eritrea control Bab el-Mandeb approaches; Horn instability disrupts Red Sea shipping"},
+    {"target": "suez_canal", "type": "corridor", "description": "Piracy and Houthi attacks originating from Horn region threaten Suez-bound trade"},
+    {"target": "gcc", "type": "trade", "description": "GCC states are top investors and hosts of Horn diaspora labor; UAE and Saudi operate regional military bases"},
+    {"target": "persian_gulf", "type": "trade", "description": "Djibouti is a key transshipment hub for Gulf-Africa trade; livestock exports to Gulf markets"},
+    {"target": "sahel", "type": "dependency", "description": "Sudan straddles both regions; conflict and displacement flow between Horn and Sahel"},
+    {"target": "belt_and_road", "type": "trade", "description": "China's first overseas military base is in Djibouti; BRI port and railway investments across the Horn"},
+    {"target": "african_union", "type": "alliance", "description": "AU-led peacekeeping missions in Somalia and South Sudan; conflict mediation in Ethiopia and Sudan"}
+  ],
+  "exposure": {
+    "commodities": ["coffee", "livestock", "sesame", "gold", "oil", "gum_arabic", "khat", "fish", "potash"],
+    "risk_factors": ["armed_conflict", "state_fragility", "piracy", "food_insecurity", "water_disputes", "displacement_crisis", "foreign_military_bases", "Red_Sea_shipping_disruption", "climate_change"]
+  },
+  "tags": ["horn-of-africa", "conflict-zone", "famine-risk", "Red-Sea", "Bab-el-Mandeb", "strategic-waterway"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN OCHA", "ACLED", "World Food Programme", "IGAD"]
+}

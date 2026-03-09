@@ -1,0 +1,67 @@
+{
+  "id": "arctic_sea_route",
+  "name": "Northern Sea Route / Arctic Shipping Corridor",
+  "type": "corridor",
+  "countries": ["RUS", "NOR", "CAN", "USA", "DNK", "ISL", "FIN", "SWE"],
+  "bbox": [-180.0, 60.0, 180.0, 90.0],
+  "climate": "Arctic and subarctic; extreme cold, polar night in winter, midnight sun in summer; rapidly warming due to climate change",
+  "hazards": [
+    "sea_ice",
+    "icebergs",
+    "extreme_cold",
+    "polar_storms",
+    "permafrost_thaw",
+    "limited_search_and_rescue",
+    "oil_spill_in_ice",
+    "methane_release"
+  ],
+  "chokepoints": [
+    "Bering Strait",
+    "Vilkitsky Strait",
+    "Sannikov Strait",
+    "Kara Gate",
+    "Northwest Passage (Canadian)"
+  ],
+  "neighbors": [
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Norway, Denmark, Finland, Sweden, Iceland are Arctic states and Nordic Council members; shared Arctic governance"},
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "USA and Canada have Arctic sovereignty; intelligence monitoring of Russian Northern Sea Route activity"},
+    {"id": "baltic_sea", "name": "Baltic Sea", "relevance": "NSR western terminus connects to Baltic ports; Murmansk and Arkhangelsk feed Baltic shipping"},
+    {"id": "cis", "name": "CIS", "relevance": "Russia controls the Northern Sea Route; CIS logistics networks feed Arctic port infrastructure"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "China declared a Polar Silk Road; investments in Yamal LNG and Arctic shipping infrastructure"}
+  ],
+  "links": [
+    {"target": "suez_canal", "type": "corridor", "description": "NSR offers shorter Asia-Europe route bypassing Suez; competitive alternative as ice recedes"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Arctic route avoids Malacca chokepoint for Asia-Europe trade; reduces transit time by 10-15 days"},
+    {"target": "nordic_council", "type": "dependency", "description": "Nordic nations manage western Arctic access; Norwegian ports serve as NSR staging points"},
+    {"target": "belt_and_road", "type": "trade", "description": "China's Polar Silk Road integrates Arctic shipping into BRI; Yamal LNG as anchor project"},
+    {"target": "five_eyes", "type": "rivalry", "description": "US and Canada contest Russian NSR transit fees and sovereignty claims; Northwest Passage disputes"},
+    {"target": "sco", "type": "trade", "description": "Russia and China coordinate Arctic resource development and shipping through SCO framework"},
+    {"target": "baltic_sea", "type": "corridor", "description": "NSR cargo connects to Baltic ports; Murmansk-to-Rotterdam route as key western link"}
+  ],
+  "exposure": {
+    "commodities": [
+      "lng",
+      "crude_oil",
+      "nickel",
+      "palladium",
+      "rare_earths",
+      "iron_ore",
+      "fish",
+      "container_shipping"
+    ],
+    "risk_factors": [
+      "ice_melt_route_opening",
+      "russian_military_buildup",
+      "sovereignty_disputes",
+      "environmental_regulation",
+      "icebreaker_capacity",
+      "insurance_costs",
+      "seasonal_navigation_window",
+      "climate_feedback_loops",
+      "strategic_competition"
+    ]
+  },
+  "tags": ["arctic", "northern_sea_route", "northwest_passage", "corridor", "shipping", "climate_change", "resource_frontier"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Arctic Council", "NOAA", "Russian NSR Administration"]
+}

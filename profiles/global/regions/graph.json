@@ -1,0 +1,307 @@
+{
+  "id": "_graph",
+  "name": "Region Interconnection Graph",
+  "description": "Global map of proximity, trade corridors, alliance overlaps, and dependency chains across all tracked regions",
+  "clusters": {
+    "europe": {
+      "members": ["eu", "eurozone", "nordic_council", "visegrad", "baltic_sea", "ruhr_area"],
+      "hub": "eu",
+      "notes": "EU is the regulatory and trade hub; eurozone subset shares monetary policy; Nordic Council and Visegrad are sub-regional blocs; Ruhr Area is the industrial core; Baltic Sea is a shared maritime zone with NATO significance"
+    },
+    "asia_pacific": {
+      "members": ["asean", "rcep", "quad", "indo_pacific", "greater_bay_area", "pearl_river_delta", "yangtze_river_delta", "south_china_sea", "taiwan_strait", "aukus"],
+      "hub": "asean",
+      "notes": "ASEAN is the diplomatic hub; RCEP is the trade framework; Quad and AUKUS are security arrangements; Greater Bay Area, Pearl River Delta, and Yangtze River Delta are manufacturing clusters; South China Sea and Taiwan Strait are contested maritime zones"
+    },
+    "middle_east": {
+      "members": ["gcc", "opec", "opec_plus", "persian_gulf", "strait_of_hormuz", "levant", "bosphorus", "red_sea"],
+      "hub": "gcc",
+      "notes": "GCC anchors the Gulf economies; OPEC/OPEC+ set global oil output; Strait of Hormuz is the critical oil chokepoint; Levant is a conflict-prone zone; Bosphorus connects Black Sea trade to Mediterranean; Red Sea links Suez to Indian Ocean"
+    },
+    "africa": {
+      "members": ["african_union", "ecowas", "eac", "sadc", "sahel", "horn_of_africa", "cape_of_good_hope"],
+      "hub": "african_union",
+      "notes": "African Union is the continental body; ECOWAS covers West Africa trade; EAC covers East Africa; SADC covers Southern Africa; Sahel and Horn of Africa are instability zones; Cape of Good Hope is the alternative route when Suez is disrupted"
+    },
+    "americas": {
+      "members": ["nafta_usmca", "mercosur", "corn_belt", "rust_belt", "silicon_valley", "panama_canal"],
+      "hub": "nafta_usmca",
+      "notes": "NAFTA/USMCA is the dominant trade framework; Mercosur covers South American trade; Corn Belt and Rust Belt are key US production zones; Silicon Valley is the global tech hub; Panama Canal connects Atlantic and Pacific shipping"
+    },
+    "maritime_corridors": {
+      "members": ["suez_canal", "panama_canal", "strait_of_malacca", "strait_of_hormuz", "bosphorus", "red_sea", "south_china_sea", "taiwan_strait", "cape_of_good_hope", "arctic_sea_route", "mediterranean", "baltic_sea", "black_sea", "persian_gulf"],
+      "hub": "strait_of_malacca",
+      "notes": "These chokepoints and sea lanes carry the bulk of global trade; Strait of Malacca alone handles ~25% of global shipping; disruption at any point forces costly rerouting and supply chain delays"
+    },
+    "global_blocs": {
+      "members": ["g7", "g20", "brics", "five_eyes", "sco", "cptpp", "belt_and_road", "cis", "quad", "aukus", "rcep", "opec_plus"],
+      "hub": "g20",
+      "notes": "G20 is the primary forum for global economic coordination; G7 represents advanced economies; BRICS is the emerging-market counterweight; Five Eyes is the core Anglophone intelligence alliance; SCO is the China-Russia led security bloc; CPTPP and RCEP are competing Asia-Pacific trade frameworks; Belt and Road is China's infrastructure investment network"
+    }
+  },
+  "critical_corridors": [
+    {
+      "route": "East Asia → Europe",
+      "via": ["strait_of_malacca", "red_sea", "suez_canal", "mediterranean"],
+      "cargo": "containers, electronics, manufactured goods, auto parts",
+      "annual_value_usd": "~$1 trillion",
+      "notes": "Primary artery for China-EU trade; ~12,000 nm; 30-35 day transit; Houthi attacks on Red Sea shipping in 2024 forced diversions via Cape of Good Hope"
+    },
+    {
+      "route": "Persian Gulf → East Asia",
+      "via": ["persian_gulf", "strait_of_hormuz", "strait_of_malacca"],
+      "cargo": "crude oil, LNG, petrochemicals",
+      "annual_value_usd": "~$500 billion",
+      "notes": "Carries ~17 million barrels/day of crude; critical energy lifeline for China, Japan, South Korea, India"
+    },
+    {
+      "route": "Persian Gulf → Europe",
+      "via": ["persian_gulf", "strait_of_hormuz", "red_sea", "suez_canal", "mediterranean"],
+      "cargo": "crude oil, LNG, refined products",
+      "annual_value_usd": "~$200 billion",
+      "notes": "Key European energy supply route; alternative pipeline routes via Turkey reduce but do not eliminate dependence"
+    },
+    {
+      "route": "East Asia → US West Coast",
+      "via": ["south_china_sea", "taiwan_strait"],
+      "cargo": "electronics, semiconductors, consumer goods, machinery",
+      "annual_value_usd": "~$800 billion",
+      "notes": "Transpacific route; Taiwan Strait tension directly threatens semiconductor supply; ~14-day transit to US West Coast ports"
+    },
+    {
+      "route": "US Gulf / East Coast → Europe",
+      "via": ["mediterranean"],
+      "cargo": "LNG, crude oil, agricultural products, chemicals",
+      "annual_value_usd": "~$400 billion",
+      "notes": "Transatlantic trade route; US became net energy exporter; key for European energy diversification from Russia"
+    },
+    {
+      "route": "South America → East Asia",
+      "via": ["cape_of_good_hope"],
+      "cargo": "soybeans, iron ore, copper, lithium",
+      "annual_value_usd": "~$200 billion",
+      "notes": "Brazil-China commodity corridor; also routes via Panama Canal for lighter cargo; critical for Chinese food and industrial input security"
+    },
+    {
+      "route": "US East Coast → Asia Pacific",
+      "via": ["panama_canal"],
+      "cargo": "LNG, grain, containers, manufactured goods",
+      "annual_value_usd": "~$300 billion",
+      "notes": "Panama Canal handles ~5% of global seaborne trade; drought restrictions in 2023-24 reduced daily transits from ~38 to ~24"
+    },
+    {
+      "route": "Russia/Black Sea → Mediterranean",
+      "via": ["black_sea", "bosphorus", "mediterranean"],
+      "cargo": "grain, fertilizer, crude oil, metals",
+      "annual_value_usd": "~$100 billion",
+      "notes": "Ukraine/Russia grain exports transit Black Sea; Bosphorus is governed by 1936 Montreux Convention; Turkey controls access"
+    },
+    {
+      "route": "Northern Sea Route (Arctic)",
+      "via": ["arctic_sea_route"],
+      "cargo": "LNG, minerals, containers (seasonal)",
+      "annual_value_usd": "~$20 billion (growing)",
+      "notes": "Cuts East Asia-Europe transit by ~10 days vs Suez route; navigable July-November; Russia controls most of the route; ice retreat expanding seasonal window"
+    },
+    {
+      "route": "West Africa → Europe / Americas",
+      "via": ["cape_of_good_hope"],
+      "cargo": "crude oil, LNG, cocoa, minerals",
+      "annual_value_usd": "~$80 billion",
+      "notes": "Gulf of Guinea is a major oil production zone; piracy risk; ECOWAS instability affects supply reliability"
+    },
+    {
+      "route": "Australia → East Asia",
+      "via": ["strait_of_malacca"],
+      "cargo": "iron ore, coal, LNG, wheat",
+      "annual_value_usd": "~$150 billion",
+      "notes": "Australia is China's largest iron ore supplier; trade tensions led to coal diversion to India and other markets"
+    }
+  ],
+  "rivalry_axes": [
+    {
+      "axis": "US-China strategic competition",
+      "regions": ["indo_pacific", "south_china_sea", "taiwan_strait", "quad", "aukus", "rcep", "cptpp", "belt_and_road", "greater_bay_area"],
+      "nature": "strategic competition",
+      "notes": "Contest over Indo-Pacific primacy, technology supremacy (semiconductors, AI), trade rules, and alliance networks; Taiwan is the most acute flashpoint"
+    },
+    {
+      "axis": "US/NATO-Russia",
+      "regions": ["baltic_sea", "black_sea", "arctic_sea_route", "cis", "nordic_council", "visegrad", "bosphorus"],
+      "nature": "military confrontation and economic decoupling",
+      "notes": "Ukraine war is the active conflict; NATO expansion to Finland/Sweden reshaped Baltic security; energy decoupling from Russia redirected global LNG flows; Arctic is emerging theater"
+    },
+    {
+      "axis": "Iran-Gulf Arab states / Israel",
+      "regions": ["persian_gulf", "strait_of_hormuz", "gcc", "levant", "red_sea"],
+      "nature": "regional power struggle and proxy conflicts",
+      "notes": "Iran's proxy network (Hezbollah, Houthis, militias in Iraq) threatens Gulf shipping and Israeli security; Houthi Red Sea attacks demonstrated cascading global trade impact"
+    },
+    {
+      "axis": "India-China border and influence competition",
+      "regions": ["indo_pacific", "quad", "sco", "rcep", "belt_and_road", "strait_of_malacca"],
+      "nature": "border disputes and competing influence in South/Southeast Asia",
+      "notes": "Himalayan border standoff since 2020; competing infrastructure investments in Indian Ocean region; India excluded from RCEP partly due to China concerns"
+    },
+    {
+      "axis": "China-ASEAN maritime tensions",
+      "regions": ["south_china_sea", "asean", "strait_of_malacca", "rcep"],
+      "nature": "territorial disputes over islands, reefs, and exclusive economic zones",
+      "notes": "Nine-dash line claims overlap with Philippines, Vietnam, Malaysia, Brunei EEZs; militarized artificial islands; risk of disruption to $3.4 trillion annual shipping through South China Sea"
+    },
+    {
+      "axis": "Sahel instability belt",
+      "regions": ["sahel", "ecowas", "african_union"],
+      "nature": "governance collapse, coups, jihadist insurgency, great power competition",
+      "notes": "Mali, Burkina Faso, Niger military coups; Russian Wagner/Africa Corps replacing French influence; migration pressure on Europe; disruption to gold and uranium mining"
+    },
+    {
+      "axis": "BRICS vs G7 institutional competition",
+      "regions": ["brics", "g7", "g20", "sco"],
+      "nature": "competing visions for global economic governance",
+      "notes": "BRICS expansion (2024: Egypt, Ethiopia, Iran, UAE, Saudi Arabia joined) challenges dollar-centric system; push for alternative payment systems and development banks"
+    }
+  ],
+  "dependency_chains": [
+    {
+      "chain": "Gulf oil → Asia",
+      "from": ["persian_gulf", "strait_of_hormuz", "opec"],
+      "to": ["asean", "greater_bay_area", "rcep"],
+      "via": ["strait_of_malacca"],
+      "commodity": "crude_oil",
+      "notes": "Asia imports ~75% of Persian Gulf crude; Hormuz closure would remove ~20% of global oil supply; strategic petroleum reserves provide ~90 days buffer"
+    },
+    {
+      "chain": "Taiwan semiconductors → global manufacturing",
+      "from": ["taiwan_strait"],
+      "to": ["silicon_valley", "greater_bay_area", "pearl_river_delta", "eu", "rust_belt"],
+      "commodity": "advanced_semiconductors",
+      "notes": "TSMC produces ~90% of sub-7nm chips; disruption would halt smartphone, automotive, AI, and defense production globally; US CHIPS Act and EU Chips Act aim to reduce dependency"
+    },
+    {
+      "chain": "Black Sea grain → MENA / Africa food security",
+      "from": ["black_sea"],
+      "to": ["levant", "horn_of_africa", "sahel", "eac", "ecowas"],
+      "via": ["bosphorus", "mediterranean", "suez_canal", "red_sea"],
+      "commodity": "wheat, corn, sunflower_oil",
+      "notes": "Ukraine and Russia supply ~30% of global wheat exports; disruption causes acute food insecurity in import-dependent MENA and African nations"
+    },
+    {
+      "chain": "Australian iron ore → Chinese steel",
+      "from": ["rcep"],
+      "to": ["greater_bay_area", "yangtze_river_delta", "pearl_river_delta"],
+      "via": ["strait_of_malacca"],
+      "commodity": "iron_ore",
+      "notes": "Australia supplies ~60% of China's iron ore; China produces ~55% of global steel; disruption cascades to global construction, manufacturing, and infrastructure"
+    },
+    {
+      "chain": "Corn Belt / Mercosur soybeans → China feed",
+      "from": ["corn_belt", "mercosur"],
+      "to": ["greater_bay_area", "yangtze_river_delta"],
+      "via": ["panama_canal", "cape_of_good_hope"],
+      "commodity": "soybeans, corn",
+      "notes": "China imports ~60% of globally traded soybeans; US-China trade war shifted sourcing to Brazil; critical for Chinese livestock feed and food security"
+    },
+    {
+      "chain": "Gulf LNG → Europe energy security",
+      "from": ["gcc", "persian_gulf"],
+      "to": ["eu", "eurozone"],
+      "via": ["strait_of_hormuz", "suez_canal", "mediterranean"],
+      "commodity": "LNG",
+      "notes": "Post-Russia pivot: Europe increased LNG imports from Qatar and US; Qatar's North Field expansion targets European market; spot LNG prices highly sensitive to shipping disruptions"
+    },
+    {
+      "chain": "Sahel / DRC minerals → global tech",
+      "from": ["sahel", "sadc", "eac"],
+      "to": ["greater_bay_area", "eu", "silicon_valley"],
+      "commodity": "cobalt, lithium, rare_earths, tantalum",
+      "notes": "DRC produces ~70% of global cobalt; critical for EV batteries and electronics; artisanal mining and conflict complicate supply; China controls ~60% of refining"
+    },
+    {
+      "chain": "Russian gas → Europe (legacy)",
+      "from": ["cis"],
+      "to": ["eu", "eurozone", "visegrad"],
+      "via": ["baltic_sea", "black_sea", "bosphorus"],
+      "commodity": "natural_gas",
+      "notes": "Nord Stream pipelines sabotaged 2022; pipeline flows reduced ~80% from pre-war levels; remaining flows via Ukraine transit (contract expired 2024) and TurkStream; structural European energy cost increase"
+    },
+    {
+      "chain": "OPEC+ production decisions → global inflation",
+      "from": ["opec", "opec_plus", "gcc"],
+      "to": ["g20", "eu", "asean", "nafta_usmca"],
+      "commodity": "crude_oil",
+      "notes": "OPEC+ controls ~40% of global oil production; output cuts/increases directly affect fuel costs, transportation, fertilizer prices, and headline inflation globally"
+    },
+    {
+      "chain": "Belt and Road infrastructure → emerging market debt",
+      "from": ["belt_and_road"],
+      "to": ["asean", "eac", "sadc", "ecowas", "cis"],
+      "commodity": "infrastructure_finance",
+      "notes": "China's BRI has deployed ~$1 trillion in loans and investments across 150+ countries; creates trade corridors but also debt dependency; port and rail projects reshape trade flows"
+    }
+  ],
+  "overlap_matrix": {
+    "eu_eurozone": {
+      "members": ["eu", "eurozone"],
+      "notes": "Eurozone is a subset of EU (20 of 27 members share the euro); EU non-eurozone members retain own currencies"
+    },
+    "opec_gcc": {
+      "members": ["opec", "opec_plus", "gcc"],
+      "notes": "Saudi Arabia, UAE, Kuwait are in all three; OPEC+ includes Russia and other non-OPEC producers; GCC includes non-OPEC Bahrain and Oman"
+    },
+    "quad_aukus_five_eyes": {
+      "members": ["quad", "aukus", "five_eyes"],
+      "notes": "Australia is in all three; US is in Quad and Five Eyes; UK is in AUKUS and Five Eyes; overlapping Indo-Pacific security architecture"
+    },
+    "rcep_asean_cptpp": {
+      "members": ["rcep", "asean", "cptpp"],
+      "notes": "All 10 ASEAN members are in RCEP; 7 ASEAN members are in CPTPP; RCEP includes China (CPTPP does not yet); CPTPP includes Western Hemisphere members"
+    },
+    "brics_sco": {
+      "members": ["brics", "sco"],
+      "notes": "China, Russia, India are in both; SCO is security-focused, BRICS is economic; both serve as counterweight forums to Western institutions"
+    },
+    "g7_g20": {
+      "members": ["g7", "g20"],
+      "notes": "All G7 members (US, UK, France, Germany, Italy, Japan, Canada + EU) are in G20; G20 adds China, India, Brazil, Russia, Australia, South Korea, Indonesia, Mexico, Saudi Arabia, Turkey, Argentina, South Africa"
+    },
+    "eu_nordic_visegrad": {
+      "members": ["eu", "nordic_council", "visegrad"],
+      "notes": "Nordic Council includes EU members (Sweden, Denmark, Finland) and non-EU (Norway, Iceland); all four Visegrad members (Poland, Czech Republic, Slovakia, Hungary) are EU members"
+    },
+    "persian_gulf_hormuz_gcc": {
+      "members": ["persian_gulf", "strait_of_hormuz", "gcc"],
+      "notes": "Geographically overlapping; all GCC states border the Persian Gulf; Strait of Hormuz is the exit point; Iran borders all three but is not in GCC"
+    },
+    "african_union_sub_blocs": {
+      "members": ["african_union", "ecowas", "eac", "sadc"],
+      "notes": "ECOWAS (West Africa), EAC (East Africa), SADC (Southern Africa) are all sub-blocs under the African Union umbrella; AfCFTA aims to unify them into a continental free trade area"
+    },
+    "nafta_usmca_cptpp": {
+      "members": ["nafta_usmca", "cptpp"],
+      "notes": "Canada and Mexico are in both; US is in USMCA but withdrew from TPP/CPTPP; creates overlapping and sometimes conflicting trade rules"
+    },
+    "cis_sco_opec_plus": {
+      "members": ["cis", "sco", "opec_plus"],
+      "notes": "Russia is in all three; Kazakhstan is in CIS and SCO; Central Asian energy producers bridge these blocs"
+    },
+    "red_sea_suez_mediterranean": {
+      "members": ["red_sea", "suez_canal", "mediterranean"],
+      "notes": "Sequential maritime zones forming the Europe-Asia sea corridor; disruption in any one forces rerouting via Cape of Good Hope adding 10-14 days transit"
+    },
+    "greater_bay_pearl_river_yangtze": {
+      "members": ["greater_bay_area", "pearl_river_delta", "yangtze_river_delta"],
+      "notes": "Greater Bay Area encompasses Pearl River Delta plus Hong Kong and Macau; Yangtze River Delta (Shanghai-centered) is the other major Chinese economic cluster; together they produce ~35% of China's GDP"
+    },
+    "belt_and_road_cis_sco": {
+      "members": ["belt_and_road", "cis", "sco"],
+      "notes": "Central Asian BRI corridors run through CIS and SCO member states; China-Europe rail freight transits Kazakhstan and Russia"
+    },
+    "corn_belt_rust_belt": {
+      "members": ["corn_belt", "rust_belt"],
+      "notes": "Adjacent US regions; Corn Belt (Iowa, Illinois, Indiana) is agricultural; Rust Belt (Michigan, Ohio, Pennsylvania) is industrial; both are politically pivotal swing regions"
+    }
+  },
+  "_updated": "2026-03-09",
+  "_sources": ["UNCTAD", "WTO", "CIA World Factbook", "IMF Direction of Trade", "Lloyd's List Intelligence", "OECD", "IEA", "UN Comtrade"]
+}

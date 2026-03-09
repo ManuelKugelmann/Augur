@@ -1,0 +1,22 @@
+{
+  "id": "KO",
+  "name": "The Coca-Cola Company",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Staples",
+  "industry": "Soft Drinks & Non-alcoholic Beverages",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1886,
+    "employees": 79000
+  },
+  "exposure": {
+    "countries": ["USA", "MEX", "BRA", "CHN", "IND", "JPN"],
+    "commodities": ["sugar", "aluminum", "corn"],
+    "supply_chain": ["Coca-Cola Europacific Partners", "Coca-Cola FEMSA", "Ball Corporation"],
+    "risk_factors": ["sugar_tax", "fx_risk", "health_trends", "commodity_input_costs"]
+  },
+  "tags": ["mega_cap", "beverages", "consumer_staples", "dividend_aristocrat", "defensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

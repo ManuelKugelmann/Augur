@@ -1,0 +1,378 @@
+[
+  {
+    "id": "ARKK",
+    "kind": "etfs",
+    "name": "ARK Innovation ETF",
+    "region": "global",
+    "tags": [
+      "innovation",
+      "disruptive_tech",
+      "active",
+      "growth",
+      "high_conviction"
+    ]
+  },
+  {
+    "id": "BND",
+    "kind": "etfs",
+    "name": "Vanguard Total Bond Market ETF",
+    "region": "global",
+    "tags": [
+      "bonds",
+      "fixed_income",
+      "aggregate",
+      "investment_grade",
+      "passive"
+    ]
+  },
+  {
+    "id": "DBA",
+    "kind": "etfs",
+    "name": "Invesco DB Agriculture Fund",
+    "region": "global",
+    "tags": [
+      "agriculture",
+      "commodity",
+      "futures_based",
+      "passive"
+    ]
+  },
+  {
+    "id": "EEM",
+    "kind": "etfs",
+    "name": "iShares MSCI Emerging Markets ETF",
+    "region": "global",
+    "tags": [
+      "emerging_markets",
+      "diversified",
+      "passive",
+      "international"
+    ]
+  },
+  {
+    "id": "EFA",
+    "kind": "etfs",
+    "name": "iShares MSCI EAFE ETF",
+    "region": "global",
+    "tags": [
+      "developed_international",
+      "eafe",
+      "passive",
+      "diversified"
+    ]
+  },
+  {
+    "id": "EWJ",
+    "kind": "etfs",
+    "name": "iShares MSCI Japan ETF",
+    "region": "global",
+    "tags": [
+      "japan",
+      "single_country",
+      "developed_markets",
+      "passive"
+    ]
+  },
+  {
+    "id": "EWZ",
+    "kind": "etfs",
+    "name": "iShares MSCI Brazil ETF",
+    "region": "global",
+    "tags": [
+      "brazil",
+      "single_country",
+      "emerging_markets",
+      "latin_america",
+      "passive"
+    ]
+  },
+  {
+    "id": "FXI",
+    "kind": "etfs",
+    "name": "iShares China Large-Cap ETF",
+    "region": "global",
+    "tags": [
+      "china",
+      "large_cap",
+      "emerging_markets",
+      "passive"
+    ]
+  },
+  {
+    "id": "GLD",
+    "kind": "etfs",
+    "name": "SPDR Gold Shares",
+    "region": "global",
+    "tags": [
+      "gold",
+      "commodity",
+      "safe_haven",
+      "inflation_hedge",
+      "passive"
+    ]
+  },
+  {
+    "id": "HYG",
+    "kind": "etfs",
+    "name": "iShares iBoxx $ High Yield Corporate Bond ETF",
+    "region": "global",
+    "tags": [
+      "high_yield",
+      "junk_bonds",
+      "corporate_bonds",
+      "fixed_income",
+      "passive"
+    ]
+  },
+  {
+    "id": "IBIT",
+    "kind": "etfs",
+    "name": "iShares Bitcoin Trust ETF",
+    "region": "global",
+    "tags": [
+      "bitcoin",
+      "crypto",
+      "spot_etf",
+      "digital_assets",
+      "passive"
+    ]
+  },
+  {
+    "id": "INDA",
+    "kind": "etfs",
+    "name": "iShares MSCI India ETF",
+    "region": "global",
+    "tags": [
+      "india",
+      "single_country",
+      "emerging_markets",
+      "passive"
+    ]
+  },
+  {
+    "id": "IWM",
+    "kind": "etfs",
+    "name": "iShares Russell 2000 ETF",
+    "region": "global",
+    "tags": [
+      "russell2000",
+      "small_cap",
+      "us_equity",
+      "passive"
+    ]
+  },
+  {
+    "id": "KWEB",
+    "kind": "etfs",
+    "name": "KraneShares CSI China Internet ETF",
+    "region": "global",
+    "tags": [
+      "china",
+      "internet",
+      "tech",
+      "emerging_markets",
+      "passive"
+    ]
+  },
+  {
+    "id": "LQD",
+    "kind": "etfs",
+    "name": "iShares iBoxx $ Investment Grade Corporate Bond ETF",
+    "region": "global",
+    "tags": [
+      "investment_grade",
+      "corporate_bonds",
+      "fixed_income",
+      "passive"
+    ]
+  },
+  {
+    "id": "QQQ",
+    "kind": "etfs",
+    "name": "Invesco QQQ Trust",
+    "region": "global",
+    "tags": [
+      "nasdaq100",
+      "large_cap",
+      "tech_heavy",
+      "growth",
+      "passive"
+    ]
+  },
+  {
+    "id": "SLV",
+    "kind": "etfs",
+    "name": "iShares Silver Trust",
+    "region": "global",
+    "tags": [
+      "silver",
+      "commodity",
+      "precious_metals",
+      "passive"
+    ]
+  },
+  {
+    "id": "SPY",
+    "kind": "etfs",
+    "name": "SPDR S&P 500 ETF Trust",
+    "region": "global",
+    "tags": [
+      "sp500",
+      "large_cap",
+      "us_equity",
+      "benchmark",
+      "passive"
+    ]
+  },
+  {
+    "id": "TLT",
+    "kind": "etfs",
+    "name": "iShares 20+ Year Treasury Bond ETF",
+    "region": "global",
+    "tags": [
+      "treasury",
+      "long_duration",
+      "bonds",
+      "fixed_income",
+      "safe_haven",
+      "passive"
+    ]
+  },
+  {
+    "id": "UNG",
+    "kind": "etfs",
+    "name": "United States Natural Gas Fund",
+    "region": "global",
+    "tags": [
+      "natural_gas",
+      "commodity",
+      "futures_based",
+      "passive"
+    ]
+  },
+  {
+    "id": "USO",
+    "kind": "etfs",
+    "name": "United States Oil Fund",
+    "region": "global",
+    "tags": [
+      "oil",
+      "commodity",
+      "futures_based",
+      "wti",
+      "passive"
+    ]
+  },
+  {
+    "id": "VGK",
+    "kind": "etfs",
+    "name": "Vanguard FTSE Europe ETF",
+    "region": "global",
+    "tags": [
+      "europe",
+      "developed_markets",
+      "diversified",
+      "passive"
+    ]
+  },
+  {
+    "id": "VNQ",
+    "kind": "etfs",
+    "name": "Vanguard Real Estate ETF",
+    "region": "global",
+    "tags": [
+      "real_estate",
+      "reits",
+      "income",
+      "passive"
+    ]
+  },
+  {
+    "id": "VTI",
+    "kind": "etfs",
+    "name": "Vanguard Total Stock Market ETF",
+    "region": "global",
+    "tags": [
+      "total_market",
+      "all_cap",
+      "us_equity",
+      "diversified",
+      "passive"
+    ]
+  },
+  {
+    "id": "VWO",
+    "kind": "etfs",
+    "name": "Vanguard FTSE Emerging Markets ETF",
+    "region": "global",
+    "tags": [
+      "emerging_markets",
+      "diversified",
+      "passive"
+    ],
+    "sector": "Broad Market"
+  },
+  {
+    "id": "VXUS",
+    "kind": "etfs",
+    "name": "Vanguard Total International Stock ETF",
+    "region": "global",
+    "tags": [
+      "international",
+      "ex_us",
+      "all_cap",
+      "diversified",
+      "passive"
+    ]
+  },
+  {
+    "id": "XLE",
+    "kind": "etfs",
+    "name": "Energy Select Sector SPDR Fund",
+    "region": "global",
+    "tags": [
+      "energy",
+      "sector",
+      "oil_gas",
+      "passive"
+    ]
+  },
+  {
+    "id": "XLF",
+    "kind": "etfs",
+    "name": "Financial Select Sector SPDR Fund",
+    "region": "global",
+    "tags": [
+      "financials",
+      "sector",
+      "banks",
+      "insurance",
+      "passive"
+    ]
+  },
+  {
+    "id": "XLK",
+    "kind": "etfs",
+    "name": "Technology Select Sector SPDR Fund",
+    "region": "global",
+    "tags": [
+      "technology",
+      "sector",
+      "large_cap",
+      "passive"
+    ]
+  },
+  {
+    "id": "XLV",
+    "kind": "etfs",
+    "name": "Health Care Select Sector SPDR Fund",
+    "region": "global",
+    "tags": [
+      "healthcare",
+      "sector",
+      "pharma",
+      "biotech",
+      "passive"
+    ]
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "id": "NFLX",
+  "name": "Netflix Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Communication Services",
+  "industry": "Movies & Entertainment",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1997,
+    "employees": 13000
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "BRA", "JPN", "KOR", "IND"],
+    "commodities": [],
+    "supply_chain": ["AWS", "content_studios", "talent_agencies"],
+    "risk_factors": ["streaming_competition", "content_costs", "subscriber_growth", "fx_risk", "password_sharing"]
+  },
+  "tags": ["mega_cap", "streaming", "entertainment", "content"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

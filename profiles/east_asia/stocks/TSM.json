@@ -1,0 +1,22 @@
+{
+  "id": "TSM",
+  "name": "Taiwan Semiconductor Manufacturing Company Limited",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
+  "country": "TWN",
+  "fundamentals": {
+    "founded": 1987,
+    "employees": 77000
+  },
+  "exposure": {
+    "countries": ["TWN", "USA", "CHN", "JPN", "KOR", "DEU"],
+    "commodities": ["silicon", "rare_earths", "water"],
+    "supply_chain": ["ASML", "Applied Materials", "Lam Research", "Tokyo Electron"],
+    "risk_factors": ["geopolitical_taiwan", "china_invasion_risk", "semiconductor_cycle", "water_scarcity", "concentration_risk"]
+  },
+  "tags": ["semiconductors", "foundry", "ai", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

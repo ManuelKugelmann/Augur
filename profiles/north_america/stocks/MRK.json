@@ -1,0 +1,22 @@
+{
+  "id": "MRK",
+  "name": "Merck & Co. Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1891,
+    "employees": 69000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "JPN", "DEU", "FRA", "GBR"],
+    "commodities": [],
+    "supply_chain": ["Samsung Biologics", "Catalent", "Lonza"],
+    "risk_factors": ["keytruda_patent_cliff", "drug_pricing_regulation", "pipeline_risk", "china_policy"]
+  },
+  "tags": ["mega_cap", "pharma", "oncology", "vaccines"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

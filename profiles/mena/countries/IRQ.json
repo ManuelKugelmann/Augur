@@ -1,0 +1,115 @@
+{
+  "id": "IRQ",
+  "name": "Iraq",
+  "iso2": "IQ",
+  "region": "Middle East & North Africa",
+  "currency": "IQD",
+  "capital": "Baghdad",
+  "population": 43000000,
+  "trade": {
+    "top_exports": [
+      "petroleum"
+    ],
+    "top_partners": [
+      "CHN",
+      "IND",
+      "KOR",
+      "USA",
+      "GRC"
+    ],
+    "major_ports": [
+      "Basra",
+      "Umm Qasr"
+    ],
+    "chokepoint_exposure": [
+      "hormuz"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "food_products",
+      "machinery",
+      "vehicles",
+      "electronics"
+    ],
+    "energy_mix": {
+      "oil": 0.4,
+      "gas": 0.55,
+      "hydro": 0.03,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "oil_dependence",
+      "political_instability",
+      "water_scarcity",
+      "sectarian_tensions"
+    ]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 3.13,
+    "press_freedom_rank": 167,
+    "corruption_perception": 23
+  },
+  "neighbors": [
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Shia axis; political influence; militia networks; trade dependency"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Kurdish PKK operations; Kirkuk-Ceyhan oil pipeline; water disputes"
+    },
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "Sunni counterweight; reopening diplomatic ties; border trade"
+    },
+    {
+      "id": "KWT",
+      "name": "Kuwait",
+      "relevance": "Gulf War legacy; shared oilfields; border cooperation"
+    },
+    {
+      "id": "SYR",
+      "name": "Syria",
+      "relevance": "ISIS legacy; Kurdish corridor; refugee flows"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Post-invasion presence; strategic framework agreement; counter-ISIS"
+    },
+    {
+      "target": "IRN",
+      "type": "dependency",
+      "description": "Electricity and gas imports; political influence via Shia parties"
+    },
+    {
+      "target": "TUR",
+      "type": "corridor",
+      "description": "Kirkuk-Ceyhan oil pipeline; trade route; water downstream"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Major oil buyer; infrastructure investment; growing economic ties"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "Arab_League"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

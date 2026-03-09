@@ -1,0 +1,132 @@
+{
+  "id": "POL",
+  "name": "Poland",
+  "iso2": "PL",
+  "region": "Europe",
+  "currency": "PLN",
+  "capital": "Warsaw",
+  "population": 38000000,
+  "trade": {
+    "top_exports": [
+      "machinery",
+      "vehicles",
+      "furniture",
+      "electronics",
+      "food_products"
+    ],
+    "top_partners": [
+      "DEU",
+      "CZE",
+      "FRA",
+      "GBR",
+      "ITA"
+    ],
+    "major_ports": [
+      "Gdansk",
+      "Gdynia",
+      "Szczecin"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "vehicles",
+      "machinery"
+    ],
+    "energy_mix": {
+      "coal": 0.62,
+      "renewables": 0.17,
+      "gas": 0.09,
+      "oil": 0.02,
+      "nuclear": 0.0,
+      "other": 0.1
+    },
+    "risk_factors": [
+      "coal_transition",
+      "demographic_decline",
+      "russian_border_proximity"
+    ]
+  },
+  "ratings": {
+    "credit": "A-",
+    "democracy_index": 7.04,
+    "press_freedom_rank": 57,
+    "corruption_perception": 55
+  },
+  "neighbors": [
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "relevance": "Largest trade partner; deep supply chain integration; historical tensions"
+    },
+    {
+      "id": "UKR",
+      "name": "Ukraine",
+      "relevance": "Longest border; refugee host; military aid transit; grain dispute"
+    },
+    {
+      "id": "CZE",
+      "name": "Czech Republic",
+      "relevance": "Visegrad partner; automotive corridor"
+    },
+    {
+      "id": "SVK",
+      "name": "Slovakia",
+      "relevance": "Visegrad partner; Carpathian border"
+    },
+    {
+      "id": "LTU",
+      "name": "Lithuania",
+      "relevance": "Suwalki Gap; NATO eastern flank; Belarus containment"
+    },
+    {
+      "id": "BLR",
+      "name": "Belarus",
+      "relevance": "Hybrid warfare frontier; border crisis; Lukashenko regime"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Key NATO eastern flank ally; US troop deployment; Patriot missiles"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member; largest CEE economy; rule-of-law tensions"
+    },
+    {
+      "target": "UKR",
+      "type": "alliance",
+      "description": "Strongest Ukraine supporter; military aid hub; refugee absorption"
+    },
+    {
+      "target": "DEU",
+      "type": "dependency",
+      "description": "~28% of exports to Germany; automotive and manufacturing integration"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Strongest sanctions advocate in EU; military buildup; ended gas imports; Ukraine hub"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "OECD"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

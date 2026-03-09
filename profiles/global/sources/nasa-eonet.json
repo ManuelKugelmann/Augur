@@ -1,0 +1,16 @@
+{
+  "id": "nasa-eonet",
+  "name": "NASA Earth Observatory Natural Event Tracker",
+  "mcp": "disasters",
+  "tool": "eonet_events",
+  "api_base": "https://eonet.gsfc.nasa.gov/api/v3/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "continuous",
+    "snapshot_type": "events",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["NASA EONET API Docs"]
+}

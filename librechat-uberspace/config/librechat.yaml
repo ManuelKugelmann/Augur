@@ -16,7 +16,6 @@ interface:
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
-# Utility MCPs: data stored under ~/TradeAssistant_Data/ (git-versioned)
 # Trading MCP: signals stack under ~/mcps/
 # External MCPs: third-party data sources
 #
@@ -64,13 +63,42 @@ mcpServers:
         description: "Your ntfy.sh topic for push notifications (plan alerts, trade confirmations). Create one at ntfy.sh."
     serverInstructions: |
       Trading signals server: store_* tools + 12 OSINT data domains + ta_* technical indicators.
+
       STORE: Profile = what an entity IS (JSON on disk). Snapshot = what was MEASURED when (MongoDB timeseries).
         store_chart returns Plotly HTML — output it directly as an artifact.
         Notes (store_save_note etc.) are per-user — plans, watchlists, journals.
         Risk gate: dry-run by default. Users enable live trading in Settings > Plugins.
+
+      PROFILE DIRECTORY STRUCTURE:
+        profiles/{region}/{kind}/{id}.json
+        Regions: north_america, latin_america, europe, mena, sub_saharan_africa,
+          south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global.
+        Kinds: countries, stocks, etfs, crypto, indices, commodities, crops, materials,
+          products, companies, sources.
+        Non-geographic kinds (etfs, indices, commodities, crops, materials, products, sources)
+          live under global/. Geographic kinds (countries, stocks, companies) live under their region.
+        Indexes: profiles/INDEX_{kind}.json — auto-generated, searchable via store_find_profile.
+        Schemas: profiles/SCHEMAS/{kind}.schema.json — descriptive, per-kind.
+
+      PROFILE FILE SCHEMAS (key fields per kind):
+        countries: id (ISO3), name, iso2, region, currency, capital, population, trade{top_exports, top_partners, major_ports, chokepoint_exposure}, exposure{commodities_import, energy_mix, risk_factors}, ratings{credit, democracy_index, press_freedom_rank, corruption_perception}, tags
+        stocks: id (ticker), name, type="stock", exchange, sector, industry, country (ISO3), fundamentals{founded, employees}, exposure{countries, commodities, supply_chain, risk_factors}, tags
+        etfs: id (ticker), name, type="etf", exchange, issuer, strategy, exposure{countries, sectors, commodities, risk_factors}, tags
+        crypto: id (symbol), name, type="crypto", network, consensus, max_supply, exposure{countries, risk_factors}, tags
+        indices: id (symbol), name, type="index", country, exchange, components, methodology, exposure{sectors, countries, risk_factors}, tags
+        commodities: id (slug), name, category (energy|metals|agriculture|livestock), unit, benchmark, producers[], consumers[], chokepoints[], seasonality, exposure{countries, risk_factors}, tags
+        crops: id (slug), name, category (grains|oilseeds|fibers|sugar|fruits|vegetables), growing_season, producers[], exporters[], water_intensity, climate_sensitivity[], exposure{countries, commodities, risk_factors}, tags
+        materials: id (slug), name, category (metals|minerals|chemicals|forestry|textiles), producers[], reserves[], processing[], end_uses[], substitutes[], exposure{countries, risk_factors}, tags
+        products: id (slug), name, category (electronics|energy|pharma|automotive|industrial|consumer), hs_codes[], manufacturers[], inputs[], trade_volume, exposure{countries, materials, commodities, risk_factors}, tags
+        companies: id (slug), name, country (ISO3), sector, industry, revenue, employees, publicly_traded, ticker, subsidiaries[], exposure{countries, products, materials, risk_factors}, tags
+        sources: id (slug), name, mcp, tool, api_base, auth (none|api_key|token), refresh{frequency, snapshot_type, default_params}, ttl_days
+
+      ID CONVENTIONS: countries=ISO3 uppercase (DEU, USA), stocks/etfs/crypto/indices=ticker uppercase (AAPL, SPY, BTC, SPX), commodities/crops/materials/products/companies/sources=lowercase slug (crude_oil, lithium, tsmc).
+
       DATA: Tools prefixed by domain (weather_, disaster_, econ_, agri_, conflict_,
         commodity_, health_, politics_, transport_, water_, humanitarian_, infra_).
         Most free/no-key. Some need optional keys (FRED, ACLED, EIA, IDMC, CF_API_TOKEN).
+
       INDICATORS (ta_* tools): Use ta_analyze_full for complete analysis of any ticker
         (SMA, RSI, MACD, Bollinger) in one call. Fetches Yahoo Finance prices automatically.
         Based on 114K-backtest study: SMA(200) trend filter + RSI/MACD/Bollinger for timing.

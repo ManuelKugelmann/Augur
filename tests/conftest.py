@@ -1,12 +1,27 @@
-"""Pytest conftest — mock heavy dependencies before store module imports them."""
+"""Pytest conftest — mock heavy dependencies before store module imports them.
+
+In CI (where pymongo/cffi imports cleanly), mongomock provides a full
+in-memory MongoDB for tests. In Claude Code sandbox (broken cffi/pyo3),
+pymongo is replaced with a MagicMock and tests use a lightweight
+_FakeCollection fallback. See _USE_MONGOMOCK flag.
+"""
 import sys
 from unittest.mock import MagicMock
 
-# Mock pymongo (prevents cryptography/SSL import chain failure in sandbox)
+# Detect whether real pymongo can import (cffi/cryptography chain).
+# Must happen before mongomock import since mongomock imports pymongo.
+_USE_MONGOMOCK = False
 if "pymongo" not in sys.modules:
-    mock_pymongo = MagicMock()
-    mock_pymongo.MongoClient = MagicMock
-    sys.modules["pymongo"] = mock_pymongo
+    try:
+        import pymongo as _real_pymongo  # noqa: F401
+        # pymongo imports OK → mongomock will work in CI
+        _USE_MONGOMOCK = True
+        del _real_pymongo
+    except BaseException:
+        # Sandbox: cffi/cryptography broken (pyo3 PanicException), mock pymongo
+        mock_pymongo = MagicMock()
+        mock_pymongo.MongoClient = MagicMock
+        sys.modules["pymongo"] = mock_pymongo
 
 
 # Mock fastmcp (v3 API changes; we only need the @mcp.tool() decorator to be a no-op)

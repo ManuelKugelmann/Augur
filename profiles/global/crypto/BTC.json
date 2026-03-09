@@ -1,0 +1,15 @@
+{
+  "id": "BTC",
+  "name": "Bitcoin",
+  "type": "crypto",
+  "network": "Bitcoin",
+  "consensus": "PoW",
+  "max_supply": 21000000,
+  "exposure": {
+    "countries": ["USA", "CHN", "DEU", "JPN", "KOR", "SLV"],
+    "risk_factors": ["regulatory_risk", "volatility", "energy_consumption", "halving_cycle", "institutional_adoption"]
+  },
+  "tags": ["store_of_value", "digital_gold", "layer1", "pow", "decentralized"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

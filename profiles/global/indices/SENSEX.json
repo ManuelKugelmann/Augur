@@ -1,0 +1,17 @@
+{
+  "id": "SENSEX",
+  "name": "BSE Sensex",
+  "type": "index",
+  "country": "IND",
+  "exchange": "BSE",
+  "components": 30,
+  "methodology": "free-float-market-cap-weighted",
+  "exposure": {
+    "sectors": ["Financials", "Technology", "Energy", "Consumer Staples", "Healthcare", "Industrials"],
+    "countries": ["IND"],
+    "risk_factors": ["inr_currency_risk", "regulatory_risk", "foreign_flow_sensitivity"]
+  },
+  "tags": ["benchmark", "indian_equity", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["BSE India"]
+}

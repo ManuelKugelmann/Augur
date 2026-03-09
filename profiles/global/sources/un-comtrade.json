@@ -1,0 +1,16 @@
+{
+  "id": "un-comtrade",
+  "name": "UN Comtrade Database",
+  "mcp": "commodities",
+  "tool": "comtrade_trade",
+  "api_base": "https://comtradeapi.un.org/",
+  "auth": "api_key",
+  "refresh": {
+    "frequency": "monthly",
+    "snapshot_type": "trade_flows",
+    "default_params": {}
+  },
+  "ttl_days": 30,
+  "_updated": "2026-03-09",
+  "_sources": ["UN Comtrade API Docs"]
+}

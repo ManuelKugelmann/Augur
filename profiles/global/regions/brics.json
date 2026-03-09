@@ -1,0 +1,73 @@
+{
+  "id": "brics",
+  "name": "BRICS+",
+  "type": "economic_zone",
+  "countries": ["BRA", "RUS", "IND", "CHN", "ZAF", "EGY", "ETH", "IRN", "SAU", "ARE"],
+  "bbox": [-73.6, -55.1, 180.0, 81.9],
+  "climate": "Highly diverse: tropical, arid, temperate, continental, arctic, monsoon — spans all major climate zones",
+  "hazards": [
+    "flooding",
+    "drought",
+    "earthquakes",
+    "cyclones",
+    "typhoons",
+    "wildfires",
+    "sandstorms",
+    "extreme_cold",
+    "extreme_heat"
+  ],
+  "chokepoints": [
+    "Strait of Hormuz",
+    "Suez Canal",
+    "Strait of Malacca",
+    "Bab el-Mandeb",
+    "Cape of Good Hope"
+  ],
+  "neighbors": [
+    {"id": "sco", "name": "Shanghai Cooperation Organisation", "relevance": "Heavy membership overlap with Russia, China, India, Iran; shared security and economic agenda"},
+    {"id": "g20", "name": "Group of Twenty", "relevance": "All BRICS members are G20 members; competing visions for global economic governance"},
+    {"id": "opec_plus", "name": "OPEC+", "relevance": "Saudi Arabia, UAE, Russia, Iran are both BRICS+ and OPEC+; energy policy coordination"},
+    {"id": "african_union", "name": "African Union", "relevance": "Ethiopia, Egypt, South Africa bridge BRICS to the African continent"},
+    {"id": "asean", "name": "ASEAN", "relevance": "China and India are major ASEAN trade partners; BRICS expansion targets Southeast Asia"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Saudi Arabia and UAE membership links BRICS to Gulf petrodollar economies"}
+  ],
+  "links": [
+    {"target": "g7", "type": "rivalry", "description": "BRICS positions itself as counterweight to G7-led global order; dedollarization agenda"},
+    {"target": "sco", "type": "overlap", "description": "Shared members (China, Russia, India, Iran) and parallel summit diplomacy"},
+    {"target": "opec_plus", "type": "trade", "description": "BRICS energy producers coordinate oil output; influence global energy pricing"},
+    {"target": "belt_and_road", "type": "dependency", "description": "China's BRI infrastructure spans BRICS member states; development finance linkage"},
+    {"target": "strait_of_hormuz", "type": "corridor", "description": "Iran, Saudi Arabia, UAE energy exports transit Hormuz; critical for BRICS oil trade"},
+    {"target": "rcep", "type": "trade", "description": "China bridges BRICS and RCEP; overlapping trade liberalization frameworks"},
+    {"target": "suez_canal", "type": "corridor", "description": "Egypt membership gives BRICS direct stake in Suez transit chokepoint"},
+    {"target": "cape_of_good_hope", "type": "corridor", "description": "South Africa controls alternative route for BRICS commodity shipments"}
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "iron_ore",
+      "gold",
+      "rare_earths",
+      "soybeans",
+      "coal",
+      "diamonds",
+      "coffee",
+      "tea",
+      "platinum"
+    ],
+    "risk_factors": [
+      "sanctions_risk",
+      "currency_dedollarization",
+      "geopolitical_fragmentation",
+      "governance_divergence",
+      "internal_border_disputes",
+      "infrastructure_inequality",
+      "capital_controls",
+      "political_regime_diversity",
+      "western_bloc_rivalry"
+    ]
+  },
+  "tags": ["brics", "brics_plus", "emerging_markets", "multipolar", "new_development_bank", "alternative_bloc"],
+  "_updated": "2026-03-09",
+  "_sources": ["BRICS Secretariat", "CIA World Factbook", "World Bank", "IMF"]
+}

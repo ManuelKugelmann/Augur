@@ -1,0 +1,18 @@
+{
+  "id": "pharmaceuticals",
+  "name": "Pharmaceuticals",
+  "category": "healthcare",
+  "hs_codes": ["3003", "3004"],
+  "manufacturers": ["USA", "CHE", "DEU", "IRL", "IND", "CHN"],
+  "inputs": ["active_pharmaceutical_ingredients", "excipients", "packaging"],
+  "trade_volume": "$700B annual",
+  "exposure": {
+    "countries": ["USA", "CHE", "DEU", "IRL", "IND", "CHN", "JPN"],
+    "materials": [],
+    "commodities": [],
+    "risk_factors": ["api_china_india_dependence", "patent_cliffs", "regulatory_divergence"]
+  },
+  "tags": ["essential_goods", "ip_intensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["IQVIA", "WHO"]
+}

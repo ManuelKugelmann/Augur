@@ -1,0 +1,32 @@
+{
+  "id": "cape_of_good_hope",
+  "name": "Cape of Good Hope Sea Route",
+  "type": "maritime",
+  "countries": ["ZAF"],
+  "bbox": [14.0, -38.0, 26.0, -32.0],
+  "climate": "Mediterranean in the west; oceanic with strong winds; confluence of warm Agulhas and cold Benguela currents; frequent storms",
+  "hazards": ["severe_storms", "rogue_waves", "strong_currents", "fog", "ship_grounding", "piracy_in_adjacent_waters"],
+  "chokepoints": ["Cape_of_Good_Hope", "Cape_Agulhas"],
+  "neighbors": [
+    {"id": "sadc", "name": "Southern African Development Community", "relevance": "South Africa is SADC's largest economy; Cape Town and Durban ports serve the bloc"},
+    {"id": "african_union", "name": "African Union", "relevance": "South Africa is a key AU member; Cape route serves continental trade"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "Cape route connects South Atlantic to Indian Ocean; alternative to Suez for Asia-bound shipping"},
+    {"id": "suez_canal", "name": "Suez Canal", "relevance": "Cape route is the primary bypass when Suez is disrupted; traffic surges during Red Sea crises"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Houthi attacks and Red Sea instability directly drive rerouting around the Cape"}
+  ],
+  "links": [
+    {"target": "suez_canal", "type": "rivalry", "description": "Primary alternative route; Cape traffic surges when Suez is blocked or Red Sea is unsafe"},
+    {"target": "red_sea", "type": "dependency", "description": "Red Sea security crises force rerouting via Cape, adding 10-14 days transit time"},
+    {"target": "sadc", "type": "corridor", "description": "South African ports (Cape Town, Durban, Richards Bay) serve as transshipment hubs for SADC"},
+    {"target": "strait_of_hormuz", "type": "corridor", "description": "Persian Gulf oil tankers use Cape route when avoiding Red Sea/Suez"},
+    {"target": "brics", "type": "trade", "description": "Cape route connects BRICS members Brazil, South Africa, India, and China"},
+    {"target": "mediterranean", "type": "corridor", "description": "Ships avoiding Suez transit the Cape instead of entering the Mediterranean via Gibraltar"}
+  ],
+  "exposure": {
+    "commodities": ["crude_oil", "LNG", "iron_ore", "coal", "manganese", "chrome", "container_goods", "grain"],
+    "risk_factors": ["Suez_alternative_surge", "longer_transit_times", "higher_fuel_costs", "insurance_costs", "weather_risk", "port_congestion_at_Cape_Town", "Red_Sea_crisis_rerouting"]
+  },
+  "tags": ["alternative-route", "Suez-bypass", "southern-Africa", "weather-risk", "rerouting-hub", "Agulhas-current"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "South African Maritime Safety Authority", "Lloyd's List", "UNCTAD"]
+}

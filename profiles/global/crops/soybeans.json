@@ -1,0 +1,18 @@
+{
+  "id": "soybeans",
+  "name": "Soybeans",
+  "category": "oilseeds",
+  "growing_season": "May-Oct (US); Oct-Mar (Brazil/Argentina)",
+  "producers": ["BRA", "USA", "ARG", "CHN", "IND"],
+  "exporters": ["BRA", "USA", "ARG", "PRY"],
+  "water_intensity": "medium",
+  "climate_sensitivity": ["drought", "heat_stress", "la_nina"],
+  "exposure": {
+    "countries": ["BRA", "USA", "ARG", "CHN"],
+    "commodities": ["soybean_oil", "soybean_meal"],
+    "risk_factors": ["china_demand", "trade_wars", "amazon_deforestation", "argentina_drought"]
+  },
+  "tags": ["oilseeds", "feed", "vegetable_oil", "food"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT", "CBOT"]
+}

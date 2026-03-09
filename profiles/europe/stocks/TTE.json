@@ -1,0 +1,22 @@
+{
+  "id": "TTE",
+  "name": "TotalEnergies SE",
+  "type": "stock",
+  "exchange": "EPA",
+  "sector": "Energy",
+  "industry": "Integrated Oil & Gas",
+  "country": "FRA",
+  "fundamentals": {
+    "founded": 1924,
+    "employees": 101000
+  },
+  "exposure": {
+    "countries": ["FRA", "USA", "NGA", "AGO", "QAT", "BRA", "MOZ"],
+    "commodities": ["crude_oil", "natural_gas", "lng"],
+    "supply_chain": ["Schlumberger", "TechnipFMC", "Saipem"],
+    "risk_factors": ["oil_price_volatility", "energy_transition", "african_political_risk", "carbon_regulation"]
+  },
+  "tags": ["energy", "oil_gas", "renewables", "lng", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "005930",
+  "name": "Samsung Electronics Co., Ltd.",
+  "type": "stock",
+  "exchange": "KRX",
+  "sector": "Information Technology",
+  "industry": "Technology Hardware, Storage & Peripherals",
+  "country": "KOR",
+  "fundamentals": {
+    "founded": 1969,
+    "employees": 267000
+  },
+  "exposure": {
+    "countries": ["KOR", "USA", "CHN", "VNM", "IND", "BRA"],
+    "commodities": ["silicon", "rare_earths", "neon_gas"],
+    "supply_chain": ["ASML", "Applied Materials", "Tokyo Electron", "SK Hynix"],
+    "risk_factors": ["memory_chip_cycle", "china_competition", "geopolitical_korea", "smartphone_saturation", "foundry_competition"]
+  },
+  "tags": ["semiconductors", "memory", "smartphones", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["Yahoo Finance", "KRX"]
+}

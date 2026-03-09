@@ -1,0 +1,115 @@
+{
+  "id": "ISR",
+  "name": "Israel",
+  "iso2": "IL",
+  "region": "Middle East & North Africa",
+  "currency": "ILS",
+  "capital": "Jerusalem",
+  "population": 9800000,
+  "trade": {
+    "top_exports": [
+      "electronics",
+      "diamonds",
+      "pharmaceuticals",
+      "chemicals",
+      "machinery"
+    ],
+    "top_partners": [
+      "USA",
+      "CHN",
+      "GBR",
+      "IRL",
+      "IND"
+    ],
+    "major_ports": [
+      "Haifa",
+      "Ashdod",
+      "Eilat"
+    ],
+    "chokepoint_exposure": [
+      "suez",
+      "bab_el_mandeb"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "diamonds",
+      "vehicles",
+      "machinery"
+    ],
+    "energy_mix": {
+      "gas": 0.65,
+      "coal": 0.15,
+      "renewables": 0.1,
+      "oil": 0.05,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "regional_conflict",
+      "political_polarization",
+      "water_scarcity"
+    ]
+  },
+  "ratings": {
+    "credit": "A+",
+    "democracy_index": 7.53,
+    "press_freedom_rank": 101,
+    "corruption_perception": 62
+  },
+  "neighbors": [
+    {
+      "id": "EGY",
+      "name": "Egypt",
+      "relevance": "Peace treaty; Gaza border; gas exports; security cooperation"
+    },
+    {
+      "id": "JOR",
+      "name": "Jordan",
+      "relevance": "Peace treaty; West Bank neighbor; water sharing; security buffer"
+    },
+    {
+      "id": "LBN",
+      "name": "Lebanon",
+      "relevance": "Hezbollah threat; maritime border (resolved); northern front"
+    },
+    {
+      "id": "SYR",
+      "name": "Syria",
+      "relevance": "Golan Heights; Iran proxy presence; buffer zone"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "$3.8B annual military aid; strategic ally; tech cooperation; Iron Dome"
+    },
+    {
+      "target": "IRN",
+      "type": "rivalry",
+      "description": "Nuclear threat; proxy ring (Hezbollah, Hamas, Houthis); shadow war"
+    },
+    {
+      "target": "ARE",
+      "type": "alliance",
+      "description": "Abraham Accords; trade normalization; defense and tech cooperation"
+    },
+    {
+      "target": "SAU",
+      "type": "trade",
+      "description": "Normalization prospects; shared Iran threat; unofficial tech ties"
+    }
+  ],
+  "tags": [
+    "OECD"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

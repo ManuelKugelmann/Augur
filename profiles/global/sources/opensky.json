@@ -1,0 +1,16 @@
+{
+  "id": "opensky",
+  "name": "OpenSky Network",
+  "mcp": "transport",
+  "tool": "opensky_flights",
+  "api_base": "https://opensky-network.org/api/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "continuous",
+    "snapshot_type": "flights",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["OpenSky Network API Docs"]
+}

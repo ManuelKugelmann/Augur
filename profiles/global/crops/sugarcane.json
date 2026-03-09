@@ -1,0 +1,18 @@
+{
+  "id": "sugarcane",
+  "name": "Sugarcane",
+  "category": "sugar",
+  "growing_season": "Year-round in tropics; harvest Apr-Nov (Brazil Center-South)",
+  "producers": ["BRA", "IND", "CHN", "THA", "PAK"],
+  "exporters": ["BRA", "IND", "THA", "AUS", "GTM"],
+  "water_intensity": "high",
+  "climate_sensitivity": ["drought", "frost", "flooding", "el_nino"],
+  "exposure": {
+    "countries": ["BRA", "IND", "THA", "CHN", "EU"],
+    "commodities": ["ethanol", "sugar"],
+    "risk_factors": ["ethanol_diversion", "monsoon_failure", "government_subsidies", "brl_exchange_rate"]
+  },
+  "tags": ["sugar", "biofuel", "food"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "ISO", "FAOSTAT"]
+}

@@ -1,0 +1,79 @@
+{
+  "id": "belt_and_road",
+  "name": "Belt and Road Initiative",
+  "type": "corridor",
+  "countries": [
+    "CHN", "PAK", "KAZ", "UZB", "TKM", "KGZ", "TJK", "RUS", "BLR", "MNG",
+    "MMR", "LAO", "KHM", "THA", "MYS", "IDN", "PHL", "LKA", "BGD", "NPL",
+    "KEN", "ETH", "DJI", "TZA", "NGA", "ZAF", "EGY", "SAU", "ARE", "IRN",
+    "IRQ", "TUR", "GRC", "ITA", "HUN", "SRB", "POL", "ARG", "BRA", "CHL",
+    "PER"
+  ],
+  "bbox": [-80.0, -55.0, 180.0, 75.0],
+  "climate": "Spans all climate zones: tropical, arid, temperate, continental, polar fringe; infrastructure exposed to diverse weather extremes",
+  "hazards": [
+    "debt_distress",
+    "political_instability",
+    "corruption",
+    "earthquakes",
+    "flooding",
+    "cyclones",
+    "drought",
+    "conflict_zones"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Suez Canal",
+    "Gwadar Port (CPEC)",
+    "Khorgos Gateway (China-Kazakhstan)",
+    "Piraeus Port (Greece)",
+    "Hambantota Port (Sri Lanka)"
+  ],
+  "neighbors": [
+    {"id": "sco", "name": "Shanghai Cooperation Organisation", "relevance": "Heavy membership overlap; SCO provides security framework alongside BRI economic corridors"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Southeast Asian BRI recipients; ports, railways, and digital infrastructure across the region"},
+    {"id": "african_union", "name": "African Union", "relevance": "BRI extends into East and West Africa; Kenya-Ethiopia railway and port projects"},
+    {"id": "eu", "name": "European Union", "relevance": "BRI western terminus; Italy, Greece, Hungary participate despite EU screening concerns"},
+    {"id": "central_asia", "name": "Central Asia", "relevance": "Core overland corridor through Kazakhstan, Uzbekistan, Turkmenistan; China-Europe rail links"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Saudi Arabia and UAE are BRI partners; Gulf ports and energy infrastructure investments"}
+  ],
+  "links": [
+    {"target": "brics", "type": "overlap", "description": "China uses BRI to deepen ties with BRICS partners; infrastructure finance complements BRICS development bank"},
+    {"target": "sco", "type": "overlap", "description": "SCO member states host major BRI corridors; shared China-Russia strategic interest in Central Asian connectivity"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Maritime Silk Road transits Malacca; BRI port investments in Malaysia and Singapore"},
+    {"target": "suez_canal", "type": "corridor", "description": "Maritime Silk Road routes through Suez; Egypt is a BRI partner with canal zone investments"},
+    {"target": "rcep", "type": "trade", "description": "BRI infrastructure supports RCEP trade flows; China links both initiatives for Asia-Pacific integration"},
+    {"target": "persian_gulf", "type": "trade", "description": "China-Pakistan Economic Corridor provides alternative to Malacca for Gulf energy imports"},
+    {"target": "g7", "type": "rivalry", "description": "G7 launched competing infrastructure initiatives (PGII) to counter BRI influence"},
+    {"target": "red_sea", "type": "corridor", "description": "Djibouti naval base and port investments secure BRI maritime route through Red Sea"}
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "iron_ore",
+      "copper",
+      "rare_earths",
+      "lithium",
+      "cobalt",
+      "container_shipping",
+      "rail_freight",
+      "construction_materials"
+    ],
+    "risk_factors": [
+      "debt_trap_diplomacy_concerns",
+      "project_delays_and_cancellations",
+      "geopolitical_backlash",
+      "us_china_competition",
+      "environmental_impact",
+      "labor_disputes",
+      "currency_risk",
+      "sovereign_default_risk",
+      "port_control_controversies",
+      "alternative_corridor_competition"
+    ]
+  },
+  "tags": ["belt_and_road", "bri", "one_belt_one_road", "corridor", "infrastructure", "china_led", "cpec", "development_finance"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "World Bank", "AidData", "Green Finance & Development Center"]
+}

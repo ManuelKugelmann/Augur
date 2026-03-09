@@ -1,0 +1,17 @@
+{
+  "id": "SHCOMP",
+  "name": "Shanghai Composite",
+  "type": "index",
+  "country": "CHN",
+  "exchange": "SSE",
+  "components": 2000,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Financials", "Industrials", "Technology", "Consumer Staples", "Materials", "Energy", "Healthcare"],
+    "countries": ["CHN"],
+    "risk_factors": ["state_intervention", "capital_controls", "regulatory_risk", "cny_currency_risk"]
+  },
+  "tags": ["benchmark", "chinese_equity", "a_shares", "onshore"],
+  "_updated": "2026-03-09",
+  "_sources": ["Shanghai Stock Exchange"]
+}

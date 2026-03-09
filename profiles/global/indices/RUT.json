@@ -1,0 +1,17 @@
+{
+  "id": "RUT",
+  "name": "Russell 2000",
+  "type": "index",
+  "country": "USA",
+  "exchange": "NYSE",
+  "components": 2000,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Healthcare", "Financials", "Industrials", "Technology", "Consumer Discretionary", "Energy", "Real Estate"],
+    "countries": ["USA"],
+    "risk_factors": ["small_cap_risk", "liquidity_risk", "economic_sensitivity"]
+  },
+  "tags": ["benchmark", "small_cap", "us_equity"],
+  "_updated": "2026-03-09",
+  "_sources": ["FTSE Russell"]
+}

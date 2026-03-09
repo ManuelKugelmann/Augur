@@ -1,0 +1,22 @@
+{
+  "id": "V",
+  "name": "Visa Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Financials",
+  "industry": "Transaction & Payment Processing Services",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1958,
+    "employees": 30300
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "BRA", "IND", "JPN", "AUS"],
+    "commodities": [],
+    "supply_chain": ["FIS", "Fiserv", "Global Payments"],
+    "risk_factors": ["fintech_disruption", "regulatory_interchange", "cross_border_volume", "digital_currency"]
+  },
+  "tags": ["mega_cap", "payments", "fintech", "consumer_spending"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

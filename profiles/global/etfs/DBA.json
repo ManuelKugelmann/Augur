@@ -1,0 +1,16 @@
+{
+  "id": "DBA",
+  "name": "Invesco DB Agriculture Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "Invesco",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "commodities": ["corn", "soybeans", "wheat", "sugar", "cocoa", "coffee", "cotton", "live_cattle", "lean_hogs"],
+    "risk_factors": ["commodity_price_risk", "weather_risk", "contango_risk", "geopolitical_risk"]
+  },
+  "tags": ["agriculture", "commodity", "futures_based", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Invesco", "Yahoo Finance"]
+}

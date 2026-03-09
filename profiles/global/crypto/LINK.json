@@ -1,0 +1,15 @@
+{
+  "id": "LINK",
+  "name": "Chainlink",
+  "type": "crypto",
+  "network": "Ethereum",
+  "consensus": "N/A",
+  "max_supply": 1000000000,
+  "exposure": {
+    "countries": ["USA", "GBR", "DEU", "JPN"],
+    "risk_factors": ["regulatory_risk", "volatility", "oracle_competition", "token_unlock_schedule"]
+  },
+  "tags": ["oracle", "defi_infrastructure", "erc20", "cross_chain", "data_feeds"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

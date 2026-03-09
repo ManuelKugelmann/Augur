@@ -1,0 +1,15 @@
+{
+  "id": "DOT",
+  "name": "Polkadot",
+  "type": "crypto",
+  "network": "Polkadot",
+  "consensus": "NPoS",
+  "max_supply": null,
+  "exposure": {
+    "countries": ["USA", "CHE", "DEU", "GBR", "JPN"],
+    "risk_factors": ["regulatory_risk", "volatility", "interoperability_competition", "parachain_adoption"]
+  },
+  "tags": ["interoperability", "layer0", "parachains", "pos", "web3"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

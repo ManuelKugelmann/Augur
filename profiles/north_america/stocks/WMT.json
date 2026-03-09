@@ -1,0 +1,22 @@
+{
+  "id": "WMT",
+  "name": "Walmart Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Staples",
+  "industry": "Consumer Staples Merchandise Retail",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1962,
+    "employees": 2100000
+  },
+  "exposure": {
+    "countries": ["USA", "MEX", "IND", "CAN", "CHN", "CHL"],
+    "commodities": ["food_commodities", "gasoline"],
+    "supply_chain": ["P&G", "Unilever", "Coca-Cola", "PepsiCo"],
+    "risk_factors": ["labor_costs", "ecommerce_competition", "consumer_spending", "supply_chain_disruption"]
+  },
+  "tags": ["mega_cap", "retail", "grocery", "ecommerce", "defensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

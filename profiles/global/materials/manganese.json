@@ -1,0 +1,17 @@
+{
+  "id": "manganese",
+  "name": "Manganese",
+  "category": "metals",
+  "producers": ["ZAF", "GAB", "AUS", "GHA", "CHN"],
+  "reserves": ["ZAF", "AUS", "GAB", "BRA", "UKR"],
+  "processing": ["CHN", "IND", "ZAF", "UKR", "JPN"],
+  "end_uses": ["steel production", "batteries", "aluminum alloys", "chemicals"],
+  "substitutes": ["chromium (some steel uses)", "other cathode chemistries"],
+  "exposure": {
+    "countries": ["ZAF", "GAB", "AUS", "CHN", "GHA"],
+    "risk_factors": ["south_africa_logistics", "steel_demand_cycles", "battery_cathode_growth", "gabon_political_stability"]
+  },
+  "tags": ["industrial_metal", "steel", "battery"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "International Manganese Institute"]
+}

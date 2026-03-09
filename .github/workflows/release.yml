@@ -1,9 +1,7 @@
-# Build pre-built LibreChat bundle and create GitHub release on tag push.
-# The bundle is a vanilla LibreChat build + MCP node packages + our config/scripts.
-# Versioned by LibreChat's package.json version + commit hash.
-# Uberspace gets a ready-to-run app — no build step on the host.
+# TradingAssistant release — config, scripts, and deployment bundle.
+# Does NOT include LibreChat (that's built separately via librechat-build.yml).
 # Usage: git tag v0.1.0 && git push --tags
-name: Release LibreChat Bundle
+name: Release TradingAssistant
 
 on:
   push:
@@ -14,64 +12,12 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Clone and build LibreChat
-        run: |
-          git clone --depth 1 https://github.com/danny-avila/LibreChat.git librechat-src
-          cd librechat-src
-          # Capture LibreChat source version (package.json version + short commit)
-          LC_PKG_VER=$(node -p "require('./package.json').version" 2>/dev/null || echo "unknown")
-          LC_COMMIT=$(git rev-parse --short HEAD)
-          echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
-          npm ci
-          npm run frontend
-          cd ..
-
-      - name: Assemble bundle
-        run: |
-          mkdir -p bundle
-
-          # Copy built LibreChat app (server + client + node_modules)
-          cp -r librechat-src/api       bundle/api
-          cp -r librechat-src/client     bundle/client
-          cp -r librechat-src/packages   bundle/packages 2>/dev/null || true
-          cp -r librechat-src/node_modules bundle/node_modules
-          cp    librechat-src/package.json bundle/package.json
-
-          # Install MCP Node packages into existing node_modules
-          cd bundle
-          npm install --save \
-            @modelcontextprotocol/server-filesystem
-          rm -f package-lock.json
-          cd ..
-
-          # Add our config and scripts
-          mkdir -p bundle/config bundle/scripts
-          cp deploy.conf                                bundle/
-          cp librechat-uberspace/config/librechat.yaml  bundle/config/
-          cp librechat-uberspace/config/.env.example    bundle/config/
-          cp librechat-uberspace/scripts/setup.sh       bundle/scripts/
-          cp librechat-uberspace/scripts/bootstrap.sh   bundle/scripts/
-          cp librechat-uberspace/scripts/TradeAssistant.sh bundle/scripts/
-          cp librechat-uberspace/scripts/setup-data-repo.sh bundle/scripts/
-
-          # Embed LibreChat version in bundle (used by ta install for update checks)
-          echo "${LC_VERSION}" > bundle/.version
-
-          # Create tarball
-          tar czf librechat-bundle.tar.gz -C bundle .
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            librechat-bundle.tar.gz
           generate_release_notes: true

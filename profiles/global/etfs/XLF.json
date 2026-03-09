@@ -1,0 +1,16 @@
+{
+  "id": "XLF",
+  "name": "Financial Select Sector SPDR Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "State Street Global Advisors",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Financials"],
+    "risk_factors": ["interest_rate_sensitivity", "credit_cycle", "regulatory_risk"]
+  },
+  "tags": ["financials", "sector", "banks", "insurance", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["State Street Global Advisors", "Yahoo Finance"]
+}

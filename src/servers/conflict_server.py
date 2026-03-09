@@ -9,6 +9,7 @@ mcp = FastMCP("conflict", instructions="Armed conflict events, military data, sa
 ACLED_EMAIL = os.environ.get("ACLED_EMAIL", "")
 ACLED_PASSWORD = os.environ.get("ACLED_PASSWORD", "")
 UCDP_TOKEN = os.environ.get("UCDP_ACCESS_TOKEN", "")
+OPENSANCTIONS_KEY = os.environ.get("OPENSANCTIONS_API_KEY", "")
 
 
 # ── ACLED OAuth helper ───────────────────────────
@@ -138,14 +139,22 @@ async def acled_events(country: str = "", event_type: str = "",
 
 @mcp.tool()
 async def search_sanctions(query: str, schema: str = "") -> dict:
-    """OpenSanctions search. schema: Person, Company, Vessel, Aircraft, Organization."""
+    """OpenSanctions search. Requires OPENSANCTIONS_API_KEY env var.
+    schema: Person, Company, Vessel, Aircraft, Organization."""
+    if not OPENSANCTIONS_KEY:
+        return {"error": "OPENSANCTIONS_API_KEY not set — get a free key at opensanctions.org"}
     params = {"q": query, "limit": 20}
     if schema:
         params["schema"] = schema
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.opensanctions.org/search/default", params=params)
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://api.opensanctions.org/search/default",
+                            params=params,
+                            headers={"Authorization": f"ApiKey {OPENSANCTIONS_KEY}"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"OpenSanctions request failed: {e}"}
 
 
 if __name__ == "__main__":

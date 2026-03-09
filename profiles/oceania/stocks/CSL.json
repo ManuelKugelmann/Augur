@@ -1,0 +1,22 @@
+{
+  "id": "CSL",
+  "name": "CSL Limited",
+  "type": "stock",
+  "exchange": "ASX",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
+  "country": "AUS",
+  "fundamentals": {
+    "founded": 1916,
+    "employees": 32000
+  },
+  "exposure": {
+    "countries": ["AUS", "USA", "DEU", "GBR", "CHE", "CHN"],
+    "commodities": [],
+    "supply_chain": ["Vifor Pharma", "Seqirus", "CSL Behring"],
+    "risk_factors": ["plasma_collection", "competition_takeda", "regulatory_approval", "fx_aud_usd"]
+  },
+  "tags": ["biotech", "plasma", "vaccines", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["ASX", "Yahoo Finance"]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "COST",
+  "name": "Costco Wholesale Corporation",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Consumer Staples",
+  "industry": "Consumer Staples Merchandise Retail",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1983,
+    "employees": 316000
+  },
+  "exposure": {
+    "countries": ["USA", "CAN", "MEX", "JPN", "GBR", "KOR"],
+    "commodities": ["gasoline", "food_commodities"],
+    "supply_chain": ["Kirkland Signature suppliers", "P&G", "Kimberly-Clark"],
+    "risk_factors": ["consumer_spending", "membership_renewal", "labor_costs", "supply_chain_disruption"]
+  },
+  "tags": ["mega_cap", "retail", "warehouse_club", "membership", "defensive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

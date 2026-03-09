@@ -34,6 +34,26 @@ def run(coro):
         pytest.xfail(f"Network unavailable: {exc}")
 
 
+def _check_upstream(result, *expected_keys):
+    """Skip test if upstream API returned a transient error (5xx, timeout).
+
+    Only skips on server-side errors (5xx) that indicate the upstream service
+    is temporarily unavailable — NOT on client errors (4xx) which indicate
+    a bug in our integration code.
+    """
+    err = None
+    if isinstance(result, dict) and "error" in result:
+        err = result["error"]
+    elif isinstance(result, list) and result and isinstance(result[0], dict) and "error" in result[0]:
+        err = result[0]["error"]
+    if err and any(code in str(err) for code in ("500", "502", "503", "521", "522", "SDMX endpoints unavailable")):
+        pytest.skip(f"Upstream API unavailable: {err}")
+    # If no transient error, assert expected keys
+    target = result[0] if isinstance(result, list) and result else result
+    for key in expected_keys:
+        assert key in target, f"Expected '{key}' in result, got: {result}"
+
+
 # ── weather_server (Open-Meteo, NOAA) ───────────────────
 
 
@@ -126,6 +146,7 @@ class TestMacroFree:
         result = run(self.m.imf_data(
             database="IFS", frequency="A", ref_area="US",
             indicator="NGDP_R_XDC", start="2020", end="2022"))
+        _check_upstream(result)
         assert "CompactData" in result or "DataSet" in result or "dataSets" in result
 
 
@@ -142,13 +163,13 @@ class TestAgriFree:
         result = run(self.m.fao_datasets())
         assert isinstance(result, list)
         assert len(result) > 0
-        assert "code" in result[0]
+        _check_upstream(result, "code")
 
     def test_fao_data(self):
         result = run(self.m.fao_data(
             domain="QCL", area="5000>", item="15",
             element="5510", year="2022"))
-        assert "data" in result
+        _check_upstream(result, "data")
 
 
 # ── conflict_server (UCDP, OpenSanctions, World Bank military) ───
@@ -164,13 +185,7 @@ class TestConflictFree:
         result = run(self.m.ucdp_conflicts(year=2023, page=1))
         assert "Result" in result or "result" in result or isinstance(result, dict)
 
-    def test_search_sanctions(self):
-        result = run(self.m.search_sanctions(query="Gazprom"))
-        assert "results" in result or "result" in result
-
-    def test_search_sanctions_result(self):
-        result = run(self.m.search_sanctions(query="Russia"))
-        assert isinstance(result, dict)
+    # search_sanctions moved to test_integration_keyed.py (requires OPENSANCTIONS_API_KEY)
 
 
 # ── elections_server (Wikidata, EU Parliament, ReliefWeb) ─
@@ -185,6 +200,7 @@ class TestElectionsFree:
     def test_global_elections_germany(self):
         result = run(self.m.global_elections(country="Germany", limit=5))
         assert isinstance(result, list)
+        _check_upstream(result)
         assert len(result) > 0
         assert "election" in result[0]
 
@@ -195,6 +211,7 @@ class TestElectionsFree:
     def test_heads_of_state_germany(self):
         result = run(self.m.heads_of_state(country="Germany", limit=5))
         assert isinstance(result, list)
+        _check_upstream(result)
         assert len(result) > 0
 
     def test_eu_parliament_meps_germany(self):
@@ -224,9 +241,7 @@ class TestHumanitarian:
         result = run(self.m.hdx_search(query="food security", rows=3))
         assert "result" in result or "success" in result
 
-    def test_reliefweb_reports(self):
-        result = run(self.m.reliefweb_reports(query="drought", limit=3))
-        assert "data" in result
+    # reliefweb_reports moved to test_integration_keyed.py (requires RELIEFWEB_APPNAME)
 
 
 # ── infra_server (RIPE Atlas — free) ────────────────────
@@ -275,5 +290,4 @@ class TestTransportFree:
         # Small bounding box over Frankfurt airport
         result = run(self.m.flights_in_area(
             lat_min=50.0, lat_max=50.1, lon_min=8.5, lon_max=8.6))
-        assert "count" in result
-        assert "states" in result
+        _check_upstream(result, "count", "states")

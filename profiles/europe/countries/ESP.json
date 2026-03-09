@@ -1,0 +1,116 @@
+{
+  "id": "ESP",
+  "name": "Spain",
+  "iso2": "ES",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Madrid",
+  "population": 48000000,
+  "trade": {
+    "top_exports": [
+      "vehicles",
+      "machinery",
+      "food_products",
+      "pharmaceuticals",
+      "chemicals"
+    ],
+    "top_partners": [
+      "FRA",
+      "DEU",
+      "PRT",
+      "ITA",
+      "GBR"
+    ],
+    "major_ports": [
+      "Valencia",
+      "Algeciras",
+      "Barcelona",
+      "Bilbao"
+    ],
+    "chokepoint_exposure": [
+      "suez",
+      "gibraltar"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "natural_gas",
+      "vehicles",
+      "electronics"
+    ],
+    "energy_mix": {
+      "renewables": 0.35,
+      "nuclear": 0.2,
+      "gas": 0.25,
+      "oil": 0.03,
+      "coal": 0.03,
+      "hydro": 0.1,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "youth_unemployment",
+      "regional_separatism",
+      "tourism_dependence"
+    ]
+  },
+  "ratings": {
+    "credit": "A",
+    "democracy_index": 7.94,
+    "press_freedom_rank": 32,
+    "corruption_perception": 60
+  },
+  "neighbors": [
+    {
+      "id": "FRA",
+      "name": "France",
+      "relevance": "Pyrenees border; energy interconnection; tourism flows"
+    },
+    {
+      "id": "PRT",
+      "name": "Portugal",
+      "relevance": "Iberian partner; shared energy market; logistics corridor"
+    },
+    {
+      "id": "MAR",
+      "name": "Morocco",
+      "relevance": "Strait of Gibraltar; migration; Ceuta/Melilla enclaves"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU/eurozone member; major CAP beneficiary; Mediterranean voice"
+    },
+    {
+      "target": "Latin America",
+      "type": "trade",
+      "description": "Cultural/linguistic ties; Spanish multinationals (Telefonica, Santander, Iberdrola)"
+    },
+    {
+      "target": "MAR",
+      "type": "dependency",
+      "description": "Migration management; gas pipeline transit; agricultural competition"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "EU sanctions regime; limited direct exposure; NATO solidarity"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "OECD"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

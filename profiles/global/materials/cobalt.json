@@ -1,0 +1,17 @@
+{
+  "id": "cobalt",
+  "name": "Cobalt",
+  "category": "minerals",
+  "producers": ["COD", "IDN", "RUS", "AUS", "PHL"],
+  "reserves": ["COD", "AUS", "IDN", "CUB", "PHL"],
+  "processing": ["CHN", "FIN", "BEL", "CAN", "JPN"],
+  "end_uses": ["EV batteries", "superalloys", "catalysts", "magnets"],
+  "substitutes": ["LFP batteries (cobalt-free)", "nickel-rich cathodes"],
+  "exposure": {
+    "countries": ["COD", "CHN", "IDN", "RUS", "AUS"],
+    "risk_factors": ["drc_supply_concentration", "artisanal_mining_ethics", "china_refining_dominance", "battery_chemistry_shift"]
+  },
+  "tags": ["critical_mineral", "battery", "conflict_mineral"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "Cobalt Institute"]
+}

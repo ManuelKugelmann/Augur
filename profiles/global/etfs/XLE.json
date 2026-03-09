@@ -1,0 +1,17 @@
+{
+  "id": "XLE",
+  "name": "Energy Select Sector SPDR Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "State Street Global Advisors",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Energy"],
+    "commodities": ["oil", "natural_gas"],
+    "risk_factors": ["oil_price_risk", "energy_transition", "geopolitical_risk"]
+  },
+  "tags": ["energy", "sector", "oil_gas", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["State Street Global Advisors", "Yahoo Finance"]
+}

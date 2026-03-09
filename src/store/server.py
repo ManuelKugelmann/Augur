@@ -1,13 +1,16 @@
-"""MCP Signals Store — Hybrid profile/snapshot store.
+"""MCP Signals Store — MongoDB-backed profile/snapshot store.
 
-Profiles: JSON files on disk at profiles/{region}/{kind}/{id}.json
-MongoDB: Per-kind timeseries collections with geo support:
+Profiles: MongoDB collections ``profiles_{kind}`` (one per kind).
+  Shared across all users. Text + geo indexes for fast search.
+  Seed data loaded from repo JSON on install (no overwrite on update).
+
+Snapshots: Per-kind timeseries collections with geo support:
   snap_{kind}  — recent data, 1-year TTL, hours granularity
   arch_{kind}  — long-term archive, no TTL, days granularity
   events       — cross-kind signal events, 1-year TTL
 
-All docs share: ts (datetime), meta (entity, kind, region, type, source),
-data (payload), location (optional GeoJSON Point).
+All snapshot/event docs share: ts (datetime), meta (entity, kind, region,
+type, source), data (payload), location (optional GeoJSON Point).
 
 When running behind LibreChat via streamable-http, X-User-ID / X-User-Email
 headers are injected per request and stored in snapshot/event meta.
@@ -24,18 +27,25 @@ import re
 from dotenv import load_dotenv
 load_dotenv()
 
-mcp = FastMCP("signals-store", instructions="Hybrid profile/snapshot store")
+mcp = FastMCP("signals-store", instructions="MongoDB-backed profile/snapshot store")
 
-PROFILES = Path(os.environ.get("PROFILES_DIR", "./profiles"))
+PROFILES_DIR = Path(os.environ.get("PROFILES_DIR", "./profiles"))
 _client = None
 _cols_ready = set()
 
 VALID_KINDS = frozenset({
     "countries", "stocks", "etfs", "crypto", "indices", "sources",
     "commodities", "crops", "materials", "products", "companies",
+    "regions",
 })
 
 _RESERVED_DIRS = frozenset({"SCHEMAS"})
+VALID_REGIONS = frozenset({
+    "north_america", "latin_america", "europe", "mena",
+    "sub_saharan_africa", "south_asia", "east_asia",
+    "southeast_asia", "central_asia", "oceania",
+    "arctic", "antarctic", "global",
+})
 
 SNAPSHOTS_TTL = 365 * 86400         # 1 year
 
@@ -66,7 +76,7 @@ def _get_user_id() -> str:
 def _db():
     global _client
     if not _client:
-        uri = os.environ.get("MONGO_URI_SIGNALS", "")
+        uri = os.environ.get("MONGO_URI_SIGNALS") or os.environ.get("MONGO_URI", "")
         if not uri:
             raise RuntimeError(
                 "MONGO_URI_SIGNALS not set — set it in .env or environment. "
@@ -102,14 +112,39 @@ def _ensure_ts(name: str, ttl: int | None = None, granularity: str = "hours"):
     _cols_ready.add(name)
 
 
+def _profiles_col(kind: str):
+    """Return the profiles collection for a kind. Auto-creates indexes."""
+    name = f"profiles_{kind}"
+    if name not in _cols_ready:
+        col = _db()[name]
+        try:
+            col.create_index("_id_str", unique=True, background=True)
+            col.create_index([("location", "2dsphere")],
+                             background=True, sparse=True)
+            col.create_index([
+                ("name", "text"),
+                ("tags", "text"),
+                ("sector", "text"),
+            ], background=True, default_language="english")
+            col.create_index("region", background=True)
+            col.create_index("tags", background=True)
+        except Exception:
+            pass  # index creation may fail on some Atlas tiers
+        _cols_ready.add(name)
+        return col
+    return _db()[name]
+
+
 def _snap_col(kind: str):
     """Return the snapshots collection for a kind (1-year TTL)."""
     name = f"snap_{kind}"
     _ensure_ts(name, ttl=SNAPSHOTS_TTL)
     col = _db()[name]
     if f"{name}_geo" not in _cols_ready:
-        col.create_index([("location", "2dsphere")],
-                         background=True)
+        try:
+            col.create_index([("location", "2dsphere")], background=True)
+        except Exception:
+            pass  # time-series collections may reject certain index options
         _cols_ready.add(f"{name}_geo")
     return col
 
@@ -126,8 +161,10 @@ def _events_col():
     _ensure_ts("events", ttl=SNAPSHOTS_TTL)
     col = _db().events
     if "events_geo" not in _cols_ready:
-        col.create_index([("location", "2dsphere")],
-                         background=True)
+        try:
+            col.create_index([("location", "2dsphere")], background=True)
+        except Exception:
+            pass  # time-series collections may reject certain index options
         _cols_ready.add("events_geo")
     return col
 
@@ -153,111 +190,93 @@ def _parse_ts(iso_str: str) -> datetime | None:
         return None
 
 
-# ── Profile filesystem helpers ────────────────────
+# ── Profile validation helpers ────────────────────
 
 
-def _regions() -> list[str]:
-    """Discover geographic region folders under PROFILES/."""
-    if not PROFILES.exists():
-        return []
-    return sorted([
-        d.name for d in PROFILES.iterdir()
-        if d.is_dir() and d.name not in _RESERVED_DIRS
-        and not d.name.startswith(".")
-    ])
-
-
-def _find_profile_path(kind: str, id: str) -> Path | None:
-    """Scan all region folders to find an existing profile file."""
-    for region in _regions():
-        p = PROFILES / region / kind / f"{id}.json"
-        if p.exists():
-            return p
+def _validate_profile_args(kind: str, id: str, region: str = "") -> dict | None:
+    """Validate kind/id/region. Returns error dict or None if valid."""
+    if not _SAFE_ID.match(id):
+        return {"error": f"invalid id: {id} (only A-Z, a-z, 0-9, _, -)"}
+    if kind not in VALID_KINDS:
+        return {"error": f"unknown kind: {kind}, valid: {sorted(VALID_KINDS)}"}
+    if region and not _SAFE_ID.match(region):
+        return {"error": f"invalid region: {region}"}
     return None
 
 
-def _safe_profile_path(region: str, kind: str, id: str) -> tuple[Path, dict | None]:
-    """Validate region+kind+id and return (path, None) or (_, error_dict)."""
-    if not _SAFE_ID.match(id):
-        return Path(), {"error": f"invalid id: {id} (only A-Z, a-z, 0-9, _, -)"}
-    if not _SAFE_ID.match(region):
-        return Path(), {"error": f"invalid region: {region}"}
-    if kind not in VALID_KINDS:
-        return Path(), {"error": f"unknown kind: {kind}, valid: {sorted(VALID_KINDS)}"}
-    p = (PROFILES / region / kind / f"{id}.json").resolve()
-    if not str(p).startswith(str(PROFILES.resolve())):
-        return Path(), {"error": f"path traversal blocked: {id}"}
-    return p, None
+# ── Seed / init helpers ──────────────────────────
 
 
-# ── Index helpers ─────────────────────────────────
+def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
+    """Load profile JSON files from disk into MongoDB.
 
+    Called during install to populate profiles_{kind} collections from the
+    repo's profiles/ directory. Uses upsert with $setOnInsert so existing
+    user data is never overwritten on update — only new profiles are added.
 
-def _kind_index_path(kind: str) -> Path:
-    """Return path to the kind's top-level index file."""
-    return PROFILES / f"INDEX_{kind}.json"
+    Args:
+        profiles_dir: Path to profiles directory (default: PROFILES_DIR).
+        clear: If True, drop all profiles_{kind} collections first (reinit).
 
+    Returns: {kind: {seeded: N, skipped: N}} summary.
+    """
+    pdir = Path(profiles_dir) if profiles_dir else PROFILES_DIR
+    if not pdir.exists():
+        return {"error": f"profiles directory not found: {pdir}"}
 
-def _index_entry(kind: str, id: str, data: dict, region: str = "") -> dict:
-    """Build a single index entry from profile data."""
-    entry: dict = {"id": id, "kind": kind, "name": data.get("name", id),
-                   "region": region}
-    for key in ("tags", "sector"):
-        if key in data:
-            entry[key] = data[key]
-    return entry
+    results: dict = {}
+    for kind in sorted(VALID_KINDS):
+        seeded = 0
+        skipped = 0
+        col = _profiles_col(kind)
 
+        if clear:
+            col.drop()
+            _cols_ready.discard(f"profiles_{kind}")
+            col = _profiles_col(kind)
 
-def _update_index(kind: str, id: str, data: dict, region: str = ""):
-    """Incrementally update a single entry in INDEX_{kind}.json."""
-    idx_path = _kind_index_path(kind)
-    index = json.loads(idx_path.read_text()) if idx_path.exists() else []
-    index = [e for e in index if e["id"] != id]
-    index.append(_index_entry(kind, id, data, region))
-    index.sort(key=lambda e: e["id"])
-    idx_path.write_text(json.dumps(index, indent=2, ensure_ascii=False))
-
-
-def _rebuild_kind_index(kind: str) -> list[dict]:
-    """Rebuild INDEX_{kind}.json by scanning all region folders."""
-    index = []
-    for region in _regions():
-        d = PROFILES / region / kind
-        if not d.exists():
-            continue
-        for f in sorted(d.glob("*.json")):
-            if f.stem.startswith("_"):
+        # Scan all region dirs
+        for region_dir in sorted(pdir.iterdir()):
+            if not region_dir.is_dir() or region_dir.name in _RESERVED_DIRS:
                 continue
-            try:
-                data = json.loads(f.read_text())
-                index.append(_index_entry(kind, f.stem, data, region))
-            except Exception:
-                pass
-    index.sort(key=lambda e: e["id"])
-    idx_path = _kind_index_path(kind)
-    idx_path.write_text(json.dumps(index, indent=2, ensure_ascii=False))
-    return index
-
-
-def _rebuild_all_indexes() -> int:
-    """Rebuild INDEX_{kind}.json for every kind. Returns total entry count."""
-    total = 0
-    for kind in VALID_KINDS:
-        total += len(_rebuild_kind_index(kind))
-    return total
-
-
-def _load_all_indexes() -> list[dict]:
-    """Load and merge all per-kind INDEX files for cross-kind search."""
-    merged = []
-    for kind in VALID_KINDS:
-        idx_path = _kind_index_path(kind)
-        if idx_path.exists():
-            try:
-                merged.extend(json.loads(idx_path.read_text()))
-            except Exception:
-                pass
-    return merged
+            if region_dir.name.startswith("."):
+                continue
+            kind_dir = region_dir / kind
+            if not kind_dir.is_dir():
+                continue
+            for fpath in sorted(kind_dir.glob("*.json")):
+                if fpath.stem.startswith("_"):
+                    continue
+                try:
+                    data = json.loads(fpath.read_text())
+                    profile_id = fpath.stem
+                    doc = {
+                        "_id_str": profile_id,
+                        "kind": kind,
+                        "region": region_dir.name,
+                        **data,
+                    }
+                    doc["_seeded"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                    if clear:
+                        # Reinit mode: insert everything
+                        col.insert_one(doc)
+                        seeded += 1
+                    else:
+                        # Normal mode: only insert if not exists
+                        r = col.update_one(
+                            {"_id_str": profile_id},
+                            {"$setOnInsert": doc},
+                            upsert=True,
+                        )
+                        if r.upserted_id:
+                            seeded += 1
+                        else:
+                            skipped += 1
+                except Exception:
+                    pass
+        if seeded or skipped:
+            results[kind] = {"seeded": seeded, "skipped": skipped}
+    return results
 
 
 # ── Schema + lint helpers ─────────────────────────
@@ -265,7 +284,7 @@ def _load_all_indexes() -> list[dict]:
 
 def _load_schema(kind: str) -> dict | None:
     """Load the schema for a kind from SCHEMAS/{kind}.schema.json."""
-    p = PROFILES / "SCHEMAS" / f"{kind}.schema.json"
+    p = PROFILES_DIR / "SCHEMAS" / f"{kind}.schema.json"
     if not p.exists():
         return None
     try:
@@ -296,146 +315,240 @@ def _lint_one(kind: str, id: str, data: dict, schema: dict | None) -> list[str]:
 
 
 # ── Profile tools ─────────────────────────────────
-# Layout: profiles/{region}/{kind}/{id}.json
-# API: kind + id identify a profile. region optional for reads, required for writes.
-# Mongo snapshot tools mirror the same (kind, id, region) parameters + time fields.
+# Profiles stored in MongoDB: profiles_{kind} collections.
+# API: kind + id identify a profile. region optional for reads, default global for writes.
+# Geo: optional location field with 2dsphere index.
+
+
+def _strip_mongo_id(doc: dict) -> dict:
+    """Remove MongoDB _id and rename _id_str→id for clean output."""
+    doc.pop("_id", None)
+    if "_id_str" in doc:
+        doc["id"] = doc.pop("_id_str")
+    return doc
 
 
 @mcp.tool()
 def get_profile(kind: str, id: str, region: str = "") -> dict:
-    """Read a profile. Searches all regions if region omitted."""
-    if not _SAFE_ID.match(id):
-        return {"error": f"invalid id: {id}"}
-    if kind not in VALID_KINDS:
-        return {"error": f"unknown kind: {kind}"}
+    """Read a profile by kind and id. Optionally filter by region."""
+    err = _validate_profile_args(kind, id, region)
+    if err:
+        return err
+    q: dict = {"_id_str": id}
     if region:
-        p, err = _safe_profile_path(region, kind, id)
-        if err:
-            return err
-    else:
-        p = _find_profile_path(kind, id)
-    if not p or not p.exists():
+        q["region"] = region
+    doc = _profiles_col(kind).find_one(q)
+    if not doc:
         return {"error": f"not found: {kind}/{id}"}
-    return json.loads(p.read_text())
+    return _strip_mongo_id(doc)
 
 
 @mcp.tool()
 def put_profile(kind: str, id: str, data: dict,
-                region: str = "global") -> dict:
-    """Create or merge a profile. Shallow-merges with existing. Updates in-place if found in another region."""
-    if not _SAFE_ID.match(id):
-        return {"error": f"invalid id: {id}"}
-    if kind not in VALID_KINDS:
-        return {"error": f"unknown kind: {kind}"}
-    existing_path = _find_profile_path(kind, id)
-    if existing_path:
-        p = existing_path
+                region: str = "global",
+                lon: float | None = None,
+                lat: float | None = None) -> dict:
+    """Create or merge a profile. Shallow-merges with existing data."""
+    err = _validate_profile_args(kind, id, region)
+    if err:
+        return err
+    col = _profiles_col(kind)
+    existing = col.find_one({"_id_str": id})
+    if existing:
+        # Merge: update in-place, keep existing region
+        actual_region = existing.get("region", region)
+        update_data = {**data}
+        update_data["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if lon is not None and lat is not None:
+            update_data["location"] = {"type": "Point", "coordinates": [lon, lat]}
+        col.update_one({"_id_str": id}, {"$set": update_data})
+        return {"id": id, "region": actual_region, "status": "ok"}
     else:
-        p, err = _safe_profile_path(region, kind, id)
-        if err:
-            return err
-    try:
-        p.parent.mkdir(parents=True, exist_ok=True)
-        existing = json.loads(p.read_text()) if p.exists() else {}
-        existing.update(data)
-        existing["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        p.write_text(json.dumps(existing, indent=2, ensure_ascii=False))
-    except (OSError, json.JSONDecodeError) as e:
-        return {"error": f"failed to write profile {kind}/{id}: {e}"}
-    actual_region = p.parent.parent.name
-    _update_index(kind, id, existing, actual_region)
-    return {"path": str(p), "region": actual_region, "status": "ok"}
+        # New profile
+        doc = {
+            "_id_str": id,
+            "kind": kind,
+            "region": region,
+            **data,
+            "_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        }
+        if lon is not None and lat is not None:
+            doc["location"] = {"type": "Point", "coordinates": [lon, lat]}
+        col.insert_one(doc)
+        return {"id": id, "region": region, "status": "ok"}
 
 
 @mcp.tool()
-def list_profiles(kind: str, region: str = "") -> list[dict]:
+def list_profiles(kind: str, region: str = "",
+                  limit: int = 500) -> list[dict]:
     """List profiles for a kind, optionally filtered by region."""
     if kind not in VALID_KINDS:
         return []
-    regions_to_scan = [region] if region else _regions()
-    result = []
-    for r in regions_to_scan:
-        d = PROFILES / r / kind
-        if not d.exists():
-            continue
-        for f in sorted(d.glob("*.json")):
-            if f.stem.startswith("_"):
-                continue
-            try:
-                data = json.loads(f.read_text())
-                result.append({"id": f.stem, "name": data.get("name", f.stem),
-                               "region": r})
-            except Exception:
-                result.append({"id": f.stem, "name": f.stem, "region": r})
-    return result
+    q: dict = {}
+    if region:
+        q["region"] = region
+    col = _profiles_col(kind)
+    projection = {"_id": 0, "_id_str": 1, "name": 1, "region": 1}
+    docs = col.find(q, projection).sort("_id_str", 1).limit(limit)
+    return [{"id": d["_id_str"], "name": d.get("name", d["_id_str"]),
+             "region": d.get("region", "")} for d in docs]
 
 
 @mcp.tool()
-def find_profile(query: str, region: str = "") -> list[dict]:
-    """Cross-kind search by name, ID, or tag. Case-insensitive partial match."""
-    q = query.lower()
-    index = _load_all_indexes()
-    if not index:
-        _rebuild_all_indexes()
-        index = _load_all_indexes()
-    matches = []
-    for entry in index:
-        if region and entry.get("region") != region:
-            continue
-        if (q in entry["id"].lower()
-                or q in entry.get("name", "").lower()
-                or any(q in t.lower() for t in entry.get("tags", []))):
-            matches.append(entry)
-    return matches
+def find_profile(query: str, region: str = "",
+                 limit: int = 100) -> list[dict]:
+    """Cross-kind search by name, ID, or tag. Uses MongoDB text index + regex fallback."""
+    results: list[dict] = []
+    for kind in sorted(VALID_KINDS):
+        col = _profiles_col(kind)
+        # Try text search first
+        q: dict = {"$text": {"$search": query}}
+        if region:
+            q["region"] = region
+        projection = {"_id": 0, "_id_str": 1, "kind": 1, "name": 1,
+                       "region": 1, "tags": 1, "sector": 1}
+        try:
+            docs = list(col.find(q, projection).limit(limit))
+        except Exception:
+            docs = []
+        # Regex fallback for ID partial match
+        regex = re.compile(re.escape(query), re.IGNORECASE)
+        id_q: dict = {"_id_str": regex}
+        if region:
+            id_q["region"] = region
+        id_docs = list(col.find(id_q, projection).limit(limit))
+        # Merge deduplicated
+        seen = {d["_id_str"] for d in docs}
+        for d in id_docs:
+            if d["_id_str"] not in seen:
+                docs.append(d)
+                seen.add(d["_id_str"])
+        for d in docs:
+            d["id"] = d.pop("_id_str")
+            if "kind" not in d:
+                d["kind"] = kind
+            results.append(d)
+    return results[:limit]
 
 
 @mcp.tool()
 def search_profiles(kind: str, field: str, value: str,
                     region: str = "") -> list[dict]:
-    """Search by dot-path field value (e.g. field='exposure.countries', value='USA')."""
-    results = []
-    for entry in list_profiles(kind, region):
-        prof = get_profile(kind, entry["id"])
-        if "error" in prof:
-            continue
-        obj = prof
-        for key in field.split("."):
-            obj = obj.get(key) if isinstance(obj, dict) else None
-            if obj is None:
-                break
-        if obj is None:
-            continue
-        if isinstance(obj, list) and value in obj:
-            results.append(prof)
-        elif isinstance(obj, str) and value.lower() in obj.lower():
-            results.append(prof)
-        elif str(obj) == value:
-            results.append(prof)
-    return results
+    """Search by dot-path field value (e.g. field='exposure.countries', value='USA').
+    Uses MongoDB dot notation queries."""
+    err = _validate_profile_args(kind, "x")  # just validate kind
+    if err:
+        return []
+    if not _SAFE_FIELD.match(field):
+        return [{"error": f"invalid field name: {field}"}]
+    col = _profiles_col(kind)
+    # Try exact match, then regex for string fields
+    q: dict = {field: value}
+    if region:
+        q["region"] = region
+    docs = list(col.find(q, {"_id": 0}).limit(100))
+    if not docs:
+        # Regex fallback for partial string match
+        q[field] = re.compile(re.escape(value), re.IGNORECASE)
+        docs = list(col.find(q, {"_id": 0}).limit(100))
+    return docs
 
 
 @mcp.tool()
-def list_regions() -> list[dict]:
-    """List geographic regions and their profile kinds."""
-    result = []
-    for region in _regions():
-        rd = PROFILES / region
-        kinds = sorted([
-            d.name for d in rd.iterdir()
-            if d.is_dir() and not d.name.startswith(".")
-        ])
-        result.append({"region": region, "kinds": kinds})
+def region_links(id: str = "", link_type: str = "") -> dict:
+    """Query region neighbors, links, and the global interconnection graph.
+
+    - id only → neighbors + links for that region
+    - id + link_type → filtered links (trade, alliance, dependency, rivalry, corridor, overlap)
+    - no args → return the global graph (clusters, corridors, rivalry axes, dependency chains)
+    """
+    if not id:
+        graph = PROFILES / "global" / "regions" / "graph.json"
+        if graph.exists():
+            return json.loads(graph.read_text())
+        return {"error": "graph.json not found — run rebuild or create it"}
+    prof = get_profile("regions", id)
+    if "error" in prof:
+        return prof
+    result: dict = {"id": id, "name": prof.get("name", id)}
+    result["neighbors"] = prof.get("neighbors", [])
+    links = prof.get("links", [])
+    if link_type:
+        links = [lk for lk in links if lk.get("type") == link_type]
+    result["links"] = links
     return result
 
 
 @mcp.tool()
-def rebuild_index(kind: str | None = None) -> dict:
-    """Rebuild INDEX files from disk. One kind if specified, else all."""
-    if kind:
-        entries = _rebuild_kind_index(kind)
-        return {"status": "ok", "kind": kind, "entries": len(entries)}
-    total = _rebuild_all_indexes()
-    return {"status": "ok", "kinds": sorted(VALID_KINDS), "entries": total}
+def country_links(id: str = "", link_type: str = "") -> dict:
+    """Query country neighbors, links, and cross-border relationships.
+
+    - id only → neighbors + links for that country
+    - id + link_type → filtered links (trade, alliance, dependency, rivalry, corridor, sanctions)
+    - no args → return all country link data across regions
+    """
+    if not id:
+        # Aggregate links from all country profiles
+        all_links: list[dict] = []
+        for region in _regions():
+            cdir = PROFILES / region / "countries"
+            if not cdir.is_dir():
+                continue
+            for fp in sorted(cdir.glob("*.json")):
+                prof = json.loads(fp.read_text())
+                links = prof.get("links", [])
+                if links:
+                    all_links.append({"id": prof.get("id", fp.stem), "name": prof.get("name", ""), "links": links})
+        return {"countries_with_links": all_links}
+    prof = get_profile("countries", id)
+    if "error" in prof:
+        return prof
+    result: dict = {"id": id, "name": prof.get("name", id)}
+    result["neighbors"] = prof.get("neighbors", [])
+    links = prof.get("links", [])
+    if link_type:
+        links = [lk for lk in links if lk.get("type") == link_type]
+    result["links"] = links
+    return result
+
+
+@mcp.tool()
+def list_regions() -> list[dict]:
+    """List geographic regions and the profile kinds they contain."""
+    result: dict[str, set] = {}
+    for kind in sorted(VALID_KINDS):
+        col = _profiles_col(kind)
+        regions = col.distinct("region")
+        for r in regions:
+            if r:
+                result.setdefault(r, set()).add(kind)
+    return [{"region": r, "kinds": sorted(ks)} for r, ks in sorted(result.items())]
+
+
+@mcp.tool()
+def nearby_profiles(kind: str, lon: float, lat: float,
+                    max_km: float = 500, limit: int = 50) -> list[dict]:
+    """Geo proximity search for profiles with location data."""
+    if kind not in VALID_KINDS:
+        return [{"error": f"unknown kind: {kind}"}]
+    pipeline: list[dict] = [
+        {"$geoNear": {
+            "near": {"type": "Point", "coordinates": [lon, lat]},
+            "distanceField": "_dist_m",
+            "maxDistance": max_km * 1000,
+            "spherical": True,
+        }},
+        {"$limit": limit},
+        {"$project": {"_id": 0}},
+    ]
+    col = _profiles_col(kind)
+    return [_strip_mongo_id(d) for d in col.aggregate(pipeline)]
+
+
+@mcp.tool()
+def seed_profiles_tool(clear: bool = False) -> dict:
+    """Seed profiles from repo JSON into MongoDB. clear=True drops and reinits."""
+    return seed_profiles(clear=clear)
 
 
 @mcp.tool()
@@ -587,23 +700,26 @@ def nearby(kind: str, lon: float, lat: float,
            max_km: float = 500, type: str = "",
            limit: int = 50) -> list[dict]:
     """Geo proximity search. kind: profile kind or 'events'."""
-    q: dict = {
-        "location": {
-            "$nearSphere": {
-                "$geometry": {"type": "Point", "coordinates": [lon, lat]},
-                "$maxDistance": max_km * 1000,
-            }
-        }
+    geo_near: dict = {
+        "near": {"type": "Point", "coordinates": [lon, lat]},
+        "distanceField": "_dist_m",
+        "maxDistance": max_km * 1000,
+        "spherical": True,
+        "key": "location",
     }
     if type:
-        q["meta.type"] = type
+        geo_near["query"] = {"meta.type": type}
     if kind == "events":
         col = _events_col()
     elif kind in VALID_KINDS:
         col = _snap_col(kind)
     else:
         return [{"error": f"unknown kind: {kind}"}]
-    return [_ser(r) for r in col.find(q).limit(limit)]
+    pipeline: list[dict] = [
+        {"$geoNear": geo_near},
+        {"$limit": limit},
+    ]
+    return [_ser(r) for r in col.aggregate(pipeline)]
 
 
 @mcp.tool()

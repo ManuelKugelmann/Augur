@@ -1,0 +1,69 @@
+{
+  "id": "nafta_usmca",
+  "name": "United States–Mexico–Canada Agreement",
+  "type": "economic_zone",
+  "countries": ["USA", "CAN", "MEX"],
+  "bbox": [-179.2, 14.5, -52.6, 83.1],
+  "climate": "Arctic and subarctic in northern Canada, temperate continental, subtropical in southern US, tropical in southern Mexico, arid deserts in the southwest",
+  "hazards": [
+    "hurricanes",
+    "tornadoes",
+    "earthquakes",
+    "wildfires",
+    "flooding",
+    "blizzards",
+    "drought",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "Panama Canal approaches",
+    "Gulf of Mexico",
+    "Saint Lawrence Seaway",
+    "Strait of Juan de Fuca"
+  ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Largest transatlantic trade partner; US-EU trade and investment relationship is the world's largest bilateral"},
+    {"id": "cptpp", "name": "CPTPP", "relevance": "Canada and Mexico are CPTPP members; overlapping Pacific trade commitments"},
+    {"id": "mercosur", "name": "Mercosur", "relevance": "Key Latin American trade partner; agricultural and energy trade flows north-south"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "US Indo-Pacific strategy drives trade policy; Pacific coast ports handle Asian trade"},
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "USA and Canada are Five Eyes members; intelligence sharing underpins security cooperation"},
+    {"id": "g7", "name": "G7", "relevance": "USA and Canada are G7 members; coordinate on trade, sanctions, and economic policy"}
+  ],
+  "links": [
+    {"target": "corn_belt", "type": "overlap", "description": "Corn Belt is within USMCA territory; US grain exports to Mexico are a core trade flow"},
+    {"target": "rust_belt", "type": "overlap", "description": "Rust Belt manufacturing is deeply integrated into US-Canada-Mexico auto supply chains"},
+    {"target": "silicon_valley", "type": "overlap", "description": "Silicon Valley tech sector drives USMCA digital trade and IP provisions"},
+    {"target": "panama_canal", "type": "corridor", "description": "Panama Canal connects US Gulf and East Coast to Pacific markets; critical for USMCA trade"},
+    {"target": "cptpp", "type": "trade", "description": "Canada and Mexico in both blocs; creates overlapping trade rules for Pacific commerce"},
+    {"target": "eu", "type": "trade", "description": "Transatlantic trade exceeds $1 trillion annually; regulatory alignment and divergence shape markets"},
+    {"target": "g20", "type": "alliance", "description": "All three USMCA members are G20 members; coordinate on global economic governance"}
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "corn",
+      "soybeans",
+      "wheat",
+      "lumber",
+      "automobiles",
+      "semiconductors",
+      "potash",
+      "copper",
+      "silver"
+    ],
+    "risk_factors": [
+      "trade_policy_shifts",
+      "tariff_disputes",
+      "border_security",
+      "supply_chain_integration",
+      "currency_volatility_mxn",
+      "energy_transition",
+      "immigration_policy",
+      "water_scarcity_southwest"
+    ]
+  },
+  "tags": ["usmca", "nafta", "free_trade", "north_america", "integrated_supply_chain"],
+  "_updated": "2026-03-09",
+  "_sources": ["USTR", "CIA World Factbook", "World Bank"]
+}

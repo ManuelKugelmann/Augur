@@ -1,0 +1,15 @@
+{
+  "id": "DOGE",
+  "name": "Dogecoin",
+  "type": "crypto",
+  "network": "Dogecoin",
+  "consensus": "PoW",
+  "max_supply": null,
+  "exposure": {
+    "countries": ["USA", "GBR", "DEU", "JPN"],
+    "risk_factors": ["volatility", "meme_driven", "inflationary_supply", "whale_concentration", "social_media_sensitivity"]
+  },
+  "tags": ["meme_coin", "payments", "layer1", "pow", "community_driven"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

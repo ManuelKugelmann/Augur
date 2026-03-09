@@ -20,7 +20,6 @@ teardown() {
     local scripts=(
         "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/setup.sh"
-        "$REPO_ROOT/librechat-uberspace/scripts/setup-data-repo.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/bootstrap.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/claude-auth-daemon.sh"
         "$REPO_ROOT/scripts/nightly-git-commit.sh"

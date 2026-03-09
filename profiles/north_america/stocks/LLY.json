@@ -1,0 +1,22 @@
+{
+  "id": "LLY",
+  "name": "Eli Lilly and Company",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1876,
+    "employees": 43000
+  },
+  "exposure": {
+    "countries": ["USA", "JPN", "CHN", "DEU", "GBR", "FRA"],
+    "commodities": [],
+    "supply_chain": ["Catalent", "Samsung Biologics", "Lonza"],
+    "risk_factors": ["glp1_competition", "drug_pricing_regulation", "manufacturing_capacity", "pipeline_risk"]
+  },
+  "tags": ["mega_cap", "pharma", "glp1", "diabetes", "obesity", "alzheimers"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

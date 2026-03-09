@@ -1,0 +1,65 @@
+{
+  "id": "quad",
+  "name": "Quadrilateral Security Dialogue",
+  "type": "economic_zone",
+  "countries": ["USA", "JPN", "AUS", "IND"],
+  "bbox": [-180.0, -50.0, 180.0, 72.0],
+  "climate": "Spans diverse zones: temperate, tropical, arid, continental across four countries on three continents",
+  "hazards": [
+    "typhoons",
+    "cyclones",
+    "earthquakes",
+    "bushfires",
+    "hurricanes",
+    "monsoon_flooding",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Taiwan Strait",
+    "Lombok Strait",
+    "Indian Ocean sea lanes"
+  ],
+  "neighbors": [
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "Quad is the primary security framework for the Indo-Pacific region"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Quad engages ASEAN on maritime security, infrastructure, and supply chains"},
+    {"id": "aukus", "name": "AUKUS", "relevance": "USA and Australia overlap; AUKUS defense technology complements Quad diplomatic agenda"},
+    {"id": "five_eyes", "name": "Five Eyes", "relevance": "USA and Australia overlap; intelligence sharing supports Quad security coordination"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Primary theater for Quad maritime domain awareness and freedom of navigation"}
+  ],
+  "links": [
+    {"target": "aukus", "type": "alliance", "description": "USA and Australia in both; AUKUS military capabilities underpin Quad strategic posture"},
+    {"target": "cptpp", "type": "trade", "description": "Japan and Australia bridge Quad security to CPTPP economic framework"},
+    {"target": "south_china_sea", "type": "dependency", "description": "Quad freedom of navigation operations focused on contested South China Sea"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "Quad members have strategic interest in Taiwan Strait stability and semiconductor supply"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Critical chokepoint for Quad trade flows between Indian and Pacific Oceans"},
+    {"target": "five_eyes", "type": "alliance", "description": "Intelligence sharing via Five Eyes informs Quad policy on China and regional security"},
+    {"target": "rcep", "type": "trade", "description": "Japan, Australia, India (observer) engage RCEP; Quad shapes rules-based trade norms"},
+    {"target": "g7", "type": "alliance", "description": "USA and Japan align Quad and G7 agendas on supply chain resilience and tech standards"}
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "rare_earths",
+      "iron_ore",
+      "lng",
+      "coal",
+      "pharmaceuticals",
+      "agricultural_products",
+      "defense_equipment"
+    ],
+    "risk_factors": [
+      "china_containment_perception",
+      "south_china_sea_tensions",
+      "supply_chain_resilience",
+      "critical_mineral_security",
+      "technology_standards_competition",
+      "vaccine_diplomacy",
+      "cyber_security",
+      "maritime_domain_awareness"
+    ]
+  },
+  "tags": ["quad", "security_dialogue", "indo_pacific_framework", "supply_chain", "tech_cooperation", "democratic_alliance"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "US State Department", "Quad Joint Statements"]
+}

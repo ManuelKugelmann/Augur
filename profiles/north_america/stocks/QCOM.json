@@ -1,0 +1,22 @@
+{
+  "id": "QCOM",
+  "name": "Qualcomm Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1985,
+    "employees": 51000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "KOR", "TWN", "JPN"],
+    "commodities": ["silicon", "rare_earths"],
+    "supply_chain": ["TSMC", "Samsung Foundry", "ASE Technology"],
+    "risk_factors": ["china_revenue_concentration", "apple_modem_loss", "licensing_disputes", "smartphone_cyclicality"]
+  },
+  "tags": ["large_cap", "semiconductors", "5g", "mobile", "ai", "automotive"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

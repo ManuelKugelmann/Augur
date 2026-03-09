@@ -1,0 +1,22 @@
+{
+  "id": "SIE",
+  "name": "Siemens AG",
+  "type": "stock",
+  "exchange": "XETRA",
+  "sector": "Industrials",
+  "industry": "Industrial Conglomerates",
+  "country": "DEU",
+  "fundamentals": {
+    "founded": 1847,
+    "employees": 320000
+  },
+  "exposure": {
+    "countries": ["DEU", "USA", "CHN", "IND", "GBR", "BRA"],
+    "commodities": ["steel", "copper", "rare_earths"],
+    "supply_chain": ["Siemens Healthineers", "Siemens Energy", "Mentor Graphics"],
+    "risk_factors": ["industrial_cycle", "china_slowdown", "energy_transition", "digital_transformation"]
+  },
+  "tags": ["industrial", "automation", "digital_industry", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

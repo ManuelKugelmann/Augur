@@ -1,0 +1,35 @@
+{
+  "id": "cis",
+  "name": "Commonwealth of Independent States",
+  "type": "economic_zone",
+  "countries": ["RUS", "BLR", "KAZ", "UZB", "KGZ", "TJK", "ARM", "AZE", "MDA"],
+  "bbox": [26.6, 35.1, 180.0, 81.9],
+  "climate": "Continental to subarctic across most of the zone; arid and semi-arid in Central Asia; Mediterranean pockets in the Caucasus",
+  "hazards": ["extreme_cold", "permafrost_thaw", "drought", "seismic_activity", "flooding", "wildfire"],
+  "chokepoints": ["Turkish_Straits", "Caspian_pipelines", "Druzhba_pipeline", "Northern_Sea_Route"],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Western neighbor and former primary energy customer; EU sanctions reshape CIS trade patterns"},
+    {"id": "sco", "name": "Shanghai Cooperation Organisation", "relevance": "Russia and Central Asian CIS members are SCO participants; security and economic alignment with China"},
+    {"id": "black_sea", "name": "Black Sea Region", "relevance": "Russia-Ukraine conflict zone; grain and energy exports flow through Black Sea ports"},
+    {"id": "arctic_sea_route", "name": "Arctic Sea Route", "relevance": "Russia controls the Northern Sea Route; LNG and resource extraction drive Arctic development"},
+    {"id": "baltic_sea", "name": "Baltic Sea Region", "relevance": "Kaliningrad exclave and Russian Baltic coastline create NATO-Russia friction zone"},
+    {"id": "belt_and_road", "name": "Belt and Road Initiative", "relevance": "Central Asian CIS states are key BRI transit corridors; Chinese infrastructure investment is growing"}
+  ],
+  "links": [
+    {"target": "eu", "type": "rivalry", "description": "Sanctions regime and energy decoupling following Russia-Ukraine conflict; Moldova seeks EU accession"},
+    {"target": "sco", "type": "alliance", "description": "Russia and Central Asian members align with China on security and counter-Western economic frameworks"},
+    {"target": "opec_plus", "type": "alliance", "description": "Russia, Kazakhstan, and Azerbaijan coordinate oil production under OPEC+ agreements"},
+    {"target": "black_sea", "type": "corridor", "description": "Russian and Ukrainian grain and energy exports historically flow through Black Sea ports"},
+    {"target": "arctic_sea_route", "type": "corridor", "description": "Russia develops the Northern Sea Route for LNG and resource shipments to Asia"},
+    {"target": "belt_and_road", "type": "trade", "description": "Kazakhstan and Uzbekistan serve as BRI land corridors linking China to European markets"},
+    {"target": "persian_gulf", "type": "trade", "description": "Caspian energy pipelines connect Azerbaijan and Kazakhstan to global markets via Gulf-adjacent routes"},
+    {"target": "nordic_council", "type": "rivalry", "description": "Finland and Norway share borders with Russia; NATO expansion has heightened security tensions"}
+  ],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "wheat", "uranium", "aluminum", "nickel", "palladium", "potash", "cotton", "gold"],
+    "risk_factors": ["sanctions_regime", "geopolitical_conflict", "pipeline_dependency", "currency_volatility", "authoritarian_governance", "energy_export_concentration"]
+  },
+  "tags": ["post-soviet", "energy-exporter", "sanctions-exposed", "eurasian", "commodity-dependent"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN Statistics Division", "World Bank", "CIS Executive Committee"]
+}
