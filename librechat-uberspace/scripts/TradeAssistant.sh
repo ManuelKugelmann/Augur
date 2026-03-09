@@ -177,7 +177,7 @@ SVCEOF
     fi
     if [[ -n "$RELEASE_JSON" ]]; then
         # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
-        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
+        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
     fi
 
     # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")
@@ -509,21 +509,6 @@ case "$CMD" in
         DOW=$(date +%u)   # 1=Mon .. 7=Sun
 
         _cron_log() { echo "[ta-cron] $1"; }
-
-        # Random jitter (0–90s) so cron tasks don't all fire at exact :00/:15/:30/:45
-        _jitter() { sleep "$((RANDOM % 90))"; }
-
-        # ── Every 15 min: profile auto-commit ──
-        _jitter
-        if [[ -d "$STACK/.git" ]]; then
-            cd "$STACK"
-            git add -A profiles/
-            if ! git diff --cached --quiet; then
-                git commit -m "auto: $(date +%Y-%m-%d) profile updates"
-                _cron_log "profiles committed"
-            fi
-            cd - >/dev/null
-        fi
 
         # ── Daily at 02:00 UTC: compact old snapshots to archive ──
         if [[ "$HOUR" == "02" ]]; then
@@ -1134,7 +1119,7 @@ SVCEOF
         echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
         echo "  ta backups      List available backups"
-        echo "  ta cron         Run cron hook (profiles + compact + agent invocation)"
+        echo "  ta cron         Run cron hook (compact + agent invocation)"
         echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"

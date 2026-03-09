@@ -6,6 +6,7 @@ Each server is an async httpx-based tool. Tests mock httpx.AsyncClient to verify
 - Response transformation (e.g., earthquake flattening)
 - Input validation (e.g., health _SAFE_ODATA)
 """
+import importlib.util
 import json
 import os
 import sys
@@ -1078,6 +1079,10 @@ class TestInfraServer:
 # ── Combined Server ─────────────────────────────
 
 
+_ta_available = bool(importlib.util.find_spec("ta"))
+
+
+@pytest.mark.skipif(not _ta_available, reason="ta library not installed")
 class TestCombinedServer:
     """Verify combined_server.py mounts store + 12 domains with correct namespaces."""
 

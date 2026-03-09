@@ -32,7 +32,6 @@ jobs:
             tests/test_claude_auth.bats \
             tests/test_deploy_conf.bats \
             tests/test_health.bats \
-            tests/test_nightly_commit.bats \
             tests/test_proxy.bats \
             tests/test_setup.bats \
             tests/test_ta_cron.bats \
@@ -124,7 +123,6 @@ jobs:
             librechat-uberspace/scripts/TradeAssistant.sh \
             librechat-uberspace/scripts/setup.sh \
             librechat-uberspace/scripts/bootstrap.sh \
-            scripts/nightly-git-commit.sh \
             deploy.conf \
           || true
 

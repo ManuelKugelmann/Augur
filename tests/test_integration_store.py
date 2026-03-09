@@ -68,7 +68,7 @@ class TestStoreLive:
         self.s = server
 
         # Seed disk profiles into MongoDB so get/list/find work
-        server.seed_profiles(str(tmp_path / "profiles"))
+        server.seed_profiles(str(tmp_path / "profiles"), clear=True)
 
         yield
 
