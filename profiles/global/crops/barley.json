@@ -1,0 +1,18 @@
+{
+  "id": "barley",
+  "name": "Barley",
+  "category": "grains",
+  "growing_season": "Spring barley: Mar-Aug; Winter barley: Sep-Jul",
+  "producers": ["RUS", "FRA", "DEU", "AUS", "CAN", "UKR", "GBR"],
+  "exporters": ["AUS", "FRA", "ARG", "UKR", "RUS"],
+  "water_intensity": "low",
+  "climate_sensitivity": ["drought", "heat_stress", "frost"],
+  "exposure": {
+    "countries": ["RUS", "AUS", "FRA", "CAN", "UKR", "SAU"],
+    "commodities": ["malt", "beer"],
+    "risk_factors": ["feed_demand", "beer_industry", "drought", "black_sea_disruption"]
+  },
+  "tags": ["grains", "feed", "malt", "beverage"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT", "IGC"]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "yangtze_river_delta",
+  "name": "Yangtze River Delta",
+  "type": "subregion",
+  "countries": ["CHN"],
+  "bbox": [118.0, 29.0, 123.0, 33.0],
+  "climate": "Subtropical monsoon transitioning to temperate; hot humid summers with plum rain season (Jun–Jul), cold damp winters; typhoon risk Jul–Oct",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "plum_rain_waterlogging",
+    "storm_surges",
+    "sea_level_rise",
+    "subsidence",
+    "air_pollution",
+    "heatwaves"
+  ],
+  "chokepoints": [
+    "Port of Shanghai (Yangshan)",
+    "Yangtze River navigation channel",
+    "Port of Ningbo-Zhoushan",
+    "Nanjing Yangtze crossings"
+  ],
+  "neighbors": [
+    {"id": "pearl_river_delta", "name": "Pearl River Delta", "relevance": "China's other major manufacturing cluster; competes in electronics, complements in heavy industry"},
+    {"id": "greater_bay_area", "name": "Greater Bay Area", "relevance": "GBA and YRD are China's twin economic engines with interlinked supply chains"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "Shanghai and Ningbo ports route significant trade through the South China Sea"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "YRD semiconductor and electronics sectors depend on Taiwan supply; shipping lanes pass nearby"},
+    {"id": "rcep", "name": "RCEP", "relevance": "YRD is the primary Chinese hub for RCEP intra-regional trade and investment"}
+  ],
+  "links": [
+    {"target": "pearl_river_delta", "type": "trade", "description": "Complementary manufacturing clusters with extensive domestic supply chain linkages"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "YRD chip fabs and electronics assemblers rely on Taiwan foundry output and IP"},
+    {"target": "south_china_sea", "type": "corridor", "description": "Container and energy shipments from Shanghai/Ningbo transit through South China Sea routes"},
+    {"target": "rcep", "type": "trade", "description": "Shanghai is China's primary port for RCEP trade with Japan, Korea, and ASEAN"},
+    {"target": "belt_and_road", "type": "corridor", "description": "Shanghai serves as maritime Silk Road hub; Yangtze connects inland BRI rail corridors"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Energy imports from the Middle East and trade with Europe transit via Malacca to YRD ports"}
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "automobiles",
+      "petrochemicals",
+      "steel",
+      "textiles",
+      "container_shipping",
+      "financial_services",
+      "pharmaceuticals",
+      "ev_batteries"
+    ],
+    "risk_factors": [
+      "yangtze_flooding",
+      "port_congestion",
+      "three_gorges_dam_concerns",
+      "us_china_financial_decoupling",
+      "shanghai_lockdown_precedent",
+      "real_estate_sector_stress",
+      "export_slowdown",
+      "power_rationing",
+      "aging_workforce"
+    ]
+  },
+  "tags": ["yangtze_river_delta", "yrd", "shanghai", "jiangsu", "zhejiang", "finance_hub", "manufacturing", "port_cluster"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Shanghai Municipal Statistics Bureau", "Port of Shanghai"]
+}

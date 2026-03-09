@@ -1,0 +1,21 @@
+{
+  "id": "foxconn",
+  "name": "Hon Hai Precision Industry (Foxconn)",
+  "country": "TWN",
+  "sector": "Information Technology",
+  "industry": "Electronic Manufacturing Services",
+  "revenue": 215000000000,
+  "employees": 878000,
+  "publicly_traded": true,
+  "ticker": "2317.TW",
+  "subsidiaries": ["Foxconn Industrial Internet", "Sharp Corporation", "Foxconn India"],
+  "exposure": {
+    "countries": ["TWN", "CHN", "IND", "VNM", "USA", "MEX"],
+    "products": ["smartphones", "semiconductors", "automotive"],
+    "materials": ["copper", "aluminum", "steel"],
+    "risk_factors": ["china_labor_dependence", "apple_concentration", "geopolitical_diversification"]
+  },
+  "tags": ["contract_manufacturer", "supply_chain_critical"],
+  "_updated": "2026-03-09",
+  "_sources": ["Hon Hai Annual Report", "Nikkei Asia"]
+}

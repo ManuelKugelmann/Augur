@@ -1,0 +1,16 @@
+{
+  "id": "EWJ",
+  "name": "iShares MSCI Japan ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["JPN"],
+    "sectors": ["Industrials", "Consumer Discretionary", "Technology", "Financials", "Healthcare", "Communication Services"],
+    "risk_factors": ["single_country_risk", "currency_risk", "deflation_risk", "demographic_risk"]
+  },
+  "tags": ["japan", "single_country", "developed_markets", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

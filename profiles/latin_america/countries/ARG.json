@@ -1,0 +1,123 @@
+{
+  "id": "ARG",
+  "name": "Argentina",
+  "iso2": "AR",
+  "region": "Latin America",
+  "currency": "ARS",
+  "capital": "Buenos Aires",
+  "population": 46000000,
+  "trade": {
+    "top_exports": [
+      "soybeans",
+      "corn",
+      "vehicles",
+      "petroleum",
+      "beef"
+    ],
+    "top_partners": [
+      "BRA",
+      "CHN",
+      "USA",
+      "CHL",
+      "IND"
+    ],
+    "major_ports": [
+      "Buenos Aires",
+      "Rosario",
+      "Bahia Blanca"
+    ],
+    "chokepoint_exposure": [
+      "panama"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "chemicals",
+      "electronics"
+    ],
+    "energy_mix": {
+      "gas": 0.55,
+      "oil": 0.06,
+      "hydro": 0.16,
+      "renewables": 0.12,
+      "nuclear": 0.06,
+      "coal": 0.02,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "hyperinflation",
+      "sovereign_debt",
+      "capital_controls",
+      "political_polarization"
+    ]
+  },
+  "ratings": {
+    "credit": "CCC+",
+    "democracy_index": 6.85,
+    "press_freedom_rank": 66,
+    "corruption_perception": 38
+  },
+  "neighbors": [
+    {
+      "id": "BRA",
+      "name": "Brazil",
+      "relevance": "Mercosur partner; largest regional trade partner; Itaipu-adjacent energy"
+    },
+    {
+      "id": "CHL",
+      "name": "Chile",
+      "relevance": "Andes border; lithium triangle; Patagonian ties"
+    },
+    {
+      "id": "URY",
+      "name": "Uruguay",
+      "relevance": "Río de la Plata; Mercosur; shared cultural ties"
+    },
+    {
+      "id": "PRY",
+      "name": "Paraguay",
+      "relevance": "Mercosur; Yacyretá dam; soy corridor"
+    },
+    {
+      "id": "BOL",
+      "name": "Bolivia",
+      "relevance": "Gas imports; lithium triangle; Andean corridor"
+    }
+  ],
+  "links": [
+    {
+      "target": "BRA",
+      "type": "trade",
+      "description": "Mercosur anchor; automotive trade; agricultural competition"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Soy/beef exports; infrastructure investment; currency swap"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "IMF relationship; energy sector investment; LNG exports potential"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Mercosur-EU FTA negotiations; wine/beef/grain exports"
+    }
+  ],
+  "tags": [
+    "G20",
+    "Mercosur"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

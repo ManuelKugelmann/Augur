@@ -1,0 +1,22 @@
+{
+  "id": "SHEL",
+  "name": "Shell plc",
+  "type": "stock",
+  "exchange": "LSE",
+  "sector": "Energy",
+  "industry": "Integrated Oil & Gas",
+  "country": "GBR",
+  "fundamentals": {
+    "founded": 1907,
+    "employees": 86000
+  },
+  "exposure": {
+    "countries": ["GBR", "NLD", "USA", "NGA", "QAT", "AUS", "BRA"],
+    "commodities": ["crude_oil", "natural_gas", "lng"],
+    "supply_chain": ["Schlumberger", "Halliburton", "Baker Hughes", "TechnipFMC"],
+    "risk_factors": ["oil_price_volatility", "energy_transition", "carbon_regulation", "geopolitical_risk", "lng_demand"]
+  },
+  "tags": ["energy", "oil_gas", "lng", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

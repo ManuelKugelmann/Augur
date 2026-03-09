@@ -1,0 +1,22 @@
+{
+  "id": "TM",
+  "name": "Toyota Motor Corporation",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Discretionary",
+  "industry": "Automobile Manufacturers",
+  "country": "JPN",
+  "fundamentals": {
+    "founded": 1937,
+    "employees": 375000
+  },
+  "exposure": {
+    "countries": ["JPN", "USA", "CHN", "THA", "IDN", "IND", "DEU"],
+    "commodities": ["steel", "aluminum", "platinum", "palladium", "lithium"],
+    "supply_chain": ["Denso", "Aisin", "Toyota Industries", "Panasonic"],
+    "risk_factors": ["ev_transition", "yen_volatility", "supply_chain_disruption", "emissions_regulation", "china_competition"]
+  },
+  "tags": ["automotive", "ev", "hybrid", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

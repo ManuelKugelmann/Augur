@@ -1,0 +1,17 @@
+{
+  "id": "TWSE",
+  "name": "Taiwan Weighted Index",
+  "type": "index",
+  "country": "TWN",
+  "exchange": "TWSE",
+  "components": 980,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Technology", "Financials", "Materials", "Industrials", "Communication Services"],
+    "countries": ["TWN"],
+    "risk_factors": ["semiconductor_concentration", "geopolitical_risk", "twd_currency_risk", "china_tensions"]
+  },
+  "tags": ["benchmark", "taiwanese_equity", "semiconductor_heavy"],
+  "_updated": "2026-03-09",
+  "_sources": ["Taiwan Stock Exchange"]
+}

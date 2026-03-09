@@ -1,0 +1,16 @@
+{
+  "id": "opensanctions",
+  "name": "OpenSanctions",
+  "mcp": "conflict",
+  "tool": "sanctions_search",
+  "api_base": "https://api.opensanctions.org/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "daily",
+    "snapshot_type": "entities",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["OpenSanctions API Docs"]
+}

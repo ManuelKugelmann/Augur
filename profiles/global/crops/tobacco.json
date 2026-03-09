@@ -1,0 +1,18 @@
+{
+  "id": "tobacco",
+  "name": "Tobacco",
+  "category": "industrial_crops",
+  "growing_season": "March-September (Northern Hemisphere); varies by latitude",
+  "producers": ["CHN", "BRA", "IND", "USA", "IDN"],
+  "exporters": ["BRA", "USA", "IND", "MWI", "ZWE"],
+  "water_intensity": "medium",
+  "climate_sensitivity": ["drought", "hail", "excessive_rain", "frost"],
+  "exposure": {
+    "countries": ["CHN", "BRA", "IND", "USA", "IDN", "MWI", "ZWE"],
+    "commodities": [],
+    "risk_factors": ["regulatory_tightening", "health_policy", "declining_demand", "trade_restrictions"]
+  },
+  "tags": ["industrial_crop", "cash_crop", "regulated"],
+  "_updated": "2026-03-09",
+  "_sources": ["FAOSTAT", "USDA"]
+}

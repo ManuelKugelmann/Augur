@@ -1,0 +1,114 @@
+{
+  "id": "VNM",
+  "name": "Vietnam",
+  "iso2": "VN",
+  "region": "Southeast Asia",
+  "currency": "VND",
+  "capital": "Hanoi",
+  "population": 100000000,
+  "trade": {
+    "top_exports": [
+      "electronics",
+      "textiles",
+      "footwear",
+      "machinery",
+      "seafood"
+    ],
+    "top_partners": [
+      "USA",
+      "CHN",
+      "KOR",
+      "JPN",
+      "HKG"
+    ],
+    "major_ports": [
+      "Ho Chi Minh City (Cat Lai)",
+      "Hai Phong",
+      "Da Nang"
+    ],
+    "chokepoint_exposure": [
+      "malacca",
+      "south_china_sea"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "electronics",
+      "machinery",
+      "petroleum",
+      "iron_steel",
+      "textiles"
+    ],
+    "energy_mix": {
+      "coal": 0.35,
+      "hydro": 0.28,
+      "gas": 0.15,
+      "renewables": 0.12,
+      "oil": 0.03,
+      "other": 0.07
+    },
+    "risk_factors": [
+      "south_china_sea_tensions",
+      "flood_risk",
+      "fdi_dependence",
+      "energy_shortage"
+    ]
+  },
+  "ratings": {
+    "credit": "BB+",
+    "democracy_index": 2.73,
+    "press_freedom_rank": 174,
+    "corruption_perception": 41
+  },
+  "neighbors": [
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Northern border; South China Sea disputes; largest import source; historical rivalry"
+    },
+    {
+      "id": "LAO",
+      "name": "Laos",
+      "relevance": "Western border; special relationship; hydropower; trade"
+    },
+    {
+      "id": "KHM",
+      "name": "Cambodia",
+      "relevance": "Mekong Delta; historical intervention; trade; Vietnamese diaspora"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Comprehensive strategic partner (2023); electronics exports; Samsung/Intel hubs; China+1"
+    },
+    {
+      "target": "CHN",
+      "type": "dependency",
+      "description": "Largest import source; raw materials for manufacturing; South China Sea friction"
+    },
+    {
+      "target": "KOR",
+      "type": "trade",
+      "description": "Samsung largest employer; $80B+ trade; FTA; major FDI source"
+    },
+    {
+      "target": "JPN",
+      "type": "trade",
+      "description": "Major ODA/FDI source; manufacturing diversification destination; defense cooperation"
+    }
+  ],
+  "tags": [
+    "ASEAN",
+    "APEC"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

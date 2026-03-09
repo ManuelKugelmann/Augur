@@ -1,0 +1,16 @@
+{
+  "id": "unhcr",
+  "name": "UNHCR Refugee Data",
+  "mcp": "humanitarian",
+  "tool": "unhcr_data",
+  "api_base": "https://api.unhcr.org/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "monthly",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 30,
+  "_updated": "2026-03-09",
+  "_sources": ["UNHCR API Docs"]
+}

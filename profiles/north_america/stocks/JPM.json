@@ -1,0 +1,22 @@
+{
+  "id": "JPM",
+  "name": "JPMorgan Chase & Co.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Financials",
+  "industry": "Diversified Banks",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1799,
+    "employees": 309926
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "CHN", "JPN", "DEU", "BRA"],
+    "commodities": ["gold", "crude_oil"],
+    "supply_chain": ["Visa", "Mastercard", "FIS"],
+    "risk_factors": ["interest_rate_risk", "credit_risk", "regulatory_capital", "geopolitical_exposure"]
+  },
+  "tags": ["mega_cap", "banking", "investment_banking", "asset_management"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

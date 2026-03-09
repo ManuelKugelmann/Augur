@@ -1,0 +1,22 @@
+{
+  "id": "AZN",
+  "name": "AstraZeneca plc",
+  "type": "stock",
+  "exchange": "LSE",
+  "sector": "Health Care",
+  "industry": "Pharmaceuticals",
+  "country": "GBR",
+  "fundamentals": {
+    "founded": 1999,
+    "employees": 89000
+  },
+  "exposure": {
+    "countries": ["GBR", "USA", "CHN", "JPN", "DEU", "FRA"],
+    "commodities": [],
+    "supply_chain": ["Catalent", "Lonza", "Daiichi Sankyo", "Merck KGaA"],
+    "risk_factors": ["drug_pricing", "pipeline_risk", "china_regulatory", "patent_cliffs", "oncology_competition"]
+  },
+  "tags": ["pharma", "oncology", "biotech", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

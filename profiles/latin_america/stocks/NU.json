@@ -1,0 +1,22 @@
+{
+  "id": "NU",
+  "name": "Nu Holdings Ltd.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Financials",
+  "industry": "Transaction & Payment Processing Services",
+  "country": "BRA",
+  "fundamentals": {
+    "founded": 2013,
+    "employees": 8000
+  },
+  "exposure": {
+    "countries": ["BRA", "MEX", "COL"],
+    "commodities": [],
+    "supply_chain": ["AWS", "Mastercard", "Visa"],
+    "risk_factors": ["brazil_interest_rates", "credit_risk", "regulatory_fintech", "competition_traditional_banks", "fx_real"]
+  },
+  "tags": ["fintech", "neobank", "digital_banking", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "RELIANCE",
+  "name": "Reliance Industries Limited",
+  "type": "stock",
+  "exchange": "BSE",
+  "sector": "Energy",
+  "industry": "Integrated Oil & Gas",
+  "country": "IND",
+  "fundamentals": {
+    "founded": 1966,
+    "employees": 360000
+  },
+  "exposure": {
+    "countries": ["IND", "USA", "SAU", "ARE", "GBR"],
+    "commodities": ["crude_oil", "natural_gas", "petrochemicals"],
+    "supply_chain": ["Jio Platforms", "Reliance Retail", "Meta", "Google"],
+    "risk_factors": ["oil_price_dependency", "india_regulatory", "telecom_competition", "retail_expansion_costs"]
+  },
+  "tags": ["energy", "telecom", "retail", "conglomerate", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["BSE India", "Yahoo Finance"]
+}

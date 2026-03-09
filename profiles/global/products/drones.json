@@ -1,0 +1,18 @@
+{
+  "id": "drones",
+  "name": "Drones",
+  "category": "aerospace",
+  "hs_codes": ["8806"],
+  "manufacturers": ["CHN", "USA", "ISR", "TUR", "IRN"],
+  "inputs": ["semiconductors", "lithium_batteries", "carbon_fiber", "cameras", "gps_modules"],
+  "trade_volume": "$35B annual",
+  "exposure": {
+    "countries": ["CHN", "USA", "ISR", "TUR", "UKR", "IRN"],
+    "materials": ["carbon_fiber", "lithium", "rare_earths"],
+    "commodities": [],
+    "risk_factors": ["dual_use_restrictions", "dji_dominance", "regulatory_fragmentation"]
+  },
+  "tags": ["dual_use", "defense", "emerging_tech"],
+  "_updated": "2026-03-09",
+  "_sources": ["Drone Industry Insights", "Teal Group"]
+}

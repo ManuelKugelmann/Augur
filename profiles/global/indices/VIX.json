@@ -1,0 +1,17 @@
+{
+  "id": "VIX",
+  "name": "CBOE Volatility Index",
+  "type": "index",
+  "country": "USA",
+  "exchange": "CBOE",
+  "components": 0,
+  "methodology": "implied-volatility",
+  "exposure": {
+    "sectors": [],
+    "countries": ["USA"],
+    "risk_factors": ["mean_reversion", "volatility_clustering", "tail_risk"]
+  },
+  "tags": ["volatility", "fear_gauge", "options_derived", "sentiment"],
+  "_updated": "2026-03-09",
+  "_sources": ["CBOE"]
+}

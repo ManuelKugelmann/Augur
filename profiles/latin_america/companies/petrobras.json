@@ -1,0 +1,21 @@
+{
+  "id": "petrobras",
+  "name": "Petroleo Brasileiro S.A. (Petrobras)",
+  "country": "BRA",
+  "sector": "Energy",
+  "industry": "Oil & Gas Integrated",
+  "revenue": 100000000000,
+  "employees": 45000,
+  "publicly_traded": true,
+  "ticker": "PBR",
+  "subsidiaries": ["Petrobras Distribuidora", "Transpetro", "Petrobras Biocombustivel"],
+  "exposure": {
+    "countries": ["BRA", "USA", "ARG", "BOL"],
+    "products": ["lng_terminals", "fertilizers"],
+    "materials": [],
+    "risk_factors": ["political_interference", "pre_salt_deepwater", "currency_risk"]
+  },
+  "tags": ["state_controlled", "deepwater", "latam_energy"],
+  "_updated": "2026-03-09",
+  "_sources": ["Petrobras Annual Report", "Bloomberg"]
+}

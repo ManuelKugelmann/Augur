@@ -7,6 +7,13 @@ load_dotenv()
 
 mcp = FastMCP("humanitarian", instructions="Refugees, displacement, humanitarian data, crisis reports")
 IDMC_KEY = os.environ.get("IDMC_API_KEY", "")
+# ReliefWeb requires a pre-approved appname since Nov 2025.
+# Register at https://reliefweb.int/ or contact ReliefWeb to get yours approved.
+RELIEFWEB_APPNAME = os.environ.get("RELIEFWEB_APPNAME", "")
+
+_RW_HEADERS = {
+    "User-Agent": "TradingAssistant/1.0 (https://github.com/ManuelKugelmann/TradingAssistant)",
+}
 
 
 @mcp.tool()
@@ -77,7 +84,10 @@ async def hdx_dataset(dataset_id: str) -> dict:
 async def reliefweb_reports(query: str = "", country: str = "",
                              disaster: str = "", limit: int = 20) -> dict:
     """ReliefWeb humanitarian reports and situation updates.
-    Filter by country name or disaster name."""
+    Filter by country name or disaster name.
+    Requires RELIEFWEB_APPNAME env var (pre-approved appname)."""
+    if not RELIEFWEB_APPNAME:
+        return {"error": "RELIEFWEB_APPNAME not set — register at reliefweb.int (required since Nov 2025)"}
     body: dict = {"limit": limit, "sort": ["date:desc"],
                   "fields": {"include": ["title", "date.original", "source",
                              "country", "disaster", "url_alias"]}}
@@ -95,7 +105,9 @@ async def reliefweb_reports(query: str = "", country: str = "",
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.post("https://api.reliefweb.int/v2/reports",
-                             json=body, params={"appname": "mcp-trading"})
+                             json=body,
+                             params={"appname": RELIEFWEB_APPNAME},
+                             headers=_RW_HEADERS)
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
@@ -105,7 +117,10 @@ async def reliefweb_reports(query: str = "", country: str = "",
 @mcp.tool()
 async def reliefweb_disasters(country: str = "", status: str = "ongoing",
                                 limit: int = 20) -> dict:
-    """ReliefWeb active disasters. status: ongoing, past, alert."""
+    """ReliefWeb active disasters. status: ongoing, past, alert.
+    Requires RELIEFWEB_APPNAME env var (pre-approved appname)."""
+    if not RELIEFWEB_APPNAME:
+        return {"error": "RELIEFWEB_APPNAME not set — register at reliefweb.int (required since Nov 2025)"}
     body: dict = {"limit": limit, "sort": ["date.event:desc"],
                   "fields": {"include": ["name", "date", "status", "country",
                              "type", "glide", "url_alias"]}}
@@ -121,7 +136,9 @@ async def reliefweb_disasters(country: str = "", status: str = "ongoing",
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.post("https://api.reliefweb.int/v2/disasters",
-                             json=body, params={"appname": "mcp-trading"})
+                             json=body,
+                             params={"appname": RELIEFWEB_APPNAME},
+                             headers=_RW_HEADERS)
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:

@@ -1,0 +1,21 @@
+{
+  "id": "samsung",
+  "name": "Samsung Electronics",
+  "country": "KOR",
+  "sector": "Information Technology",
+  "industry": "Semiconductors & Consumer Electronics",
+  "revenue": 200000000000,
+  "employees": 267000,
+  "publicly_traded": true,
+  "ticker": "005930.KS",
+  "subsidiaries": ["Samsung Display", "Samsung SDI", "Samsung Electro-Mechanics", "Samsung Austin Semiconductor"],
+  "exposure": {
+    "countries": ["KOR", "USA", "VNM", "CHN", "IND"],
+    "products": ["semiconductors", "smartphones", "ev_batteries"],
+    "materials": ["silicon", "rare_earths", "cobalt"],
+    "risk_factors": ["north_korea_tensions", "chip_competition", "china_market_risk"]
+  },
+  "tags": ["conglomerate", "memory_chips", "foundry"],
+  "_updated": "2026-03-09",
+  "_sources": ["Samsung Annual Report", "Bloomberg"]
+}

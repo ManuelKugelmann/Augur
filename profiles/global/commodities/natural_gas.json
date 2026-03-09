@@ -1,0 +1,18 @@
+{
+  "id": "natural_gas",
+  "name": "Natural Gas",
+  "category": "energy",
+  "unit": "MMBtu",
+  "benchmark": "Henry Hub / TTF / JKM",
+  "producers": ["USA", "RUS", "IRN", "QAT", "CAN"],
+  "consumers": ["USA", "RUS", "CHN", "IRN", "JPN"],
+  "chokepoints": ["nord_stream", "suez", "hormuz", "lng_terminals"],
+  "seasonality": "Winter heating demand peaks in Northern Hemisphere; summer cooling demand growing",
+  "exposure": {
+    "countries": ["USA", "RUS", "QAT", "AUS", "CHN", "DEU", "JPN"],
+    "risk_factors": ["pipeline_disruption", "lng_capacity", "weather_extremes", "energy_transition"]
+  },
+  "tags": ["energy", "fossil_fuel", "lng"],
+  "_updated": "2026-03-09",
+  "_sources": ["EIA", "IEA"]
+}

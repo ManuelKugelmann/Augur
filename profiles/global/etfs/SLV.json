@@ -1,0 +1,16 @@
+{
+  "id": "SLV",
+  "name": "iShares Silver Trust",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "commodities": ["silver"],
+    "risk_factors": ["commodity_price_risk", "industrial_demand", "volatility"]
+  },
+  "tags": ["silver", "commodity", "precious_metals", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

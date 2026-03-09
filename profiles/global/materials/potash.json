@@ -1,0 +1,17 @@
+{
+  "id": "potash",
+  "name": "Potash",
+  "category": "minerals",
+  "producers": ["CAN", "RUS", "BLR", "CHN", "DEU"],
+  "reserves": ["CAN", "RUS", "BLR", "DEU", "CHN"],
+  "processing": ["CAN", "RUS", "BLR", "CHN", "DEU"],
+  "end_uses": ["fertilizers (MOP/SOP)", "industrial chemicals", "water treatment"],
+  "substitutes": ["organic fertilizers (partial)", "precision nutrient management"],
+  "exposure": {
+    "countries": ["CAN", "RUS", "BLR", "CHN", "DEU"],
+    "risk_factors": ["belarus_sanctions", "russia_sanctions", "food_security_dependency", "canada_rail_logistics"]
+  },
+  "tags": ["fertilizer", "agriculture", "food_security"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "IFA", "Nutrien"]
+}

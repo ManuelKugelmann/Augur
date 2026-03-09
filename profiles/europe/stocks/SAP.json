@@ -1,0 +1,22 @@
+{
+  "id": "SAP",
+  "name": "SAP SE",
+  "type": "stock",
+  "exchange": "XETRA",
+  "sector": "Information Technology",
+  "industry": "Application Software",
+  "country": "DEU",
+  "fundamentals": {
+    "founded": 1972,
+    "employees": 107000
+  },
+  "exposure": {
+    "countries": ["DEU", "USA", "CHN", "IND", "BRA", "JPN"],
+    "commodities": [],
+    "supply_chain": ["Microsoft Azure", "AWS", "Google Cloud"],
+    "risk_factors": ["cloud_transition", "enterprise_spending", "competition_oracle", "european_regulation"]
+  },
+  "tags": ["enterprise_software", "cloud", "erp", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

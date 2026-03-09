@@ -4,6 +4,7 @@
 
 - **Never circumvent or exclude failing tests.** Always find and fix the root cause. If not possible, discuss the problem with the user before proceeding.
 - **Run tests locally before pushing.** Always run `python -m pytest tests/ -v` (and `bats tests/*.bats` if shell scripts changed) before committing and pushing. Do not push code that fails tests.
+- **Prefer battle-tested libraries over custom code.** Use well-established libraries (e.g. `mongomock` for MongoDB mocks) instead of writing custom implementations — but don't explode the dependency tree for marginal gains.
 
 ## Project
 

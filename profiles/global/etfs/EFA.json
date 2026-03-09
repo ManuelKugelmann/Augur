@@ -1,0 +1,16 @@
+{
+  "id": "EFA",
+  "name": "iShares MSCI EAFE ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["JPN", "GBR", "FRA", "CHE", "DEU", "AUS", "NLD", "SWE", "DNK", "HKG"],
+    "sectors": ["Financials", "Industrials", "Healthcare", "Consumer Discretionary", "Consumer Staples", "Technology"],
+    "risk_factors": ["currency_risk", "european_slowdown", "japan_deflation"]
+  },
+  "tags": ["developed_international", "eafe", "passive", "diversified"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

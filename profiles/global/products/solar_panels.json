@@ -1,0 +1,18 @@
+{
+  "id": "solar_panels",
+  "name": "Solar Panels",
+  "category": "renewable_energy",
+  "hs_codes": ["8541.40"],
+  "manufacturers": ["CHN", "USA", "VNM", "MYS", "IND"],
+  "inputs": ["polysilicon", "silver", "aluminum", "glass"],
+  "trade_volume": "$200B annual",
+  "exposure": {
+    "countries": ["CHN", "USA", "IND", "VNM", "MYS", "DEU"],
+    "materials": ["silicon", "silver", "aluminum"],
+    "commodities": ["natural_gas"],
+    "risk_factors": ["china_polysilicon_dominance", "trade_tariffs", "forced_labor_concerns"]
+  },
+  "tags": ["green_transition", "trade_sensitive"],
+  "_updated": "2026-03-09",
+  "_sources": ["IEA", "IRENA", "BloombergNEF"]
+}

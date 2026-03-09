@@ -1,0 +1,64 @@
+{
+  "id": "eurozone",
+  "name": "Euro Area",
+  "type": "economic_zone",
+  "countries": [
+    "AUT", "BEL", "HRV", "CYP", "EST", "FIN", "FRA", "DEU", "GRC", "IRL",
+    "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "PRT", "SVK", "SVN", "ESP"
+  ],
+  "bbox": [-10.5, 34.5, 29.7, 70.1],
+  "climate": "Temperate maritime to Mediterranean, continental interior",
+  "hazards": [
+    "flooding",
+    "heatwaves",
+    "drought",
+    "winter_storms",
+    "wildfires",
+    "earthquakes"
+  ],
+  "chokepoints": [
+    "Strait of Gibraltar",
+    "English Channel",
+    "Strait of Sicily"
+  ],
+  "neighbors": [
+    {"id": "eu", "name": "European Union", "relevance": "Eurozone is a subset of the EU; non-euro EU members (Poland, Sweden, etc.) are key trade partners"},
+    {"id": "nordic_council", "name": "Nordic Council", "relevance": "Finland is a eurozone member; Denmark pegs to the euro; Sweden trades heavily with the zone"},
+    {"id": "visegrad", "name": "Visegrád Group", "relevance": "Slovakia is a eurozone member; Poland, Czechia, Hungary are deeply integrated via supply chains"},
+    {"id": "mediterranean", "name": "Mediterranean Sea Basin", "relevance": "Southern eurozone members (Spain, Italy, Greece) face Mediterranean-specific risks"},
+    {"id": "nafta_usmca", "name": "NAFTA/USMCA", "relevance": "USD-EUR exchange rate dynamics; transatlantic capital flows and trade"},
+    {"id": "cis", "name": "Commonwealth of Independent States", "relevance": "Energy import dependency; sanctions impact on eurozone banks and trade"}
+  ],
+  "links": [
+    {"target": "eu", "type": "overlap", "description": "All eurozone members are EU members; single market integration amplifies monetary union"},
+    {"target": "visegrad", "type": "trade", "description": "German-Central European automotive supply chain is the eurozone's industrial backbone"},
+    {"target": "ruhr_area", "type": "overlap", "description": "Germany's industrial heartland drives eurozone manufacturing output and exports"},
+    {"target": "mediterranean", "type": "dependency", "description": "Southern eurozone members depend on Mediterranean shipping lanes for energy and trade"},
+    {"target": "g7", "type": "alliance", "description": "ECB coordinates with G7 central banks on monetary policy and financial stability"},
+    {"target": "belt_and_road", "type": "trade", "description": "Chinese investment in eurozone ports and infrastructure raises strategic dependency concerns"}
+  ],
+  "exposure": {
+    "commodities": [
+      "natural_gas",
+      "crude_oil",
+      "wheat",
+      "dairy",
+      "automobiles",
+      "machinery",
+      "pharmaceuticals"
+    ],
+    "risk_factors": [
+      "ecb_monetary_policy",
+      "sovereign_debt_spreads",
+      "energy_import_dependence",
+      "demographic_decline",
+      "banking_sector_fragility",
+      "fiscal_rule_compliance",
+      "inflation_divergence",
+      "competitiveness_gap"
+    ]
+  },
+  "tags": ["eurozone", "emu", "ecb", "single_currency", "monetary_union"],
+  "_updated": "2026-03-09",
+  "_sources": ["European Central Bank", "Eurostat", "CIA World Factbook"]
+}

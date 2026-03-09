@@ -1,0 +1,17 @@
+{
+  "id": "silicon",
+  "name": "Silicon",
+  "category": "metalloids",
+  "producers": ["CHN", "RUS", "BRA", "NOR", "USA"],
+  "reserves": ["CHN", "RUS", "BRA", "NOR", "USA"],
+  "processing": ["CHN", "NOR", "USA", "DEU", "JPN"],
+  "end_uses": ["semiconductors", "solar panels", "aluminum alloys", "silicones"],
+  "substitutes": ["gallium arsenide (semiconductors)", "germanium"],
+  "exposure": {
+    "countries": ["CHN", "RUS", "BRA", "NOR", "USA"],
+    "risk_factors": ["semiconductor_supply_chain", "solar_demand_growth", "energy_intensive_production", "trade_restrictions"]
+  },
+  "tags": ["semiconductor", "solar", "industrial"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "Silicon Industry Branch"]
+}

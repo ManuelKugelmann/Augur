@@ -1,0 +1,17 @@
+{
+  "id": "vanadium",
+  "name": "Vanadium",
+  "category": "metals",
+  "producers": ["CHN", "RUS", "ZAF", "BRA"],
+  "reserves": ["CHN", "RUS", "ZAF", "AUS"],
+  "processing": ["CHN", "RUS", "ZAF", "AUT"],
+  "end_uses": ["steel strengthening", "vanadium redox flow batteries", "titanium alloys", "chemicals"],
+  "substitutes": ["niobium (steel strengthening)", "lithium-ion batteries (energy storage)"],
+  "exposure": {
+    "countries": ["CHN", "RUS", "ZAF", "BRA"],
+    "risk_factors": ["china_russia_concentration", "steel_demand_dependency", "energy_storage_growth", "small_market_volatility"]
+  },
+  "tags": ["critical_mineral", "steel", "energy_storage"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "Vanitec"]
+}

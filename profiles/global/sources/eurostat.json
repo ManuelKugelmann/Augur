@@ -1,0 +1,16 @@
+{
+  "id": "eurostat",
+  "name": "Eurostat",
+  "mcp": "macro",
+  "tool": "eurostat_data",
+  "api_base": "https://ec.europa.eu/eurostat/api/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "monthly",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 30,
+  "_updated": "2026-03-09",
+  "_sources": ["Eurostat API Docs"]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "greater_bay_area",
+  "name": "Guangdong–Hong Kong–Macau Greater Bay Area",
+  "type": "subregion",
+  "countries": ["CHN"],
+  "bbox": [112.4, 21.5, 115.5, 24.0],
+  "climate": "Subtropical monsoon; hot humid summers with typhoon season (Jun–Nov), mild winters; heavy rainfall",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "storm_surges",
+    "sea_level_rise",
+    "air_pollution",
+    "industrial_accidents"
+  ],
+  "chokepoints": [
+    "Pearl River estuary",
+    "Hong Kong harbor",
+    "South China Sea approaches"
+  ],
+  "neighbors": [
+    {"id": "pearl_river_delta", "name": "Pearl River Delta", "relevance": "GBA encompasses and extends the PRD manufacturing base; near-complete geographic overlap"},
+    {"id": "south_china_sea", "name": "South China Sea", "relevance": "GBA's ports open directly onto the South China Sea; shipping route for all exports"},
+    {"id": "yangtze_river_delta", "name": "Yangtze River Delta", "relevance": "China's other major economic cluster; competes and complements GBA in finance and manufacturing"},
+    {"id": "asean", "name": "ASEAN", "relevance": "ASEAN is GBA's closest international trading partner bloc; factory relocation destination"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "Semiconductor supply dependency on Taiwan; any disruption directly impacts GBA electronics industry"}
+  ],
+  "links": [
+    {"target": "pearl_river_delta", "type": "overlap", "description": "GBA subsumes the PRD and adds Hong Kong and Macau for financial and services integration"},
+    {"target": "south_china_sea", "type": "corridor", "description": "GBA ports (Shenzhen, Guangzhou, Hong Kong) are primary departure points for South China Sea shipping"},
+    {"target": "yangtze_river_delta", "type": "trade", "description": "Domestic rivalry and supply chain linkages between China's two largest economic clusters"},
+    {"target": "asean", "type": "trade", "description": "ASEAN is the top trade partner and manufacturing relocation destination for GBA firms"},
+    {"target": "taiwan_strait", "type": "dependency", "description": "GBA electronics and tech firms depend on TSMC and Taiwan semiconductor supply"},
+    {"target": "belt_and_road", "type": "corridor", "description": "Hong Kong and Shenzhen serve as financing and logistics hubs for Belt and Road projects"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Energy imports and container exports transit the Strait of Malacca en route to GBA ports"}
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "consumer_electronics",
+      "smartphones",
+      "drones",
+      "ev_batteries",
+      "textiles",
+      "plastics",
+      "container_shipping"
+    ],
+    "risk_factors": [
+      "us_china_tech_decoupling",
+      "hong_kong_political_risk",
+      "one_country_two_systems",
+      "export_controls",
+      "supply_chain_concentration",
+      "typhoon_disruption",
+      "pearl_river_pollution",
+      "talent_competition",
+      "capital_controls"
+    ]
+  },
+  "tags": ["greater_bay_area", "gba", "tech_hub", "manufacturing", "hong_kong", "shenzhen", "guangdong", "pearl_river_delta_overlap"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Guangdong Provincial Government", "HKTDC"]
+}

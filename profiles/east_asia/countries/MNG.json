@@ -1,0 +1,97 @@
+{
+  "id": "MNG",
+  "name": "Mongolia",
+  "iso2": "MN",
+  "region": "East Asia",
+  "currency": "MNT",
+  "capital": "Ulaanbaatar",
+  "population": 3400000,
+  "trade": {
+    "top_exports": [
+      "copper",
+      "coal",
+      "gold",
+      "iron_ore",
+      "cashmere"
+    ],
+    "top_partners": [
+      "CHN",
+      "CHE",
+      "GBR",
+      "SGP",
+      "RUS"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "machinery",
+      "vehicles",
+      "food_products"
+    ],
+    "energy_mix": {
+      "coal": 0.7,
+      "oil": 0.1,
+      "renewables": 0.08,
+      "hydro": 0.05,
+      "other": 0.07
+    },
+    "risk_factors": [
+      "china_dependence",
+      "mining_concentration",
+      "landlocked",
+      "extreme_climate"
+    ]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 6.48,
+    "press_freedom_rank": 73,
+    "corruption_perception": 35
+  },
+  "neighbors": [
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Dominant trade partner; 90%+ of exports transit through China"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Northern neighbor; energy imports; Trans-Mongolian Railway"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "dependency",
+      "description": "Coal and copper exports almost entirely to China; infrastructure financing"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Petroleum imports; railway connectivity to Trans-Siberian"
+    },
+    {
+      "target": "JPN",
+      "type": "trade",
+      "description": "Third neighbor policy; development aid and mining investment"
+    },
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Third neighbor policy; democracy support; rare earth diversification interest"
+    }
+  ],
+  "tags": [],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

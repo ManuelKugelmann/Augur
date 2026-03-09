@@ -1,0 +1,18 @@
+{
+  "id": "palm_oil",
+  "name": "Palm Oil",
+  "category": "agricultural",
+  "unit": "metric_ton",
+  "benchmark": "Bursa Malaysia CPO / Rotterdam CIF",
+  "producers": ["IDN", "MYS", "THA", "COL", "NGA"],
+  "consumers": ["IND", "CHN", "EU", "PAK", "BGD"],
+  "chokepoints": ["malacca", "indonesian_straits"],
+  "seasonality": "Peak production Oct-Mar; low output Jun-Aug; Ramadan demand boost",
+  "exposure": {
+    "countries": ["IDN", "MYS", "IND", "CHN", "NGA"],
+    "risk_factors": ["deforestation_regulation", "export_levies", "weather_el_nino", "biodiesel_mandates"]
+  },
+  "tags": ["agricultural", "vegetable_oil", "biofuel", "food"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "MPOB", "Oil World"]
+}

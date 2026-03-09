@@ -1,0 +1,22 @@
+{
+  "id": "GRAB",
+  "name": "Grab Holdings Limited",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Communication Services",
+  "industry": "Interactive Media & Services",
+  "country": "SGP",
+  "fundamentals": {
+    "founded": 2012,
+    "employees": 11000
+  },
+  "exposure": {
+    "countries": ["SGP", "IDN", "MYS", "THA", "VNM", "PHL"],
+    "commodities": [],
+    "supply_chain": ["AWS", "Google Cloud", "Mastercard"],
+    "risk_factors": ["path_to_profitability", "regulatory_southeast_asia", "competition_gojek", "fx_emerging_markets"]
+  },
+  "tags": ["ride_hailing", "fintech", "food_delivery", "superapp", "mid_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

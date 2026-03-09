@@ -7,25 +7,140 @@
   "capital": "Berlin",
   "population": 84000000,
   "trade": {
-    "top_exports": ["vehicles", "machinery", "chemicals", "electronics"],
-    "top_partners": ["USA", "CHN", "FRA", "NLD", "POL"],
-    "major_ports": ["Hamburg", "Bremerhaven", "Wilhelmshaven"],
-    "chokepoint_exposure": ["suez"]
+    "top_exports": [
+      "vehicles",
+      "machinery",
+      "chemicals",
+      "electronics"
+    ],
+    "top_partners": [
+      "USA",
+      "CHN",
+      "FRA",
+      "NLD",
+      "POL"
+    ],
+    "major_ports": [
+      "Hamburg",
+      "Bremerhaven",
+      "Wilhelmshaven"
+    ],
+    "chokepoint_exposure": [
+      "suez"
+    ]
   },
   "exposure": {
-    "commodities_import": ["natural_gas", "crude_oil", "rare_earths"],
-    "energy_mix": {"renewables": 0.46, "gas": 0.15, "coal": 0.26, "nuclear": 0.0, "oil": 0.01, "other": 0.12},
-    "risk_factors": ["energy_dependence", "china_export_exposure", "demographic_decline"]
+    "commodities_import": [
+      "natural_gas",
+      "crude_oil",
+      "rare_earths"
+    ],
+    "energy_mix": {
+      "renewables": 0.46,
+      "gas": 0.15,
+      "coal": 0.26,
+      "nuclear": 0.0,
+      "oil": 0.01,
+      "other": 0.12
+    },
+    "risk_factors": [
+      "energy_dependence",
+      "china_export_exposure",
+      "demographic_decline"
+    ]
   },
   "ratings": {
     "credit": "AAA",
-    "democracy_index": 8.80,
+    "democracy_index": 8.8,
     "press_freedom_rank": 21,
     "corruption_perception": 79
   },
-  "tags": ["EU", "G7", "NATO", "eurozone"],
+  "neighbors": [
+    {
+      "id": "FRA",
+      "name": "France",
+      "relevance": "Franco-German engine of EU; largest bilateral relationship in Europe"
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "relevance": "Eastern neighbor; manufacturing supply chain; migration"
+    },
+    {
+      "id": "NLD",
+      "name": "Netherlands",
+      "relevance": "Rhine corridor; Rotterdam port serves German industry"
+    },
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "relevance": "Shared language; deep economic integration"
+    },
+    {
+      "id": "CHE",
+      "name": "Switzerland",
+      "relevance": "Major trade partner; cross-border labor market"
+    },
+    {
+      "id": "CZE",
+      "name": "Czech Republic",
+      "relevance": "Automotive supply chain; Skoda/VW integration"
+    },
+    {
+      "id": "DNK",
+      "name": "Denmark",
+      "relevance": "North Sea energy; Fehmarn Belt tunnel project"
+    },
+    {
+      "id": "BEL",
+      "name": "Belgium",
+      "relevance": "Logistics corridor; EU institutional proximity"
+    },
+    {
+      "id": "LUX",
+      "name": "Luxembourg",
+      "relevance": "Financial center; EU institutions"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Largest single-country export market; automotive and machinery"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner overall; automotive and machinery exports; decoupling pressure"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "Largest EU economy; eurozone anchor; drives EU industrial and fiscal policy"
+    },
+    {
+      "target": "FRA",
+      "type": "alliance",
+      "description": "Franco-German axis drives EU integration; Airbus, defense cooperation"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Former gas dependency; Nordstream destruction; full EU sanctions regime; economic decoupling"
+    }
+  ],
+  "tags": [
+    "EU",
+    "G7",
+    "NATO",
+    "eurozone"
+  ],
   "_updated": "2026-03-03",
-  "_sources": ["World Bank", "CIA Factbook", "EIU"],
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
   "_placeholder": true,
   "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
 }

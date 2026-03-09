@@ -1,0 +1,17 @@
+{
+  "id": "zinc",
+  "name": "Zinc",
+  "category": "metals",
+  "producers": ["CHN", "AUS", "PER", "IND", "USA"],
+  "reserves": ["AUS", "CHN", "PER", "MEX", "IND"],
+  "processing": ["CHN", "KOR", "IND", "CAN", "JPN"],
+  "end_uses": ["galvanizing steel", "alloys (brass)", "zinc oxide", "batteries"],
+  "substitutes": ["aluminum (some coating uses)", "plastic coatings"],
+  "exposure": {
+    "countries": ["CHN", "AUS", "PER", "IND", "USA"],
+    "risk_factors": ["steel_cycle_correlation", "mine_depletion", "environmental_smelting_regulation", "construction_demand"]
+  },
+  "tags": ["industrial_metal", "base_metal", "galvanizing"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "LME", "ILZSG"]
+}

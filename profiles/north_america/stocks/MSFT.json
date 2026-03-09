@@ -1,0 +1,22 @@
+{
+  "id": "MSFT",
+  "name": "Microsoft Corporation",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Information Technology",
+  "industry": "Systems Software",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1975,
+    "employees": 221000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "IND", "GBR", "DEU", "JPN"],
+    "commodities": ["rare_earths"],
+    "supply_chain": ["Intel", "AMD", "Samsung", "OpenAI"],
+    "risk_factors": ["antitrust_regulation", "cloud_competition", "ai_investment_costs", "cybersecurity"]
+  },
+  "tags": ["mega_cap", "cloud", "ai", "enterprise_software", "gaming", "magnificent_seven"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

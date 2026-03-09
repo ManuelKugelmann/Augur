@@ -1,0 +1,22 @@
+{
+  "id": "CSCO",
+  "name": "Cisco Systems Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Information Technology",
+  "industry": "Communications Equipment",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1984,
+    "employees": 84900
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "GBR", "JPN", "DEU", "IND"],
+    "commodities": ["rare_earths", "copper"],
+    "supply_chain": ["Foxconn", "Flex", "Jabil"],
+    "risk_factors": ["enterprise_spending_cyclicality", "cloud_transition", "china_competition", "splunk_integration"]
+  },
+  "tags": ["large_cap", "networking", "cybersecurity", "enterprise", "dividend"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

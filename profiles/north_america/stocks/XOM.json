@@ -1,0 +1,22 @@
+{
+  "id": "XOM",
+  "name": "Exxon Mobil Corporation",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Energy",
+  "industry": "Integrated Oil & Gas",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1882,
+    "employees": 62000
+  },
+  "exposure": {
+    "countries": ["USA", "CAN", "GUY", "NGA", "QAT", "BRA"],
+    "commodities": ["crude_oil", "natural_gas", "lng"],
+    "supply_chain": ["Schlumberger", "Halliburton", "Baker Hughes"],
+    "risk_factors": ["oil_price_volatility", "energy_transition", "geopolitical_risk", "carbon_regulation"]
+  },
+  "tags": ["mega_cap", "oil_gas", "energy", "dividend_aristocrat"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

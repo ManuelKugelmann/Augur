@@ -1,0 +1,16 @@
+{
+  "id": "reliefweb",
+  "name": "ReliefWeb",
+  "mcp": "humanitarian",
+  "tool": "reliefweb_reports",
+  "api_base": "https://api.reliefweb.int/v1/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "daily",
+    "snapshot_type": "reports",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["ReliefWeb API Docs"]
+}

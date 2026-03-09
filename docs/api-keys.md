@@ -21,6 +21,7 @@ All domain servers work partially without keys — tools that need a key return 
 | `ACLED_PASSWORD` | ACLED (OAuth password) | conflict_server | — | same as above |
 | `OPENSANCTIONS_API_KEY` | OpenSanctions (entity search) | conflict_server | free tier | https://www.opensanctions.org/api/ |
 | `UCDP_ACCESS_TOKEN` | UCDP (armed conflict) | conflict_server | free (request token) | https://ucdp.uu.se/apidocs/ |
+| `OPENSANCTIONS_API_KEY` | OpenSanctions (sanctions search) | conflict_server | free (self-service) | https://www.opensanctions.org/api/ |
 | `EIA_API_KEY` | EIA (US energy data) | commodities_server | unlimited | https://www.eia.gov/opendata/register.php |
 | `COMTRADE_API_KEY` | UN Comtrade (trade flows) | commodities_server | 100 req/day | https://comtradeplus.un.org/TradeFlow |
 | `GOOGLE_API_KEY` | Google Civic Info | elections_server | generous | https://console.cloud.google.com/apis/credentials |
@@ -30,6 +31,7 @@ All domain servers work partially without keys — tools that need a key return 
 | `CF_API_TOKEN` | Cloudflare Radar | infra_server | free | https://dash.cloudflare.com/profile/api-tokens |
 | `USDA_NASS_API_KEY` | USDA NASS (ag stats) | agri_server | unlimited | https://quickstats.nass.usda.gov/api/ |
 | `IDMC_API_KEY` | IDMC (displacement data) | humanitarian_server | free (request key) | https://www.internal-displacement.org/ |
+| `RELIEFWEB_APPNAME` | ReliefWeb (reports/disasters) | humanitarian_server | free (register appname) | https://apidoc.reliefweb.int/ |
 
 ## LLM Provider Keys (LibreChat)
 
@@ -66,9 +68,9 @@ These APIs require no authentication and work out of the box:
 | disasters | USGS Earthquakes, GDACS, NASA EONET |
 | macro | World Bank, IMF WEO (FRED needs key) |
 | agri | FAOSTAT (USDA NASS needs key) |
-| conflict | UCDP, OpenSanctions (ACLED needs OAuth, UCDP token optional) |
+| conflict | UCDP (ACLED needs OAuth, UCDP token optional, OpenSanctions needs key) |
 | health | WHO GHO, WHO Outbreaks, disease.sh, FDA |
-| humanitarian | UNHCR, OCHA HDX, ReliefWeb (IDMC needs key) |
+| humanitarian | UNHCR, OCHA HDX (IDMC needs key, ReliefWeb needs appname) |
 | elections | Wikidata, EU Parliament (Google Civic needs key) |
 | transport | OpenSky Network (AIS Stream needs key, OpenSky OAuth2 optional) |
 | water | USGS Water Services, US Drought Monitor |
@@ -105,6 +107,7 @@ librechat.yaml           │ env: blocks pass keys explicitly
   ├─ ACLED_EMAIL ───────►│ conflict_server (OAuth login)
   ├─ ACLED_PASSWORD ────►│ conflict_server (OAuth password)
   ├─ UCDP_ACCESS_TOKEN ─►│ conflict_server
+  ├─ OPENSANCTIONS_API_KEY►│ conflict_server
   ├─ EIA_API_KEY ───────►│ commodities_server
   ├─ COMTRADE_API_KEY ──►│ commodities_server
   ├─ GOOGLE_API_KEY ────►│ elections_server
@@ -113,5 +116,6 @@ librechat.yaml           │ env: blocks pass keys explicitly
   ├─ OPENSKY_CLIENT_SECRET► transport_server (OAuth2)
   ├─ CF_API_TOKEN ──────►│ infra_server
   ├─ USDA_NASS_API_KEY ──► agri_server
-  └─ IDMC_API_KEY ──────►│ humanitarian_server
+  ├─ IDMC_API_KEY ──────►│ humanitarian_server
+  └─ RELIEFWEB_APPNAME ──► humanitarian_server
 ```

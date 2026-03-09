@@ -1,0 +1,22 @@
+{
+  "id": "NESN",
+  "name": "Nestlé S.A.",
+  "type": "stock",
+  "exchange": "SWX",
+  "sector": "Consumer Staples",
+  "industry": "Packaged Foods & Meats",
+  "country": "CHE",
+  "fundamentals": {
+    "founded": 1866,
+    "employees": 270000
+  },
+  "exposure": {
+    "countries": ["CHE", "USA", "BRA", "CHN", "IND", "MEX", "FRA"],
+    "commodities": ["coffee", "cocoa", "milk", "sugar", "wheat"],
+    "supply_chain": ["Cargill", "Barry Callebaut", "Olam", "ADM"],
+    "risk_factors": ["commodity_inflation", "consumer_health_trends", "water_scarcity", "emerging_market_fx"]
+  },
+  "tags": ["consumer_staples", "food_beverage", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

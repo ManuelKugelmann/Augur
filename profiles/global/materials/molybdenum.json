@@ -1,0 +1,17 @@
+{
+  "id": "molybdenum",
+  "name": "Molybdenum",
+  "category": "metals",
+  "producers": ["CHN", "CHL", "USA", "PER", "MEX"],
+  "reserves": ["CHN", "USA", "CHL", "PER", "CAN"],
+  "processing": ["CHN", "CHL", "USA", "NLD", "DEU"],
+  "end_uses": ["steel alloys", "stainless steel", "chemicals", "oil refining catalysts"],
+  "substitutes": ["tungsten (some alloy uses)", "niobium", "chromium"],
+  "exposure": {
+    "countries": ["CHN", "CHL", "USA", "PER", "MEX"],
+    "risk_factors": ["copper_byproduct_dependency", "steel_demand_cycles", "oil_refining_capacity", "china_production_share"]
+  },
+  "tags": ["industrial_metal", "steel", "refining"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "IMOA"]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "rust_belt",
+  "name": "US Rust Belt",
+  "type": "subregion",
+  "countries": ["USA"],
+  "bbox": [-90.0, 38.0, -75.0, 45.0],
+  "climate": "Humid continental; cold snowy winters, warm humid summers; lake-effect snow near Great Lakes",
+  "hazards": [
+    "lake_effect_snow",
+    "flooding",
+    "industrial_pollution",
+    "brownfield_contamination",
+    "tornadoes",
+    "extreme_cold"
+  ],
+  "chokepoints": [
+    "Great Lakes–St. Lawrence Seaway",
+    "Soo Locks (Sault Ste. Marie)",
+    "Ohio River system",
+    "Interstate highway corridors"
+  ],
+  "neighbors": [
+    {"id": "corn_belt", "name": "US Corn Belt", "relevance": "Adjacent agricultural region; farm equipment demand, ethanol plants, and food processing create tight economic links"},
+    {"id": "nafta_usmca", "name": "USMCA", "relevance": "Rust Belt sits within USMCA territory; US-Canada auto supply chains cross the Great Lakes border daily"},
+    {"id": "silicon_valley", "name": "Silicon Valley", "relevance": "Tech-driven automation and EV software reshape Rust Belt manufacturing; venture capital flows into industrial IoT"},
+    {"id": "eu", "name": "European Union", "relevance": "EU automakers (VW, BMW, Stellantis) operate Rust Belt plants; steel tariffs affect transatlantic trade"},
+    {"id": "rcep", "name": "RCEP", "relevance": "Asian steel and auto parts imports compete with Rust Belt output; China, Japan, South Korea are key rivals"}
+  ],
+  "links": [
+    {"target": "nafta_usmca", "type": "overlap", "description": "Rust Belt automotive and steel industries are deeply integrated into US-Canada-Mexico supply chains"},
+    {"target": "corn_belt", "type": "trade", "description": "Great Lakes corridor processes Corn Belt agricultural output; ethanol and food manufacturing overlap"},
+    {"target": "silicon_valley", "type": "dependency", "description": "EV transition depends on Silicon Valley battery and software tech; reshoring of chip manufacturing"},
+    {"target": "eu", "type": "rivalry", "description": "European steel and auto imports compete directly; tariff and anti-dumping disputes are recurring"},
+    {"target": "rcep", "type": "rivalry", "description": "Chinese steel overcapacity and Asian auto parts undercut Rust Belt producers; tariff protection is key"},
+    {"target": "g7", "type": "trade", "description": "G7 steel and aluminum trade agreements directly affect Rust Belt production levels and employment"},
+    {"target": "panama_canal", "type": "corridor", "description": "Great Lakes-St. Lawrence Seaway and Gulf Coast ports connect Rust Belt exports to global markets via Panama"}
+  ],
+  "exposure": {
+    "commodities": [
+      "steel",
+      "automobiles",
+      "auto_parts",
+      "aluminum",
+      "coal",
+      "machinery",
+      "chemicals",
+      "glass",
+      "rubber"
+    ],
+    "risk_factors": [
+      "deindustrialization",
+      "manufacturing_job_loss",
+      "import_competition",
+      "tariff_policy_dependence",
+      "infrastructure_aging",
+      "population_decline",
+      "opioid_crisis",
+      "reshoring_opportunities",
+      "ev_transition_disruption",
+      "soo_locks_single_point_failure"
+    ]
+  },
+  "tags": ["rust_belt", "manufacturing", "great_lakes", "steel", "automotive", "industrial", "reshoring"],
+  "_updated": "2026-03-09",
+  "_sources": ["US Census Bureau", "CIA World Factbook", "Bureau of Labor Statistics", "US Army Corps of Engineers"]
+}

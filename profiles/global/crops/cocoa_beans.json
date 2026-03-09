@@ -1,0 +1,18 @@
+{
+  "id": "cocoa_beans",
+  "name": "Cocoa Beans",
+  "category": "tree_crops",
+  "growing_season": "Year-round; main harvest Oct-March (West Africa)",
+  "producers": ["CIV", "GHA", "IDN", "ECU", "CMR"],
+  "exporters": ["CIV", "GHA", "ECU", "CMR", "NGA"],
+  "water_intensity": "high",
+  "climate_sensitivity": ["drought", "excessive_rain", "temperature_rise", "disease"],
+  "exposure": {
+    "countries": ["CIV", "GHA", "IDN", "ECU", "CMR", "NGA"],
+    "commodities": ["chocolate"],
+    "risk_factors": ["west_africa_concentration", "child_labor_regulation", "deforestation_policy", "swollen_shoot_virus"]
+  },
+  "tags": ["tree_crop", "tropical", "cash_crop"],
+  "_updated": "2026-03-09",
+  "_sources": ["ICCO", "FAOSTAT", "USDA"]
+}

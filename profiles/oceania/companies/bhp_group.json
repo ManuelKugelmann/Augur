@@ -1,0 +1,21 @@
+{
+  "id": "bhp_group",
+  "name": "BHP Group",
+  "country": "AUS",
+  "sector": "Materials",
+  "industry": "Diversified Metals & Mining",
+  "revenue": 53000000000,
+  "employees": 80000,
+  "publicly_traded": true,
+  "ticker": "BHP",
+  "subsidiaries": ["BHP Nickel West", "BHP Mitsubishi Alliance", "Samarco (JV)"],
+  "exposure": {
+    "countries": ["AUS", "CHL", "CAN", "USA", "GBR", "BRA"],
+    "products": ["steel", "ev_batteries"],
+    "materials": ["iron_ore", "copper", "nickel", "potash"],
+    "risk_factors": ["china_demand_dependence", "commodity_cycles", "environmental_liabilities"]
+  },
+  "tags": ["mining_major", "dividend", "resources"],
+  "_updated": "2026-03-09",
+  "_sources": ["BHP Annual Report", "Bloomberg"]
+}

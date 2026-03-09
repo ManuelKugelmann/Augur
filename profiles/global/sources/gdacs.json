@@ -1,0 +1,16 @@
+{
+  "id": "gdacs",
+  "name": "Global Disaster Alerting Coordination System",
+  "mcp": "disasters",
+  "tool": "gdacs_alerts",
+  "api_base": "https://www.gdacs.org/gdacsapi/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "continuous",
+    "snapshot_type": "alerts",
+    "default_params": {}
+  },
+  "ttl_days": 1,
+  "_updated": "2026-03-09",
+  "_sources": ["GDACS API Docs"]
+}

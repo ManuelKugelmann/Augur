@@ -1,0 +1,22 @@
+{
+  "id": "GE",
+  "name": "GE Aerospace",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Industrials",
+  "industry": "Aerospace & Defense",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1892,
+    "employees": 52000
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "FRA", "DEU", "CHN", "IND"],
+    "commodities": ["titanium", "nickel", "cobalt"],
+    "supply_chain": ["Safran", "Boeing", "Airbus", "Honeywell"],
+    "risk_factors": ["aviation_demand", "supply_chain_constraints", "defense_budgets", "engine_certification"]
+  },
+  "tags": ["aerospace", "defense", "jet_engines", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

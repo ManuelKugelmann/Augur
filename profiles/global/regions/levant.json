@@ -1,0 +1,32 @@
+{
+  "id": "levant",
+  "name": "Levant",
+  "type": "subregion",
+  "countries": ["SYR", "LBN", "JOR", "ISR", "PSE"],
+  "bbox": [34.2, 29.2, 42.4, 37.3],
+  "climate": "Mediterranean along the coast with hot dry summers and mild wet winters; semi-arid to arid inland; desert in eastern Syria and southern Jordan",
+  "hazards": ["seismic_activity", "drought", "water_scarcity", "conflict", "refugee_crisis", "wildfire"],
+  "chokepoints": ["Eastern_Mediterranean_shipping", "Suez_northern_approach", "Golan_Heights", "Jordan_River_basin"],
+  "neighbors": [
+    {"id": "mediterranean", "name": "Mediterranean", "relevance": "Western coastline; Eastern Mediterranean gas fields and shipping lanes"},
+    {"id": "red_sea", "name": "Red Sea", "relevance": "Jordan and Israel have Red Sea ports at Aqaba and Eilat"},
+    {"id": "suez_canal", "name": "Suez Canal", "relevance": "Adjacent across Sinai; Levant stability affects Suez Canal security"},
+    {"id": "persian_gulf", "name": "Persian Gulf", "relevance": "Iraqi border connects Levant to Gulf oil economy; Iranian influence corridor"},
+    {"id": "gcc", "name": "Gulf Cooperation Council", "relevance": "Major source of investment, remittances, and reconstruction funding for Levant states"}
+  ],
+  "links": [
+    {"target": "mediterranean", "type": "corridor", "description": "Eastern Mediterranean gas discoveries (Leviathan, Tamar) link Levant to EU energy markets"},
+    {"target": "suez_canal", "type": "dependency", "description": "Levant trade depends on Suez Canal access; Sinai instability threatens both"},
+    {"target": "red_sea", "type": "trade", "description": "Aqaba and Eilat ports provide Levant access to Indian Ocean trade routes"},
+    {"target": "gcc", "type": "trade", "description": "GCC sovereign wealth funds invest in Levant reconstruction and infrastructure"},
+    {"target": "eu", "type": "trade", "description": "EU is the largest trade partner and aid donor for Levant economies"},
+    {"target": "persian_gulf", "type": "rivalry", "description": "Iran-Israel rivalry plays out across the Levant via proxy forces in Syria and Lebanon"}
+  ],
+  "exposure": {
+    "commodities": ["natural_gas", "phosphates", "potash", "olive_oil", "citrus", "tech_exports", "diamonds"],
+    "risk_factors": ["armed_conflict", "territorial_disputes", "refugee_displacement", "sanctions", "Hezbollah_militancy", "water_scarcity", "state_collapse", "Iranian_proxy_influence", "energy_exploration_disputes"]
+  },
+  "tags": ["levant", "geopolitical-hotspot", "Mediterranean", "conflict-zone", "water-stressed", "refugee-host"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN OCHA", "World Bank", "ACLED"]
+}

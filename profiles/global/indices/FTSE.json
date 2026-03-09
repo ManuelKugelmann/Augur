@@ -1,0 +1,17 @@
+{
+  "id": "FTSE",
+  "name": "FTSE 100",
+  "type": "index",
+  "country": "GBR",
+  "exchange": "LSE",
+  "components": 100,
+  "methodology": "market-cap-weighted",
+  "exposure": {
+    "sectors": ["Energy", "Financials", "Healthcare", "Consumer Staples", "Materials", "Industrials"],
+    "countries": ["GBR"],
+    "risk_factors": ["gbp_currency_risk", "commodity_exposure", "global_revenue_mix"]
+  },
+  "tags": ["benchmark", "uk_equity", "large_cap", "international_revenue"],
+  "_updated": "2026-03-09",
+  "_sources": ["FTSE Russell"]
+}

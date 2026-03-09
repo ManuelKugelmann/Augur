@@ -1,0 +1,160 @@
+{
+  "id": "CHN",
+  "name": "China",
+  "iso2": "CN",
+  "region": "East Asia",
+  "currency": "CNY",
+  "capital": "Beijing",
+  "population": 1410000000,
+  "trade": {
+    "top_exports": [
+      "electronics",
+      "machinery",
+      "textiles",
+      "furniture",
+      "steel"
+    ],
+    "top_partners": [
+      "USA",
+      "JPN",
+      "KOR",
+      "VNM",
+      "DEU"
+    ],
+    "major_ports": [
+      "Shanghai",
+      "Shenzhen",
+      "Ningbo-Zhoushan",
+      "Guangzhou",
+      "Qingdao"
+    ],
+    "chokepoint_exposure": [
+      "malacca",
+      "taiwan_strait",
+      "suez"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "iron_ore",
+      "soybeans",
+      "natural_gas",
+      "copper"
+    ],
+    "energy_mix": {
+      "coal": 0.56,
+      "renewables": 0.14,
+      "hydro": 0.15,
+      "gas": 0.06,
+      "nuclear": 0.05,
+      "oil": 0.01,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "us_trade_tensions",
+      "property_sector_crisis",
+      "demographic_decline",
+      "taiwan_strait_risk"
+    ]
+  },
+  "ratings": {
+    "credit": "A+",
+    "democracy_index": 2.12,
+    "press_freedom_rank": 172,
+    "corruption_perception": 45
+  },
+  "neighbors": [
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Strategic partner; energy imports and UN Security Council coordination"
+    },
+    {
+      "id": "IND",
+      "name": "India",
+      "relevance": "Border disputes (LAC); competing for regional influence in South/Southeast Asia"
+    },
+    {
+      "id": "JPN",
+      "name": "Japan",
+      "relevance": "Senkaku/Diaoyu dispute; largest Asian rival economy; deep supply chain ties"
+    },
+    {
+      "id": "KOR",
+      "name": "South Korea",
+      "relevance": "Major trade partner; semiconductor supply chain; THAAD tensions"
+    },
+    {
+      "id": "VNM",
+      "name": "Vietnam",
+      "relevance": "South China Sea disputes; manufacturing competitor and trade partner"
+    },
+    {
+      "id": "MNG",
+      "name": "Mongolia",
+      "relevance": "Landlocked buffer state; mineral resources and transit routes"
+    },
+    {
+      "id": "PRK",
+      "name": "North Korea",
+      "relevance": "Security liability; buffer state; sanctions enforcement"
+    },
+    {
+      "id": "TWN",
+      "name": "Taiwan",
+      "relevance": "Core sovereignty claim; semiconductor chokepoint; potential flashpoint"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "rivalry",
+      "description": "Strategic competition across tech, trade, military, and influence domains"
+    },
+    {
+      "target": "TWN",
+      "type": "dependency",
+      "description": "Claims sovereignty; TSMC semiconductor dependence; military posturing"
+    },
+    {
+      "target": "RUS",
+      "type": "alliance",
+      "description": "No-limits partnership; energy buyer; mutual UN veto coordination"
+    },
+    {
+      "target": "ASEAN",
+      "type": "trade",
+      "description": "Largest ASEAN trade partner; RCEP anchor; South China Sea friction"
+    },
+    {
+      "target": "SAU",
+      "type": "trade",
+      "description": "Largest oil supplier; petroyuan settlement growing"
+    },
+    {
+      "target": "AUS",
+      "type": "rivalry",
+      "description": "Trade coercion cycle; iron ore dependency; AUKUS response"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Second-largest trade partner; EV tariff disputes; investment screening"
+    }
+  ],
+  "tags": [
+    "BRICS",
+    "G20",
+    "APEC",
+    "reserve_currency"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

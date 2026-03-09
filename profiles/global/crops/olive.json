@@ -1,0 +1,18 @@
+{
+  "id": "olive",
+  "name": "Olive",
+  "category": "oilseeds",
+  "growing_season": "Perennial; harvest Oct-Feb (Mediterranean)",
+  "producers": ["ESP", "ITA", "GRC", "TUR", "MAR", "TUN"],
+  "exporters": ["ESP", "ITA", "TUN", "GRC", "TUR"],
+  "water_intensity": "low",
+  "climate_sensitivity": ["drought", "heat_waves", "frost", "xylella_fastidiosa"],
+  "exposure": {
+    "countries": ["ESP", "ITA", "GRC", "TUR", "TUN"],
+    "commodities": ["olive_oil"],
+    "risk_factors": ["mediterranean_drought", "alternate_bearing_cycle", "xylella_disease", "climate_change"]
+  },
+  "tags": ["oilseeds", "food", "mediterranean"],
+  "_updated": "2026-03-09",
+  "_sources": ["IOC", "USDA", "FAOSTAT"]
+}

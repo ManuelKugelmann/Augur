@@ -1,0 +1,16 @@
+{
+  "id": "HYG",
+  "name": "iShares iBoxx $ High Yield Corporate Bond ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["High Yield Corporate Bonds"],
+    "risk_factors": ["credit_risk", "default_risk", "interest_rate_risk", "spread_widening"]
+  },
+  "tags": ["high_yield", "junk_bonds", "corporate_bonds", "fixed_income", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

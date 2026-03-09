@@ -1,0 +1,22 @@
+{
+  "id": "BABA",
+  "name": "Alibaba Group Holding Limited",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Discretionary",
+  "industry": "Broadline Retail",
+  "country": "CHN",
+  "fundamentals": {
+    "founded": 1999,
+    "employees": 220000
+  },
+  "exposure": {
+    "countries": ["CHN", "USA", "SGP", "IDN", "TUR"],
+    "commodities": [],
+    "supply_chain": ["Ant Group", "Cainiao", "Lazada", "AliCloud"],
+    "risk_factors": ["china_regulatory", "us_delisting_risk", "competition_pdd", "cloud_growth", "consumer_confidence_china"]
+  },
+  "tags": ["ecommerce", "cloud", "fintech", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

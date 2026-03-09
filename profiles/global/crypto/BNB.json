@@ -1,0 +1,15 @@
+{
+  "id": "BNB",
+  "name": "BNB",
+  "type": "crypto",
+  "network": "BNB Chain",
+  "consensus": "PoSA",
+  "max_supply": 200000000,
+  "exposure": {
+    "countries": ["USA", "CHN", "JPN", "KOR"],
+    "risk_factors": ["regulatory_risk", "volatility", "exchange_dependence", "centralization_risk"]
+  },
+  "tags": ["exchange_token", "layer1", "defi", "binance"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

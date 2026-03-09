@@ -1,0 +1,22 @@
+{
+  "id": "UNH",
+  "name": "UnitedHealth Group Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Health Care",
+  "industry": "Managed Health Care",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1977,
+    "employees": 400000
+  },
+  "exposure": {
+    "countries": ["USA", "BRA", "CHL"],
+    "commodities": [],
+    "supply_chain": ["Optum", "Change Healthcare"],
+    "risk_factors": ["healthcare_regulation", "medicare_reimbursement", "medical_cost_ratio", "political_risk"]
+  },
+  "tags": ["mega_cap", "health_insurance", "managed_care", "optum"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

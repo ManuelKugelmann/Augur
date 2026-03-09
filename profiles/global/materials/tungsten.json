@@ -1,0 +1,17 @@
+{
+  "id": "tungsten",
+  "name": "Tungsten",
+  "category": "metals",
+  "producers": ["CHN", "VNM", "RUS", "BOL", "AUT"],
+  "reserves": ["CHN", "RUS", "VNM", "CAN", "BOL"],
+  "processing": ["CHN", "AUT", "USA", "DEU", "JPN"],
+  "end_uses": ["cemented carbide (cutting tools)", "mill products", "alloys", "electronics"],
+  "substitutes": ["molybdenum (some steel uses)", "ceramics (cutting tools)"],
+  "exposure": {
+    "countries": ["CHN", "VNM", "RUS", "AUT"],
+    "risk_factors": ["china_dominance", "export_controls", "defense_applications", "recycling_rate"]
+  },
+  "tags": ["critical_mineral", "strategic", "defense", "industrial"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "ITIA"]
+}
