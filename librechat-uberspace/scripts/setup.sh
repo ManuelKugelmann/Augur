@@ -14,7 +14,6 @@ VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
 BAK="${APP}.prev"
 STACK="${STACK_DIR:-$HOME/mcps}"
-SVC="$HOME/etc/services.d/librechat.ini"
 PORT="${LC_PORT:-3080}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -22,13 +21,39 @@ log()  { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
+# ── Platform detection ──
+_is_u8() { [[ -f /etc/arch-release ]]; }
+
+_svc_stop_lc() {
+    if _is_u8; then
+        systemctl --user stop librechat 2>/dev/null || true
+    else
+        supervisorctl stop librechat 2>/dev/null || true
+    fi
+}
+_svc_start_lc() {
+    if _is_u8; then
+        systemctl --user start librechat 2>/dev/null || true
+    else
+        supervisorctl start librechat 2>/dev/null || supervisorctl restart librechat 2>/dev/null || true
+    fi
+}
+_web_backend() {
+    local path="$1" port="$2"
+    if _is_u8; then
+        uberspace web backend add "$path" port "$port" --force 2>/dev/null
+    else
+        uberspace web backend set "$path" --http --port "$port" 2>/dev/null
+    fi
+}
+
 # Dirs that survive updates
 PERSIST=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
-command -v node &>/dev/null || die "Node.js not found. Run: uberspace tools version use node ${NODE_VERSION:-22}"
+command -v node &>/dev/null || die "Node.js not found. On U7: uberspace tools version use node ${NODE_VERSION:-22}. On U8: node is system-provided."
 NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d 'v')
-[[ "$NODE_MAJOR" -lt 20 ]] && die "Node.js ≥20 required (got $(node -v)). Run: uberspace tools version use node ${NODE_VERSION:-22}"
+[[ "$NODE_MAJOR" -lt 20 ]] && die "Node.js ≥20 required (got $(node -v))."
 
 # ── Detect mode ─────────────────────────────
 if [[ -d "$APP" ]]; then
@@ -41,7 +66,7 @@ fi
 
 # ── Stop service before swap ────────────────
 if [[ "$MODE" == "update" ]]; then
-    supervisorctl stop librechat 2>/dev/null || true
+    _svc_stop_lc
     sleep 2
 
     # Preserve .env and persistent dirs
@@ -115,9 +140,9 @@ fi
 
 # ── Install signals stack (Python MCP servers) ──
 # Resolve Python binary: try explicit PYTHON_VERSION first, then scan
-# descending 3.13→3.10, then bare python3 (works on U7 + U8 + generic Linux)
+# descending 3.14→3.10, then bare python3 (works on U7 + U8 + generic Linux)
 _PYTHON_BIN=""
-for _py in "python${PYTHON_VERSION:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+for _py in "python${PYTHON_VERSION:-}" python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
     [[ -z "$_py" || "$_py" == "python" ]] && continue
     if command -v "$_py" &>/dev/null && \
        "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
@@ -197,7 +222,7 @@ if [[ "$MODE" == "install" ]]; then
                 fi
             fi
             sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$STACK/.env"
-            # Also set in LibreChat .env for the trading supervisord service
+            # Also set in LibreChat .env for the trading service
             if ! grep -q "^MONGO_URI_SIGNALS=" "$APP/.env"; then
                 echo "MONGO_URI_SIGNALS=$DERIVED" >> "$APP/.env"
             else
@@ -207,9 +232,27 @@ if [[ "$MODE" == "install" ]]; then
         fi
     fi
 
-    # Supervisord service
-    mkdir -p "$(dirname "$SVC")"
-    cat > "$SVC" <<EOF
+    # Register librechat service (U7: supervisord, U8: systemd)
+    if _is_u8; then
+        local SVC_DIR="$HOME/.config/systemd/user"
+        mkdir -p "$SVC_DIR"
+        cat > "$SVC_DIR/librechat.service" <<EOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${APP}
+Environment=NODE_ENV=production
+ExecStart=node --max-old-space-size=1024 api/server/index.js
+Restart=always
+RestartSec=60
+EOF
+        systemctl --user daemon-reload
+        systemctl --user enable librechat 2>/dev/null || true
+    else
+        local SVC="$HOME/etc/services.d/librechat.ini"
+        mkdir -p "$(dirname "$SVC")"
+        cat > "$SVC" <<EOF
 [program:librechat]
 directory=${APP}
 command=node --max-old-space-size=1024 api/server/index.js
@@ -220,11 +263,12 @@ startsecs=60
 stopsignal=TERM
 stopwaitsecs=10
 EOF
-    supervisorctl reread 2>/dev/null
-    supervisorctl add librechat 2>/dev/null || true
+        supervisorctl reread 2>/dev/null
+        supervisorctl add librechat 2>/dev/null || true
+    fi
 
     # Web backend
-    uberspace web backend set / --http --port $PORT || warn "Failed to set web backend on port $PORT"
+    _web_backend / "$PORT" || warn "Failed to set web backend on port $PORT"
 
     # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
@@ -235,7 +279,7 @@ EOF
     echo ""
     log "Installed ${VER}"
     echo ""
-    echo -e "${CYAN}📋 Next steps:${NC}"
+    echo -e "${CYAN}Next steps:${NC}"
     echo ""
     echo -e "  ${YELLOW}1.${NC} Configure LibreChat:"
     echo "     nano $APP/.env"
@@ -249,14 +293,18 @@ EOF
     echo "     nano $APP/librechat.yaml"
     echo ""
     echo -e "  ${YELLOW}3.${NC} Start:"
-    echo "     supervisorctl start librechat"
+    if _is_u8; then
+        echo "     systemctl --user start librechat"
+    else
+        echo "     supervisorctl start librechat"
+    fi
     echo ""
-    echo -e "  ${YELLOW}5.${NC} Access:"
+    echo -e "  ${YELLOW}4.${NC} Access:"
     echo "     https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'YOUR_USER.uber.space')}"
     echo ""
 else
     # ── Update: restart ─────────────────────
-    supervisorctl start librechat 2>/dev/null || supervisorctl restart librechat 2>/dev/null || true
+    _svc_start_lc
     log "Updated to ${VER} — service restarted"
 fi
 
