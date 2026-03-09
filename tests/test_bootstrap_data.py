@@ -5,6 +5,7 @@ Tests the script's logic without requiring a running LibreChat instance.
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 
@@ -322,3 +323,236 @@ class TestDryRun:
         client.close()
 
         assert stats["kinds"] == 0
+
+
+# ── Index rebuild tests ─────────────────────────
+
+
+class TestRebuildIndexes:
+    """Test the rebuild_indexes function."""
+
+    def test_builds_index_from_profiles(self, profiles_dir):
+        results = bootstrap.rebuild_indexes(str(profiles_dir))
+        assert "countries" in results
+        assert results["countries"] == 2  # USA + DEU
+
+        idx_path = profiles_dir / "INDEX_countries.json"
+        assert idx_path.exists()
+        index = json.loads(idx_path.read_text())
+        ids = [e["id"] for e in index]
+        assert "USA" in ids
+        assert "DEU" in ids
+
+    def test_index_sorted_by_id(self, profiles_dir):
+        bootstrap.rebuild_indexes(str(profiles_dir))
+        idx_path = profiles_dir / "INDEX_countries.json"
+        index = json.loads(idx_path.read_text())
+        ids = [e["id"] for e in index]
+        assert ids == sorted(ids)
+
+    def test_index_entry_fields(self, profiles_dir):
+        bootstrap.rebuild_indexes(str(profiles_dir))
+        idx_path = profiles_dir / "INDEX_countries.json"
+        index = json.loads(idx_path.read_text())
+        usa = next(e for e in index if e["id"] == "USA")
+        assert usa["kind"] == "countries"
+        assert usa["name"] == "United States"
+        assert usa["region"] == "north_america"
+
+    def test_index_includes_optional_fields(self, profiles_dir):
+        # Write a profile with tags and sector
+        (profiles_dir / "north_america" / "stocks" / "MSFT.json").write_text(
+            json.dumps({"id": "MSFT", "name": "Microsoft", "tags": ["tech"], "sector": "Technology"})
+        )
+        bootstrap.rebuild_indexes(str(profiles_dir))
+        idx_path = profiles_dir / "INDEX_stocks.json"
+        index = json.loads(idx_path.read_text())
+        msft = next(e for e in index if e["id"] == "MSFT")
+        assert msft["tags"] == ["tech"]
+        assert msft["sector"] == "Technology"
+
+    def test_empty_kinds_get_empty_index(self, profiles_dir):
+        bootstrap.rebuild_indexes(str(profiles_dir))
+        idx_path = profiles_dir / "INDEX_crypto.json"
+        assert idx_path.exists()
+        index = json.loads(idx_path.read_text())
+        assert index == []
+
+    def test_skips_schema_and_hidden_dirs(self, profiles_dir):
+        (profiles_dir / "SCHEMAS" / "countries").mkdir(parents=True)
+        (profiles_dir / "SCHEMAS" / "countries" / "FAKE.json").write_text(
+            json.dumps({"id": "FAKE", "name": "Fake"})
+        )
+        (profiles_dir / ".hidden" / "countries").mkdir(parents=True)
+        (profiles_dir / ".hidden" / "countries" / "HID.json").write_text(
+            json.dumps({"id": "HID", "name": "Hidden"})
+        )
+        results = bootstrap.rebuild_indexes(str(profiles_dir))
+        assert results.get("countries", 0) == 2  # only USA + DEU
+
+    def test_skips_underscore_files(self, profiles_dir):
+        (profiles_dir / "north_america" / "countries" / "_template.json").write_text(
+            json.dumps({"id": "_template", "name": "Template"})
+        )
+        results = bootstrap.rebuild_indexes(str(profiles_dir))
+        idx_path = profiles_dir / "INDEX_countries.json"
+        index = json.loads(idx_path.read_text())
+        ids = [e["id"] for e in index]
+        assert "_template" not in ids
+
+    def test_all_valid_kinds_get_index_files(self, profiles_dir):
+        bootstrap.rebuild_indexes(str(profiles_dir))
+        for kind in bootstrap.VALID_KINDS:
+            idx_path = profiles_dir / f"INDEX_{kind}.json"
+            assert idx_path.exists(), f"Missing INDEX_{kind}.json"
+
+
+# ── E2E: bootstrap → index → data branch push ───
+
+
+class TestE2EDataBranch:
+    """End-to-end test: bootstrap dry-run, rebuild indexes, commit+push to data branch."""
+
+    @pytest.fixture
+    def git_env(self, tmp_path):
+        """Set up a local git repo with profiles, plus a bare remote to push to."""
+        git_env = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null"}
+
+        def git(*args, **kw):
+            return subprocess.run(
+                ["git"] + list(args), check=True, capture_output=True, env=git_env, **kw,
+            )
+
+        # Create bare remote
+        remote = tmp_path / "remote.git"
+        remote.mkdir()
+        git("init", "--bare", "--initial-branch=main", str(remote))
+
+        # Create working repo
+        work = tmp_path / "work"
+        work.mkdir()
+        git("init", "--initial-branch=main", str(work))
+        git("-C", str(work), "remote", "add", "origin", str(remote))
+        git("-C", str(work), "config", "user.name", "test")
+        git("-C", str(work), "config", "user.email", "test@test.com")
+        git("-C", str(work), "config", "commit.gpgsign", "false")
+
+        # Create initial commit on main
+        readme = work / "README.md"
+        readme.write_text("# test")
+        git("-C", str(work), "add", ".")
+        git("-C", str(work), "commit", "-m", "init")
+        git("-C", str(work), "push", "-u", "origin", "main")
+
+        # Create profiles directory with sample data
+        profiles = work / "profiles"
+        (profiles / "north_america" / "countries").mkdir(parents=True)
+        (profiles / "europe" / "stocks").mkdir(parents=True)
+        (profiles / "global" / "commodities").mkdir(parents=True)
+
+        (profiles / "north_america" / "countries" / "USA.json").write_text(
+            json.dumps({"id": "USA", "name": "United States", "iso2": "US",
+                         "region": "north_america", "tags": ["g7", "nato"]})
+        )
+        (profiles / "north_america" / "countries" / "CAN.json").write_text(
+            json.dumps({"id": "CAN", "name": "Canada", "iso2": "CA",
+                         "region": "north_america", "tags": ["g7", "nato"]})
+        )
+        (profiles / "europe" / "stocks" / "SAP.json").write_text(
+            json.dumps({"id": "SAP", "name": "SAP SE", "type": "stock",
+                         "sector": "Technology", "tags": ["dax", "tech"]})
+        )
+        (profiles / "global" / "commodities" / "gold.json").write_text(
+            json.dumps({"id": "gold", "name": "Gold", "category": "precious_metals",
+                         "tags": ["safe_haven"]})
+        )
+
+        return {"work": work, "remote": remote, "profiles": profiles, "git": git}
+
+    def test_e2e_dry_run_rebuilds_indexes_and_pushes(self, git_env, targets):
+        """Full e2e: dry-run bootstrap, rebuild indexes, commit, push to data branch."""
+        work = git_env["work"]
+        profiles = git_env["profiles"]
+        git = git_env["git"]
+
+        # 1. Run bootstrap in dry-run mode
+        client = bootstrap.httpx.Client(base_url="http://localhost:1")
+        stats = bootstrap.run_bootstrap(
+            client=client,
+            agent_id="dry-run",
+            targets=targets,
+            profiles_dir=str(profiles),
+            kind_filter="countries",
+            dry_run=True,
+        )
+        client.close()
+        assert stats["errors"] == 0
+
+        # 2. Rebuild indexes (the new feature)
+        idx_results = bootstrap.rebuild_indexes(str(profiles))
+        assert idx_results["countries"] == 2  # USA + CAN
+        assert idx_results["stocks"] == 1     # SAP
+        assert idx_results["commodities"] == 1  # gold
+
+        # Verify INDEX files exist and are valid
+        for kind in ("countries", "stocks", "commodities"):
+            idx_path = profiles / f"INDEX_{kind}.json"
+            assert idx_path.exists()
+            index = json.loads(idx_path.read_text())
+            assert len(index) == idx_results[kind]
+            # Each entry has required fields
+            for entry in index:
+                assert "id" in entry
+                assert "kind" in entry
+                assert "name" in entry
+                assert "region" in entry
+
+        # 3. Stage, commit, and push to data branch
+        data_branch = "data/bootstrap-test"
+        git("-C", str(work), "checkout", "-B", data_branch)
+        git("-C", str(work), "add", "profiles/")
+
+        result = subprocess.run(
+            ["git", "-C", str(work), "diff", "--cached", "--quiet"],
+            capture_output=True,
+        )
+        assert result.returncode != 0, "Expected staged changes"
+
+        git("-C", str(work), "commit", "-m", "bootstrap: e2e test")
+        git("-C", str(work), "push", "-u", "origin", data_branch)
+
+        # 4. Verify the data branch exists on remote and contains profiles + indexes
+        result = git("-C", str(work), "ls-remote", "--heads", "origin", data_branch, text=True)
+        assert data_branch in result.stdout
+
+        # Verify committed files by listing the tree
+        result = git("-C", str(work), "ls-tree", "-r", "--name-only", data_branch, "--", "profiles/", text=True)
+        files = result.stdout.strip().split("\n")
+
+        # Profiles are committed
+        assert "profiles/north_america/countries/USA.json" in files
+        assert "profiles/north_america/countries/CAN.json" in files
+        assert "profiles/europe/stocks/SAP.json" in files
+        assert "profiles/global/commodities/gold.json" in files
+
+        # INDEX files are committed
+        assert "profiles/INDEX_countries.json" in files
+        assert "profiles/INDEX_stocks.json" in files
+        assert "profiles/INDEX_commodities.json" in files
+
+    def test_e2e_no_changes_skips_commit(self, git_env):
+        """If no profiles change, git diff --cached --quiet succeeds (no commit needed)."""
+        work = git_env["work"]
+        git = git_env["git"]
+
+        # Stage and commit everything first
+        git("-C", str(work), "add", "profiles/")
+        git("-C", str(work), "commit", "-m", "initial profiles")
+
+        # Now try staging again — nothing changed
+        git("-C", str(work), "add", "profiles/")
+        result = subprocess.run(
+            ["git", "-C", str(work), "diff", "--cached", "--quiet"],
+            capture_output=True,
+        )
+        assert result.returncode == 0, "Expected no staged changes"
