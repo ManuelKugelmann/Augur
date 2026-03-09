@@ -1,0 +1,17 @@
+{
+  "id": "panama_canal",
+  "name": "Panama Canal",
+  "type": "corridor",
+  "countries": ["PAN"],
+  "bbox": [-79.95, 8.85, -79.5, 9.4],
+  "climate": "Tropical maritime; hot and humid year-round; pronounced wet season (May-December); annual rainfall ~2500mm; El Nino-sensitive",
+  "hazards": ["drought", "low_water_levels", "flooding", "El_Nino_disruption", "landslide", "tropical_storm"],
+  "chokepoints": ["Panama_Canal", "Gatun_Lake"],
+  "exposure": {
+    "commodities": ["container_goods", "grain", "LNG", "LPG", "crude_oil", "dry_bulk", "vehicles"],
+    "risk_factors": ["water_level_dependency", "El_Nino_drought_restrictions", "transit_slot_limitations", "capacity_constraints", "climate_change_water_stress", "Atlantic-Pacific_trade_disruption", "canal_fee_increases"]
+  },
+  "tags": ["chokepoint", "trade-corridor", "5pct-global-trade", "Atlantic-Pacific-link", "canal", "water-dependent"],
+  "_updated": "2026-03-09",
+  "_sources": ["Panama Canal Authority", "CIA World Factbook", "UNCTAD", "NOAA"]
+}

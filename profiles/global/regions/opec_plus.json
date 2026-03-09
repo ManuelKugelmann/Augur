@@ -1,0 +1,53 @@
+{
+  "id": "opec_plus",
+  "name": "OPEC+",
+  "type": "economic_zone",
+  "countries": [
+    "DZA", "AGO", "COG", "GNQ", "GAB", "IRN", "IRQ", "KWT", "LBY", "NGA",
+    "SAU", "ARE", "VEN",
+    "AZE", "BHR", "BRN", "KAZ", "MYS", "MEX", "OMN", "RUS", "SSD", "SDN"
+  ],
+  "bbox": [-117.1, -18.0, 87.3, 81.9],
+  "climate": "Extremely diverse: arid desert, tropical, continental, subarctic — spans from equatorial Africa to Siberia",
+  "hazards": [
+    "sandstorms",
+    "extreme_heat",
+    "extreme_cold",
+    "flooding",
+    "drought",
+    "civil_conflict",
+    "permafrost_thaw"
+  ],
+  "chokepoints": [
+    "Strait of Hormuz",
+    "Bab el-Mandeb",
+    "Suez Canal",
+    "Strait of Malacca",
+    "Turkish Straits",
+    "Gulf of Guinea"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "lng",
+      "petrochemicals",
+      "condensates",
+      "coal"
+    ],
+    "risk_factors": [
+      "production_cut_coordination",
+      "compliance_discipline",
+      "us_shale_competition",
+      "energy_transition",
+      "sanctions_on_members",
+      "geopolitical_fragmentation",
+      "demand_uncertainty",
+      "spare_capacity_limits",
+      "internal_rivalries"
+    ]
+  },
+  "tags": ["opec_plus", "oil_alliance", "production_coordination", "energy", "expanded_cartel"],
+  "_updated": "2026-03-09",
+  "_sources": ["OPEC Secretariat", "CIA World Factbook", "EIA", "IEA"]
+}

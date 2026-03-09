@@ -1,0 +1,48 @@
+{
+  "id": "opec",
+  "name": "Organization of the Petroleum Exporting Countries",
+  "type": "economic_zone",
+  "countries": [
+    "DZA", "AGO", "COG", "GNQ", "GAB", "IRN", "IRQ", "KWT", "LBY", "NGA",
+    "SAU", "ARE", "VEN"
+  ],
+  "bbox": [-73.4, -18.0, 63.3, 37.4],
+  "climate": "Predominantly arid and tropical; desert in Middle East and North Africa, tropical in West and Central Africa, tropical/arid in Venezuela",
+  "hazards": [
+    "sandstorms",
+    "extreme_heat",
+    "flooding",
+    "drought",
+    "civil_conflict",
+    "tropical_storms"
+  ],
+  "chokepoints": [
+    "Strait of Hormuz",
+    "Bab el-Mandeb",
+    "Suez Canal",
+    "Gulf of Guinea",
+    "Strait of Gibraltar"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "lng",
+      "petrochemicals",
+      "condensates"
+    ],
+    "risk_factors": [
+      "oil_price_volatility",
+      "production_quota_compliance",
+      "energy_transition_demand_destruction",
+      "sanctions_on_members",
+      "political_instability",
+      "civil_conflict",
+      "spare_capacity_concentration",
+      "revenue_dependence_on_hydrocarbons"
+    ]
+  },
+  "tags": ["opec", "oil_cartel", "petroleum", "production_quotas", "energy"],
+  "_updated": "2026-03-09",
+  "_sources": ["OPEC Secretariat", "CIA World Factbook", "EIA"]
+}

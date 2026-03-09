@@ -1,0 +1,51 @@
+{
+  "id": "corn_belt",
+  "name": "US Corn Belt",
+  "type": "subregion",
+  "countries": ["USA"],
+  "bbox": [-104.0, 36.0, -80.0, 49.0],
+  "climate": "Humid continental; hot summers, cold winters; adequate rainfall for rain-fed agriculture; increasing variability due to climate change",
+  "hazards": [
+    "drought",
+    "flooding",
+    "tornadoes",
+    "hailstorms",
+    "early_frost",
+    "heat_stress",
+    "soil_erosion",
+    "derecho_storms"
+  ],
+  "chokepoints": [
+    "Mississippi River barge system",
+    "Gulf of Mexico export terminals",
+    "Pacific Northwest grain elevators",
+    "Rail corridors to ports"
+  ],
+  "exposure": {
+    "commodities": [
+      "corn",
+      "soybeans",
+      "wheat",
+      "ethanol",
+      "hogs",
+      "cattle",
+      "soybean_oil",
+      "corn_syrup",
+      "animal_feed"
+    ],
+    "risk_factors": [
+      "drought_crop_failure",
+      "china_soybean_demand",
+      "ethanol_mandate_policy",
+      "fertilizer_price_spikes",
+      "mississippi_river_low_water",
+      "farm_consolidation",
+      "gmo_regulation",
+      "trade_war_retaliation",
+      "groundwater_depletion"
+    ]
+  },
+  "tags": ["corn_belt", "agriculture", "midwest", "grain_production", "breadbasket", "ethanol", "soybeans"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA NASS", "CIA World Factbook", "NOAA", "US Army Corps of Engineers"]
+}

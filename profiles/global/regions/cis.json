@@ -1,0 +1,17 @@
+{
+  "id": "cis",
+  "name": "Commonwealth of Independent States",
+  "type": "economic_zone",
+  "countries": ["RUS", "BLR", "KAZ", "UZB", "KGZ", "TJK", "ARM", "AZE", "MDA"],
+  "bbox": [26.6, 35.1, 180.0, 81.9],
+  "climate": "Continental to subarctic across most of the zone; arid and semi-arid in Central Asia; Mediterranean pockets in the Caucasus",
+  "hazards": ["extreme_cold", "permafrost_thaw", "drought", "seismic_activity", "flooding", "wildfire"],
+  "chokepoints": ["Turkish_Straits", "Caspian_pipelines", "Druzhba_pipeline", "Northern_Sea_Route"],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "wheat", "uranium", "aluminum", "nickel", "palladium", "potash", "cotton", "gold"],
+    "risk_factors": ["sanctions_regime", "geopolitical_conflict", "pipeline_dependency", "currency_volatility", "authoritarian_governance", "energy_export_concentration"]
+  },
+  "tags": ["post-soviet", "energy-exporter", "sanctions-exposed", "eurasian", "commodity-dependent"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN Statistics Division", "World Bank", "CIS Executive Committee"]
+}

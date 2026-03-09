@@ -1,0 +1,52 @@
+{
+  "id": "asean",
+  "name": "Association of Southeast Asian Nations",
+  "type": "economic_zone",
+  "countries": ["BRN", "KHM", "IDN", "LAO", "MYS", "MMR", "PHL", "SGP", "THA", "VNM"],
+  "bbox": [92.2, -11.0, 141.0, 28.5],
+  "climate": "Tropical equatorial and monsoon, hot and humid year-round with distinct wet and dry seasons in mainland Southeast Asia",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "earthquakes",
+    "tsunamis",
+    "volcanic_eruptions",
+    "landslides",
+    "drought",
+    "haze_from_fires"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Strait of Singapore",
+    "Lombok Strait",
+    "Sunda Strait",
+    "South China Sea"
+  ],
+  "exposure": {
+    "commodities": [
+      "palm_oil",
+      "rubber",
+      "rice",
+      "tin",
+      "natural_gas",
+      "crude_oil",
+      "nickel",
+      "semiconductors",
+      "electronics",
+      "textiles"
+    ],
+    "risk_factors": [
+      "south_china_sea_disputes",
+      "supply_chain_relocation",
+      "climate_vulnerability",
+      "political_instability_myanmar",
+      "currency_volatility",
+      "infrastructure_gaps",
+      "us_china_competition",
+      "maritime_piracy"
+    ]
+  },
+  "tags": ["asean", "southeast_asia", "trade_bloc", "manufacturing_hub", "rcep_member"],
+  "_updated": "2026-03-09",
+  "_sources": ["ASEAN Secretariat", "CIA World Factbook", "World Bank"]
+}

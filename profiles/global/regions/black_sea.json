@@ -1,0 +1,48 @@
+{
+  "id": "black_sea",
+  "name": "Black Sea Region",
+  "type": "maritime",
+  "countries": ["TUR", "ROU", "BGR", "UKR", "GEO", "RUS"],
+  "bbox": [27.4, 40.9, 41.8, 46.6],
+  "climate": "Continental to subtropical along southern coast; cold winters in the north, mild Mediterranean-influenced climate in the south",
+  "hazards": [
+    "naval_conflict",
+    "mine_warfare",
+    "storm_surges",
+    "flooding",
+    "earthquakes",
+    "pipeline_sabotage"
+  ],
+  "chokepoints": [
+    "Bosphorus Strait",
+    "Dardanelles",
+    "Kerch Strait",
+    "Turkish Straits (combined)"
+  ],
+  "exposure": {
+    "commodities": [
+      "wheat",
+      "corn",
+      "sunflower_oil",
+      "barley",
+      "crude_oil",
+      "natural_gas",
+      "steel",
+      "fertilizer",
+      "manganese"
+    ],
+    "risk_factors": [
+      "russia_ukraine_conflict",
+      "grain_export_disruption",
+      "turkish_straits_bottleneck",
+      "montreux_convention_tensions",
+      "nato_russia_confrontation",
+      "energy_pipeline_routes",
+      "sanctions_enforcement",
+      "naval_mine_risk"
+    ]
+  },
+  "tags": ["black_sea", "grain_corridor", "energy_transit", "geopolitical_hotspot", "maritime", "nato_frontier"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN FAO", "NATO", "IMO"]
+}

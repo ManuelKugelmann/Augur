@@ -1,0 +1,50 @@
+{
+  "id": "silicon_valley",
+  "name": "Silicon Valley / San Francisco Bay Area",
+  "type": "subregion",
+  "countries": ["USA"],
+  "bbox": [-122.5, 37.0, -121.5, 37.9],
+  "climate": "Mediterranean; dry warm summers, mild wet winters; fog common along coast; minimal temperature extremes",
+  "hazards": [
+    "earthquakes",
+    "wildfires",
+    "drought",
+    "sea_level_rise",
+    "liquefaction",
+    "atmospheric_rivers",
+    "power_shutoffs"
+  ],
+  "chokepoints": [
+    "San Francisco Bay bridges",
+    "Port of Oakland",
+    "SFO/SJC airports",
+    "Pacific submarine cable landings"
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "software",
+      "cloud_computing",
+      "ai_systems",
+      "venture_capital",
+      "biotech",
+      "autonomous_vehicles",
+      "social_media_platforms"
+    ],
+    "risk_factors": [
+      "earthquake_risk_hayward_fault",
+      "san_andreas_fault",
+      "housing_affordability",
+      "talent_migration",
+      "tech_regulation",
+      "antitrust_enforcement",
+      "ai_regulation",
+      "remote_work_dispersion",
+      "water_supply_constraints",
+      "wildfire_smoke"
+    ]
+  },
+  "tags": ["silicon_valley", "tech_hub", "bay_area", "venture_capital", "ai_center", "innovation", "san_francisco"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "US Census Bureau", "USGS", "Joint Venture Silicon Valley"]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "african_union",
+  "name": "African Union",
+  "type": "economic_zone",
+  "countries": [
+    "DZA", "AGO", "BEN", "BWA", "BFA", "BDI", "CPV", "CMR", "CAF", "TCD",
+    "COM", "COG", "COD", "CIV", "DJI", "EGY", "GNQ", "ERI", "SWZ", "ETH",
+    "GAB", "GMB", "GHA", "GIN", "GNB", "KEN", "LSO", "LBR", "LBY", "MDG",
+    "MWI", "MLI", "MRT", "MUS", "MAR", "MOZ", "NAM", "NER", "NGA", "RWA",
+    "STP", "SEN", "SYC", "SLE", "SOM", "ZAF", "SSD", "SDN", "TZA", "TGO",
+    "TUN", "UGA", "ZMB", "ZWE"
+  ],
+  "bbox": [-25.4, -46.9, 63.5, 37.4],
+  "climate": "Equatorial rainforest, savanna, Saharan desert, Mediterranean in the north, temperate in the south, highland in East Africa",
+  "hazards": [
+    "drought",
+    "flooding",
+    "locust_swarms",
+    "tropical_cyclones",
+    "desertification",
+    "deforestation",
+    "volcanic_activity",
+    "epidemics",
+    "civil_conflict"
+  ],
+  "chokepoints": [
+    "Suez Canal",
+    "Bab el-Mandeb",
+    "Strait of Gibraltar",
+    "Mozambique Channel",
+    "Cape of Good Hope",
+    "Gulf of Guinea"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "gold",
+      "diamonds",
+      "cobalt",
+      "copper",
+      "platinum",
+      "cocoa",
+      "coffee",
+      "natural_gas",
+      "iron_ore",
+      "manganese",
+      "uranium",
+      "coltan"
+    ],
+    "risk_factors": [
+      "political_instability",
+      "conflict_and_terrorism",
+      "governance_challenges",
+      "infrastructure_deficit",
+      "food_insecurity",
+      "debt_distress",
+      "climate_vulnerability",
+      "demographic_youth_bulge",
+      "resource_curse",
+      "afcfta_implementation"
+    ]
+  },
+  "tags": ["african_union", "afcfta", "africa", "continental_bloc", "55_members"],
+  "_updated": "2026-03-09",
+  "_sources": ["African Union Commission", "CIA World Factbook", "World Bank", "UN Economic Commission for Africa"]
+}

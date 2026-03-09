@@ -1,0 +1,52 @@
+{
+  "id": "nafta_usmca",
+  "name": "United States–Mexico–Canada Agreement",
+  "type": "economic_zone",
+  "countries": ["USA", "CAN", "MEX"],
+  "bbox": [-179.2, 14.5, -52.6, 83.1],
+  "climate": "Arctic and subarctic in northern Canada, temperate continental, subtropical in southern US, tropical in southern Mexico, arid deserts in the southwest",
+  "hazards": [
+    "hurricanes",
+    "tornadoes",
+    "earthquakes",
+    "wildfires",
+    "flooding",
+    "blizzards",
+    "drought",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "Panama Canal approaches",
+    "Gulf of Mexico",
+    "Saint Lawrence Seaway",
+    "Strait of Juan de Fuca"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "corn",
+      "soybeans",
+      "wheat",
+      "lumber",
+      "automobiles",
+      "semiconductors",
+      "potash",
+      "copper",
+      "silver"
+    ],
+    "risk_factors": [
+      "trade_policy_shifts",
+      "tariff_disputes",
+      "border_security",
+      "supply_chain_integration",
+      "currency_volatility_mxn",
+      "energy_transition",
+      "immigration_policy",
+      "water_scarcity_southwest"
+    ]
+  },
+  "tags": ["usmca", "nafta", "free_trade", "north_america", "integrated_supply_chain"],
+  "_updated": "2026-03-09",
+  "_sources": ["USTR", "CIA World Factbook", "World Bank"]
+}

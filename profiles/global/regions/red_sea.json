@@ -1,0 +1,46 @@
+{
+  "id": "red_sea",
+  "name": "Red Sea",
+  "type": "maritime",
+  "countries": ["EGY", "SAU", "YEM", "ERI", "DJI", "SDN", "ISR", "JOR"],
+  "bbox": [32.3, 12.4, 43.5, 30.0],
+  "climate": "Arid desert on both coasts; extremely hot summers, mild winters; minimal rainfall",
+  "hazards": [
+    "houthi_missile_attacks",
+    "piracy",
+    "naval_mines",
+    "dust_storms",
+    "coral_reef_damage",
+    "oil_spill_risk",
+    "earthquakes"
+  ],
+  "chokepoints": [
+    "Bab el-Mandeb Strait",
+    "Suez Canal",
+    "Strait of Tiran"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "lng",
+      "container_shipping",
+      "phosphates",
+      "potash",
+      "refined_petroleum"
+    ],
+    "risk_factors": [
+      "houthi_shipping_disruption",
+      "suez_canal_blockage_risk",
+      "yemen_civil_war",
+      "iran_proxy_conflict",
+      "global_trade_rerouting",
+      "insurance_premium_spikes",
+      "naval_force_deployment",
+      "horn_of_africa_instability",
+      "container_shipping_delays"
+    ]
+  },
+  "tags": ["red_sea", "suez_approach", "bab_el_mandeb", "shipping_lane", "maritime", "houthi_threat", "energy_transit"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN", "IMO", "Lloyd's List"]
+}

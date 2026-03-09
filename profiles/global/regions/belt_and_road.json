@@ -1,0 +1,61 @@
+{
+  "id": "belt_and_road",
+  "name": "Belt and Road Initiative",
+  "type": "corridor",
+  "countries": [
+    "CHN", "PAK", "KAZ", "UZB", "TKM", "KGZ", "TJK", "RUS", "BLR", "MNG",
+    "MMR", "LAO", "KHM", "THA", "MYS", "IDN", "PHL", "LKA", "BGD", "NPL",
+    "KEN", "ETH", "DJI", "TZA", "NGA", "ZAF", "EGY", "SAU", "ARE", "IRN",
+    "IRQ", "TUR", "GRC", "ITA", "HUN", "SRB", "POL", "ARG", "BRA", "CHL",
+    "PER"
+  ],
+  "bbox": [-80.0, -55.0, 180.0, 75.0],
+  "climate": "Spans all climate zones: tropical, arid, temperate, continental, polar fringe; infrastructure exposed to diverse weather extremes",
+  "hazards": [
+    "debt_distress",
+    "political_instability",
+    "corruption",
+    "earthquakes",
+    "flooding",
+    "cyclones",
+    "drought",
+    "conflict_zones"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Suez Canal",
+    "Gwadar Port (CPEC)",
+    "Khorgos Gateway (China-Kazakhstan)",
+    "Piraeus Port (Greece)",
+    "Hambantota Port (Sri Lanka)"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "iron_ore",
+      "copper",
+      "rare_earths",
+      "lithium",
+      "cobalt",
+      "container_shipping",
+      "rail_freight",
+      "construction_materials"
+    ],
+    "risk_factors": [
+      "debt_trap_diplomacy_concerns",
+      "project_delays_and_cancellations",
+      "geopolitical_backlash",
+      "us_china_competition",
+      "environmental_impact",
+      "labor_disputes",
+      "currency_risk",
+      "sovereign_default_risk",
+      "port_control_controversies",
+      "alternative_corridor_competition"
+    ]
+  },
+  "tags": ["belt_and_road", "bri", "one_belt_one_road", "corridor", "infrastructure", "china_led", "cpec", "development_finance"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "World Bank", "AidData", "Green Finance & Development Center"]
+}

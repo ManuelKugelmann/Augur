@@ -1,0 +1,52 @@
+{
+  "id": "five_eyes",
+  "name": "Five Eyes Intelligence Alliance",
+  "type": "economic_zone",
+  "countries": ["USA", "GBR", "CAN", "AUS", "NZL"],
+  "bbox": [-180.0, -47.0, 180.0, 84.0],
+  "climate": "Diverse: temperate maritime (GBR, NZL), continental (CAN, USA interior), arid (AUS interior), tropical (northern AUS, Hawaii), arctic (northern CAN, AK)",
+  "hazards": [
+    "hurricanes",
+    "bushfires",
+    "earthquakes",
+    "blizzards",
+    "flooding",
+    "tornadoes",
+    "cyclones",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "English Channel",
+    "Panama Canal approaches",
+    "Strait of Malacca (strategic interest)",
+    "GIUK Gap",
+    "Northwest Passage"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "iron_ore",
+      "gold",
+      "uranium",
+      "wheat",
+      "dairy",
+      "lumber",
+      "semiconductors",
+      "defense_equipment"
+    ],
+    "risk_factors": [
+      "foreign_intelligence_threats",
+      "cyber_espionage",
+      "tech_transfer_controls",
+      "5g_network_security",
+      "foreign_interference",
+      "critical_infrastructure_protection",
+      "chinese_investment_screening",
+      "data_sovereignty"
+    ]
+  },
+  "tags": ["five_eyes", "fvey", "intelligence_alliance", "anglosphere", "security_cooperation", "tech_regulation"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UKUSA Agreement (declassified)", "Parliamentary records"]
+}

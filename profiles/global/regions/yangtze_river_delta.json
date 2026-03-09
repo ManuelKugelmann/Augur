@@ -1,0 +1,51 @@
+{
+  "id": "yangtze_river_delta",
+  "name": "Yangtze River Delta",
+  "type": "subregion",
+  "countries": ["CHN"],
+  "bbox": [118.0, 29.0, 123.0, 33.0],
+  "climate": "Subtropical monsoon transitioning to temperate; hot humid summers with plum rain season (Jun–Jul), cold damp winters; typhoon risk Jul–Oct",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "plum_rain_waterlogging",
+    "storm_surges",
+    "sea_level_rise",
+    "subsidence",
+    "air_pollution",
+    "heatwaves"
+  ],
+  "chokepoints": [
+    "Port of Shanghai (Yangshan)",
+    "Yangtze River navigation channel",
+    "Port of Ningbo-Zhoushan",
+    "Nanjing Yangtze crossings"
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "automobiles",
+      "petrochemicals",
+      "steel",
+      "textiles",
+      "container_shipping",
+      "financial_services",
+      "pharmaceuticals",
+      "ev_batteries"
+    ],
+    "risk_factors": [
+      "yangtze_flooding",
+      "port_congestion",
+      "three_gorges_dam_concerns",
+      "us_china_financial_decoupling",
+      "shanghai_lockdown_precedent",
+      "real_estate_sector_stress",
+      "export_slowdown",
+      "power_rationing",
+      "aging_workforce"
+    ]
+  },
+  "tags": ["yangtze_river_delta", "yrd", "shanghai", "jiangsu", "zhejiang", "finance_hub", "manufacturing", "port_cluster"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Shanghai Municipal Statistics Bureau", "Port of Shanghai"]
+}

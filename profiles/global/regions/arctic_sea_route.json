@@ -1,0 +1,51 @@
+{
+  "id": "arctic_sea_route",
+  "name": "Northern Sea Route / Arctic Shipping Corridor",
+  "type": "corridor",
+  "countries": ["RUS", "NOR", "CAN", "USA", "DNK", "ISL", "FIN", "SWE"],
+  "bbox": [-180.0, 60.0, 180.0, 90.0],
+  "climate": "Arctic and subarctic; extreme cold, polar night in winter, midnight sun in summer; rapidly warming due to climate change",
+  "hazards": [
+    "sea_ice",
+    "icebergs",
+    "extreme_cold",
+    "polar_storms",
+    "permafrost_thaw",
+    "limited_search_and_rescue",
+    "oil_spill_in_ice",
+    "methane_release"
+  ],
+  "chokepoints": [
+    "Bering Strait",
+    "Vilkitsky Strait",
+    "Sannikov Strait",
+    "Kara Gate",
+    "Northwest Passage (Canadian)"
+  ],
+  "exposure": {
+    "commodities": [
+      "lng",
+      "crude_oil",
+      "nickel",
+      "palladium",
+      "rare_earths",
+      "iron_ore",
+      "fish",
+      "container_shipping"
+    ],
+    "risk_factors": [
+      "ice_melt_route_opening",
+      "russian_military_buildup",
+      "sovereignty_disputes",
+      "environmental_regulation",
+      "icebreaker_capacity",
+      "insurance_costs",
+      "seasonal_navigation_window",
+      "climate_feedback_loops",
+      "strategic_competition"
+    ]
+  },
+  "tags": ["arctic", "northern_sea_route", "northwest_passage", "corridor", "shipping", "climate_change", "resource_frontier"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Arctic Council", "NOAA", "Russian NSR Administration"]
+}

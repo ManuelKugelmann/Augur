@@ -1,0 +1,54 @@
+{
+  "id": "eac",
+  "name": "East African Community",
+  "type": "economic_zone",
+  "countries": ["BDI", "COD", "KEN", "RWA", "SSD", "TZA", "UGA"],
+  "bbox": [12.2, -11.7, 41.9, 12.2],
+  "climate": "Equatorial to tropical; highland climate in the Rift Valley, semi-arid in northern Kenya and South Sudan, tropical along Lake Victoria",
+  "hazards": [
+    "drought",
+    "flooding",
+    "locust_swarms",
+    "volcanic_activity",
+    "earthquakes",
+    "landslides",
+    "epidemics",
+    "civil_conflict"
+  ],
+  "chokepoints": [
+    "Bab el-Mandeb approaches",
+    "Port of Mombasa corridor",
+    "Lake Victoria waterways",
+    "Nile River headwaters"
+  ],
+  "exposure": {
+    "commodities": [
+      "coffee",
+      "tea",
+      "gold",
+      "cobalt",
+      "coltan",
+      "crude_oil",
+      "natural_gas",
+      "tobacco",
+      "flowers",
+      "cotton",
+      "fish"
+    ],
+    "risk_factors": [
+      "political_instability",
+      "conflict_drc_south_sudan",
+      "infrastructure_deficit",
+      "food_insecurity",
+      "refugee_flows",
+      "border_disputes",
+      "governance_challenges",
+      "climate_vulnerability",
+      "landlocked_members",
+      "monetary_union_delays"
+    ]
+  },
+  "tags": ["eac", "east_africa", "customs_union", "common_market", "rift_valley"],
+  "_updated": "2026-03-09",
+  "_sources": ["EAC Secretariat", "CIA World Factbook", "World Bank"]
+}

@@ -1,0 +1,61 @@
+{
+  "id": "indo_pacific",
+  "name": "Indo-Pacific",
+  "type": "subregion",
+  "countries": [
+    "IND", "JPN", "AUS", "USA", "KOR", "SGP", "IDN", "MYS", "PHL", "THA",
+    "VNM", "NZL", "TWN", "BGD", "LKA", "MMR", "KHM", "LAO", "BRN", "TLS",
+    "FJI", "PNG", "MDV"
+  ],
+  "bbox": [30.0, -50.0, -120.0, 60.0],
+  "climate": "Highly diverse: tropical equatorial in Southeast Asia, monsoon in South Asia, temperate in Japan/Korea/Australia, arid in parts of India and Australia",
+  "hazards": [
+    "typhoons",
+    "cyclones",
+    "tsunamis",
+    "earthquakes",
+    "volcanic_activity",
+    "monsoon_flooding",
+    "sea_level_rise",
+    "coral_bleaching"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Strait of Hormuz",
+    "Lombok Strait",
+    "Sunda Strait",
+    "Taiwan Strait",
+    "Luzon Strait",
+    "Bab el-Mandeb"
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "crude_oil",
+      "lng",
+      "iron_ore",
+      "palm_oil",
+      "rice",
+      "rubber",
+      "tin",
+      "nickel",
+      "rare_earths",
+      "container_shipping"
+    ],
+    "risk_factors": [
+      "us_china_strategic_competition",
+      "taiwan_strait_tensions",
+      "south_china_sea_disputes",
+      "north_korea_nuclear",
+      "india_china_border",
+      "supply_chain_diversification",
+      "semiconductor_dependency",
+      "freedom_of_navigation",
+      "nuclear_proliferation",
+      "climate_vulnerability"
+    ]
+  },
+  "tags": ["indo_pacific", "strategic_framework", "quad_area", "aukus_area", "free_and_open", "great_power_competition"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "US State Department", "ASEAN", "UN ESCAP"]
+}

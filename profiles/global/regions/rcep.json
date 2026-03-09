@@ -1,0 +1,58 @@
+{
+  "id": "rcep",
+  "name": "Regional Comprehensive Economic Partnership",
+  "type": "economic_zone",
+  "countries": [
+    "AUS", "BRN", "KHM", "CHN", "IDN", "JPN", "KOR", "LAO", "MYS", "MMR",
+    "NZL", "PHL", "SGP", "THA", "VNM"
+  ],
+  "bbox": [92.2, -47.0, 180.0, 53.6],
+  "climate": "Tropical equatorial to temperate; monsoon-dominated in Southeast and East Asia, oceanic in Australasia",
+  "hazards": [
+    "typhoons",
+    "cyclones",
+    "earthquakes",
+    "tsunamis",
+    "flooding",
+    "volcanic_eruptions",
+    "drought",
+    "haze_from_fires"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "South China Sea",
+    "Taiwan Strait",
+    "Korea Strait",
+    "Lombok Strait",
+    "Torres Strait"
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "electronics",
+      "palm_oil",
+      "rice",
+      "rubber",
+      "iron_ore",
+      "coal",
+      "lng",
+      "rare_earths",
+      "nickel",
+      "automobiles",
+      "textiles"
+    ],
+    "risk_factors": [
+      "us_china_decoupling",
+      "south_china_sea_disputes",
+      "taiwan_strait_tensions",
+      "supply_chain_concentration",
+      "rules_of_origin_complexity",
+      "development_level_disparity",
+      "myanmar_political_crisis",
+      "currency_volatility"
+    ]
+  },
+  "tags": ["rcep", "asia_pacific", "mega_trade_deal", "asean_led", "largest_fta"],
+  "_updated": "2026-03-09",
+  "_sources": ["ASEAN Secretariat", "CIA World Factbook", "World Bank"]
+}

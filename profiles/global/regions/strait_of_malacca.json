@@ -1,0 +1,17 @@
+{
+  "id": "strait_of_malacca",
+  "name": "Strait of Malacca",
+  "type": "maritime",
+  "countries": ["MYS", "SGP", "IDN"],
+  "bbox": [95.0, -1.5, 104.5, 7.0],
+  "climate": "Tropical equatorial; hot and humid year-round; heavy monsoon rainfall; frequent thunderstorms",
+  "hazards": ["piracy", "ship_collision", "oil_spill", "typhoon", "tsunami", "flooding", "haze"],
+  "chokepoints": ["Strait_of_Malacca", "Singapore_Strait", "Phillips_Channel"],
+  "exposure": {
+    "commodities": ["crude_oil", "LNG", "palm_oil", "rubber", "tin", "electronics", "container_goods"],
+    "risk_factors": ["shipping_congestion", "piracy", "oil_transit_dependency", "China_energy_vulnerability", "territorial_overlaps", "environmental_degradation", "global_supply_chain_bottleneck"]
+  },
+  "tags": ["chokepoint", "25pct-global-shipping", "busiest-strait", "ASEAN", "piracy-risk", "energy-transit"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "IMB Piracy Reporting Centre", "UNCTAD", "Singapore MPA"]
+}

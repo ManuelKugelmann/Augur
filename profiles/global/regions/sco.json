@@ -1,0 +1,17 @@
+{
+  "id": "sco",
+  "name": "Shanghai Cooperation Organisation",
+  "type": "economic_zone",
+  "countries": ["CHN", "RUS", "IND", "PAK", "KAZ", "KGZ", "TJK", "UZB", "IRN"],
+  "bbox": [26.0, 1.0, 180.0, 81.9],
+  "climate": "Ranges from tropical monsoon (South Asia) to subarctic (Siberia); arid continental in Central Asia; temperate in eastern China",
+  "hazards": ["seismic_activity", "flooding", "drought", "extreme_cold", "cyclone", "desertification", "wildfire"],
+  "chokepoints": ["Strait_of_Malacca", "Strait_of_Hormuz", "Karakoram_Highway", "China-Central_Asia_pipelines"],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "rare_earths", "wheat", "cotton", "iron_ore", "copper", "uranium", "tea", "rice"],
+    "risk_factors": ["border_disputes", "nuclear_proliferation", "terrorism", "great_power_rivalry", "water_scarcity", "sanctions_exposure", "Belt_and_Road_debt"]
+  },
+  "tags": ["multipolar", "eurasian-security", "energy-corridor", "BRI-aligned", "nuclear-states"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN", "SCO Secretariat", "World Bank"]
+}

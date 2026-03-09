@@ -1,0 +1,17 @@
+{
+  "id": "levant",
+  "name": "Levant",
+  "type": "subregion",
+  "countries": ["SYR", "LBN", "JOR", "ISR", "PSE"],
+  "bbox": [34.2, 29.2, 42.4, 37.3],
+  "climate": "Mediterranean along the coast with hot dry summers and mild wet winters; semi-arid to arid inland; desert in eastern Syria and southern Jordan",
+  "hazards": ["seismic_activity", "drought", "water_scarcity", "conflict", "refugee_crisis", "wildfire"],
+  "chokepoints": ["Eastern_Mediterranean_shipping", "Suez_northern_approach", "Golan_Heights", "Jordan_River_basin"],
+  "exposure": {
+    "commodities": ["natural_gas", "phosphates", "potash", "olive_oil", "citrus", "tech_exports", "diamonds"],
+    "risk_factors": ["armed_conflict", "territorial_disputes", "refugee_displacement", "sanctions", "Hezbollah_militancy", "water_scarcity", "state_collapse", "Iranian_proxy_influence", "energy_exploration_disputes"]
+  },
+  "tags": ["levant", "geopolitical-hotspot", "Mediterranean", "conflict-zone", "water-stressed", "refugee-host"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN OCHA", "World Bank", "ACLED"]
+}

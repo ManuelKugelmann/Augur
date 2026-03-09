@@ -1,0 +1,51 @@
+{
+  "id": "pearl_river_delta",
+  "name": "Pearl River Delta",
+  "type": "subregion",
+  "countries": ["CHN"],
+  "bbox": [112.5, 21.5, 114.5, 23.5],
+  "climate": "Subtropical monsoon; hot humid summers with typhoon season (Jun–Nov), mild dry winters; annual rainfall 1600–2000mm",
+  "hazards": [
+    "typhoons",
+    "flooding",
+    "storm_surges",
+    "sea_level_rise",
+    "subsidence",
+    "air_pollution",
+    "industrial_chemical_accidents"
+  ],
+  "chokepoints": [
+    "Pearl River estuary",
+    "Shenzhen–Hong Kong crossings",
+    "Port of Shenzhen",
+    "Port of Guangzhou"
+  ],
+  "exposure": {
+    "commodities": [
+      "consumer_electronics",
+      "smartphones",
+      "semiconductors",
+      "textiles",
+      "toys",
+      "furniture",
+      "plastics",
+      "container_shipping",
+      "ev_batteries",
+      "drones"
+    ],
+    "risk_factors": [
+      "us_china_trade_war",
+      "export_control_escalation",
+      "factory_relocation_to_southeast_asia",
+      "labor_cost_increases",
+      "typhoon_factory_shutdowns",
+      "water_pollution",
+      "power_shortages",
+      "supply_chain_concentration_risk",
+      "covid_lockdown_precedent"
+    ]
+  },
+  "tags": ["pearl_river_delta", "prd", "manufacturing", "electronics", "shenzhen", "guangzhou", "dongguan", "factory_of_world"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Guangdong Statistical Bureau", "HKTDC"]
+}

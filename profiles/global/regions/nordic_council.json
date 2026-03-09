@@ -1,0 +1,17 @@
+{
+  "id": "nordic_council",
+  "name": "Nordic Council",
+  "type": "subregion",
+  "countries": ["DNK", "FIN", "ISL", "NOR", "SWE"],
+  "bbox": [-25.0, 54.5, 31.6, 71.2],
+  "climate": "Subarctic to maritime temperate; Gulf Stream moderates Norwegian coast; continental cold in Finland and interior Sweden; sub-polar in Iceland",
+  "hazards": ["volcanic_eruption", "extreme_cold", "storm_surge", "sea_ice", "geomagnetic_storm", "avalanche"],
+  "chokepoints": ["Danish_Straits", "GIUK_Gap", "Baltic_Sea_entrance"],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "fish", "timber", "iron_ore", "aluminum", "hydropower", "rare_earths", "wind_energy"],
+    "risk_factors": ["Arctic_geopolitics", "NATO_frontline", "Russian_border_proximity", "energy_transition_leadership", "small_open_economies", "submarine_cable_vulnerability"]
+  },
+  "tags": ["nordic", "NATO", "Arctic", "high-income", "energy-transition", "welfare-state"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Nordic Council of Ministers", "UN Statistics Division"]
+}

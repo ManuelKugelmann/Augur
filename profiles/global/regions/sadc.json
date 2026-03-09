@@ -1,0 +1,55 @@
+{
+  "id": "sadc",
+  "name": "Southern African Development Community",
+  "type": "economic_zone",
+  "countries": [
+    "AGO", "BWA", "COM", "COD", "SWZ", "LSO", "MDG", "MWI", "MUS", "MOZ",
+    "NAM", "SYC", "ZAF", "TZA", "ZMB", "ZWE"
+  ],
+  "bbox": [11.7, -46.9, 63.5, 5.4],
+  "climate": "Tropical in the north, semi-arid in the interior, Mediterranean in the southwest, oceanic in island states",
+  "hazards": [
+    "tropical_cyclones",
+    "drought",
+    "flooding",
+    "locust_swarms",
+    "epidemics",
+    "volcanic_activity",
+    "desertification"
+  ],
+  "chokepoints": [
+    "Mozambique Channel",
+    "Cape of Good Hope",
+    "Strait of Madagascar"
+  ],
+  "exposure": {
+    "commodities": [
+      "platinum",
+      "gold",
+      "diamonds",
+      "copper",
+      "cobalt",
+      "coal",
+      "iron_ore",
+      "chromium",
+      "natural_gas",
+      "tobacco",
+      "sugar",
+      "maize"
+    ],
+    "risk_factors": [
+      "political_instability",
+      "infrastructure_deficit",
+      "energy_shortages",
+      "water_scarcity",
+      "hiv_aids_prevalence",
+      "mining_sector_dependence",
+      "currency_volatility",
+      "food_insecurity",
+      "drc_conflict_spillover"
+    ]
+  },
+  "tags": ["sadc", "southern_africa", "regional_bloc", "mineral_wealth", "customs_union_overlap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SADC Secretariat", "CIA World Factbook", "World Bank"]
+}

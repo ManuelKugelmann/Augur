@@ -1,0 +1,17 @@
+{
+  "id": "horn_of_africa",
+  "name": "Horn of Africa",
+  "type": "subregion",
+  "countries": ["ETH", "ERI", "DJI", "SOM", "KEN", "SSD", "SDN"],
+  "bbox": [21.8, -4.7, 51.4, 23.1],
+  "climate": "Arid to semi-arid lowlands; tropical highland in Ethiopian plateau; hot and humid along Red Sea and Indian Ocean coasts; bimodal rainfall in equatorial south",
+  "hazards": ["drought", "famine", "flooding", "locust_swarms", "conflict", "displacement", "cyclone", "seismic_activity"],
+  "chokepoints": ["Bab_el-Mandeb", "Port_of_Djibouti", "Suez_Canal_southern_approach", "Nile_water_system"],
+  "exposure": {
+    "commodities": ["coffee", "livestock", "sesame", "gold", "oil", "gum_arabic", "khat", "fish", "potash"],
+    "risk_factors": ["armed_conflict", "state_fragility", "piracy", "food_insecurity", "water_disputes", "displacement_crisis", "foreign_military_bases", "Red_Sea_shipping_disruption", "climate_change"]
+  },
+  "tags": ["horn-of-africa", "conflict-zone", "famine-risk", "Red-Sea", "Bab-el-Mandeb", "strategic-waterway"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN OCHA", "ACLED", "World Food Programme", "IGAD"]
+}

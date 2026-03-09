@@ -1,0 +1,17 @@
+{
+  "id": "taiwan_strait",
+  "name": "Taiwan Strait",
+  "type": "maritime",
+  "countries": ["TWN", "CHN"],
+  "bbox": [117.0, 22.0, 121.5, 26.5],
+  "climate": "Subtropical maritime; warm humid summers with typhoon risk; mild winters; northeast monsoon creates rough seas in winter",
+  "hazards": ["typhoon", "military_confrontation", "naval_blockade", "seismic_activity", "rough_seas", "undersea_cable_damage"],
+  "chokepoints": ["Taiwan_Strait"],
+  "exposure": {
+    "commodities": ["semiconductors", "electronics", "container_goods", "crude_oil", "LNG", "petrochemicals", "machinery"],
+    "risk_factors": ["semiconductor_supply_chain_disruption", "TSMC_concentration_risk", "China_reunification_threat", "military_escalation", "US_defense_commitment", "global_tech_supply_shock", "shipping_lane_disruption", "undersea_cable_severance", "economic_coercion"]
+  },
+  "tags": ["chokepoint", "semiconductor-lifeline", "TSMC", "geopolitical-flashpoint", "US-China-tension", "tech-supply-chain"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Semiconductor Industry Association", "CSIS", "US Naval Institute"]
+}

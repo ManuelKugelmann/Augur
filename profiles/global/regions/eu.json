@@ -1,0 +1,54 @@
+{
+  "id": "eu",
+  "name": "European Union",
+  "type": "economic_zone",
+  "countries": [
+    "AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA",
+    "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD",
+    "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE"
+  ],
+  "bbox": [-10.5, 34.5, 34.6, 71.2],
+  "climate": "Temperate maritime in the west, continental in the east, Mediterranean in the south, subarctic in northern Scandinavia",
+  "hazards": [
+    "flooding",
+    "heatwaves",
+    "wildfires",
+    "winter_storms",
+    "drought",
+    "earthquakes",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "Strait of Gibraltar",
+    "English Channel",
+    "Danish Straits",
+    "Strait of Sicily",
+    "Bosphorus approaches"
+  ],
+  "exposure": {
+    "commodities": [
+      "natural_gas",
+      "crude_oil",
+      "wheat",
+      "dairy",
+      "wine",
+      "automobiles",
+      "machinery",
+      "pharmaceuticals",
+      "chemicals"
+    ],
+    "risk_factors": [
+      "energy_import_dependence",
+      "russian_gas_dependency",
+      "demographic_aging",
+      "sovereign_debt_divergence",
+      "migration_pressures",
+      "regulatory_fragmentation",
+      "euro_stability",
+      "populism"
+    ]
+  },
+  "tags": ["eu", "single_market", "customs_union", "eurozone_overlap", "nato_overlap", "trade_bloc"],
+  "_updated": "2026-03-09",
+  "_sources": ["European Commission", "Eurostat", "CIA World Factbook"]
+}

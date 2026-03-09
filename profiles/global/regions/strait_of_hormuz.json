@@ -1,0 +1,17 @@
+{
+  "id": "strait_of_hormuz",
+  "name": "Strait of Hormuz",
+  "type": "maritime",
+  "countries": ["IRN", "OMN", "ARE"],
+  "bbox": [54.0, 25.0, 57.5, 27.5],
+  "climate": "Hyper-arid; extreme summer heat; high humidity; occasional shamal dust storms",
+  "hazards": ["naval_confrontation", "mine_warfare", "oil_spill", "extreme_heat", "dust_storms", "piracy"],
+  "chokepoints": ["Strait_of_Hormuz"],
+  "exposure": {
+    "commodities": ["crude_oil", "LNG", "condensates", "petrochemicals", "refined_products"],
+    "risk_factors": ["oil_transit_disruption", "Iran_military_posture", "tanker_seizures", "naval_escalation", "global_oil_price_shock", "insurance_premium_spikes", "IRGC_naval_forces", "mine_threat"]
+  },
+  "tags": ["chokepoint", "oil-transit", "21pct-global-oil", "Persian-Gulf-exit", "strategic-waterway", "naval-flashpoint"],
+  "_updated": "2026-03-09",
+  "_sources": ["EIA", "CIA World Factbook", "US Naval Institute", "Lloyd's List"]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "baltic_sea",
+  "name": "Baltic Sea Region",
+  "type": "maritime",
+  "countries": ["SWE", "FIN", "EST", "LVA", "LTU", "POL", "DEU", "DNK", "RUS"],
+  "bbox": [9.0, 53.5, 30.5, 66.0],
+  "climate": "Maritime to humid continental; cold winters with sea ice in the north and east; cool summers; moderate precipitation; limited daylight in winter",
+  "hazards": ["sea_ice", "severe_storms", "submarine_cable_sabotage", "pipeline_sabotage", "naval_confrontation", "oil_spill", "eutrophication"],
+  "chokepoints": ["Danish_Straits", "Kiel_Canal", "Gulf_of_Finland", "Aland_Sea"],
+  "exposure": {
+    "commodities": ["natural_gas", "crude_oil", "timber", "fish", "grain", "fertilizer", "iron_ore", "container_goods", "wind_energy"],
+    "risk_factors": ["NATO-Russia_frontline", "critical_infrastructure_sabotage", "Nord_Stream_pipeline_politics", "Suwalki_Gap_vulnerability", "Kaliningrad_enclave", "hybrid_warfare", "undersea_cable_vulnerability", "energy_security", "Finland_Sweden_NATO_accession"]
+  },
+  "tags": ["NATO-frontline", "energy-infrastructure", "Baltic-states", "hybrid-warfare-risk", "critical-infrastructure", "semi-enclosed-sea"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "NATO", "HELCOM", "European Commission", "Baltic Sea Region Energy Cooperation"]
+}

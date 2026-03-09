@@ -1,0 +1,17 @@
+{
+  "id": "visegrad",
+  "name": "Visegrád Group",
+  "type": "subregion",
+  "countries": ["POL", "CZE", "SVK", "HUN"],
+  "bbox": [12.1, 45.7, 24.2, 54.8],
+  "climate": "Humid continental with warm summers and cold winters; transitional between maritime and continental influences",
+  "hazards": ["flooding", "drought", "heatwave", "severe_storms"],
+  "chokepoints": ["Danube_River_corridor", "Suwalki_Gap"],
+  "exposure": {
+    "commodities": ["automotive_parts", "coal", "wheat", "corn", "steel", "copper", "natural_gas"],
+    "risk_factors": ["EU_integration_tensions", "Russian_energy_dependency", "automotive_supply_chain", "demographic_decline", "NATO_eastern_flank", "migration_politics", "rule_of_law_disputes"]
+  },
+  "tags": ["V4", "EU-member", "NATO", "automotive-hub", "central-europe", "post-communist"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "European Commission", "Visegrád Group Secretariat"]
+}

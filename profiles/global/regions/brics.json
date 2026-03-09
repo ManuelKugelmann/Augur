@@ -1,0 +1,55 @@
+{
+  "id": "brics",
+  "name": "BRICS+",
+  "type": "economic_zone",
+  "countries": ["BRA", "RUS", "IND", "CHN", "ZAF", "EGY", "ETH", "IRN", "SAU", "ARE"],
+  "bbox": [-73.6, -55.1, 180.0, 81.9],
+  "climate": "Highly diverse: tropical, arid, temperate, continental, arctic, monsoon — spans all major climate zones",
+  "hazards": [
+    "flooding",
+    "drought",
+    "earthquakes",
+    "cyclones",
+    "typhoons",
+    "wildfires",
+    "sandstorms",
+    "extreme_cold",
+    "extreme_heat"
+  ],
+  "chokepoints": [
+    "Strait of Hormuz",
+    "Suez Canal",
+    "Strait of Malacca",
+    "Bab el-Mandeb",
+    "Cape of Good Hope"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "iron_ore",
+      "gold",
+      "rare_earths",
+      "soybeans",
+      "coal",
+      "diamonds",
+      "coffee",
+      "tea",
+      "platinum"
+    ],
+    "risk_factors": [
+      "sanctions_risk",
+      "currency_dedollarization",
+      "geopolitical_fragmentation",
+      "governance_divergence",
+      "internal_border_disputes",
+      "infrastructure_inequality",
+      "capital_controls",
+      "political_regime_diversity",
+      "western_bloc_rivalry"
+    ]
+  },
+  "tags": ["brics", "brics_plus", "emerging_markets", "multipolar", "new_development_bank", "alternative_bloc"],
+  "_updated": "2026-03-09",
+  "_sources": ["BRICS Secretariat", "CIA World Factbook", "World Bank", "IMF"]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "aukus",
+  "name": "AUKUS",
+  "type": "economic_zone",
+  "countries": ["AUS", "GBR", "USA"],
+  "bbox": [-180.0, -47.0, 180.0, 72.0],
+  "climate": "Diverse: temperate maritime (GBR), continental and arid (AUS), varied (USA); alliance focused on Indo-Pacific maritime domain",
+  "hazards": [
+    "cyclones",
+    "hurricanes",
+    "bushfires",
+    "flooding",
+    "submarine_incidents",
+    "nuclear_proliferation_concerns"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "South China Sea",
+    "Taiwan Strait",
+    "GIUK Gap",
+    "Lombok Strait"
+  ],
+  "exposure": {
+    "commodities": [
+      "nuclear_submarine_technology",
+      "hypersonic_weapons",
+      "quantum_computing",
+      "ai_systems",
+      "cyber_capabilities",
+      "uranium",
+      "rare_earths",
+      "defense_equipment"
+    ],
+    "risk_factors": [
+      "china_strategic_competition",
+      "nuclear_proliferation_treaty_tensions",
+      "french_diplomatic_fallout",
+      "submarine_delivery_timeline",
+      "defense_industrial_base_capacity",
+      "technology_transfer_security",
+      "indo_pacific_arms_race",
+      "cost_overruns"
+    ]
+  },
+  "tags": ["aukus", "defense_pact", "nuclear_submarines", "indo_pacific", "pillar_one", "pillar_two", "advanced_capabilities"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "AUKUS Joint Leaders Statement", "Australian Department of Defence"]
+}

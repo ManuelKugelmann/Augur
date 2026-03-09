@@ -1,0 +1,17 @@
+{
+  "id": "south_china_sea",
+  "name": "South China Sea",
+  "type": "maritime",
+  "countries": ["CHN", "VNM", "PHL", "MYS", "BRN", "TWN", "IDN"],
+  "bbox": [99.0, 0.0, 122.0, 23.5],
+  "climate": "Tropical maritime; hot and humid; monsoon-driven; typhoon-prone (June-November); heavy rainfall",
+  "hazards": ["typhoon", "territorial_confrontation", "naval_incident", "oil_spill", "tsunami", "coral_reef_destruction"],
+  "chokepoints": ["Strait_of_Malacca_eastern_approach", "Luzon_Strait", "Paracel_Islands", "Spratly_Islands", "Scarborough_Shoal"],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "fish", "container_goods", "electronics", "LNG"],
+    "risk_factors": ["territorial_disputes", "nine-dash_line_claims", "island_militarization", "freedom_of_navigation_tensions", "fishing_conflicts", "undersea_cable_vulnerability", "oil_exploration_disputes", "ASEAN_unity_strain", "US-China_naval_rivalry"]
+  },
+  "tags": ["disputed-waters", "territorial-claims", "3.4T-annual-trade", "UNCLOS", "island-building", "naval-flashpoint"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "CSIS Asia Maritime Transparency Initiative", "UNCLOS", "EIA"]
+}

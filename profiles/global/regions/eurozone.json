@@ -1,0 +1,48 @@
+{
+  "id": "eurozone",
+  "name": "Euro Area",
+  "type": "economic_zone",
+  "countries": [
+    "AUT", "BEL", "HRV", "CYP", "EST", "FIN", "FRA", "DEU", "GRC", "IRL",
+    "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "PRT", "SVK", "SVN", "ESP"
+  ],
+  "bbox": [-10.5, 34.5, 29.7, 70.1],
+  "climate": "Temperate maritime to Mediterranean, continental interior",
+  "hazards": [
+    "flooding",
+    "heatwaves",
+    "drought",
+    "winter_storms",
+    "wildfires",
+    "earthquakes"
+  ],
+  "chokepoints": [
+    "Strait of Gibraltar",
+    "English Channel",
+    "Strait of Sicily"
+  ],
+  "exposure": {
+    "commodities": [
+      "natural_gas",
+      "crude_oil",
+      "wheat",
+      "dairy",
+      "automobiles",
+      "machinery",
+      "pharmaceuticals"
+    ],
+    "risk_factors": [
+      "ecb_monetary_policy",
+      "sovereign_debt_spreads",
+      "energy_import_dependence",
+      "demographic_decline",
+      "banking_sector_fragility",
+      "fiscal_rule_compliance",
+      "inflation_divergence",
+      "competitiveness_gap"
+    ]
+  },
+  "tags": ["eurozone", "emu", "ecb", "single_currency", "monetary_union"],
+  "_updated": "2026-03-09",
+  "_sources": ["European Central Bank", "Eurostat", "CIA World Factbook"]
+}

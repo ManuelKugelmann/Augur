@@ -1,0 +1,17 @@
+{
+  "id": "sahel",
+  "name": "Sahel Belt",
+  "type": "subregion",
+  "countries": ["MLI", "NER", "TCD", "BFA", "MRT", "SEN", "NGA"],
+  "bbox": [-17.5, 4.0, 24.0, 25.0],
+  "climate": "Arid to semi-arid; hot dry season and short wet season; rainfall highly variable; Saharan influence in the north, savanna in the south",
+  "hazards": ["drought", "desertification", "locust_swarms", "flooding", "heatwave", "dust_storms", "food_insecurity"],
+  "chokepoints": ["Niger_River_basin", "Lake_Chad_basin", "Trans-Saharan_routes"],
+  "exposure": {
+    "commodities": ["gold", "uranium", "oil", "livestock", "millet", "sorghum", "cotton", "iron_ore", "phosphates"],
+    "risk_factors": ["armed_conflict", "jihadist_insurgency", "military_coups", "food_insecurity", "population_growth", "climate_change_amplification", "displacement", "governance_fragility", "Wagner_Group_presence"]
+  },
+  "tags": ["sahel", "conflict-zone", "climate-vulnerable", "food-insecure", "resource-rich", "francophone"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN OCHA", "ACLED", "World Food Programme", "USGS"]
+}

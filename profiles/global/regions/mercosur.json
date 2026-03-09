@@ -1,0 +1,48 @@
+{
+  "id": "mercosur",
+  "name": "Mercosur",
+  "type": "economic_zone",
+  "countries": ["BRA", "ARG", "URY", "PRY"],
+  "bbox": [-73.6, -55.1, -34.7, 5.3],
+  "climate": "Tropical in the north, subtropical in central regions, temperate and arid in the south, Amazonian rainforest in northwest Brazil",
+  "hazards": [
+    "flooding",
+    "drought",
+    "deforestation",
+    "wildfires",
+    "landslides",
+    "tropical_storms"
+  ],
+  "chokepoints": [
+    "Strait of Magellan",
+    "Rio de la Plata",
+    "Parana River waterway"
+  ],
+  "exposure": {
+    "commodities": [
+      "soybeans",
+      "beef",
+      "iron_ore",
+      "crude_oil",
+      "corn",
+      "sugar",
+      "coffee",
+      "lithium",
+      "copper",
+      "wheat"
+    ],
+    "risk_factors": [
+      "currency_volatility",
+      "inflation",
+      "political_instability",
+      "deforestation_regulation",
+      "commodity_price_dependence",
+      "infrastructure_deficit",
+      "venezuela_suspension",
+      "eu_mercosur_trade_deal"
+    ]
+  },
+  "tags": ["mercosur", "south_america", "customs_union", "trade_bloc", "agricultural_powerhouse"],
+  "_updated": "2026-03-09",
+  "_sources": ["Mercosur Secretariat", "CIA World Factbook", "World Bank"]
+}

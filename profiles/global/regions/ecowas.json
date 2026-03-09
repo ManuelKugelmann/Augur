@@ -1,0 +1,56 @@
+{
+  "id": "ecowas",
+  "name": "Economic Community of West African States",
+  "type": "economic_zone",
+  "countries": [
+    "BEN", "CPV", "CIV", "GMB", "GHA", "GIN", "GNB", "LBR", "MLI", "NER",
+    "NGA", "SEN", "SLE", "TGO", "BFA"
+  ],
+  "bbox": [-25.4, 1.7, 16.0, 27.3],
+  "climate": "Tropical to semi-arid; Sahel zone in the north, humid tropical along the coast, savanna in the interior",
+  "hazards": [
+    "drought",
+    "flooding",
+    "desertification",
+    "locust_swarms",
+    "harmattan_dust",
+    "epidemics",
+    "civil_conflict",
+    "coastal_erosion"
+  ],
+  "chokepoints": [
+    "Gulf of Guinea",
+    "Niger River delta",
+    "Strait of Gibraltar approaches"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "cocoa",
+      "gold",
+      "iron_ore",
+      "natural_gas",
+      "cotton",
+      "rubber",
+      "palm_oil",
+      "cashews",
+      "phosphates",
+      "uranium"
+    ],
+    "risk_factors": [
+      "political_instability",
+      "military_coups",
+      "terrorism_sahel",
+      "food_insecurity",
+      "infrastructure_deficit",
+      "currency_zones_cfa_vs_others",
+      "youth_unemployment",
+      "piracy_gulf_of_guinea",
+      "governance_challenges",
+      "climate_vulnerability"
+    ]
+  },
+  "tags": ["ecowas", "west_africa", "regional_bloc", "cfa_franc_zone", "economic_integration"],
+  "_updated": "2026-03-09",
+  "_sources": ["ECOWAS Commission", "CIA World Factbook", "World Bank"]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "quad",
+  "name": "Quadrilateral Security Dialogue",
+  "type": "economic_zone",
+  "countries": ["USA", "JPN", "AUS", "IND"],
+  "bbox": [-180.0, -50.0, 180.0, 72.0],
+  "climate": "Spans diverse zones: temperate, tropical, arid, continental across four countries on three continents",
+  "hazards": [
+    "typhoons",
+    "cyclones",
+    "earthquakes",
+    "bushfires",
+    "hurricanes",
+    "monsoon_flooding",
+    "volcanic_activity"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Taiwan Strait",
+    "Lombok Strait",
+    "Indian Ocean sea lanes"
+  ],
+  "exposure": {
+    "commodities": [
+      "semiconductors",
+      "rare_earths",
+      "iron_ore",
+      "lng",
+      "coal",
+      "pharmaceuticals",
+      "agricultural_products",
+      "defense_equipment"
+    ],
+    "risk_factors": [
+      "china_containment_perception",
+      "south_china_sea_tensions",
+      "supply_chain_resilience",
+      "critical_mineral_security",
+      "technology_standards_competition",
+      "vaccine_diplomacy",
+      "cyber_security",
+      "maritime_domain_awareness"
+    ]
+  },
+  "tags": ["quad", "security_dialogue", "indo_pacific_framework", "supply_chain", "tech_cooperation", "democratic_alliance"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "US State Department", "Quad Joint Statements"]
+}

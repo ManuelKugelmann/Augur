@@ -1,0 +1,45 @@
+{
+  "id": "gcc",
+  "name": "Gulf Cooperation Council",
+  "type": "economic_zone",
+  "countries": ["SAU", "ARE", "QAT", "KWT", "BHR", "OMN"],
+  "bbox": [39.0, 16.4, 59.9, 30.1],
+  "climate": "Arid desert, extremely hot summers exceeding 50°C, mild winters, very low rainfall",
+  "hazards": [
+    "sandstorms",
+    "extreme_heat",
+    "drought",
+    "flooding",
+    "sea_level_rise",
+    "desertification"
+  ],
+  "chokepoints": [
+    "Strait of Hormuz",
+    "Bab el-Mandeb",
+    "Suez Canal approaches"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "lng",
+      "petrochemicals",
+      "aluminum",
+      "fertilizers",
+      "desalinated_water"
+    ],
+    "risk_factors": [
+      "oil_price_dependence",
+      "geopolitical_tension_iran",
+      "water_scarcity",
+      "economic_diversification",
+      "labor_market_imbalance",
+      "regional_conflicts",
+      "energy_transition_risk",
+      "strait_of_hormuz_blockade_risk"
+    ]
+  },
+  "tags": ["gcc", "gulf", "opec_overlap", "petrostate", "sovereign_wealth", "middle_east"],
+  "_updated": "2026-03-09",
+  "_sources": ["GCC Secretariat", "CIA World Factbook", "OPEC"]
+}

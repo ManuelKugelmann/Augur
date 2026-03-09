@@ -1,0 +1,17 @@
+{
+  "id": "persian_gulf",
+  "name": "Persian Gulf",
+  "type": "subregion",
+  "countries": ["SAU", "IRN", "IRQ", "KWT", "BHR", "QAT", "ARE", "OMN"],
+  "bbox": [43.0, 21.0, 59.5, 35.0],
+  "climate": "Hyper-arid desert; extremely hot summers exceeding 50C; mild winters; minimal rainfall; high humidity along coastal areas",
+  "hazards": ["extreme_heat", "dust_storms", "drought", "sea_level_rise", "cyclone", "seismic_activity", "oil_spill"],
+  "chokepoints": ["Strait_of_Hormuz", "Shatt_al-Arab_waterway", "Bab_el-Mandeb_access"],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "LNG", "petrochemicals", "aluminum", "desalinated_water", "dates", "fish"],
+    "risk_factors": ["oil_price_dependency", "Iran-Saudi_rivalry", "Strait_of_Hormuz_closure_risk", "water_scarcity", "migrant_labor_dependency", "nuclear_proliferation", "drone_and_missile_attacks", "economic_diversification_pressure"]
+  },
+  "tags": ["persian-gulf", "OPEC", "energy-superpower", "GCC", "oil-dependent", "desalination"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "EIA", "OPEC", "UN Statistics Division"]
+}

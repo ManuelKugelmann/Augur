@@ -1,0 +1,50 @@
+{
+  "id": "rust_belt",
+  "name": "US Rust Belt",
+  "type": "subregion",
+  "countries": ["USA"],
+  "bbox": [-90.0, 38.0, -75.0, 45.0],
+  "climate": "Humid continental; cold snowy winters, warm humid summers; lake-effect snow near Great Lakes",
+  "hazards": [
+    "lake_effect_snow",
+    "flooding",
+    "industrial_pollution",
+    "brownfield_contamination",
+    "tornadoes",
+    "extreme_cold"
+  ],
+  "chokepoints": [
+    "Great Lakes–St. Lawrence Seaway",
+    "Soo Locks (Sault Ste. Marie)",
+    "Ohio River system",
+    "Interstate highway corridors"
+  ],
+  "exposure": {
+    "commodities": [
+      "steel",
+      "automobiles",
+      "auto_parts",
+      "aluminum",
+      "coal",
+      "machinery",
+      "chemicals",
+      "glass",
+      "rubber"
+    ],
+    "risk_factors": [
+      "deindustrialization",
+      "manufacturing_job_loss",
+      "import_competition",
+      "tariff_policy_dependence",
+      "infrastructure_aging",
+      "population_decline",
+      "opioid_crisis",
+      "reshoring_opportunities",
+      "ev_transition_disruption",
+      "soo_locks_single_point_failure"
+    ]
+  },
+  "tags": ["rust_belt", "manufacturing", "great_lakes", "steel", "automotive", "industrial", "reshoring"],
+  "_updated": "2026-03-09",
+  "_sources": ["US Census Bureau", "CIA World Factbook", "Bureau of Labor Statistics", "US Army Corps of Engineers"]
+}

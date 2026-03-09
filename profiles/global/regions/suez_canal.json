@@ -1,0 +1,17 @@
+{
+  "id": "suez_canal",
+  "name": "Suez Canal",
+  "type": "corridor",
+  "countries": ["EGY"],
+  "bbox": [32.2, 29.8, 32.6, 31.3],
+  "climate": "Hyper-arid desert; hot summers with minimal rainfall; mild winters; occasional sandstorms",
+  "hazards": ["blockage_risk", "grounding", "geopolitical_disruption", "terrorist_attack", "sandstorm", "Red_Sea_security_threat"],
+  "chokepoints": ["Suez_Canal"],
+  "exposure": {
+    "commodities": ["crude_oil", "LNG", "container_goods", "grain", "refined_products", "automobiles"],
+    "risk_factors": ["canal_blockage", "Houthi_Red_Sea_attacks", "Egypt_economic_instability", "transit_fee_increases", "capacity_constraints", "rerouting_via_Cape", "global_supply_chain_disruption", "Sinai_security"]
+  },
+  "tags": ["chokepoint", "trade-corridor", "12pct-global-trade", "Asia-Europe-link", "canal", "Egypt"],
+  "_updated": "2026-03-09",
+  "_sources": ["Suez Canal Authority", "CIA World Factbook", "UNCTAD", "Lloyd's List"]
+}

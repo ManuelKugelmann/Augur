@@ -1,0 +1,52 @@
+{
+  "id": "cptpp",
+  "name": "Comprehensive and Progressive Agreement for Trans-Pacific Partnership",
+  "type": "economic_zone",
+  "countries": ["AUS", "BRN", "CAN", "CHL", "JPN", "MYS", "MEX", "NZL", "PER", "SGP", "VNM"],
+  "bbox": [-179.2, -47.0, 179.2, 83.1],
+  "climate": "Highly diverse: tropical, arid, temperate, subarctic — spans Pacific Rim from Canada to Chile to Australia",
+  "hazards": [
+    "earthquakes",
+    "tsunamis",
+    "typhoons",
+    "cyclones",
+    "volcanic_eruptions",
+    "flooding",
+    "drought",
+    "wildfires"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Panama Canal",
+    "Strait of Magellan",
+    "Torres Strait",
+    "Tsushima Strait"
+  ],
+  "exposure": {
+    "commodities": [
+      "copper",
+      "lithium",
+      "palm_oil",
+      "rubber",
+      "lng",
+      "iron_ore",
+      "dairy",
+      "beef",
+      "seafood",
+      "electronics",
+      "automobiles"
+    ],
+    "risk_factors": [
+      "us_absence",
+      "china_accession_bid",
+      "rules_of_origin_complexity",
+      "ip_enforcement_divergence",
+      "labor_standards_variation",
+      "currency_volatility",
+      "geopolitical_tensions_pacific"
+    ]
+  },
+  "tags": ["cptpp", "tpp", "pacific_rim", "free_trade", "high_standards", "trade_bloc"],
+  "_updated": "2026-03-09",
+  "_sources": ["CPTPP Secretariat", "CIA World Factbook", "World Bank"]
+}

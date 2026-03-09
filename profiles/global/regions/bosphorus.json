@@ -1,0 +1,17 @@
+{
+  "id": "bosphorus",
+  "name": "Turkish Straits",
+  "type": "maritime",
+  "countries": ["TUR"],
+  "bbox": [25.7, 39.7, 29.9, 41.3],
+  "climate": "Mediterranean transitioning to humid subtropical; mild wet winters and warm dry summers; fog common in the strait",
+  "hazards": ["ship_collision", "oil_spill", "seismic_activity", "fog", "strong_currents", "geopolitical_blockade"],
+  "chokepoints": ["Bosphorus", "Dardanelles", "Sea_of_Marmara"],
+  "exposure": {
+    "commodities": ["crude_oil", "grain", "coal", "steel", "sunflower_oil", "LPG", "fertilizer"],
+    "risk_factors": ["Montreux_Convention_politics", "Russia_Black_Sea_access", "congestion", "Istanbul_seismic_risk", "Ukraine_war_grain_transit", "Turkey_leverage", "naval_access_control"]
+  },
+  "tags": ["chokepoint", "Turkish-Straits", "Black-Sea-access", "Montreux-Convention", "grain-corridor", "NATO-member"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "Turkish Maritime Authority", "UNCTAD", "Montreux Convention 1936"]
+}

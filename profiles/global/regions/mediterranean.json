@@ -1,0 +1,58 @@
+{
+  "id": "mediterranean",
+  "name": "Mediterranean Sea Basin",
+  "type": "maritime",
+  "countries": [
+    "ESP", "FRA", "MCO", "ITA", "MLT", "SVN", "HRV", "BIH", "MNE", "ALB",
+    "GRC", "TUR", "SYR", "LBN", "ISR", "EGY", "LBY", "TUN", "DZA", "MAR",
+    "CYP"
+  ],
+  "bbox": [-5.6, 30.0, 36.2, 46.0],
+  "climate": "Mediterranean: hot dry summers, mild wet winters; semi-arid in North Africa; temperate in northern littoral",
+  "hazards": [
+    "earthquakes",
+    "volcanic_activity",
+    "tsunamis",
+    "wildfires",
+    "heatwaves",
+    "drought",
+    "flooding",
+    "sea_level_rise",
+    "oil_spills"
+  ],
+  "chokepoints": [
+    "Strait of Gibraltar",
+    "Suez Canal",
+    "Strait of Sicily",
+    "Strait of Messina",
+    "Bosphorus Strait",
+    "Dardanelles"
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "olive_oil",
+      "wine",
+      "citrus",
+      "fish",
+      "tourism",
+      "container_shipping",
+      "refined_petroleum"
+    ],
+    "risk_factors": [
+      "migration_flows",
+      "north_africa_instability",
+      "water_scarcity",
+      "overtourism",
+      "energy_import_dependence",
+      "climate_change_hotspot",
+      "desertification",
+      "maritime_territorial_disputes",
+      "east_med_gas_disputes"
+    ]
+  },
+  "tags": ["mediterranean", "maritime", "shipping_lane", "tourism", "energy_transit", "climate_hotspot", "migration_route"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "UN Environment Programme", "EU", "IMO"]
+}

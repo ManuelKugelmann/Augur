@@ -1,0 +1,17 @@
+{
+  "id": "ruhr_area",
+  "name": "Ruhr Area",
+  "type": "subregion",
+  "countries": ["DEU"],
+  "bbox": [6.5, 51.2, 7.8, 51.8],
+  "climate": "Oceanic (Cfb), mild winters, cool summers",
+  "hazards": ["flooding", "industrial pollution", "heat waves"],
+  "chokepoints": ["Rhine-Ruhr inland waterways", "Duisburg inland port"],
+  "exposure": {
+    "commodities": ["steel", "chemicals", "coal", "natural gas", "electricity"],
+    "risk_factors": ["energy transition costs", "industrial restructuring", "aging infrastructure", "labor market shifts", "EU carbon pricing"]
+  },
+  "tags": ["industry", "manufacturing", "steel", "chemicals", "logistics", "energy_transition", "europe"],
+  "_updated": "2026-03-09",
+  "_sources": ["Eurostat", "German Federal Statistical Office", "NRW.INVEST"]
+}
