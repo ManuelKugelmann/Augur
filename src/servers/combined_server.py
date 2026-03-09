@@ -36,6 +36,7 @@ from water_server import mcp as water  # noqa: E402
 from humanitarian_server import mcp as humanitarian  # noqa: E402
 from infra_server import mcp as infra  # noqa: E402
 from indicators_server import mcp as indicators  # noqa: E402
+from augur_server import mcp as augur  # noqa: E402
 
 mcp.mount(store, namespace="store")
 mcp.mount(weather, namespace="weather")
@@ -51,6 +52,7 @@ mcp.mount(water, namespace="water")
 mcp.mount(humanitarian, namespace="humanitarian")
 mcp.mount(infra, namespace="infra")
 mcp.mount(indicators, namespace="ta")
+mcp.mount(augur, namespace="augur")
 
 if __name__ == "__main__":
     import os

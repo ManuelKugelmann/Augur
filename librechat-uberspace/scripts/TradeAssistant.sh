@@ -637,6 +637,51 @@ except Exception as e:
             fi
         fi
 
+        # ── Invoke news agents (they self-schedule via augur_due_now()) ──
+        if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
+            LC_URL="http://localhost:${LC_PORT:-3080}"
+            for NEWS_AGENT_NAME in news-the-augur news-der-augur news-financial-augur news-finanz-augur; do
+                NEWS_AGENT_ID=$("$STACK/venv/bin/python" -c "
+import httpx, sys
+try:
+    r = httpx.get('${LC_URL}/api/agents/v1/models',
+                   headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}'},
+                   timeout=10)
+    if r.status_code == 200:
+        for m in r.json().get('data', []):
+            if '${NEWS_AGENT_NAME}' in m.get('id', '').lower() or '${NEWS_AGENT_NAME}' in m.get('name', '').lower():
+                print(m['id']); sys.exit(0)
+    sys.exit(1)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null) || NEWS_AGENT_ID=""
+
+                if [[ -n "$NEWS_AGENT_ID" ]]; then
+                    _cron_log "invoking $NEWS_AGENT_NAME"
+                    "$STACK/venv/bin/python" -c "
+import httpx, json, sys
+try:
+    r = httpx.post('${LC_URL}/api/agents/v1/chat/completions',
+                    headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}',
+                             'Content-Type': 'application/json'},
+                    json={'model': '${NEWS_AGENT_ID}',
+                          'messages': [{'role': 'user',
+                                        'content': 'Check augur_due_now() and produce any due articles.'}],
+                          'stream': False},
+                    timeout=600)
+    if r.status_code == 200:
+        data = r.json()
+        content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
+        print(f'OK: {content[:200]}')
+    else:
+        print(f'ERROR: {r.status_code} {r.text[:200]}', file=sys.stderr)
+except Exception as e:
+    print(f'ERROR: {e}', file=sys.stderr)
+" 2>&1 | while read -r line; do _cron_log "$NEWS_AGENT_NAME: $line"; done
+                fi
+            done
+        fi
+
         # ── Weekly on Sunday at 03:00 UTC: placeholder for future tasks ──
         # if [[ "$HOUR" == "03" ]] && [[ "$DOW" == "7" ]]; then
         #     _cron_log "weekly maintenance"
