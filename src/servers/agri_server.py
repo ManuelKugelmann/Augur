@@ -6,19 +6,37 @@ from dotenv import load_dotenv
 load_dotenv()
 
 mcp = FastMCP("agri", instructions="FAO global agriculture + USDA crop data")
-BASE = "https://fenixservices.fao.org/faostat/api/v1/en"
+# FAOSTAT migrated from fenixservices to faostatservices (2025).
+# Try new endpoint first, fall back to old if unavailable.
+_FAOSTAT_URLS = [
+    "https://faostatservices.fao.org/api/v1/en",
+    "https://fenixservices.fao.org/faostat/api/v1/en",
+]
 NASS_KEY = os.environ.get("USDA_NASS_API_KEY", "")
+
+
+async def _fao_get(path: str, params: dict | None = None) -> httpx.Response:
+    """Try FAOSTAT endpoints in order, return first successful response."""
+    last_exc: Exception | None = None
+    async with httpx.AsyncClient(timeout=30) as c:
+        for base in _FAOSTAT_URLS:
+            try:
+                r = await c.get(f"{base}/{path}", params=params)
+                r.raise_for_status()
+                return r
+            except httpx.HTTPError as e:
+                last_exc = e
+                continue
+    raise last_exc  # type: ignore[misc]
 
 
 @mcp.tool()
 async def fao_datasets() -> list:
     """List FAOSTAT dataset codes (QCL=crops, TP=trade, PP=prices)."""
     try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get(f"{BASE}/definitions/domain")
-            r.raise_for_status()
-            data = r.json().get("data", [])
-            return [{"code": d["code"], "label": d["label"]} for d in data]
+        r = await _fao_get("definitions/domain")
+        data = r.json().get("data", [])
+        return [{"code": d["code"], "label": d["label"]} for d in data]
     except httpx.HTTPError as e:
         return [{"error": f"FAOSTAT request failed: {e}"}]
 
@@ -30,12 +48,10 @@ async def fao_data(domain: str = "QCL", area: str = "5000>",
     """FAOSTAT data. item: 15=wheat, 56=maize, 27=rice, 236=soybean.
     element: 5510=production, 5312=area, 5419=yield."""
     try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get(f"{BASE}/data/{domain}", params={
-                "area": area, "item": item, "element": element, "year": year,
-                "output_type": "objects"})
-            r.raise_for_status()
-            return r.json()
+        r = await _fao_get(f"data/{domain}", params={
+            "area": area, "item": item, "element": element, "year": year,
+            "output_type": "objects"})
+        return r.json()
     except httpx.HTTPError as e:
         return {"error": f"FAOSTAT request failed: {e}"}
 

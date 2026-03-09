@@ -9,7 +9,7 @@ load_dotenv()
 mcp = FastMCP("elections", instructions="Global elections and democracy data")
 GOOGLE_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
-_WD_HEADERS = {"User-Agent": "TradingAssistant/1.0 (trading signals research)"}
+_WD_HEADERS = {"User-Agent": "TradingAssistant/1.0 (https://github.com/ManuelKugelmann/TradingAssistant)"}
 
 # Sanitize inputs for SPARQL queries to prevent injection
 _SAFE_SPARQL_TEXT = re.compile(r'^[A-Za-z0-9 .\'()-]+$')
@@ -132,20 +132,8 @@ async def eu_parliament_votes(year: str = "2025", limit: int = 20) -> dict:
 # ── Google Civic Info (US, needs key) ────────────────────
 
 
-@mcp.tool()
-async def us_representatives(address: str) -> dict:
-    """US elected officials for an address (Google Civic Info)."""
-    if not GOOGLE_KEY:
-        return {"error": "GOOGLE_API_KEY not set"}
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://www.googleapis.com/civicinfo/v2/representatives",
-                            params={"key": GOOGLE_KEY, "address": address})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"Google Civic Info request failed: {e}"}
-
+# us_representatives removed — Google Civic Representatives API was permanently
+# shut down April 30, 2025. Use us_voter_info for election/voter data instead.
 
 @mcp.tool()
 async def us_voter_info(address: str) -> dict:

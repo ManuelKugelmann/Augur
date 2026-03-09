@@ -78,15 +78,28 @@ async def worldbank_search(query: str) -> dict:
 async def imf_data(database: str = "IFS", frequency: str = "A",
                     ref_area: str = "US", indicator: str = "NGDP_R_XDC",
                     start: str = "2020", end: str = "2024") -> dict:
-    """IMF SDMX data. database: IFS/BOP/DOT/WEO. indicator: NGDP_R_XDC, PCPI_IX, ENDA_XDC_USD_RATE."""
+    """IMF data. database: IFS/BOP/DOT/WEO. indicator: NGDP_R_XDC, PCPI_IX, ENDA_XDC_USD_RATE.
+    Tries SDMX Central first, falls back to legacy SDMX endpoint."""
+    # IMF migrated from dataservices.imf.org (retired Nov 2025) to sdmxcentral.imf.org
+    sdmx_urls = [
+        f"https://sdmxcentral.imf.org/ws/public/sdmxapi/rest/data/"
+        f"{database}/{frequency}.{ref_area}.{indicator}",
+        f"https://dataservices.imf.org/REST/SDMX_JSON.svc/CompactData/"
+        f"{database}/{frequency}.{ref_area}.{indicator}",
+    ]
+    params = {"startPeriod": start, "endPeriod": end}
     try:
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get(
-                f"https://dataservices.imf.org/REST/SDMX_JSON.svc/CompactData/"
-                f"{database}/{frequency}.{ref_area}.{indicator}",
-                params={"startPeriod": start, "endPeriod": end})
-            r.raise_for_status()
-            return r.json()
+            for url in sdmx_urls:
+                try:
+                    r = await c.get(url, params=params,
+                                    headers={"Accept": "application/json"})
+                    r.raise_for_status()
+                    return r.json()
+                except httpx.HTTPError:
+                    continue
+            # All SDMX endpoints failed — return error
+            return {"error": f"IMF SDMX endpoints unavailable for {database}/{indicator}"}
     except httpx.HTTPError as e:
         return {"error": f"IMF SDMX request failed: {e}"}
 
