@@ -167,6 +167,36 @@ if [[ "$MODE" == "install" ]]; then
         log "Generated crypto keys in .env"
     fi
 
+    # ── Auto-derive MONGO_URI_SIGNALS in signals stack .env ──
+    # If the user set MONGO_URI in the LibreChat .env, derive the signals
+    # database URI automatically (same cluster, different database name).
+    if [[ -f "$STACK/.env" ]] && [[ -f "$APP/.env" ]]; then
+        LC_MONGO=$(grep "^MONGO_URI=" "$APP/.env" | head -1 | cut -d= -f2-)
+        SIGNALS_MONGO=$(grep "^MONGO_URI_SIGNALS=" "$STACK/.env" | head -1 | cut -d= -f2-)
+        # Only derive if LibreChat has a real URI and signals doesn't
+        if [[ -n "$LC_MONGO" ]] && [[ "$LC_MONGO" != *"user:password"* ]] && \
+           { [[ -z "$SIGNALS_MONGO" ]] || [[ "$SIGNALS_MONGO" == *"user:password"* ]]; }; then
+            # Replace database name: mongodb+srv://user:pass@host/LibreChat?params → .../signals?params
+            DERIVED=$(echo "$LC_MONGO" | sed -E 's|(/[^/?]+)(\?)|/signals\2|; t; s|(/[^/?]+)$|/signals|')
+            # If no database name in URI, just append /signals
+            if [[ "$DERIVED" == "$LC_MONGO" ]]; then
+                if [[ "$LC_MONGO" == *"?"* ]]; then
+                    DERIVED="${LC_MONGO%%\?*}/signals?${LC_MONGO#*\?}"
+                else
+                    DERIVED="${LC_MONGO}/signals"
+                fi
+            fi
+            sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$STACK/.env"
+            # Also set in LibreChat .env for the trading supervisord service
+            if ! grep -q "^MONGO_URI_SIGNALS=" "$APP/.env"; then
+                echo "MONGO_URI_SIGNALS=$DERIVED" >> "$APP/.env"
+            else
+                sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$APP/.env"
+            fi
+            log "Auto-derived MONGO_URI_SIGNALS from MONGO_URI (database: signals)"
+        fi
+    fi
+
     # Supervisord service
     mkdir -p "$(dirname "$SVC")"
     cat > "$SVC" <<EOF

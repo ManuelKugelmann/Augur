@@ -238,6 +238,53 @@ SVCEOF
     supervisorctl reread 2>/dev/null || true
     supervisorctl update 2>/dev/null || true
 
+    # ── 11. Auto-seed agents (if credentials available) ──
+    if [[ -n "${TA_SETUP_EMAIL:-}" ]] && [[ -n "${TA_SETUP_PASSWORD:-}" ]]; then
+        # Wait for LibreChat to become ready
+        local LC_URL="http://localhost:${LC_PORT:-3080}"
+        local LC_READY=false
+        supervisorctl start librechat 2>/dev/null || true
+        for i in $(seq 1 30); do
+            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                LC_READY=true
+                break
+            fi
+            sleep 2
+        done
+        if [[ "$LC_READY" == true ]]; then
+            log "LibreChat is ready, seeding agents..."
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
+                --email "$TA_SETUP_EMAIL" --password "$TA_SETUP_PASSWORD" \
+                --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: ta agents)"
+        else
+            warn "LibreChat not ready after 60s — seed agents manually: ta agents <email> <password>"
+        fi
+    fi
+
+    # ── 12. Auto-setup data repo (if SSH key exists) ──
+    if [[ ! -d "${DATA}/.git" ]] && [[ -f "$HOME/.ssh/id_ed25519" || -f "$HOME/.ssh/id_rsa" ]]; then
+        if [[ -f "$STACK/librechat-uberspace/scripts/setup-data-repo.sh" ]]; then
+            log "Setting up data repo..."
+            bash "$STACK/librechat-uberspace/scripts/setup-data-repo.sh" \
+                "${GH_USER:-ManuelKugelmann}/${GH_REPO_DATA:-TradeAssistant_Data}" 2>&1 || \
+                warn "Data repo setup failed (run manually: bash $STACK/librechat-uberspace/scripts/setup-data-repo.sh)"
+        fi
+    fi
+
+    # ── 13. Rebuild profile indexes ───────────────
+    if [[ -x "$STACK/venv/bin/python" ]]; then
+        PROFILES_DIR="$STACK/profiles" "$STACK/venv/bin/python" -c "
+import sys, os
+sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
+try:
+    from server import rebuild_index
+    result = rebuild_index()
+    print(f'Profile indexes rebuilt: {result}')
+except Exception as e:
+    print(f'Index rebuild skipped: {e}')
+" 2>&1 | while read -r line; do log "$line"; done
+    fi
+
     # ── Done ────────────────────────────────────
     local UBER="${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
     echo ""
@@ -469,6 +516,60 @@ PYEOF
         if [[ -f "$HOME/.claude-auth.env" ]] && [[ "$((10#$MIN % 30))" -eq 0 ]]; then
             if [[ -x "$HOME/bin/claude-auth-daemon.sh" ]]; then
                 "$HOME/bin/claude-auth-daemon.sh" --once 2>&1 | while read -r line; do _cron_log "$line"; done
+            fi
+        fi
+
+        # ── Every 6 hours (00, 06, 12, 18): invoke cron-planner agent ──
+        if [[ "$((10#$HOUR % 6))" -eq 0 ]] && [[ "$((10#$MIN))" -lt 15 ]]; then
+            if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
+                LC_URL="http://localhost:${LC_PORT:-3080}"
+                # Find cron-planner agent ID from agents list
+                CRON_AGENT_ID=$("$STACK/venv/bin/python" -c "
+import httpx, sys
+try:
+    r = httpx.get('${LC_URL}/api/agents/v1/models',
+                   headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}'},
+                   timeout=10)
+    if r.status_code == 200:
+        for m in r.json().get('data', []):
+            if 'cron' in m.get('id', '').lower() or 'Cron' in m.get('name', ''):
+                print(m['id']); sys.exit(0)
+    sys.exit(1)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null) || CRON_AGENT_ID=""
+
+                if [[ -n "$CRON_AGENT_ID" ]]; then
+                    _cron_log "invoking cron-planner agent ($CRON_AGENT_ID)"
+                    "$STACK/venv/bin/python" -c "
+import httpx, json, sys
+try:
+    r = httpx.post('${LC_URL}/api/agents/v1/chat/completions',
+                    headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}',
+                             'Content-Type': 'application/json'},
+                    json={'model': '${CRON_AGENT_ID}',
+                          'messages': [{'role': 'user',
+                                        'content': 'Execute your periodic routine: '
+                                                   '1) Read plans (store_get_notes kind=plan). '
+                                                   '2) Check risk status. '
+                                                   '3) For watched entities, refresh data via data agents. '
+                                                   '4) Run analysis if data is stale. '
+                                                   '5) Update plans with results. '
+                                                   '6) Log summary as event.'}],
+                          'stream': False},
+                    timeout=300)
+    if r.status_code == 200:
+        data = r.json()
+        content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
+        print(f'OK: {content[:200]}')
+    else:
+        print(f'ERROR: {r.status_code} {r.text[:200]}', file=sys.stderr)
+except Exception as e:
+    print(f'ERROR: {e}', file=sys.stderr)
+" 2>&1 | while read -r line; do _cron_log "cron-planner: $line"; done
+                else
+                    _cron_log "cron-planner agent not found (seed agents: ta agents)"
+                fi
             fi
         fi
 
@@ -936,7 +1037,7 @@ SVCEOF
         echo "  ta rb|rollback  Rollback to previous version"
         echo ""
         echo "  ta sync         Force git sync of data dir"
-        echo "  ta cron         Run cron hook (every 15min; sync + profiles + daily compact)"
+        echo "  ta cron         Run cron hook (sync + profiles + compact + agent invocation)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"
         echo "  ta check -t     Health check + run test suite (bats + pytest)"

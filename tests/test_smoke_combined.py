@@ -43,6 +43,19 @@ def _ensure_real_pymongo():
     return pymongo
 
 
+def _check_mongo_connection(uri):
+    """Verify MongoDB is reachable; skip tests if not (e.g. IP not allowlisted)."""
+    if not uri:
+        return
+    try:
+        pymongo = _ensure_real_pymongo()
+        client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=5000)
+        client.admin.command("ping")
+        client.close()
+    except Exception as exc:
+        pytest.skip(f"MongoDB not reachable: {exc}")
+
+
 def _fresh_import_combined(tmp_path):
     """Import combined_server.py with real pymongo, return the root mcp."""
     # Point at a temp profiles dir so file-based tools don't fail
@@ -93,6 +106,7 @@ class TestCombinedSmoke:
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
+        _check_mongo_connection(MONGO_URI)
         self.mcp = _fresh_import_combined(tmp_path)
         self.tmp = tmp_path
         yield
@@ -263,6 +277,7 @@ class TestPerUserNotes:
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
+        _check_mongo_connection(MONGO_URI)
         _fresh_import_combined(tmp_path)
         yield
         _cleanup_signals_db()
@@ -358,6 +373,7 @@ class TestSharedResearch:
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
+        _check_mongo_connection(MONGO_URI)
         _fresh_import_combined(tmp_path)
         yield
         _cleanup_signals_db()
@@ -442,6 +458,7 @@ class TestLibreChatMongo:
 
     def test_librechat_atlas_ping(self):
         """LibreChat's MONGO_URI_LIBRECHAT responds to ping."""
+        _check_mongo_connection(LIBRECHAT_MONGO_URI)
         _ensure_real_pymongo()
         from pymongo import MongoClient
         client = MongoClient(LIBRECHAT_MONGO_URI, serverSelectionTimeoutMS=5000)
@@ -453,6 +470,7 @@ class TestLibreChatMongo:
 
     def test_librechat_database_exists(self):
         """LibreChat database is accessible (may be empty on fresh setup)."""
+        _check_mongo_connection(LIBRECHAT_MONGO_URI)
         _ensure_real_pymongo()
         from pymongo import MongoClient
         client = MongoClient(LIBRECHAT_MONGO_URI, serverSelectionTimeoutMS=5000)

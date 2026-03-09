@@ -1,17 +1,18 @@
 # TODO — MCP Signals Stack
 
-Global roadmap and task list. Updated 2026-03-03.
+Global roadmap and task list. Updated 2026-03-09.
 
 ---
 
 ## P0 — Foundation (do first)
 
-- [ ] **Validate all 12 domain servers run without errors**
-      Smoke-test each `src/servers/*_server.py` with `fastmcp dev` or `python -c "import ..."`.
-      Some may have import issues or broken API base URLs.
-- [ ] **Test signals store against live Atlas M0**
-      Verify `snapshot()`, `event()`, `history()`, `trend()` round-trip correctly.
-      Ensure TTL indexes work (insert doc with short TTL, confirm deletion).
+- [x] **Validate combined trading server runs without errors**
+      Combined server (store + 12 domains) mounts all namespaces.
+      CI smoke test verifies 50+ tools, all 13 namespaces mounted.
+- [x] **Test signals store against live Atlas M0**
+      `snapshot()`, `event()`, `history()`, `trend()`, `aggregate()`, `nearby()` round-trip verified.
+      Fixed: sparse indexes on timeseries, invalid `"days"` granularity.
+      Integration tests in CI (test_integration_store.py, test_smoke_combined.py).
 - [ ] **Populate seed country profiles** (~20 major economies)
       Currently only DEU and USA. Need at minimum: CHN, JPN, GBR, FRA, IND, BRA, KOR,
       AUS, CAN, RUS, SAU, ZAF, MEX, IDN, TUR, ITA, ESP, NLD, CHE, SGP.
@@ -26,6 +27,9 @@ Global roadmap and task list. Updated 2026-03-03.
 
 ## P1 — Integration & Data Pipeline
 
+- [x] **Build periodic ingest scheduler (cron-planner agent)**
+      Cron-planner agent invoked every 6 hours via `ta cron` using LibreChat Agents API.
+      Agent reads plans/watchlists, delegates to L1 data agents, triggers L2 analysis.
 - [ ] **Wire price ingestion for indicator computation**
       Indicators server (`ta_*` namespace) is pure math — needs OHLCV input.
       Options: (a) yahoo-finance MCP → snapshot → feed to indicators, or
@@ -57,10 +61,9 @@ Global roadmap and task list. Updated 2026-03-03.
       Add a `deep=True` mode that validates cross-references: country ISO3 codes
       in `exposure.countries` exist as profiles, `trade.top_partners` resolve,
       source `mcp` fields match actual server names, supply chain entity IDs exist.
-
 - [ ] **Add error handling and retries to domain servers**
-      Most servers do bare `httpx.get()` calls with no retry, timeout, or error wrapping.
-      Add consistent error responses and configurable timeouts.
+      Most servers do bare `httpx.get()` calls with no retry or error wrapping.
+      Some servers (weather, conflict) have try/except — extend to all 12.
 - [ ] **Add async support to signals store**
       `server.py` uses sync `pymongo`. Consider `motor` for async MongoDB if needed
       for concurrent snapshot ingestion.
@@ -88,15 +91,19 @@ Global roadmap and task list. Updated 2026-03-03.
 
 ## P4 — Deployment & Ops
 
+- [x] **Set up CI/CD** (GitHub Actions)
+      87+ unit tests (bats + pytest), integration tests against Atlas, E2E smoke tests,
+      ShellCheck on all scripts. Release workflow builds bundle on tag push.
+- [x] **Automate LibreChat setup**
+      `ta install` auto-derives MONGO_URI_SIGNALS, auto-seeds agents (if credentials set),
+      auto-sets up data repo (if SSH key exists), rebuilds profile indexes.
+      `remoteAgents` enabled by default in librechat.yaml.
 - [ ] **Test Uberspace deployment end-to-end**
       Run `ta install` on a live Uberspace host.
       Verify supervisord services start, logs rotate, .env is picked up.
 - [ ] **Test LibreChat deployment end-to-end**
       Run the `librechat-uberspace/` deployment package. Verify LibreChat connects
       to Atlas, MCP servers respond, git-versioned data sync works.
-- [ ] **Set up CI/CD** (GitHub Actions)
-      Lint Python (`ruff`), run basic import checks, validate JSON profiles against schemas.
-      Release workflow exists (`.github/workflows/release.yml`) — still need lint/test workflow.
 - [ ] **Add monitoring / health dashboard**
       Simple status page or script that checks: Atlas connection, each MCP server,
       last successful ingest timestamp per source.
@@ -136,3 +143,17 @@ Global roadmap and task list. Updated 2026-03-03.
       librechat.yaml, add __HOME__ path placeholders, add .env.example for LC,
       add GitHub Actions release workflow, update setup.sh for Python MCP deps,
       rewrite README with QuickStart (2026-03-03)
+- [x] **Code review fixes** — all 5 critical security issues fixed (path traversal,
+      aggregate pipeline, mutable defaults, shell injection, operator precedence),
+      plus env var mismatches, datetime deprecation, Comtrade validation (2026-03-06)
+- [x] **Test suite** — 87+ tests: 45 bats + 42+ pytest, CI on push/PR (2026-03-06)
+- [x] **Multi-agent architecture** — 11 agents (L1-L5 + utility), seed script,
+      handoff edges, web research tools on all tiers (2026-03-09)
+- [x] **Web research MCPs** — fetch, webresearch, google-news, tavily added as
+      Tier 1.5 MCPs with all agents having access (2026-03-09)
+- [x] **Knowledge building** — all agents instructed to create/read notes for
+      persistent memory, relationship discovery, and data source tracking (2026-03-09)
+- [x] **MongoDB timeseries fixes** — sparse index removed from timeseries collections,
+      invalid "days" granularity changed to "hours" (2026-03-09)
+- [x] **E2E smoke tests** — LibreChat + trading server health, MCP tools, agents,
+      MongoDB connectivity, cron API calls (2026-03-09)
