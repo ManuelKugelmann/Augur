@@ -1,4 +1,4 @@
-"""Conflict & Military — UCDP, ACLED, OpenSanctions."""
+"""Conflict & Military — UCDP, ACLED, VIEWS forecasts, OpenSanctions."""
 from fastmcp import FastMCP
 import httpx
 import os
@@ -35,22 +35,79 @@ async def _acled_auth() -> str:
         return ""
 
 
-@mcp.tool()
-async def ucdp_conflicts(year: int = 2024, page: int = 1) -> dict:
-    """UCDP armed conflicts by year. Georeferenced events 1946-present.
-    Optional: set UCDP_ACCESS_TOKEN env var (request from UCDP)."""
-    headers: dict = {}
+_UCDP_BASE = "https://ucdpapi.pcr.uu.se/api"
+
+
+def _ucdp_headers() -> dict:
     if UCDP_TOKEN:
-        headers["x-ucdp-access-token"] = UCDP_TOKEN
+        return {"x-ucdp-access-token": UCDP_TOKEN}
+    return {}
+
+
+@mcp.tool()
+async def ucdp_conflicts(year: int = 2024, page: int = 1,
+                          version: str = "25.1") -> dict:
+    """UCDP georeferenced conflict events (GED). Data: 1989-2024.
+    version: API dataset version (default 25.1 = 2025 release covering through 2024).
+    Requires UCDP_ACCESS_TOKEN env var."""
     try:
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://ucdpapi.pcr.uu.se/api/gedevents/25.1",
+            r = await c.get(f"{_UCDP_BASE}/gedevents/{version}",
                             params={"pagesize": 100, "page": page, "Year": year},
-                            headers=headers)
+                            headers=_ucdp_headers())
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
         return {"error": f"UCDP request failed: {e}"}
+
+
+@mcp.tool()
+async def ucdp_candidate_events(page: int = 1, country: str = "",
+                                 version: str = "26.0.1") -> dict:
+    """UCDP candidate events — near-real-time monthly releases (more recent than
+    the stable GED dataset). Use for 2025+ conflict events. version default: 26.0.1.
+    Requires UCDP_ACCESS_TOKEN env var."""
+    params: dict = {"pagesize": 100, "page": page}
+    if country:
+        params["Country"] = country
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(f"{_UCDP_BASE}/gedevents/{version}",
+                            params=params, headers=_ucdp_headers())
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"UCDP candidate events request failed: {e}"}
+
+
+# ── VIEWS conflict forecasts ──────────────────────
+
+_VIEWS_BASE = "https://api.viewsforecasting.org"
+
+
+@mcp.tool()
+async def views_forecast(iso: str = "", level: str = "cm",
+                          violence_type: str = "sb",
+                          date_start: str = "", date_end: str = "") -> dict:
+    """VIEWS conflict fatality forecasts 1-36 months ahead. Free, no auth.
+    iso: 3-letter country code (e.g. SYR, UKR). level: cm (country-month) or
+    pgm (PRIO-GRID-month, sub-national for Africa/MENA). violence_type: sb
+    (state-based), ns (non-state), os (one-sided). date_start/date_end: YYYY-MM-DD."""
+    params: dict = {"pagesize": 100}
+    if iso:
+        params["iso"] = iso.upper()
+    if date_start:
+        params["date_start"] = date_start
+    if date_end:
+        params["date_end"] = date_end
+    path = f"/current/{level}/{violence_type}"
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(f"{_VIEWS_BASE}{path}", params=params)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"VIEWS forecast request failed: {e}"}
 
 
 @mcp.tool()

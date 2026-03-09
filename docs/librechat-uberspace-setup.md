@@ -350,7 +350,6 @@ All providers below have **free tiers**:
 |----------|-----------|---------|
 | Groq | Fast inference, rate-limited | https://console.groq.com/keys |
 | Gemini | 15 RPM, 1M tokens/day | https://aistudio.google.com/apikey |
-| Grok (xAI) | 30 RPM | https://console.x.ai |
 | Mistral | mistral-small, codestral | https://console.mistral.ai/api-keys |
 | Cerebras | 30 RPM, fast inference | https://cloud.cerebras.ai |
 | Cohere | 20 RPM, 1K req/month | https://dashboard.cohere.com/api-keys |
