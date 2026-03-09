@@ -104,6 +104,24 @@ mcpServers:
     chatMenu: false
     serverInstructions: "Reddit post/comment search for sentiment and signal detection."
 
+  # ── External MCPs (Tier 1.5 — general web access) ──
+
+  fetch:
+    command: uvx
+    args: ["mcp-server-fetch"]
+    chatMenu: false
+    serverInstructions: "Fetch any URL and extract contents as markdown. Use for reading web pages, SEC filings, press releases, API docs, or any public URL."
+
+  tavily:
+    type: streamable-http
+    url: "https://mcp.tavily.com/mcp/?tavilyApiKey={{TAVILY_API_KEY}}"
+    chatMenu: false
+    customUserVars:
+      TAVILY_API_KEY:
+        title: "Tavily API Key"
+        description: "Web search API key (free: 1000 searches/month). Get one at tavily.com."
+    serverInstructions: "Web search via Tavily. Use for real-time web search, news, company info, regulatory filings, or any question requiring current web data. Free tier: 1000 searches/month."
+
   # ── External MCPs (Tier 2 — additive analytics & signals) ──
 
   alphavantage:
