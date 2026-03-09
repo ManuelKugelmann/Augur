@@ -1,0 +1,44 @@
+name: Install Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'librechat-uberspace/scripts/**'
+      - 'deploy.conf'
+      - 'requirements.txt'
+      - 'tests/test_install_*'
+      - 'tests/helpers/**'
+      - '.github/workflows/tests-install.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'librechat-uberspace/scripts/**'
+      - 'deploy.conf'
+      - 'requirements.txt'
+      - 'tests/test_install_*'
+      - 'tests/helpers/**'
+      - '.github/workflows/tests-install.yml'
+
+jobs:
+  install-tests:
+    name: Install smoke & lifecycle tests (bats)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps (for real venv in install tests)
+        run: pip install httpx python-dotenv pymongo
+
+      - name: Install bats
+        run: |
+          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
+          sudo /tmp/bats/install.sh /usr/local
+
+      - name: Run install bats tests
+        run: bats tests/test_install_smoke.bats tests/test_install_lifecycle.bats

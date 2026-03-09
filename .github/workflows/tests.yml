@@ -13,14 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Python deps (for real venv in install smoke tests)
-        run: pip install httpx python-dotenv pymongo
-
       - name: Install bats
         run: |
           git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
@@ -33,8 +25,21 @@ jobs:
             bash -n "$f"
           done
 
-      - name: Run bats tests
-        run: bats tests/*.bats
+      - name: Run fast bats tests (excludes slow install tests)
+        run: |
+          bats \
+            tests/test_bootstrap.bats \
+            tests/test_claude_auth.bats \
+            tests/test_deploy_conf.bats \
+            tests/test_health.bats \
+            tests/test_nightly_commit.bats \
+            tests/test_proxy.bats \
+            tests/test_setup.bats \
+            tests/test_setup_data_repo.bats \
+            tests/test_ta_cron.bats \
+            tests/test_ta_dispatch.bats \
+            tests/test_ta_sync.bats \
+            tests/test_uberspace.bats
 
   python-tests:
     name: Python tests (pytest)
