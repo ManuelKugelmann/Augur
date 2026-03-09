@@ -122,9 +122,10 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+          OPENSANCTIONS_API_KEY: ${{ secrets.OPENSANCTIONS_API_KEY }}
         run: |
           echo "=== API Key Availability ==="
-          for key in FRED_API_KEY EIA_API_KEY COMTRADE_API_KEY ACLED_API_KEY ACLED_EMAIL USDA_NASS_API_KEY GOOGLE_API_KEY CF_API_TOKEN AISSTREAM_API_KEY; do
+          for key in FRED_API_KEY EIA_API_KEY COMTRADE_API_KEY ACLED_API_KEY ACLED_EMAIL USDA_NASS_API_KEY GOOGLE_API_KEY CF_API_TOKEN AISSTREAM_API_KEY OPENSANCTIONS_API_KEY; do
             val=$(printenv "$key" 2>/dev/null || true)
             if [ -n "$val" ]; then
               echo "  $key: SET (${#val} chars)"
@@ -144,6 +145,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+          OPENSANCTIONS_API_KEY: ${{ secrets.OPENSANCTIONS_API_KEY }}
         run: python -m pytest tests/test_integration_keyed.py -v -m integration --timeout=60
 
   integration-llm-keys:

@@ -117,7 +117,7 @@ Optional API keys (most data sources work without keys):
 
 ```bash
 # FRED_API_KEY=           # https://fred.stlouisfed.org/docs/api/api_key.html
-# ACLED_API_KEY=           # https://developer.acleddata.com/
+# ACLED_API_KEY=           # https://acleddata.com/register/
 # EIA_API_KEY=             # https://www.eia.gov/opendata/register.php
 ```
 

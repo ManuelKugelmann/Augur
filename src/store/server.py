@@ -66,7 +66,7 @@ def _get_user_id() -> str:
 def _db():
     global _client
     if not _client:
-        uri = os.environ.get("MONGO_URI_SIGNALS", "")
+        uri = os.environ.get("MONGO_URI_SIGNALS") or os.environ.get("MONGO_URI", "")
         if not uri:
             raise RuntimeError(
                 "MONGO_URI_SIGNALS not set — set it in .env or environment. "
@@ -109,7 +109,7 @@ def _snap_col(kind: str):
     col = _db()[name]
     if f"{name}_geo" not in _cols_ready:
         col.create_index([("location", "2dsphere")],
-                         background=True)
+                         sparse=True, background=True)
         _cols_ready.add(f"{name}_geo")
     return col
 
@@ -127,7 +127,7 @@ def _events_col():
     col = _db().events
     if "events_geo" not in _cols_ready:
         col.create_index([("location", "2dsphere")],
-                         background=True)
+                         sparse=True, background=True)
         _cols_ready.add("events_geo")
     return col
 
