@@ -582,104 +582,84 @@ PYEOF
             fi
         fi
 
-        # ── Every 6 hours (00, 06, 12, 18): invoke cron-planner agent ──
-        if [[ "$((10#$HOUR % 6))" -eq 0 ]] && [[ "$((10#$MIN))" -lt 15 ]]; then
+        # ── Agent dispatcher: fetch agent list once, invoke all due agents ──
+        if [[ -n "${TA_AGENTS_API_KEY:-}" ]] && [[ -f "$STACK/venv/bin/python" ]]; then
             sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
-            if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
-                LC_URL="http://localhost:${LC_PORT:-3080}"
-                # Find cron-planner agent ID from agents list
-                CRON_AGENT_ID=$("$STACK/venv/bin/python" -c "
-import httpx, sys
-try:
-    r = httpx.get('${LC_URL}/api/agents/v1/models',
-                   headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}'},
-                   timeout=10)
-    if r.status_code == 200:
-        for m in r.json().get('data', []):
-            if 'cron' in m.get('id', '').lower() or 'Cron' in m.get('name', ''):
-                print(m['id']); sys.exit(0)
-    sys.exit(1)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null) || CRON_AGENT_ID=""
-
-                if [[ -n "$CRON_AGENT_ID" ]]; then
-                    _cron_log "invoking cron-planner agent ($CRON_AGENT_ID)"
-                    "$STACK/venv/bin/python" -c "
-import httpx, json, sys
-try:
-    r = httpx.post('${LC_URL}/api/agents/v1/chat/completions',
-                    headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}',
-                             'Content-Type': 'application/json'},
-                    json={'model': '${CRON_AGENT_ID}',
-                          'messages': [{'role': 'user',
-                                        'content': 'Execute your periodic routine: '
-                                                   '1) Read plans (store_get_notes kind=plan). '
-                                                   '2) Check risk status. '
-                                                   '3) For watched entities, refresh data via data agents. '
-                                                   '4) Run analysis if data is stale. '
-                                                   '5) Update plans with results. '
-                                                   '6) Log summary as event.'}],
-                          'stream': False},
-                    timeout=300)
-    if r.status_code == 200:
-        data = r.json()
-        content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
-        print(f'OK: {content[:200]}')
-    else:
-        print(f'ERROR: {r.status_code} {r.text[:200]}', file=sys.stderr)
-except Exception as e:
-    print(f'ERROR: {e}', file=sys.stderr)
-" 2>&1 | while read -r line; do _cron_log "cron-planner: $line"; done
-                else
-                    _cron_log "cron-planner agent not found (seed agents: ta agents)"
-                fi
-            fi
-        fi
-
-        # ── Invoke news agents (they self-schedule via augur_due_now()) ──
-        if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
             LC_URL="http://localhost:${LC_PORT:-3080}"
-            for NEWS_AGENT_NAME in news-the-augur news-der-augur news-financial-augur news-finanz-augur; do
-                NEWS_AGENT_ID=$("$STACK/venv/bin/python" -c "
-import httpx, sys
-try:
-    r = httpx.get('${LC_URL}/api/agents/v1/models',
-                   headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}'},
-                   timeout=10)
-    if r.status_code == 200:
-        for m in r.json().get('data', []):
-            if '${NEWS_AGENT_NAME}' in m.get('id', '').lower() or '${NEWS_AGENT_NAME}' in m.get('name', '').lower():
-                print(m['id']); sys.exit(0)
-    sys.exit(1)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null) || NEWS_AGENT_ID=""
-
-                if [[ -n "$NEWS_AGENT_ID" ]]; then
-                    _cron_log "invoking $NEWS_AGENT_NAME"
-                    "$STACK/venv/bin/python" -c "
+            "$STACK/venv/bin/python" - "$LC_URL" "$TA_AGENTS_API_KEY" "$HOUR" "$MIN" <<'PYEOF' 2>&1 \
+                | while read -r line; do _cron_log "agents: $line"; done
 import httpx, json, sys
+
+lc_url, api_key, hour, minute = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+# ── Dispatch table: (name_match, due_check, message, timeout) ──
+DISPATCH = [
+    ("cron-planner",
+     lambda h, m: h % 6 == 0 and m < 15,
+     "Execute your periodic routine: "
+     "1) Read plans (store_get_notes kind=plan). "
+     "2) Check risk status. "
+     "3) For watched entities, refresh data via data agents. "
+     "4) Run analysis if data is stale. "
+     "5) Update plans with results. "
+     "6) Log summary as event.",
+     300),
+    ("news-the-augur",      lambda h, m: True,
+     "Check augur_due_now() and produce any due articles.", 600),
+    ("news-der-augur",      lambda h, m: True,
+     "Check augur_due_now() and produce any due articles.", 600),
+    ("news-financial-augur", lambda h, m: True,
+     "Check augur_due_now() and produce any due articles.", 600),
+    ("news-finanz-augur",   lambda h, m: True,
+     "Check augur_due_now() and produce any due articles.", 600),
+]
+
+# Fetch agent list once
 try:
-    r = httpx.post('${LC_URL}/api/agents/v1/chat/completions',
-                    headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}',
-                             'Content-Type': 'application/json'},
-                    json={'model': '${NEWS_AGENT_ID}',
-                          'messages': [{'role': 'user',
-                                        'content': 'Check augur_due_now() and produce any due articles.'}],
-                          'stream': False},
-                    timeout=600)
-    if r.status_code == 200:
-        data = r.json()
-        content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
-        print(f'OK: {content[:200]}')
-    else:
-        print(f'ERROR: {r.status_code} {r.text[:200]}', file=sys.stderr)
+    r = httpx.get(f"{lc_url}/api/agents/v1/models",
+                  headers=headers, timeout=10)
+    if r.status_code != 200:
+        print(f"ERROR: agent list {r.status_code}", file=sys.stderr); sys.exit(1)
+    agents = {m["id"]: m for m in r.json().get("data", [])}
 except Exception as e:
-    print(f'ERROR: {e}', file=sys.stderr)
-" 2>&1 | while read -r line; do _cron_log "$NEWS_AGENT_NAME: $line"; done
-                fi
-            done
+    print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
+
+# Build name→id lookup (match by substring in id or name)
+def find_agent(name_match):
+    for aid, m in agents.items():
+        if name_match in aid.lower() or name_match in m.get("name", "").lower():
+            return aid
+    return None
+
+# Invoke due agents
+invoked = 0
+for name_match, due_check, message, timeout in DISPATCH:
+    if not due_check(hour, minute):
+        continue
+    agent_id = find_agent(name_match)
+    if not agent_id:
+        print(f"SKIP {name_match}: agent not found")
+        continue
+    print(f"invoking {name_match} ({agent_id})")
+    try:
+        r = httpx.post(f"{lc_url}/api/agents/v1/chat/completions",
+                       headers=headers,
+                       json={"model": agent_id,
+                             "messages": [{"role": "user", "content": message}],
+                             "stream": False},
+                       timeout=timeout)
+        if r.status_code == 200:
+            content = r.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+            print(f"OK {name_match}: {content[:200]}")
+        else:
+            print(f"ERROR {name_match}: {r.status_code} {r.text[:200]}", file=sys.stderr)
+    except Exception as e:
+        print(f"ERROR {name_match}: {e}", file=sys.stderr)
+    invoked += 1
+
+print(f"done: {invoked} agents invoked")
+PYEOF
         fi
 
         # ── Weekly on Sunday at 03:00 UTC: placeholder for future tasks ──
