@@ -30,21 +30,27 @@ async def who_indicator(indicator: str = "NCDMORT3070",
         filters.append(f"TimeDim eq {year}")
     if filters:
         params["$filter"] = " and ".join(filters)
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get(url, params=params)
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get(url, params=params)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"WHO GHO request failed: {e}"}
 
 
 @mcp.tool()
 async def disease_outbreaks(limit: int = 20) -> dict:
     """Latest WHO Disease Outbreak News."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://www.who.int/api/news/diseaseoutbreaknews",
-                        params={"sf_culture": "en", "$top": limit,
-                                "$orderby": "PublicationDate desc"})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://www.who.int/api/news/diseaseoutbreaknews",
+                            params={"sf_culture": "en", "$top": limit,
+                                    "$orderby": "PublicationDate desc"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"WHO outbreaks request failed: {e}"}
 
 
 @mcp.tool()
@@ -54,14 +60,17 @@ async def disease_tracker(disease: str = "covid", country: str = "") -> dict:
         return {"error": "invalid country name (letters, spaces, digits only)"}
     if disease not in ("covid", "influenza"):
         return {"error": "disease must be 'covid' or 'influenza'"}
-    async with httpx.AsyncClient(timeout=30) as c:
-        if disease == "covid":
-            url = f"https://disease.sh/v3/covid-19/{'countries/' + country if country else 'all'}"
-        else:
-            url = f"https://disease.sh/v3/influenza/{'ihsa/country/' + country if country else 'ihsa'}"
-        r = await c.get(url)
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            if disease == "covid":
+                url = f"https://disease.sh/v3/covid-19/{'countries/' + country if country else 'all'}"
+            else:
+                url = f"https://disease.sh/v3/influenza/{'ihsa/country/' + country if country else 'ihsa'}"
+            r = await c.get(url)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"disease.sh request failed: {e}"}
 
 
 @mcp.tool()
@@ -70,11 +79,14 @@ async def fda_adverse_events(drug: str = "", limit: int = 20) -> dict:
     if drug and not _SAFE_COUNTRY.match(drug):
         return {"error": "invalid drug name (letters, spaces, digits only)"}
     search = f'patient.drug.medicinalproduct:"{drug}"' if drug else ""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://api.fda.gov/drug/event.json",
-                        params={"search": search, "limit": limit})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://api.fda.gov/drug/event.json",
+                            params={"search": search, "limit": limit})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"OpenFDA request failed: {e}"}
 
 
 if __name__ == "__main__":

@@ -41,17 +41,20 @@ async def global_elections(country: str = "", year: str = "",
   {filter_block}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
 }} ORDER BY DESC(?date) LIMIT {limit}"""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://query.wikidata.org/sparql",
-                        params={"query": query, "format": "json"},
-                        headers=_WD_HEADERS)
-        r.raise_for_status()
-        bindings = r.json()["results"]["bindings"]
-        return [{"election": b.get("electionLabel", {}).get("value", ""),
-                 "country": b.get("countryLabel", {}).get("value", ""),
-                 "date": b.get("date", {}).get("value", ""),
-                 "type": b.get("typeLabel", {}).get("value", "")}
-                for b in bindings]
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://query.wikidata.org/sparql",
+                            params={"query": query, "format": "json"},
+                            headers=_WD_HEADERS)
+            r.raise_for_status()
+            bindings = r.json()["results"]["bindings"]
+            return [{"election": b.get("electionLabel", {}).get("value", ""),
+                     "country": b.get("countryLabel", {}).get("value", ""),
+                     "date": b.get("date", {}).get("value", ""),
+                     "type": b.get("typeLabel", {}).get("value", "")}
+                    for b in bindings]
+    except httpx.HTTPError as e:
+        return [{"error": f"Wikidata request failed: {e}"}]
 
 
 @mcp.tool()
@@ -73,18 +76,21 @@ async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
   {country_filter}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
 }} ORDER BY DESC(?start) LIMIT {limit}"""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://query.wikidata.org/sparql",
-                        params={"query": query, "format": "json"},
-                        headers=_WD_HEADERS)
-        r.raise_for_status()
-        bindings = r.json()["results"]["bindings"]
-        return [{"person": b.get("personLabel", {}).get("value", ""),
-                 "country": b.get("countryLabel", {}).get("value", ""),
-                 "position": b.get("positionLabel", {}).get("value", ""),
-                 "start": b.get("start", {}).get("value", ""),
-                 "end": b.get("end", {}).get("value", "")}
-                for b in bindings]
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://query.wikidata.org/sparql",
+                            params={"query": query, "format": "json"},
+                            headers=_WD_HEADERS)
+            r.raise_for_status()
+            bindings = r.json()["results"]["bindings"]
+            return [{"person": b.get("personLabel", {}).get("value", ""),
+                     "country": b.get("countryLabel", {}).get("value", ""),
+                     "position": b.get("positionLabel", {}).get("value", ""),
+                     "start": b.get("start", {}).get("value", ""),
+                     "end": b.get("end", {}).get("value", "")}
+                    for b in bindings]
+    except httpx.HTTPError as e:
+        return [{"error": f"Wikidata request failed: {e}"}]
 
 
 # ── EU Parliament (no key) ──────────────────────────────
@@ -96,25 +102,31 @@ async def eu_parliament_meps(country: str = "", limit: int = 50) -> dict:
     params: dict = {"offset": 0, "limit": limit}
     if country:
         params["country-of-representation"] = country.upper()
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://data.europarl.europa.eu/api/v2/meps",
-                        params=params,
-                        headers={"Accept": "application/ld+json"})
-        r.raise_for_status()
-        data = r.json()
-        meps = data.get("data", [])
-        return {"count": len(meps), "meps": meps}
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://data.europarl.europa.eu/api/v2/meps",
+                            params=params,
+                            headers={"Accept": "application/ld+json"})
+            r.raise_for_status()
+            data = r.json()
+            meps = data.get("data", [])
+            return {"count": len(meps), "meps": meps}
+    except httpx.HTTPError as e:
+        return {"error": f"EU Parliament request failed: {e}"}
 
 
 @mcp.tool()
 async def eu_parliament_votes(year: str = "2025", limit: int = 20) -> dict:
     """EU Parliament plenary documents/votes."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://data.europarl.europa.eu/api/v2/plenary-documents",
-                        params={"year": year, "limit": limit},
-                        headers={"Accept": "application/ld+json"})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://data.europarl.europa.eu/api/v2/plenary-documents",
+                            params={"year": year, "limit": limit},
+                            headers={"Accept": "application/ld+json"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"EU Parliament request failed: {e}"}
 
 
 # ── Google Civic Info (US, needs key) ────────────────────
@@ -125,11 +137,14 @@ async def us_representatives(address: str) -> dict:
     """US elected officials for an address (Google Civic Info)."""
     if not GOOGLE_KEY:
         return {"error": "GOOGLE_API_KEY not set"}
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://www.googleapis.com/civicinfo/v2/representatives",
-                        params={"key": GOOGLE_KEY, "address": address})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://www.googleapis.com/civicinfo/v2/representatives",
+                            params={"key": GOOGLE_KEY, "address": address})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"Google Civic Info request failed: {e}"}
 
 
 @mcp.tool()
@@ -137,11 +152,14 @@ async def us_voter_info(address: str) -> dict:
     """US voter/election info for an address. Only during active elections."""
     if not GOOGLE_KEY:
         return {"error": "GOOGLE_API_KEY not set"}
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://www.googleapis.com/civicinfo/v2/voterInfoQuery",
-                        params={"key": GOOGLE_KEY, "address": address})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://www.googleapis.com/civicinfo/v2/voterInfoQuery",
+                            params={"key": GOOGLE_KEY, "address": address})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"Google Civic Info request failed: {e}"}
 
 
 

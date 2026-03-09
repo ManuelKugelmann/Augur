@@ -1,6 +1,6 @@
 # TODO — MCP Signals Stack
 
-Global roadmap and task list. Updated 2026-03-09.
+Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 
 ---
 
@@ -22,6 +22,11 @@ Global roadmap and task list. Updated 2026-03-09.
 - [ ] **Add more source profiles** for the 75+ data sources
       Currently only 3 (usgs, faostat, open-meteo). Each FastMCP server maps to
       multiple sources — create profiles for at least the top 2 per domain.
+- [ ] **Generate INDEX files** (`profiles/INDEX_*.json`)
+      Currently missing on disk. `rebuild_index()` exists but hasn't been run.
+      Install script calls it at step 13 — verify it works with current profiles.
+- [ ] **Fix placeholder profiles** (USA.json, faostat.json)
+      Both have `_placeholder: true` with incomplete data. Fill in real values.
 
 ---
 
@@ -56,14 +61,21 @@ Global roadmap and task list. Updated 2026-03-09.
 
 ## P2 — Server Improvements
 
+- [ ] **Optimize `search_profiles()` for scale** (REVIEW.md #17)
+      O(n) disk reads per query — reads every profile file. Fine for <100 profiles,
+      will degrade at 500+. Options: in-memory cache with TTL, extend INDEX files
+      with searchable fields, or MongoDB text search.
+- [ ] **Add `econ_indicator()` routing improvements** (review-mcp-tools.md §2.1)
+      Router exists in `macro_server.py`. Extend with ECB, OECD, Eurostat providers
+      as they're added.
 - [ ] **Add cross-reference validation to profile linter**
       `lint_profiles()` currently does basic checks (required fields, types).
       Add a `deep=True` mode that validates cross-references: country ISO3 codes
       in `exposure.countries` exist as profiles, `trade.top_partners` resolve,
       source `mcp` fields match actual server names, supply chain entity IDs exist.
-- [ ] **Add error handling and retries to domain servers**
-      Most servers do bare `httpx.get()` calls with no retry or error wrapping.
-      Some servers (weather, conflict) have try/except — extend to all 12.
+- [x] **Add error handling to domain servers**
+      All 12 servers now wrap HTTP calls in `try/except httpx.HTTPError` returning
+      `{"error": ...}` instead of crashing. (2026-03-09)
 - [ ] **Add async support to signals store**
       `server.py` uses sync `pymongo`. Consider `motor` for async MongoDB if needed
       for concurrent snapshot ingestion.
@@ -157,3 +169,10 @@ Global roadmap and task list. Updated 2026-03-09.
       invalid "days" granularity changed to "hours" (2026-03-09)
 - [x] **E2E smoke tests** — LibreChat + trading server health, MCP tools, agents,
       MongoDB connectivity, cron API calls (2026-03-09)
+- [x] **Provider-agnostic routing** — `econ_indicator()` router in macro_server.py
+      auto-routes GDP/CPI/unemployment to FRED/World Bank/IMF by country.
+      Duplicate tools (`election_reports`, `military_spending`) removed. (2026-03-09)
+- [x] **HTTP timeouts on all servers** — explicit `timeout=` on every httpx call
+      across all 12 domain servers + store. (2026-03-09)
+- [x] **Error handling on all servers** — try/except httpx.HTTPError on all HTTP
+      tools. Returns `{"error": ...}` instead of crashing. (2026-03-09)

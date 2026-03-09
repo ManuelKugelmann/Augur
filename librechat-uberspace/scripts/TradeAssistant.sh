@@ -12,6 +12,9 @@
 set -euo pipefail
 
 # ── Defaults (work before repo/config exist) ──
+# These defaults are needed for the curl|bash one-liner where deploy.conf
+# doesn't exist yet.  Once the repo is cloned, deploy.conf is sourced below
+# and its values take effect for all subsequent variable expansions.
 GH_USER="${GH_USER:-ManuelKugelmann}"
 GH_REPO="${GH_REPO:-TradingAssistant}"
 STACK_DIR="${STACK_DIR:-$HOME/mcps}"

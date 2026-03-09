@@ -18,13 +18,16 @@ async def trade_flows(reporter: str = "842", partner: str = "0",
     276=Germany, 0=World). flow: M(import), X(export)."""
     if not COMTRADE_KEY:
         return {"error": "COMTRADE_API_KEY not set"}
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get("https://comtradeapi.un.org/data/v1/get/C/A/HS", params={
-            "reporterCode": reporter, "partnerCode": partner,
-            "cmdCode": commodity, "flowCode": flow, "period": period,
-            "subscription-key": COMTRADE_KEY})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get("https://comtradeapi.un.org/data/v1/get/C/A/HS", params={
+                "reporterCode": reporter, "partnerCode": partner,
+                "cmdCode": commodity, "flowCode": flow, "period": period,
+                "subscription-key": COMTRADE_KEY})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"UN Comtrade request failed: {e}"}
 
 
 @mcp.tool()
@@ -36,12 +39,15 @@ async def energy_series(series: str = "PET.RWTC.D",
     ELEC.GEN.ALL-US-99.M (US electricity)."""
     if not EIA_KEY:
         return {"error": "EIA_API_KEY not set"}
-    async with httpx.AsyncClient(timeout=30) as c:
-        r = await c.get(f"https://api.eia.gov/v2/seriesid/{series}",
-                        params={"api_key": EIA_KEY, "start": start,
-                                "frequency": frequency})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(f"https://api.eia.gov/v2/seriesid/{series}",
+                            params={"api_key": EIA_KEY, "start": start,
+                                    "frequency": frequency})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"EIA request failed: {e}"}
 
 
 if __name__ == "__main__":
