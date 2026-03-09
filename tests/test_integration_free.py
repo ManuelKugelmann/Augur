@@ -241,9 +241,7 @@ class TestHumanitarian:
         result = run(self.m.hdx_search(query="food security", rows=3))
         assert "result" in result or "success" in result
 
-    def test_reliefweb_reports(self):
-        result = run(self.m.reliefweb_reports(query="drought", limit=3))
-        _check_upstream(result, "data")
+    # reliefweb_reports moved to test_integration_keyed.py (requires RELIEFWEB_APPNAME)
 
 
 # ── infra_server (RIPE Atlas — free) ────────────────────

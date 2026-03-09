@@ -129,6 +129,24 @@ class TestUSDA:
         assert "data" in result or "error" not in result
 
 
+# ── ReliefWeb (humanitarian_server) ─────────────────────
+
+@pytest.mark.skipif(not os.environ.get("RELIEFWEB_APPNAME"), reason="RELIEFWEB_APPNAME not set")
+class TestReliefWeb:
+    @pytest.fixture(autouse=True)
+    def _load(self):
+        import humanitarian_server as mod
+        self.m = mod
+
+    def test_reliefweb_reports(self):
+        result = run(self.m.reliefweb_reports(query="drought", limit=3))
+        assert "data" in result
+
+    def test_reliefweb_disasters(self):
+        result = run(self.m.reliefweb_disasters(limit=3))
+        assert "data" in result
+
+
 # ── Google Civic (elections_server) ──────────────────────
 # us_representatives removed — Google Civic Representatives API was permanently
 # shut down April 30, 2025. us_voter_info still works but requires active elections.

@@ -604,15 +604,20 @@ class TestHumanitarianViaConflict:
 
     @pytest.mark.asyncio
     async def test_reliefweb_uses_post(self):
-        resp = _mock_response({"data": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.reliefweb_reports(query="flood", country="Bangladesh")
-        # Should use POST
-        client.post.assert_called_once()
-        body = client.post.call_args[1]["json"]
-        assert body["query"]["value"] == "flood"
-        assert body["filter"]["value"] == ["Bangladesh"]
+        old = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = "test-app"
+        try:
+            resp = _mock_response({"data": []})
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                await self.mod.reliefweb_reports(query="flood", country="Bangladesh")
+            # Should use POST
+            client.post.assert_called_once()
+            body = client.post.call_args[1]["json"]
+            assert body["query"]["value"] == "flood"
+            assert body["filter"]["value"] == ["Bangladesh"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old
 
 
 # ── Transport Server ─────────────────────────────
@@ -959,14 +964,30 @@ class TestHumanitarianServer:
         assert params["q"] == "displacement"
 
     @pytest.mark.asyncio
+    async def test_reliefweb_reports_missing_appname(self):
+        old = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = ""
+        try:
+            result = await self.mod.reliefweb_reports(query="drought")
+            assert "error" in result
+            assert "RELIEFWEB_APPNAME" in result["error"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old
+
+    @pytest.mark.asyncio
     async def test_reliefweb_reports_country_filter(self):
-        resp = _mock_response({"data": []})
-        patcher, client = _patch_httpx_get(resp)
-        with patcher:
-            await self.mod.reliefweb_reports(country="Syria")
-        body = client.post.call_args[1]["json"]
-        assert body["filter"]["field"] == "country.name"
-        assert "Syria" in body["filter"]["value"]
+        old = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = "test-app"
+        try:
+            resp = _mock_response({"data": []})
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                await self.mod.reliefweb_reports(country="Syria")
+            body = client.post.call_args[1]["json"]
+            assert body["filter"]["field"] == "country.name"
+            assert "Syria" in body["filter"]["value"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old
 
     @pytest.mark.asyncio
     async def test_idmc_missing_key(self, monkeypatch):
