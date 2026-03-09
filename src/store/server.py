@@ -109,7 +109,7 @@ def _snap_col(kind: str):
     col = _db()[name]
     if f"{name}_geo" not in _cols_ready:
         col.create_index([("location", "2dsphere")],
-                         sparse=True, background=True)
+                         background=True)
         _cols_ready.add(f"{name}_geo")
     return col
 
@@ -117,7 +117,7 @@ def _snap_col(kind: str):
 def _arch_col(kind: str):
     """Return the archive collection for a kind (no TTL)."""
     name = f"arch_{kind}"
-    _ensure_ts(name, granularity="days")
+    _ensure_ts(name, granularity="hours")
     return _db()[name]
 
 
@@ -127,7 +127,7 @@ def _events_col():
     col = _db().events
     if "events_geo" not in _cols_ready:
         col.create_index([("location", "2dsphere")],
-                         sparse=True, background=True)
+                         background=True)
         _cols_ready.add("events_geo")
     return col
 
