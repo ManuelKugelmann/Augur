@@ -234,7 +234,7 @@ EOF
     supervisorctl add librechat 2>/dev/null || true
 
     # Web backend
-    uberspace web backend set / --http --port $PORT 2>/dev/null || true
+    uberspace web backend set / --http --port $PORT || warn "Failed to set web backend on port $PORT"
 
     # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"

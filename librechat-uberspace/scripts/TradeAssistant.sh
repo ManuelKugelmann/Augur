@@ -69,7 +69,7 @@ _do_install() {
 
     # ── 1. Node.js ──────────────────────────────
     log "Setting Node.js ${NODE_VERSION}..."
-    uberspace tools version use node "$NODE_VERSION" 2>/dev/null || true
+    uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
     command -v node &>/dev/null || die "Node.js not available"
     log "Node.js $(node -v)"
 
@@ -152,7 +152,7 @@ autorestart=true
 startsecs=60
 SVCEOF
     # Register /charts route to chart server port
-    uberspace web backend set /charts --http --port 8066 2>/dev/null || true
+    uberspace web backend set /charts --http --port 8066 || warn "Failed to set /charts web backend"
     log "Services registered (trading, charts)"
 
     # ── 6. LibreChat — download prebuilt release bundle ──
@@ -254,7 +254,7 @@ SVCEOF
             supervisorctl add librechat 2>/dev/null || true
             log "Supervisord service re-registered"
         fi
-        uberspace web backend set / --http --port "${LC_PORT}" 2>/dev/null || true
+        uberspace web backend set / --http --port "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
     fi
 
     # ── 8. Install ta shortcut ──────────────────
