@@ -1,0 +1,102 @@
+name: Data Bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 'Profile kind to bootstrap (blank = all)'
+        required: false
+        type: string
+      batch_size:
+        description: 'Entities per API call (default: 10)'
+        required: false
+        default: '10'
+        type: string
+      dry_run:
+        description: 'Dry run (preview prompts only)'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  bootstrap:
+    name: Bootstrap profile data
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Check prerequisites
+        env:
+          TA_AGENTS_API_KEY: ${{ secrets.TA_AGENTS_API_KEY }}
+          TA_BOOTSTRAP_AGENT_ID: ${{ secrets.TA_BOOTSTRAP_AGENT_ID }}
+          LIBRECHAT_BASE_URL: ${{ secrets.LIBRECHAT_BASE_URL }}
+        run: |
+          echo "=== Bootstrap Configuration ==="
+          if [ -n "$TA_AGENTS_API_KEY" ]; then
+            echo "  TA_AGENTS_API_KEY: SET (${#TA_AGENTS_API_KEY} chars)"
+          else
+            echo "  TA_AGENTS_API_KEY: MISSING"
+          fi
+          if [ -n "$TA_BOOTSTRAP_AGENT_ID" ]; then
+            echo "  TA_BOOTSTRAP_AGENT_ID: $TA_BOOTSTRAP_AGENT_ID"
+          else
+            echo "  TA_BOOTSTRAP_AGENT_ID: MISSING"
+          fi
+          if [ -n "$LIBRECHAT_BASE_URL" ]; then
+            echo "  LIBRECHAT_BASE_URL: $LIBRECHAT_BASE_URL"
+          else
+            echo "  LIBRECHAT_BASE_URL: not set (will use default localhost:3080)"
+          fi
+          echo "  Kind: ${{ inputs.kind || 'all' }}"
+          echo "  Batch size: ${{ inputs.batch_size }}"
+          echo "  Dry run: ${{ inputs.dry_run }}"
+
+      - name: Run bootstrap
+        env:
+          TA_AGENTS_API_KEY: ${{ secrets.TA_AGENTS_API_KEY }}
+          TA_BOOTSTRAP_AGENT_ID: ${{ secrets.TA_BOOTSTRAP_AGENT_ID }}
+          LIBRECHAT_BASE_URL: ${{ secrets.LIBRECHAT_BASE_URL }}
+        run: |
+          ARGS=""
+
+          # API credentials (skip for dry-run)
+          if [ "${{ inputs.dry_run }}" != "true" ]; then
+            if [ -z "$TA_AGENTS_API_KEY" ] || [ -z "$TA_BOOTSTRAP_AGENT_ID" ]; then
+              echo "ERROR: TA_AGENTS_API_KEY and TA_BOOTSTRAP_AGENT_ID secrets required for live run"
+              exit 1
+            fi
+            ARGS="$ARGS --api-key $TA_AGENTS_API_KEY --agent-id $TA_BOOTSTRAP_AGENT_ID"
+            if [ -n "$LIBRECHAT_BASE_URL" ]; then
+              ARGS="$ARGS --base-url $LIBRECHAT_BASE_URL"
+            fi
+          fi
+
+          # Kind filter
+          if [ -n "${{ inputs.kind }}" ]; then
+            ARGS="$ARGS --kind ${{ inputs.kind }}"
+          fi
+
+          # Batch size
+          ARGS="$ARGS --batch-size ${{ inputs.batch_size }}"
+
+          # Dry run
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          python librechat-uberspace/scripts/bootstrap-data.py $ARGS
+
+      - name: Validate profiles after bootstrap
+        if: inputs.dry_run != true
+        run: |
+          pip install pytest pytest-asyncio python-dotenv pyyaml pandas ta
+          python -m pytest tests/test_store.py -v -k "lint" --tb=short || true

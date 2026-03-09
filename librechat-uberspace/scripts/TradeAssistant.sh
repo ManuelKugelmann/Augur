@@ -889,6 +889,48 @@ SVCEOF
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
         ;;
+    bootstrap)
+        # ── Bootstrap profile data via LibreChat Agents API ──
+        # Instructs an agent (default: L4 cron-planner) to populate and enrich
+        # profiles using MCP tools and web search. Additive: extends existing data.
+        #
+        # Usage:
+        #   ta bootstrap                              # bootstrap all kinds
+        #   ta bootstrap --kind countries             # bootstrap one kind
+        #   ta bootstrap --batch-size 5               # smaller batches
+        #   ta bootstrap --dry-run                    # preview prompts only
+        #
+        # Env vars: TA_AGENTS_API_KEY, TA_BOOTSTRAP_AGENT_ID
+        BOOTSTRAP_API_KEY="${TA_AGENTS_API_KEY:-}"
+        BOOTSTRAP_AGENT_ID="${TA_BOOTSTRAP_AGENT_ID:-}"
+
+        if [[ "${2:-}" == "--dry-run" ]]; then
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
+                --dry-run "${@:3}"
+        elif [[ -z "$BOOTSTRAP_API_KEY" ]]; then
+            echo -e "${YELLOW}Usage: ta bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
+            echo ""
+            echo "  Bootstraps profile data via LibreChat Agents API."
+            echo "  Enriches existing profiles and creates new ones using MCP tools."
+            echo ""
+            echo "  Required env vars:"
+            echo "    TA_AGENTS_API_KEY        LibreChat Agents API key"
+            echo "    TA_BOOTSTRAP_AGENT_ID    Agent ID (e.g. from 'ta agents' output)"
+            echo ""
+            echo "  ta bootstrap                        # all kinds"
+            echo "  ta bootstrap --kind countries        # one kind"
+            echo "  ta bootstrap --dry-run               # preview only"
+        else
+            LC_URL="http://localhost:${LC_PORT:-3080}"
+            echo -e "${CYAN}Bootstrapping profiles via ${LC_URL}...${NC}"
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
+                --api-key "$BOOTSTRAP_API_KEY" \
+                --agent-id "$BOOTSTRAP_AGENT_ID" \
+                --base-url "$LC_URL" \
+                "${@:2}"
+            echo -e "${GREEN}✓${NC} Bootstrap complete"
+        fi
+        ;;
     agents)
         # ── Seed/update multi-agent architecture in LibreChat ──
         # Creates all 11 agents (L1-L5 + utility) with correct tools, edges, models.
@@ -937,6 +979,7 @@ SVCEOF
         echo ""
         echo "  ta sync         Force git sync of data dir"
         echo "  ta cron         Run cron hook (every 15min; sync + profiles + daily compact)"
+        echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"
         echo "  ta check -t     Health check + run test suite (bats + pytest)"
