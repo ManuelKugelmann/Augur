@@ -8,7 +8,7 @@
 # A shared venv is built once in setup_file and copied per test to avoid
 # repeated slow venv creation.
 
-load helpers/setup
+load ../helpers/setup
 
 # ── File-level setup: build a reusable venv once ──
 setup_file() {

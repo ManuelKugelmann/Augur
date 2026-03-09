@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python deps (for real venv in install smoke tests)
+      - name: Install Python deps
         run: pip install httpx python-dotenv pymongo
 
       - name: Install bats
@@ -33,8 +33,63 @@ jobs:
             bash -n "$f"
           done
 
-      - name: Run bats tests
+      - name: Run bats unit tests (fast)
         run: bats tests/*.bats
+
+  install-tests:
+    name: Install integration tests (bats, slow)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for install-related changes
+        id: changes
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            DIFF_TARGET="HEAD~1"
+          else
+            DIFF_TARGET="origin/${{ github.event.pull_request.base.ref }}"
+            git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          fi
+          CHANGED=$(git diff --name-only "$DIFF_TARGET" -- \
+            'librechat-uberspace/scripts/' \
+            'deploy.conf' \
+            'requirements.txt' \
+            '.env.example' \
+            'tests/install/' \
+            'tests/helpers/' \
+            '.github/workflows/tests.yml' \
+          2>/dev/null || echo "FORCE")
+          if [[ -n "$CHANGED" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Install-related files changed:"
+            echo "$CHANGED"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No install-related changes — skipping install tests"
+          fi
+
+      - name: Set up Python
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        if: steps.changes.outputs.run == 'true'
+        run: pip install httpx python-dotenv pymongo
+
+      - name: Install bats
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats
+          sudo /tmp/bats/install.sh /usr/local
+
+      - name: Run install integration tests
+        if: steps.changes.outputs.run == 'true'
+        run: bats tests/install/*.bats
 
   python-tests:
     name: Python tests (pytest)

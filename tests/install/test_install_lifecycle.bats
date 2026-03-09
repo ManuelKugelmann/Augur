@@ -1,8 +1,28 @@
 #!/usr/bin/env bats
 # Integration test: full install → pull → update lifecycle
 # Exercises TradeAssistant.sh _do_install, pull, and setup.sh in a sandboxed env.
+#
+# A shared venv is built once in setup_file and copied per test to avoid
+# repeated slow venv creation.
 
-load helpers/setup
+load ../helpers/setup
+
+# ── File-level setup: build a reusable venv once ──
+setup_file() {
+    export SHARED_VENV_DIR="$(mktemp -d)"
+    python3 -m venv "$SHARED_VENV_DIR/venv"
+    "$SHARED_VENV_DIR/venv/bin/pip" install -q -r "$REPO_ROOT/requirements.txt"
+}
+
+teardown_file() {
+    [[ -n "${SHARED_VENV_DIR:-}" ]] && rm -rf "$SHARED_VENV_DIR"
+}
+
+# Copy the shared venv into the given directory
+copy_shared_venv() {
+    local dest="${1:?}"
+    cp -r "$SHARED_VENV_DIR/venv" "$dest/venv"
+}
 
 setup() {
     setup_sandbox
@@ -55,9 +75,8 @@ teardown() {
         "$REAL_GIT" "$@"
     '
 
-    # Run the venv creation portion directly (install calls uberspace which we stub)
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
+    # Copy shared venv (built once in setup_file)
+    copy_shared_venv "$STACK_DIR"
 
     [ -x "$STACK_DIR/venv/bin/python" ]
     "$STACK_DIR/venv/bin/python" -c "import httpx" 2>/dev/null
@@ -118,9 +137,8 @@ SVCEOF
     # Step 2: Repo already exists (setup created it)
     [ -d "$STACK_DIR/.git" ]
 
-    # Step 3: Venv
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
+    # Step 3: Venv (copy shared venv)
+    copy_shared_venv "$STACK_DIR"
     [ -x "$STACK_DIR/venv/bin/python" ]
 
     # Step 4: .env
@@ -150,9 +168,8 @@ SVCEOF
 # ── Pull tests ────────────────────────────────
 
 @test "pull: git pull updates stack repo" {
-    # Create venv first
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
+    # Copy shared venv (built once in setup_file)
+    copy_shared_venv "$STACK_DIR"
 
     # Create APP_DIR with .version file
     mkdir -p "$APP_DIR/scripts" "$APP_DIR/config"
@@ -344,9 +361,8 @@ ENVEOF
     '
 
     # === INSTALL ===
-    # Create venv
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
+    # Copy shared venv (built once in setup_file)
+    copy_shared_venv "$STACK_DIR"
 
     # Create .env
     cp "$STACK_DIR/.env.example" "$STACK_DIR/.env"
