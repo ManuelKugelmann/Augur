@@ -441,6 +441,39 @@ def region_links(id: str = "", link_type: str = "") -> dict:
 
 
 @mcp.tool()
+def country_links(id: str = "", link_type: str = "") -> dict:
+    """Query country neighbors, links, and cross-border relationships.
+
+    - id only → neighbors + links for that country
+    - id + link_type → filtered links (trade, alliance, dependency, rivalry, corridor, sanctions)
+    - no args → return all country link data across regions
+    """
+    if not id:
+        # Aggregate links from all country profiles
+        all_links: list[dict] = []
+        for region in _regions():
+            cdir = PROFILES / region / "countries"
+            if not cdir.is_dir():
+                continue
+            for fp in sorted(cdir.glob("*.json")):
+                prof = json.loads(fp.read_text())
+                links = prof.get("links", [])
+                if links:
+                    all_links.append({"id": prof.get("id", fp.stem), "name": prof.get("name", ""), "links": links})
+        return {"countries_with_links": all_links}
+    prof = get_profile("countries", id)
+    if "error" in prof:
+        return prof
+    result: dict = {"id": id, "name": prof.get("name", id)}
+    result["neighbors"] = prof.get("neighbors", [])
+    links = prof.get("links", [])
+    if link_type:
+        links = [lk for lk in links if lk.get("type") == link_type]
+    result["links"] = links
+    return result
+
+
+@mcp.tool()
 def list_regions() -> list[dict]:
     """List geographic regions and their profile kinds."""
     result = []
