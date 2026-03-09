@@ -33,6 +33,7 @@ _cols_ready = set()
 VALID_KINDS = frozenset({
     "countries", "stocks", "etfs", "crypto", "indices", "sources",
     "commodities", "crops", "materials", "products", "companies",
+    "regions",
 })
 
 _RESERVED_DIRS = frozenset({"SCHEMAS"})

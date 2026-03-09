@@ -46,6 +46,7 @@ API_TIMEOUT = 300  # 5 min per batch (agent may call many tools)
 VALID_KINDS = {
     "countries", "stocks", "etfs", "crypto", "indices", "sources",
     "commodities", "crops", "materials", "products", "companies",
+    "regions",
 }
 
 # Schema required fields per kind (for prompt generation)
@@ -61,6 +62,7 @@ SCHEMA_REQUIRED = {
     "products": ["id", "name", "category"],
     "companies": ["id", "name", "country"],
     "sources": ["id", "name", "mcp", "auth"],
+    "regions": ["id", "name", "type"],
 }
 
 # Kind-specific data enrichment instructions
@@ -132,6 +134,14 @@ KIND_INSTRUCTIONS = {
         "Populate: country, sector, industry, revenue estimate, employees, "
         "publicly_traded, ticker (if public), exposure (countries, products, "
         "materials, risk_factors), tags."
+    ),
+    "regions": (
+        "For each region, populate from your knowledge and MCP tools:\n"
+        "- type: one of continent, subregion, economic_zone, climate_zone, maritime, corridor\n"
+        "- Use econ_world_bank_indicator for regional economic data\n"
+        "Populate: countries (ISO3 array), bbox [west, south, east, north], "
+        "climate, hazards, chokepoints (shipping/trade), "
+        "exposure (commodities, risk_factors), tags."
     ),
 }
 

@@ -437,7 +437,7 @@ class TestValidKinds:
     def test_all_expected_kinds_present(self, store):
         expected = {"countries", "stocks", "etfs", "crypto", "indices",
                     "sources", "commodities", "crops", "materials",
-                    "products", "companies"}
+                    "products", "companies", "regions"}
         assert store.VALID_KINDS == expected
 
     def test_blocked_agg_stages(self, store):
