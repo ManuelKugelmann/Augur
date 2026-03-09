@@ -290,6 +290,12 @@
     ]
   },
   {
+    "id": "graph",
+    "kind": "regions",
+    "name": "Region Interconnection Graph",
+    "region": "global"
+  },
+  {
     "id": "greater_bay_area",
     "kind": "regions",
     "name": "Guangdong–Hong Kong–Macau Greater Bay Area",
