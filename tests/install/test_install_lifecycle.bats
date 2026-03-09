@@ -118,13 +118,6 @@ SVCEOF
     [ -L "$HOME/bin/TradeAssistant" ]
 }
 
-@test "install: creates data directory" {
-    mkdir -p "$DATA_DIR/files"
-
-    [ -d "$DATA_DIR" ]
-    [ -d "$DATA_DIR/files" ]
-}
-
 @test "install: _do_install pre-LibreChat steps complete correctly" {
     # Simulate the individual pre-LibreChat steps from _do_install
     # (end-to-end sourcing isn't feasible due to mktemp/trap interactions)
@@ -160,9 +153,6 @@ SVCEOF
     [ -x "$HOME/bin/ta" ]
     [ -L "$HOME/bin/TradeAssistant" ]
 
-    # Step 9: Data dir
-    mkdir -p "$DATA_DIR/files"
-    [ -d "$DATA_DIR/files" ]
 }
 
 # ── Pull tests ────────────────────────────────
@@ -378,9 +368,6 @@ SVCEOF
     cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
     chmod +x "$HOME/bin/ta"
 
-    # Create data dir
-    mkdir -p "$DATA_DIR/files"
-
     # Create APP_DIR with mock LibreChat
     mkdir -p "$APP_DIR/api/server" "$APP_DIR/scripts" "$APP_DIR/config"
     echo "// app" > "$APP_DIR/api/server/index.js"
@@ -391,7 +378,6 @@ SVCEOF
     [ -f "$STACK_DIR/.env" ]
     [ -f "$HOME/etc/services.d/trading.ini" ]
     [ -x "$HOME/bin/ta" ]
-    [ -d "$DATA_DIR/files" ]
 
     # === PULL ===
     # Make a change on remote

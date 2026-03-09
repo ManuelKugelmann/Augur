@@ -30,7 +30,6 @@ teardown() {
     [[ "$output" == *"update"* ]]
     [[ "$output" == *"install"* ]]
     [[ "$output" == *"rollback"* ]]
-    [[ "$output" == *"sync"* ]]
     [[ "$output" == *"cron"* ]]
 }
 

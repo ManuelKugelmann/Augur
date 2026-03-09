@@ -16,7 +16,6 @@ interface:
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
-# Utility MCPs: data stored under ~/TradeAssistant_Data/ (git-versioned)
 # Trading MCP: signals stack under ~/mcps/
 # External MCPs: third-party data sources
 #

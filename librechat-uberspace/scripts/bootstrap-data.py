@@ -26,6 +26,7 @@ import argparse
 import json
 import os
 import sys
+import random
 import time
 
 try:
@@ -145,6 +146,47 @@ KIND_INSTRUCTIONS = {
     ),
 }
 
+# Kind-specific timeseries bootstrap instructions (rough historical data)
+TIMESERIES_INSTRUCTIONS = {
+    "countries": (
+        "For each country, fetch rough historical economic data and store as snapshots:\n"
+        "- Use econ_world_bank_indicator for GDP, GDP growth, inflation, unemployment (annual, last 5 years)\n"
+        "- Use econ_fred_series for US-specific time series\n"
+        "- Use econ_imf_weo for forecasts\n"
+        "For each data point, call `store_snapshot(kind='countries', entity='{id}', "
+        "type='macro', data={{year, gdp, gdp_growth, inflation, unemployment, ...}}, "
+        "region='{region}')`. One snapshot per year."
+    ),
+    "stocks": (
+        "For each stock, fetch recent price history and store as snapshots:\n"
+        "- Use ta_analyze_full to get current OHLCV + technical indicators\n"
+        "- Store the result via `store_snapshot(kind='stocks', entity='{id}', "
+        "type='indicators', data={{...analysis result...}}, region='{region}')`.\n"
+        "One snapshot with the current analysis is sufficient."
+    ),
+    "etfs": (
+        "For each ETF, fetch current data and store as snapshot:\n"
+        "- Use ta_analyze_full to get current OHLCV + technical indicators\n"
+        "- Store via `store_snapshot(kind='etfs', entity='{id}', "
+        "type='indicators', data={{...}}, region='{region}')`."
+    ),
+    "commodities": (
+        "For each commodity, fetch recent price/production data:\n"
+        "- Use commodities_eia_series for energy commodities (crude oil, natural gas)\n"
+        "- Use agri_faostat_data for agricultural commodities\n"
+        "- Store each data point via `store_snapshot(kind='commodities', entity='{id}', "
+        "type='price', data={{...}}, region='global')`."
+    ),
+    "crops": (
+        "For each crop, fetch recent production data:\n"
+        "- Use agri_faostat_data for global production/trade\n"
+        "- Use agri_usda_nass for US production\n"
+        "- Store via `store_snapshot(kind='crops', entity='{id}', "
+        "type='production', data={{year, production_mt, area_ha, yield_kg_ha, ...}}, "
+        "region='global')`. One snapshot per available year."
+    ),
+}
+
 
 def load_targets(targets_file: str) -> dict:
     """Load bootstrap targets from JSON file."""
@@ -220,6 +262,40 @@ def build_prompt(kind: str, targets: list[dict], existing_ids: set[str]) -> str:
         "4. Include `tags` array with relevant categorization tags.",
         "5. Process ALL entities listed above. Report results when done.",
         "6. If an MCP tool fails, skip that data point and note it — don't stop.",
+    ])
+
+    return "\n".join(prompt_parts)
+
+
+def build_timeseries_prompt(kind: str, targets: list[dict]) -> str | None:
+    """Build a timeseries bootstrap prompt for a batch of targets.
+
+    Returns None if this kind has no timeseries instructions.
+    """
+    instructions = TIMESERIES_INSTRUCTIONS.get(kind)
+    if not instructions:
+        return None
+
+    prompt_parts = [
+        f"## Historical Timeseries Bootstrap: {kind}\n",
+        "You are bootstrapping rough historical timeseries data for the trading signals "
+        "platform. Use MCP tools (data APIs) to fetch real historical data points and "
+        "store each as a snapshot via `store_snapshot()`.\n",
+        f"### Data gathering instructions\n{instructions}\n",
+        "### Entities to process\n",
+    ]
+
+    for t in targets:
+        filled = instructions.replace("{id}", t["id"]).replace("{region}", t["region"])
+        prompt_parts.append(f"- **{t['id']}** (region: {t['region']})")
+
+    prompt_parts.extend([
+        "\n### Rules",
+        "1. Use MCP data tools to fetch REAL data — do not fabricate numbers.",
+        "2. Store each data point via `store_snapshot()` with appropriate type.",
+        "3. If a tool fails or returns no data for an entity, skip it and continue.",
+        "4. Rough/approximate data is fine — this is seed data, not precision data.",
+        "5. Process ALL entities listed above. Report results when done.",
     ])
 
     return "\n".join(prompt_parts)
@@ -302,6 +378,7 @@ def run_bootstrap(
     kind_filter: str | None = None,
     batch_size: int = DEFAULT_BATCH_SIZE,
     dry_run: bool = False,
+    timeseries: bool = False,
 ) -> dict:
     """Run the full bootstrap process. Returns summary stats."""
     stats = {"kinds": 0, "batches": 0, "targets": 0, "ok": 0, "errors": 0}
@@ -368,7 +445,55 @@ def run_bootstrap(
 
             # Brief pause between batches to avoid rate limiting
             if not dry_run and i < len(batches):
-                time.sleep(2)
+                time.sleep(random.uniform(1.0, 4.0))
+
+    # ── Phase 2: Timeseries bootstrap (rough historical data) ──
+    if timeseries:
+        ts_kinds = [kind_filter] if kind_filter else sorted(TIMESERIES_INSTRUCTIONS.keys())
+        for kind in ts_kinds:
+            if kind not in targets or kind not in TIMESERIES_INSTRUCTIONS:
+                continue
+            kind_targets = targets[kind]
+            # Smaller batches for timeseries (more API calls per entity)
+            ts_batch_size = max(1, batch_size // 2)
+            batches = batch_targets(kind_targets, ts_batch_size)
+
+            print(f"\n{'='*60}")
+            print(f"Timeseries: {kind} — {len(kind_targets)} targets, {len(batches)} batches")
+            print(f"{'='*60}")
+
+            for i, batch in enumerate(batches, 1):
+                prompt = build_timeseries_prompt(kind, batch)
+                if not prompt:
+                    continue
+
+                batch_ids = [t["id"] for t in batch]
+                print(f"\n  TS Batch {i}/{len(batches)}: {batch_ids}")
+                stats["batches"] += 1
+                stats["targets"] += len(batch)
+
+                if dry_run:
+                    print(f"    [DRY RUN] Timeseries prompt ({len(prompt)} chars):")
+                    for line in prompt[:500].split("\n"):
+                        print(f"      {line}")
+                    if len(prompt) > 500:
+                        print(f"      ... ({len(prompt) - 500} more chars)")
+                    stats["ok"] += 1
+                    continue
+
+                result = send_bootstrap_message(client, agent_id, prompt)
+
+                if result["status"] == "ok":
+                    content = result.get("content", "")
+                    print(f"    OK — response: {len(content)} chars")
+                    stats["ok"] += 1
+                else:
+                    error = result.get("error", "unknown error")
+                    print(f"    FAIL — {error}", file=sys.stderr)
+                    stats["errors"] += 1
+
+                if not dry_run and i < len(batches):
+                    time.sleep(random.uniform(1.0, 4.0))
 
     return stats
 
@@ -418,6 +543,11 @@ def main():
         action="store_true",
         help="Preview prompts without calling API",
     )
+    parser.add_argument(
+        "--timeseries",
+        action="store_true",
+        help="Also bootstrap rough historical timeseries data via store_snapshot()",
+    )
     args = parser.parse_args()
 
     # Validate args
@@ -457,6 +587,7 @@ def main():
         kind_filter=args.kind,
         batch_size=args.batch_size,
         dry_run=args.dry_run,
+        timeseries=args.timeseries,
     )
 
     client.close()

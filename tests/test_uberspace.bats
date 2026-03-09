@@ -21,8 +21,6 @@ setup() {
     # Use real HOME, not sandbox — we're testing the live system
     export STACK_DIR="${STACK_DIR:-$HOME/mcps}"
     export APP_DIR="${APP_DIR:-$HOME/LibreChat}"
-    export DATA_DIR="${DATA_DIR:-$HOME/TradeAssistant_Data}"
-
     # Source deploy.conf if available
     [[ -f "$STACK_DIR/deploy.conf" ]] && source "$STACK_DIR/deploy.conf"
 }
@@ -122,16 +120,8 @@ setup() {
 }
 
 # ══════════════════════════════════════════
-#  Data & Profiles
+#  Profiles
 # ══════════════════════════════════════════
-
-@test "uberspace: data directory exists" {
-    [[ -d "$DATA_DIR" ]]
-}
-
-@test "uberspace: data directory is git-tracked" {
-    [[ -d "$DATA_DIR/.git" ]]
-}
 
 @test "uberspace: profiles directory exists" {
     [[ -d "$STACK_DIR/profiles" ]]
