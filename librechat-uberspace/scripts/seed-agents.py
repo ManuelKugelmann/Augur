@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import sys
+import random
 import time
 
 try:
@@ -180,7 +181,7 @@ def main():
             print(f"    -> FAILED", file=sys.stderr)
 
         # Brief pause to avoid rate limiting
-        time.sleep(0.1)
+        time.sleep(random.uniform(0.05, 0.3))
 
     # Phase 2: Wire handoff edges (now we have all IDs)
     print(f"\nWiring handoff edges...")
@@ -201,7 +202,7 @@ def main():
         target_ids = [e["to"] for e in edge_objects]
         print(f"  {internal_name}: {edge_names} -> {target_ids}")
         update_agent(client, agent_id, {"edges": edge_objects})
-        time.sleep(0.1)
+        time.sleep(random.uniform(0.05, 0.3))
 
     # Summary
     print(f"\nDone! {len(id_map)} agents seeded.")

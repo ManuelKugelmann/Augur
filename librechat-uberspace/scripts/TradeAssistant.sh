@@ -506,7 +506,11 @@ case "$CMD" in
 
         _cron_log() { echo "[ta-cron] $1"; }
 
+        # Random jitter (0–90s) so cron tasks don't all fire at exact :00/:15/:30/:45
+        _jitter() { sleep "$((RANDOM % 90))"; }
+
         # ── Every 15 min: data sync ──
+        _jitter
         if [[ -d "$DATA/.git" ]]; then
             cd "$DATA"
             git add -A
@@ -530,6 +534,7 @@ case "$CMD" in
 
         # ── Daily at 02:00 UTC: compact old snapshots to archive ──
         if [[ "$HOUR" == "02" ]]; then
+            sleep "$((RANDOM % 300))"   # 0–5 min extra jitter for daily tasks
             _cron_log "running daily compact"
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
@@ -586,6 +591,7 @@ PYEOF
 
         # ── Every 6 hours (00, 06, 12, 18): invoke cron-planner agent ──
         if [[ "$((10#$HOUR % 6))" -eq 0 ]] && [[ "$((10#$MIN))" -lt 15 ]]; then
+            sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
             if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
                 LC_URL="http://localhost:${LC_PORT:-3080}"
                 # Find cron-planner agent ID from agents list

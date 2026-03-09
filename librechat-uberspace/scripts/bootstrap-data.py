@@ -26,6 +26,7 @@ import argparse
 import json
 import os
 import sys
+import random
 import time
 
 try:
@@ -368,7 +369,7 @@ def run_bootstrap(
 
             # Brief pause between batches to avoid rate limiting
             if not dry_run and i < len(batches):
-                time.sleep(2)
+                time.sleep(random.uniform(1.0, 4.0))
 
     return stats
 
