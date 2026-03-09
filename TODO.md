@@ -110,6 +110,12 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
       `ta install` auto-derives MONGO_URI_SIGNALS, auto-seeds agents (if credentials set),
       auto-sets up data repo (if SSH key exists), rebuilds profile indexes.
       `remoteAgents` enabled by default in librechat.yaml.
+- [ ] **MongoDB Atlas backup to data repo**
+      Export snapshots/events/notes from Atlas to JSON files in `TradeAssistant_Data/`.
+      Run via `ta cron` (e.g. daily) using `mongoexport` or a Python script that dumps
+      each collection (`snap_*`, `arch_*`, `events`, `user_notes`) to `data/mongo/`.
+      Git-tracked in the data repo → versioned history + offline recovery.
+      Keeps Atlas M0 as live store, data repo as backup + audit trail.
 - [ ] **Test Uberspace deployment end-to-end**
       Run `ta install` on a live Uberspace host.
       Verify supervisord services start, logs rotate, .env is picked up.
