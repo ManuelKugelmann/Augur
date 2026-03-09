@@ -418,6 +418,31 @@ class TestConflictServer:
         assert headers["x-ucdp-access-token"] == "test_ucdp_token"
 
     @pytest.mark.asyncio
+    async def test_views_forecast_params(self):
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.views_forecast(
+                iso="ukr", level="cm", violence_type="sb",
+                date_start="2025-01-01"
+            )
+        url = client.get.call_args[0][0]
+        assert "/current/cm/sb" in url
+        assert "api.viewsforecasting.org" in url
+        params = client.get.call_args[1]["params"]
+        assert params["iso"] == "UKR"
+        assert params["date_start"] == "2025-01-01"
+
+    @pytest.mark.asyncio
+    async def test_views_forecast_pgm(self):
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.views_forecast(level="pgm", violence_type="ns")
+        url = client.get.call_args[0][0]
+        assert "/current/pgm/ns" in url
+
+    @pytest.mark.asyncio
     async def test_sanctions_search(self):
         resp = _mock_response({"results": []})
         patcher, client = _patch_httpx_get(resp)

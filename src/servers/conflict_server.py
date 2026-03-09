@@ -1,4 +1,4 @@
-"""Conflict & Military — UCDP, ACLED, OpenSanctions."""
+"""Conflict & Military — UCDP, ACLED, VIEWS forecasts, OpenSanctions."""
 from fastmcp import FastMCP
 import httpx
 import os
@@ -78,6 +78,36 @@ async def ucdp_candidate_events(page: int = 1, country: str = "",
             return r.json()
     except httpx.HTTPError as e:
         return {"error": f"UCDP candidate events request failed: {e}"}
+
+
+# ── VIEWS conflict forecasts ──────────────────────
+
+_VIEWS_BASE = "https://api.viewsforecasting.org"
+
+
+@mcp.tool()
+async def views_forecast(iso: str = "", level: str = "cm",
+                          violence_type: str = "sb",
+                          date_start: str = "", date_end: str = "") -> dict:
+    """VIEWS conflict fatality forecasts 1-36 months ahead. Free, no auth.
+    iso: 3-letter country code (e.g. SYR, UKR). level: cm (country-month) or
+    pgm (PRIO-GRID-month, sub-national for Africa/MENA). violence_type: sb
+    (state-based), ns (non-state), os (one-sided). date_start/date_end: YYYY-MM-DD."""
+    params: dict = {"pagesize": 100}
+    if iso:
+        params["iso"] = iso.upper()
+    if date_start:
+        params["date_start"] = date_start
+    if date_end:
+        params["date_end"] = date_end
+    path = f"/current/{level}/{violence_type}"
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(f"{_VIEWS_BASE}{path}", params=params)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"VIEWS forecast request failed: {e}"}
 
 
 @mcp.tool()
