@@ -76,7 +76,7 @@ One Node.js process handles all brands via `req.hostname` → brand config looku
 - Background: `#f4f0e8` (aged paper)
 - Ink: `#1a1a1a`
 - Accent: `#8b0000` (deep red) / `#1a3a5c` (deep blue for Der Augur)
-- Images: Fake photographs — photorealistic AI-generated editorial photography (FLUX.2 klein 4B, Apache 2.0)
+- Images: Fake photographs — photorealistic AI-generated editorial photography (FLUX.2 klein 4B, Apache 2.0; Replicate primary, fal.ai fallback)
 - Layout: Single-column, justified text, drop caps, rule lines
 
 **Financial Augur / Finanz Augur** (financial broadsheet):
@@ -188,7 +188,7 @@ interface HorizonConfig {
 }
 ```
 
-DB stores the `key`. Routing maps `slug ↔ key` per brand config.
+Front matter stores the `key`. Jekyll routing maps `slug ↔ key` per brand config in `_data/brands.yml`.
 
 ---
 
@@ -393,33 +393,27 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 
 | Asset | Existing Source | Reuse |
 |-------|----------------|-------|
-| Uberspace + supervisord | mkbc-mcp, LibreChat | Hosting, process management |
-| Node/TS + zero-dep HTTP | mkbc-mcp | Runtime |
+| Uberspace + supervisord | mkbc-mcp, LibreChat | Pipeline engine (cron + scripts) |
+| GitHub Pages + Jekyll | — | Static site hosting (free, CDN) |
 | GitHub deploy (CI/CD) | LibreChat bootstrap | Deployment |
 | ntfy | mkbc-mcp | Pipeline alerts, failure notifications |
 | Tavily API | Trading system MCP | News OSINT source |
 | GDELT Cloud | Trading system MCP | Geopolitical OSINT |
 | Yahoo Finance API | Trading system MCP | Financial data |
 | Alpaca sentiment | trade.sh | Financial brand sentiment feed |
-| MongoDB Atlas | LibreChat (optional) | — |
-| Replicate API | Connected (HF MCP also available) | Image generation |
+| Replicate API | Connected | Image generation (primary) |
+| fal.ai API | — | Image generation (fallback) |
 
 ### System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Uberspace (kugelmann.uber.space)                            │
+│ Uberspace (assist.uber.space)                            │
 │                                                             │
-│  Existing services:                                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
-│  │ mkbc-mcp │  │ LibreChat│  │ ntfy     │                  │
-│  │ :8009    │  │ :3080    │  │ :9876    │                  │
-│  └──────────┘  └──────────┘  └──────────┘                  │
-│                                                             │
-│  New: augur-engine                                          │
+│  augur-engine (cron-triggered pipeline)                     │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                                                      │   │
-│  │  Signal Collector (cron-triggered)                   │   │
+│  │  Signal Collector                                    │   │
 │  │     ├── Tavily API (news search)                     │   │
 │  │     ├── GDELT Cloud API (geopolitical events)        │   │
 │  │     ├── RSS feeds (curated per brand/locale)         │   │
@@ -433,29 +427,75 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 │  │              │                                       │   │
 │  │  Asset Generator                                     │   │
 │  │     ├── Image gen (Replicate FLUX.2 klein 4B)        │   │
+│  │     │   └── Fallback: fal.ai FLUX.2 klein 4B        │   │
 │  │     ├── Watermark overlay (sharp)                    │   │
 │  │     └── Social cards: 1:1, 9:16, 16:9 (sharp)       │   │
 │  │              │                                       │   │
 │  │  Publisher                                           │   │
-│  │     ├── Static HTML → ~/html/augur/{brand}/          │   │
-│  │     ├── Social queue → platform APIs                 │   │
+│  │     ├── Write Markdown + images to augur_news branch │   │
+│  │     ├── git push → GitHub Pages auto-builds Jekyll   │   │
+│  │     ├── Social queue → JSON files → platform APIs    │   │
 │  │     └── ntfy → pipeline status alerts                │   │
-│  │              │                                       │   │
-│  │  Data Store                                          │   │
-│  │     └── SQLite: predictions.db                       │   │
 │  │                                                      │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
-│  Web backends (Uberspace reverse proxy):                    │
-│    *.augur.news → static files in ~/html/augur/             │
-│    the.augur.news  → ~/html/augur/the/                      │
-│    der.augur.news  → ~/html/augur/der/                      │
-│    financial.augur.news → ~/html/augur/financial/            │
-│    finanz.augur.news → ~/html/augur/finanz/                 │
-│    augur.news      → ~/html/augur/hub/                      │
+│  Social poster (cron: */30)                                 │
+│     └── Reads _data/social/pending/ → posts → moves files   │
 │                                                             │
+└────────────────────────┬────────────────────────────────────┘
+                         │ git push (augur_news branch)
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│ GitHub (ManuelKugelmann/TradingAssistant)                    │
+│                                                             │
+│  Branch: augur_news (GitHub Pages source)                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Jekyll site (custom broadsheet theme)               │   │
+│  │  ├── _config.yml                                     │   │
+│  │  ├── _layouts/          (article, horizon, hub)      │   │
+│  │  ├── _includes/         (masthead, footer, cards)    │   │
+│  │  ├── _sass/             (broadsheet theme CSS)       │   │
+│  │  ├── _posts/                                         │   │
+│  │  │   ├── the/tomorrow/  (EN general predictions)     │   │
+│  │  │   ├── der/morgen/    (DE general predictions)     │   │
+│  │  │   ├── financial/     (EN financial predictions)   │   │
+│  │  │   └── finanz/        (DE financial predictions)   │   │
+│  │  ├── _data/                                          │   │
+│  │  │   ├── brands.yml     (brand configs)              │   │
+│  │  │   ├── social/        (posting queue JSON)         │   │
+│  │  │   └── signals/       (cached signal data)         │   │
+│  │  └── assets/                                         │   │
+│  │      ├── images/        (AI-generated article images)│   │
+│  │      └── cards/         (social sharing cards)       │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+│  GitHub Pages auto-build on push → CDN                      │
+│                                                             │
+└────────────────────────┬────────────────────────────────────┘
+                         │ serves
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│ DNS: *.augur.news → GitHub Pages                            │
+│                                                             │
+│  augur.news              → hub landing page                 │
+│  the.augur.news          → EN general predictions           │
+│  der.augur.news          → DE general predictions           │
+│  financial.augur.news    → EN financial predictions         │
+│  finanz.augur.news       → DE financial predictions         │
+│                                                             │
+│  CNAME: augur.news in repo root                             │
+│  Note: GitHub Pages supports ONE custom domain per repo.    │
+│  Subdomains routed via Jekyll baseurl + collections,        │
+│  or separate repos per brand if needed.                     │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**GitHub Pages limitation**: One custom domain per repo. Options:
+1. **Single domain** — `augur.news` with path-based brands (`augur.news/the/`, `augur.news/der/`, etc.)
+2. **Separate repos** — one repo per brand subdomain, each with GitHub Pages + CNAME
+3. **Cloudflare proxy** — `*.augur.news` → Cloudflare → rewrite to `augur.news/{brand}/`
+
+Recommended: **Option 1** (path-based) for MVP. Simplest. One repo, one build. Subdomain routing adds complexity for marginal benefit.
 
 ### Pipeline Flow (one cycle)
 
@@ -467,6 +507,7 @@ cron triggers: augur-cycle --brand=the --horizon=tomorrow
   │    GDELT: query(themes=["ENV_CLIMATECHANGE", "ECON_*"])
   │    RSS: fetch(brand.sources)
   │    [financial brands]: yahoo.news() + read sentiment.json
+  │    Cache: write JSON → _data/signals/{source}-{timestamp}.json
   │
   ├── EXTRAPOLATE (Anthropic API)
   │    → Pass 1: system=brand.tonePrompt, user=signals+fictiveDate
@@ -476,16 +517,16 @@ cron triggers: augur-cycle --brand=the --horizon=tomorrow
   │    → Generate image prompt from article content
   │
   ├── GENERATE assets
-  │    Replicate: flux-2-klein-4b with brand.imageStylePrefix + imagePrompt
+  │    Replicate: flux-2-klein-4b (primary)
+  │      └── fal.ai: flux-2-klein-4b (fallback if Replicate fails)
   │    sharp: apply watermark text overlay
   │    sharp: composite social cards (3 ratios) with headline + branding
   │
-  ├── PUBLISH
-  │    SQLite: INSERT prediction record
-  │    Template: render article HTML → write to static file path
-  │    Template: update horizon index page + main index
-  │    Template: update RSS feed
-  │    Queue: INSERT social posts (staggered schedule per platform)
+  ├── PUBLISH (Jekyll flat files)
+  │    Write Markdown: _posts/{brand}/{horizon}/{date}-{slug}.md
+  │      └── YAML front matter: all structured data (headline, sections, tags, etc.)
+  │    jekyll build → static HTML in _site/
+  │    Write social queue: _data/social/pending/{brand}-{date}-{platform}.json
   │
   └── NOTIFY
        ntfy: push pipeline status (success/failure/article count)
@@ -496,15 +537,15 @@ cron triggers: augur-cycle --brand=the --horizon=tomorrow
 ```
 cron: */30 * * * *  augur-post
 
-  SELECT * FROM social_queue
-  WHERE scheduled_at <= NOW() AND status = 'pending'
-  ORDER BY scheduled_at
+  Scan _data/social/pending/*.json
+  Filter: scheduled_at <= NOW()
+  Sort by scheduled_at
 
   For each queued post:
     → Upload image to platform
     → Post with caption + link
-    → UPDATE status = 'posted', post_url = ...
-    → On failure: UPDATE status = 'failed', retry_count++
+    → Move file: pending/ → posted/ (add post_url to JSON)
+    → On failure: Move to failed/ (add error + retry_count)
 ```
 
 ### Cron Schedule
@@ -541,95 +582,128 @@ cron: */30 * * * *  augur-post
 
 ---
 
-## Database Schema
+## Data Structure (Flat Files)
 
-SQLite (`predictions.db`).
+No database. All data is Markdown + JSON files on disk, git-tracked.
 
-```sql
--- Core predictions table
-CREATE TABLE predictions (
-  brand      TEXT NOT NULL,       -- 'the' | 'der' | 'financial' | 'finanz'
-  horizon    TEXT NOT NULL,       -- 'tomorrow' | 'soon' | 'future' (internal key, not slug)
-  date_key   TEXT NOT NULL,       -- YYYY-MM-DD (full ISO, always)
+### Predictions = Jekyll Posts
 
-  fictive_date  TEXT NOT NULL,    -- the prediction target date
-  created_at    TEXT NOT NULL,    -- generation timestamp ISO
-  headline      TEXT NOT NULL,
-  signal        TEXT NOT NULL,    -- "The Signal" section
-  extrapolation TEXT NOT NULL,    -- "The Extrapolation" section
-  in_the_works  TEXT NOT NULL,    -- "In The Works" section
-  sources       TEXT NOT NULL,    -- JSON array: [{title, url}]
-  tags          TEXT NOT NULL,    -- JSON array: ["energy", "europe"]
-  image_prompt  TEXT,
-  image_paths   TEXT,             -- JSON array: paths to generated images
+Each prediction is a Markdown file with YAML front matter:
 
-  -- Financial brands only
-  sentiment_sector    TEXT,
-  sentiment_direction TEXT,
-  sentiment_confidence REAL,
-
-  -- Outcome tracking
-  outcome      TEXT,              -- NULL | 'confirmed' | 'partial' | 'wrong'
-  outcome_note TEXT,
-  outcome_date TEXT,
-
-  -- LLM metadata
-  model        TEXT DEFAULT 'claude-sonnet-4-5',
-
-  PRIMARY KEY (brand, horizon, date_key)
-);
-
--- Social posting queue
-CREATE TABLE social_queue (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  brand        TEXT NOT NULL,
-  horizon      TEXT NOT NULL,
-  date_key     TEXT NOT NULL,
-  platform     TEXT NOT NULL,     -- 'x' | 'bluesky' | 'mastodon' | 'facebook' | 'linkedin' | 'instagram'
-  scheduled_at TEXT NOT NULL,     -- when to post (staggered)
-  caption      TEXT NOT NULL,
-  image_path   TEXT NOT NULL,     -- which ratio card to use
-  status       TEXT DEFAULT 'pending',  -- 'pending' | 'posted' | 'failed'
-  post_url     TEXT,              -- URL of the posted content
-  retry_count  INTEGER DEFAULT 0,
-  error        TEXT,
-  created_at   TEXT NOT NULL,
-  posted_at    TEXT,
-
-  FOREIGN KEY (brand, horizon, date_key) REFERENCES predictions(brand, horizon, date_key)
-);
-
--- Signal cache (avoid re-fetching within cycle)
-CREATE TABLE signals (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  source     TEXT NOT NULL,       -- 'tavily' | 'gdelt' | 'rss' | 'yahoo' | 'trade'
-  fetched_at TEXT NOT NULL,
-  query      TEXT,
-  content    TEXT NOT NULL,       -- JSON: raw signal data
-  used_in    TEXT                 -- JSON array: ["the/tomorrow/2026-03-04"]
-);
-
-CREATE INDEX idx_predictions_brand_horizon ON predictions(brand, horizon);
-CREATE INDEX idx_social_queue_pending ON social_queue(status, scheduled_at);
-CREATE INDEX idx_signals_source_date ON signals(source, fetched_at);
 ```
+_posts/{brand}/{horizon}/{YYYY-MM-DD}-{slug}.md
+```
+
+Example: `_posts/the/tomorrow/2026-03-04-grid-failures-europe.md`
+
+```yaml
+---
+brand: the
+horizon: tomorrow
+date_key: "2026-03-04"
+fictive_date: "2026-03-04"
+created_at: "2026-03-03T14:22:00Z"
+headline: "Grid failures accelerate across three European regions"
+tags: [energy, europe, infrastructure]
+image_prompt: "Aerial view of darkened European city grid at twilight..."
+image_paths: [assets/images/the-tomorrow-2026-03-04.webp]
+sources:
+  - title: "European Grid Status Report"
+    url: "https://..."
+  - title: "ENTSO-E Transparency Platform"
+    url: "https://..."
+# Financial brands only:
+sentiment_sector: null
+sentiment_direction: null
+sentiment_confidence: null
+# Outcome tracking:
+outcome: null          # null | confirmed | partial | wrong
+outcome_note: null
+outcome_date: null
+# LLM metadata:
+model: claude-sonnet-4-5
+---
+
+## ⚡ The Signal
+
+[Factual description of current real-world signals, sourced]
+
+## 🔮 The Extrapolation
+
+[Where this leads if unchecked]
+
+## 🛠️ In The Works
+
+[Real solutions being developed, named, sourced]
+```
+
+### Social Queue = JSON Files
+
+```
+_data/social/
+├── pending/     ← awaiting posting
+├── posted/      ← successfully posted (moved from pending)
+└── failed/      ← failed attempts (moved from pending)
+```
+
+Each file: `{brand}-{date_key}-{platform}.json`
+
+Example: `_data/social/pending/the-2026-03-04-x.json`
+
+```json
+{
+  "brand": "the",
+  "horizon": "tomorrow",
+  "date_key": "2026-03-04",
+  "platform": "x",
+  "scheduled_at": "2026-03-03T16:00:00Z",
+  "caption": "Grid failures accelerate across three European regions...",
+  "image_path": "assets/cards/the-tomorrow-2026-03-04-16x9.webp",
+  "created_at": "2026-03-03T14:22:00Z",
+  "post_url": null,
+  "retry_count": 0,
+  "error": null,
+  "posted_at": null
+}
+```
+
+### Signal Cache = JSON Files
+
+```
+_data/signals/{source}-{YYYY-MM-DDTHH}.json
+```
+
+One file per source per fetch cycle. Pruned after 7 days. Contains raw signal data + which predictions used it.
+
+### Outcome Tracking
+
+Stored directly in post front matter (`outcome`, `outcome_note`, `outcome_date`). Scorecard page generated by Jekyll from front matter data across all posts.
+
+### Why No Database
+
+- **Zero runtime deps** — no SQLite driver, no connection management
+- **Git-tracked** — every prediction versioned, diffable, restorable
+- **Grep/find queryable** — standard Unix tools work on the data
+- **Jekyll-native** — front matter is Jekyll's data model
+- **Portable** — copy files = copy everything
+- **Debuggable** — read any prediction in a text editor
 
 ---
 
 ## File Structure
 
+Two parts: the **pipeline engine** (in this repo, runs on Uberspace) and the **Jekyll site** (on `augur_news` branch, served by GitHub Pages).
+
+### Pipeline Engine (main branch: `augur-engine/`)
+
 ```
 augur-engine/
-├── CLAUDE.md                       # Claude Code instructions
-├── README.md
 ├── package.json
 ├── tsconfig.json
 ├── .env.example                    # API key template
-├── .gitignore
 │
 ├── src/
 │   ├── index.ts                    # CLI entry: augur-cycle, augur-post, augur-scorecard
-│   ├── db.ts                       # SQLite setup (better-sqlite3)
 │   │
 │   ├── config/
 │   │   ├── brands.ts               # BrandConfig[] — all 4 brands
@@ -649,14 +723,14 @@ augur-engine/
 │   │   └── prompts.ts              # System prompts per brand/horizon/locale
 │   │
 │   ├── assets/
-│   │   ├── imagegen.ts             # Replicate API (FLUX.2 klein 4B)
+│   │   ├── imagegen.ts             # Replicate primary + fal.ai fallback (FLUX.2 klein 4B)
 │   │   ├── watermark.ts            # sharp: overlay watermark text
 │   │   └── cards.ts                # sharp: social card compositing (3 ratios)
 │   │
 │   ├── publish/
-│   │   ├── static.ts               # HTML template → static file writer
-│   │   ├── rss.ts                  # RSS/Atom feed generator
-│   │   ├── social-queue.ts         # Queue manager: schedule posts per platform
+│   │   ├── jekyll.ts               # Write Markdown + front matter → augur_news branch
+│   │   ├── git-push.ts             # Commit + push to augur_news branch
+│   │   ├── social-queue.ts         # Queue manager: write JSON files to _data/social/
 │   │   └── social/
 │   │       ├── x.ts                # Twitter/X API v2
 │   │       ├── bluesky.ts          # AT Protocol
@@ -666,52 +740,120 @@ augur-engine/
 │   │       └── instagram.ts        # Meta Graph API (add later)
 │   │
 │   └── scorecard/
-│       ├── tracker.ts              # Outcome evaluation (semi-automated via LLM)
-│       └── render.ts               # Scorecard page generator
-│
-├── templates/
-│   ├── article.html                # Article page template (Mustache/Handlebars)
-│   ├── horizon-index.html          # Horizon listing page template
-│   ├── brand-index.html            # Brand main page template
-│   ├── hub.html                    # augur.news landing page
-│   ├── scorecard.html              # Accuracy tracking page
-│   ├── feed.xml                    # RSS template
-│   └── cards/
-│       ├── card-1x1.svg            # Social card template (Instagram/FB)
-│       ├── card-9x16.svg           # Social card template (Stories/Reels)
-│       └── card-16x9.svg           # Social card template (X/OG)
-│
-├── data/
-│   ├── predictions.db              # SQLite database
-│   └── assets/                     # Generated images and cards
-│       ├── images/                  # AI-generated article images
-│       └── cards/                   # Social sharing cards
+│       └── tracker.ts              # Outcome evaluation (semi-automated via LLM)
 │
 └── deploy/
-    ├── uberspace/
-    │   ├── setup.sh                # Uberspace setup script
-    │   ├── augur-post.ini          # supervisord config for social poster
-    │   └── crontab.txt             # cron jobs reference
-    └── .env.example                # Production env template
+    ├── setup.sh                    # Uberspace setup script
+    └── crontab.txt                 # cron jobs reference
+```
+
+### Jekyll Site (`augur_news` branch)
+
+```
+/ (augur_news branch root)
+├── _config.yml                     # Jekyll config (collections, defaults, plugins)
+├── CNAME                           # augur.news (GitHub Pages custom domain)
+├── Gemfile                         # jekyll, jekyll-feed, jekyll-seo-tag
+│
+├── _layouts/
+│   ├── default.html                # Base layout (masthead, nav, footer)
+│   ├── article.html                # Single prediction article
+│   ├── horizon.html                # Horizon listing (all Tomorrow, etc.)
+│   ├── brand.html                  # Brand main page (all horizons)
+│   ├── hub.html                    # augur.news landing page
+│   └── scorecard.html              # Accuracy tracking page
+│
+├── _includes/
+│   ├── masthead.html               # Newspaper masthead with brand name
+│   ├── article-card.html           # Article preview card (for listings)
+│   ├── sentiment-bar.html          # Financial brand sentiment display
+│   ├── sources.html                # Source citation block
+│   ├── disclaimer.html             # AI-generated content disclaimer
+│   ├── footer.html                 # Legal + impressum links
+│   └── head.html                   # OpenGraph + Twitter Card meta tags
+│
+├── _sass/
+│   ├── _base.scss                  # Reset, typography (Playfair, Lora, JetBrains)
+│   ├── _broadsheet.scss            # Newspaper layout: columns, rules, drop caps
+│   ├── _brands.scss                # Brand-specific palettes (aged paper, financial green)
+│   ├── _article.scss               # Article page styles
+│   ├── _listings.scss              # Horizon/brand listing pages
+│   ├── _sentiment.scss             # Sentiment bar + confidence meter
+│   └── _responsive.scss            # Mobile-first responsive
+│
+├── _posts/                         # Pipeline writes here (Markdown + front matter)
+│   ├── the/
+│   │   ├── tomorrow/
+│   │   ├── soon/
+│   │   └── future/
+│   ├── der/
+│   │   ├── morgen/
+│   │   ├── bald/
+│   │   └── zukunft/
+│   ├── financial/
+│   │   ├── tomorrow/
+│   │   ├── soon/
+│   │   └── future/
+│   └── finanz/
+│       ├── morgen/
+│       ├── bald/
+│       └── zukunft/
+│
+├── _data/
+│   ├── brands.yml                  # Brand configs (name, palette, locale, etc.)
+│   ├── social/                     # Social posting queue (pending/posted/failed)
+│   └── signals/                    # Cached signal data (pruned after 7 days)
+│
+├── assets/
+│   ├── css/main.scss               # Jekyll SCSS entry point
+│   ├── images/                     # AI-generated article images
+│   ├── cards/                      # Social sharing cards (1:1, 9:16, 16:9)
+│   └── fonts/                      # Self-hosted web fonts (optional)
+│
+├── the/                            # EN general brand pages
+│   ├── index.html                  # Brand landing
+│   ├── tomorrow/index.html         # Horizon listing
+│   ├── soon/index.html
+│   └── future/index.html
+├── der/                            # DE general brand pages
+│   ├── index.html
+│   ├── morgen/index.html
+│   ├── bald/index.html
+│   └── zukunft/index.html
+├── financial/                      # EN financial brand pages
+├── finanz/                         # DE financial brand pages
+│
+├── feed.xml                        # Jekyll RSS feed template
+├── scorecard/index.html            # Accuracy tracking page
+├── impressum/index.html            # Legal (German requirement)
+├── datenschutz/index.html          # Privacy policy (DSGVO)
+└── 404.html                        # Custom 404
 ```
 
 ---
 
 ## Dependencies
 
-### Runtime
+### Pipeline Engine (Node.js, runs on Uberspace)
 
-- `better-sqlite3` — SQLite driver
 - `sharp` — image compositing, watermarks, card generation
-- `mustache` or `handlebars` — HTML templating
-- Node built-in `fetch` — API calls (Anthropic, Replicate, social platforms)
 - `rss-parser` — RSS/Atom feed parsing
-- `fast-xml-parser` — GDELT XML parsing (if needed)
+- Node built-in `fetch` — API calls (Anthropic, Replicate, fal.ai, social platforms)
+- `simple-git` — programmatic git operations (push to augur_news branch)
+- TypeScript, `tsx`
+
+### Jekyll Site (augur_news branch)
+
+- `jekyll` (~4.3) — static site generator
+- `jekyll-feed` — RSS/Atom feed generation
+- `jekyll-seo-tag` — OpenGraph + Twitter Card meta
+- Custom broadsheet theme (in `_sass/`, no external theme gem)
 
 ### APIs (env vars)
 
 - `ANTHROPIC_API_KEY` — LLM extrapolation
-- `REPLICATE_API_TOKEN` — FLUX.2 klein 4B image generation
+- `REPLICATE_API_TOKEN` — FLUX.2 klein 4B image generation (primary)
+- `FAL_KEY` — FLUX.2 klein 4B image generation (fallback)
 - `TAVILY_API_KEY` — news search
 - `TWITTER_BEARER_TOKEN` + `TWITTER_API_KEY` + `TWITTER_API_SECRET` + `TWITTER_ACCESS_TOKEN` + `TWITTER_ACCESS_SECRET` — X posting
 - `BLUESKY_HANDLE` + `BLUESKY_APP_PASSWORD` — Bluesky posting
@@ -719,11 +861,6 @@ augur-engine/
 - `FACEBOOK_PAGE_ID` + `FACEBOOK_ACCESS_TOKEN` — Facebook posting
 - `LINKEDIN_ACCESS_TOKEN` — LinkedIn posting (later)
 - `NTFY_URL` + `NTFY_TOKEN` — pipeline notifications
-
-### Dev
-
-- TypeScript, `tsx` (or `ts-node`)
-- ESLint
 
 ---
 
@@ -773,21 +910,22 @@ The website is optimized as a landing page for social traffic, not a reading des
 
 | Phase | What | Depends on | Effort |
 |-------|------|------------|--------|
-| P0 | DB schema + config system + CLI skeleton + types | Nothing | 1 day |
-| P1 | Signal collector (Tavily + RSS) | P0 | 1 day |
-| P2 | Extrapolation pipeline (3-pass LLM) | P1 | 1 day |
-| P3 | Static site generator + article HTML template | P2 | 1 day |
-| P4 | Image gen (Replicate) + watermark + social cards | P2 | 2 days |
-| P5 | Social autoposting (X + Bluesky first) | P4 | 2 days |
-| P6 | Der Augur (German brand config) | P0-P5 | 0.5 day |
-| P7 | Financial brands + trade.sh integration | P0-P5 + trading sys | 1 day |
-| P8 | Scorecard / outcome tracking | P3 | 1 day |
-| P9 | GDELT + Yahoo Finance collectors | P1 | 1 day |
-| P10 | Mastodon + Facebook posting | P5 | 1 day |
-| P11 | LinkedIn + Instagram posting | P5 | 1 day |
-| P12 | Email capture + newsletter | P3 | 1 day |
+| P0 | Jekyll site scaffold + custom broadsheet theme + augur_news branch | Nothing | 1 day |
+| P1 | Config system + CLI skeleton + types | Nothing | 0.5 day |
+| P2 | Signal collector (Tavily + RSS) | P1 | 1 day |
+| P3 | Extrapolation pipeline (3-pass LLM) | P2 | 1 day |
+| P4 | Markdown publisher + git push to augur_news | P0, P3 | 1 day |
+| P5 | Image gen (Replicate + fal.ai fallback) + watermark + social cards | P3 | 2 days |
+| P6 | Social autoposting (X + Bluesky first) | P5 | 2 days |
+| P7 | Der Augur (German brand config + DE layouts) | P0-P6 | 0.5 day |
+| P8 | Financial brands + trade.sh integration | P0-P6 + trading sys | 1 day |
+| P9 | Scorecard / outcome tracking | P4 | 1 day |
+| P10 | GDELT + Yahoo Finance collectors | P2 | 1 day |
+| P11 | Mastodon + Facebook posting | P6 | 1 day |
+| P12 | LinkedIn + Instagram posting | P6 | 1 day |
+| P13 | Email capture + newsletter | P4 | 1 day |
 
-**MVP** (The Augur EN, static site, X + Bluesky posting): P0–P5 ≈ 8 days
+**MVP** (The Augur EN, Jekyll on GitHub Pages, X + Bluesky posting): P0–P6 ≈ 8 days
 
 ---
 
@@ -795,14 +933,16 @@ The website is optimized as a landing page for social traffic, not a reading des
 
 | Item | Cost |
 |------|------|
-| Uberspace hosting | ~€5/mo |
+| Uberspace hosting (pipeline only) | ~€5/mo |
+| GitHub Pages (Jekyll site hosting) | $0 |
 | Anthropic API (Sonnet, ~120 articles/mo) | ~$5-10/mo |
 | Replicate (FLUX.2 klein 4B, ~120 images/mo) | ~$1.80/mo |
+| fal.ai (fallback only, ~10% of images) | ~$0.20/mo |
 | Tavily (free tier 1000/mo) | $0 |
 | GDELT (free) | $0 |
 | Domain (augur.news) | ~$20/year |
 | Social platform APIs | $0 (free tiers) |
-| **Total** | **~$17-22/mo** |
+| **Total** | **~$13-18/mo** |
 
 ---
 
@@ -819,7 +959,14 @@ Contains all 4 brands, 3 horizons each, 12 mock articles with realistic content.
 - Brand switching, horizon tabs
 - Watermark placeholders, source sections, tags, permalinks
 
-Use as visual reference for the static HTML templates.
+Use as visual reference for the custom Jekyll broadsheet theme (`_sass/` + `_layouts/`).
+
+---
+
+## Open Questions
+
+- **Project rename**: Consider renaming the main project/brand (The Augur → ?)
+- **Multi-domain**: GitHub Pages supports one CNAME per repo. Path-based routing (`augur.news/the/`, `/der/`) for MVP, evaluate subdomain approach later.
 
 ---
 
