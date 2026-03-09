@@ -1,8 +1,11 @@
-"""Technical indicators — pure-math computation layer.
+"""Technical indicators — computation + integrated Yahoo Finance tools.
 
-No external API calls. Tools accept OHLCV price arrays and return computed
-indicator values. Designed around the 3-layer hierarchy from the NexusTrade
-114K-backtest study:
+Two tiers of tools:
+  1. Pure-math tools: accept OHLCV arrays, return computed indicators
+  2. Integrated tools: fetch prices from Yahoo Finance, compute indicators,
+     return everything in one call (analyze_* prefix)
+
+Designed around the 3-layer hierarchy from the NexusTrade 114K-backtest study:
 
   Layer 1 — Fundamental Screen (debt/assets, net income — handled by profiles)
   Layer 2 — Trend Filter (200-day SMA)
@@ -14,13 +17,16 @@ Reference:
 from __future__ import annotations
 
 import math
+import httpx
 from fastmcp import FastMCP
 
 mcp = FastMCP(
     "indicators",
     instructions=(
-        "Technical indicator computation (no API calls). "
-        "Pass OHLCV price data and get back computed indicators. "
+        "Technical indicator computation. Two modes: "
+        "(1) Pass raw price arrays to sma/ema/rsi/bollinger_bands/macd tools. "
+        "(2) Use analyze_* tools to fetch Yahoo Finance prices + compute "
+        "indicators in one call — no need to chain tools. "
         "Best practice from 114K backtests: use 200-day SMA as trend filter "
         "(Layer 2), then RSI/Bollinger/MACD for entry/exit timing (Layer 3)."
     ),
@@ -383,6 +389,277 @@ async def trend_filter_check(
         "rsi_signal": rsi_signal,
         "current_close": closes[-1],
     }
+
+
+# ── Yahoo Finance price fetching ─────────────────────
+
+
+async def _fetch_yahoo_closes(
+    ticker: str, period: str = "1y", interval: str = "1d"
+) -> dict:
+    """Fetch historical closing prices from Yahoo Finance v8 chart API.
+
+    Returns {"closes": [...], "dates": [...], "ticker": str, "currency": str}
+    or {"error": str} on failure.
+    """
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
+    params = {"range": period, "interval": interval, "includePrePost": "false"}
+    headers = {"User-Agent": "TradingAssistant/1.0"}
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.get(url, params=params, headers=headers)
+            r.raise_for_status()
+            data = r.json()
+        result = data["chart"]["result"][0]
+        timestamps = result["timestamp"]
+        closes = result["indicators"]["quote"][0]["close"]
+        currency = result.get("meta", {}).get("currency", "USD")
+        # Filter out None values (market holidays)
+        paired = [(t, c) for t, c in zip(timestamps, closes) if c is not None]
+        if not paired:
+            return {"error": f"No price data returned for {ticker}"}
+        from datetime import datetime, timezone
+        dates = [
+            datetime.fromtimestamp(t, tz=timezone.utc).strftime("%Y-%m-%d")
+            for t, _ in paired
+        ]
+        clean_closes = [float(c) for _, c in paired]
+        return {
+            "closes": clean_closes,
+            "dates": dates,
+            "ticker": ticker.upper(),
+            "currency": currency,
+            "data_points": len(clean_closes),
+        }
+    except httpx.HTTPStatusError as e:
+        return {"error": f"Yahoo Finance HTTP {e.response.status_code} for {ticker}"}
+    except (KeyError, IndexError, TypeError) as e:
+        return {"error": f"Yahoo Finance parse error for {ticker}: {e}"}
+    except httpx.RequestError as e:
+        return {"error": f"Yahoo Finance request failed for {ticker}: {e}"}
+
+
+# ── Integrated tools (fetch + compute) ──────────────
+
+
+@mcp.tool()
+async def analyze_trend(
+    ticker: str,
+    period: str = "1y",
+    sma_period: int = 200,
+) -> dict:
+    """Fetch prices for a ticker and compute SMA trend filter.
+
+    One-call alternative to: yahoo-finance → get closes → ta_sma.
+    Uses Yahoo Finance (free, no API key needed).
+
+    ticker: stock/ETF/index symbol (e.g. AAPL, SPY, ^GSPC).
+    period: price history range (1mo, 3mo, 6mo, 1y, 2y, 5y).
+    sma_period: SMA lookback (default 200 — the #1 indicator).
+    """
+    prices = await _fetch_yahoo_closes(ticker, period)
+    if "error" in prices:
+        return prices
+    closes = prices["closes"]
+    if len(closes) < sma_period:
+        return {
+            "error": f"Only {len(closes)} data points for {ticker}, "
+            f"need {sma_period} for SMA({sma_period}). Try a longer period."
+        }
+    sma_result = await sma(closes, sma_period)
+    return {
+        "ticker": prices["ticker"],
+        "currency": prices["currency"],
+        "data_points": prices["data_points"],
+        "date_range": f"{prices['dates'][0]} to {prices['dates'][-1]}",
+        "current_close": closes[-1],
+        "current_sma": sma_result["current_sma"],
+        "trend_signal": sma_result["trend_signal"],
+        "description": sma_result["description"],
+    }
+
+
+@mcp.tool()
+async def analyze_rsi(
+    ticker: str,
+    period: str = "3mo",
+    rsi_period: int = 14,
+) -> dict:
+    """Fetch prices for a ticker and compute RSI.
+
+    ticker: stock/ETF/index symbol (e.g. AAPL, SPY).
+    period: price history range (1mo, 3mo, 6mo, 1y).
+    rsi_period: RSI lookback (default 14).
+    """
+    prices = await _fetch_yahoo_closes(ticker, period)
+    if "error" in prices:
+        return prices
+    closes = prices["closes"]
+    if len(closes) < rsi_period + 1:
+        return {"error": f"Not enough data for RSI({rsi_period})"}
+    rsi_result = await rsi(closes, rsi_period)
+    return {
+        "ticker": prices["ticker"],
+        "currency": prices["currency"],
+        "date_range": f"{prices['dates'][0]} to {prices['dates'][-1]}",
+        "current_close": closes[-1],
+        "current_rsi": rsi_result["current_rsi"],
+        "signal": rsi_result["signal"],
+        "description": rsi_result["description"],
+    }
+
+
+@mcp.tool()
+async def analyze_macd(
+    ticker: str,
+    period: str = "6mo",
+    fast: int = 12,
+    slow: int = 26,
+    signal_period: int = 9,
+) -> dict:
+    """Fetch prices for a ticker and compute MACD.
+
+    ticker: stock/ETF/index symbol (e.g. AAPL, MSFT).
+    period: price history range (3mo, 6mo, 1y).
+    """
+    prices = await _fetch_yahoo_closes(ticker, period)
+    if "error" in prices:
+        return prices
+    closes = prices["closes"]
+    min_needed = slow + signal_period
+    if len(closes) < min_needed:
+        return {"error": f"Not enough data for MACD({fast},{slow},{signal_period})"}
+    macd_result = await macd(closes, fast, slow, signal_period)
+    return {
+        "ticker": prices["ticker"],
+        "currency": prices["currency"],
+        "date_range": f"{prices['dates'][0]} to {prices['dates'][-1]}",
+        "current_close": closes[-1],
+        "current_macd": macd_result["current_macd"],
+        "current_signal": macd_result["current_signal"],
+        "current_histogram": macd_result["current_histogram"],
+        "cross_signal": macd_result["cross_signal"],
+        "description": macd_result["description"],
+    }
+
+
+@mcp.tool()
+async def analyze_bollinger(
+    ticker: str,
+    period: str = "3mo",
+    bb_period: int = 20,
+    num_std: float = 2.0,
+) -> dict:
+    """Fetch prices for a ticker and compute Bollinger Bands.
+
+    ticker: stock/ETF/index symbol (e.g. AAPL, SPY).
+    period: price history range (1mo, 3mo, 6mo, 1y).
+    """
+    prices = await _fetch_yahoo_closes(ticker, period)
+    if "error" in prices:
+        return prices
+    closes = prices["closes"]
+    if len(closes) < bb_period:
+        return {"error": f"Not enough data for Bollinger({bb_period})"}
+    bb_result = await bollinger_bands(closes, bb_period, num_std)
+    return {
+        "ticker": prices["ticker"],
+        "currency": prices["currency"],
+        "date_range": f"{prices['dates'][0]} to {prices['dates'][-1]}",
+        "current_close": closes[-1],
+        "current_upper": bb_result["current_upper"],
+        "current_middle": bb_result["current_middle"],
+        "current_lower": bb_result["current_lower"],
+        "bandwidth": bb_result["bandwidth"],
+        "signal": bb_result["signal"],
+        "description": bb_result["description"],
+    }
+
+
+@mcp.tool()
+async def analyze_full(
+    ticker: str,
+    period: str = "1y",
+) -> dict:
+    """Full technical analysis for a ticker — all indicators in one call.
+
+    Fetches 1 year of prices from Yahoo Finance, then computes:
+    - SMA(200) trend filter (Layer 2)
+    - RSI(14) entry/exit timing (Layer 3)
+    - MACD(12,26,9) momentum (Layer 3)
+    - Bollinger Bands(20,2) volatility (Layer 3)
+    - Composite trend filter signal
+
+    This is the recommended single-call tool for complete analysis.
+
+    ticker: stock/ETF/index/crypto symbol (AAPL, SPY, ^GSPC, BTC-USD).
+    period: price history range (default 1y; use 2y for more SMA context).
+    """
+    prices = await _fetch_yahoo_closes(ticker, period)
+    if "error" in prices:
+        return prices
+    closes = prices["closes"]
+
+    result: dict = {
+        "ticker": prices["ticker"],
+        "currency": prices["currency"],
+        "data_points": prices["data_points"],
+        "date_range": f"{prices['dates'][0]} to {prices['dates'][-1]}",
+        "current_close": closes[-1],
+    }
+
+    # SMA(200) — may not have enough data for short periods
+    if len(closes) >= 200:
+        sma_result = await sma(closes, 200)
+        result["sma_200"] = sma_result["current_sma"]
+        result["trend_signal"] = sma_result["trend_signal"]
+    elif len(closes) >= 50:
+        sma_result = await sma(closes, 50)
+        result["sma_50"] = sma_result["current_sma"]
+        result["trend_signal"] = sma_result["trend_signal"]
+        result["trend_note"] = "Using SMA(50) — not enough data for SMA(200)"
+    else:
+        result["trend_signal"] = "insufficient_data"
+
+    # RSI(14)
+    if len(closes) >= 15:
+        rsi_result = await rsi(closes, 14)
+        result["rsi_14"] = rsi_result["current_rsi"]
+        result["rsi_signal"] = rsi_result["signal"]
+
+    # MACD(12,26,9)
+    if len(closes) >= 35:
+        macd_result = await macd(closes, 12, 26, 9)
+        result["macd"] = macd_result["current_macd"]
+        result["macd_signal_line"] = macd_result["current_signal"]
+        result["macd_histogram"] = macd_result["current_histogram"]
+        result["macd_cross"] = macd_result["cross_signal"]
+
+    # Bollinger Bands(20,2)
+    if len(closes) >= 20:
+        bb_result = await bollinger_bands(closes, 20, 2.0)
+        result["bb_upper"] = bb_result["current_upper"]
+        result["bb_middle"] = bb_result["current_middle"]
+        result["bb_lower"] = bb_result["current_lower"]
+        result["bb_bandwidth"] = bb_result["bandwidth"]
+        result["bb_signal"] = bb_result["signal"]
+
+    # Composite signal
+    if result.get("trend_signal") in ("bullish", "bearish") and "rsi_signal" in result:
+        trend_ok = result["trend_signal"] == "bullish"
+        rsi_sig = result["rsi_signal"]
+        if trend_ok and rsi_sig == "oversold":
+            result["composite"] = "strong_buy"
+        elif trend_ok and rsi_sig == "neutral":
+            result["composite"] = "hold"
+        elif trend_ok and rsi_sig == "overbought":
+            result["composite"] = "caution"
+        elif not trend_ok and rsi_sig == "oversold":
+            result["composite"] = "wait"
+        else:
+            result["composite"] = "avoid"
+
+    return result
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import math
 import sys
 from pathlib import Path
 
+import httpx
 import pytest
 
 # Add servers dir to path
@@ -342,3 +343,170 @@ class TestHelpers:
 
     def test_require_passes(self):
         ind._require([1.0, 2.0, 3.0], 3, "test")  # no error
+
+
+# ── Integrated Yahoo tools (mocked) ─────────────────
+
+
+def _mock_yahoo_response(closes: list[float], ticker: str = "AAPL") -> dict:
+    """Build a fake Yahoo Finance v8 chart response."""
+    import time
+    base_ts = int(time.time()) - len(closes) * 86400
+    return {
+        "chart": {
+            "result": [{
+                "timestamp": [base_ts + i * 86400 for i in range(len(closes))],
+                "indicators": {"quote": [{"close": closes}]},
+                "meta": {"currency": "USD"},
+            }]
+        }
+    }
+
+
+class _FakeResponse:
+    """Minimal httpx.Response mock."""
+    def __init__(self, data: dict, status_code: int = 200):
+        self._data = data
+        self.status_code = status_code
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise httpx.HTTPStatusError(
+                "error", request=MagicMock(), response=self
+            )
+
+    def json(self):
+        return self._data
+
+
+class _FakeAsyncClient:
+    """Mock httpx.AsyncClient that returns canned Yahoo data."""
+    def __init__(self, response: _FakeResponse):
+        self._response = response
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        pass
+
+    async def get(self, url, **kwargs):
+        return self._response
+
+
+@pytest.fixture
+def mock_yahoo(monkeypatch):
+    """Fixture that patches httpx.AsyncClient to return fake Yahoo data."""
+    closes = _make_prices(250, start=100, trend=0.2)
+    response = _FakeResponse(_mock_yahoo_response(closes))
+    monkeypatch.setattr(httpx, "AsyncClient",
+                        lambda **kw: _FakeAsyncClient(response))
+    return closes
+
+
+class TestAnalyzeTrend:
+    @pytest.mark.asyncio
+    async def test_returns_trend(self, mock_yahoo):
+        result = await ind.analyze_trend("AAPL", period="1y")
+        assert result["ticker"] == "AAPL"
+        assert result["trend_signal"] in ("bullish", "bearish")
+        assert "current_sma" in result
+        assert "current_close" in result
+
+    @pytest.mark.asyncio
+    async def test_insufficient_data(self, monkeypatch):
+        closes = _make_prices(50, start=100, trend=0.1)
+        response = _FakeResponse(_mock_yahoo_response(closes))
+        monkeypatch.setattr(httpx, "AsyncClient",
+                            lambda **kw: _FakeAsyncClient(response))
+        result = await ind.analyze_trend("AAPL", period="3mo", sma_period=200)
+        assert "error" in result
+
+
+class TestAnalyzeRSI:
+    @pytest.mark.asyncio
+    async def test_returns_rsi(self, mock_yahoo):
+        result = await ind.analyze_rsi("AAPL")
+        assert result["ticker"] == "AAPL"
+        assert "current_rsi" in result
+        assert result["signal"] in ("oversold", "overbought", "neutral")
+
+
+class TestAnalyzeMACD:
+    @pytest.mark.asyncio
+    async def test_returns_macd(self, mock_yahoo):
+        result = await ind.analyze_macd("AAPL")
+        assert result["ticker"] == "AAPL"
+        assert "current_macd" in result
+        assert result["cross_signal"] in ("bullish", "bearish")
+
+
+class TestAnalyzeBollinger:
+    @pytest.mark.asyncio
+    async def test_returns_bollinger(self, mock_yahoo):
+        result = await ind.analyze_bollinger("AAPL")
+        assert result["ticker"] == "AAPL"
+        assert result["current_upper"] > result["current_lower"]
+        assert result["signal"] in ("above_upper", "below_lower", "within_bands")
+
+
+class TestAnalyzeFull:
+    @pytest.mark.asyncio
+    async def test_returns_all_indicators(self, mock_yahoo):
+        result = await ind.analyze_full("AAPL")
+        assert result["ticker"] == "AAPL"
+        assert "trend_signal" in result
+        assert "rsi_14" in result
+        assert "macd" in result
+        assert "bb_upper" in result
+        assert "composite" in result
+
+    @pytest.mark.asyncio
+    async def test_short_period_fallback(self, monkeypatch):
+        # With only 60 data points, should fallback to SMA(50) and skip SMA(200)
+        closes = _make_prices(60, start=100, trend=0.5)
+        response = _FakeResponse(_mock_yahoo_response(closes))
+        monkeypatch.setattr(httpx, "AsyncClient",
+                            lambda **kw: _FakeAsyncClient(response))
+        result = await ind.analyze_full("AAPL", period="3mo")
+        assert "sma_50" in result
+        assert "sma_200" not in result
+        assert "trend_note" in result
+
+    @pytest.mark.asyncio
+    async def test_yahoo_error_propagated(self, monkeypatch):
+        response = _FakeResponse({}, status_code=404)
+        monkeypatch.setattr(httpx, "AsyncClient",
+                            lambda **kw: _FakeAsyncClient(response))
+        result = await ind.analyze_full("INVALID")
+        assert "error" in result
+
+
+class TestFetchYahooCloses:
+    @pytest.mark.asyncio
+    async def test_parses_response(self, mock_yahoo):
+        result = await ind._fetch_yahoo_closes("AAPL")
+        assert result["ticker"] == "AAPL"
+        assert result["currency"] == "USD"
+        assert len(result["closes"]) == 250
+        assert len(result["dates"]) == 250
+
+    @pytest.mark.asyncio
+    async def test_handles_none_closes(self, monkeypatch):
+        # Yahoo sometimes returns None for holidays
+        closes = [100.0, None, 102.0, None, 104.0]
+        response = _FakeResponse(_mock_yahoo_response(closes))
+        monkeypatch.setattr(httpx, "AsyncClient",
+                            lambda **kw: _FakeAsyncClient(response))
+        result = await ind._fetch_yahoo_closes("AAPL")
+        assert result["data_points"] == 3  # only non-None values
+        assert None not in result["closes"]
+
+    @pytest.mark.asyncio
+    async def test_http_error(self, monkeypatch):
+        response = _FakeResponse({}, status_code=429)
+        monkeypatch.setattr(httpx, "AsyncClient",
+                            lambda **kw: _FakeAsyncClient(response))
+        result = await ind._fetch_yahoo_closes("AAPL")
+        assert "error" in result
+        assert "429" in result["error"]
