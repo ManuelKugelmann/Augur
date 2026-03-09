@@ -121,21 +121,6 @@ PYEOF
     [[ "$output" == *"PASS"*"librechat.yaml with MCP servers"* ]]
 }
 
-# ── Data checks ──
-
-@test "check detects data dir with git" {
-    mkdir -p "$DATA_DIR"
-    init_mock_git_repo "$DATA_DIR"
-    run bash "$TA" check
-    [[ "$output" == *"PASS"*"Data dir: git-tracked"* ]]
-}
-
-@test "check warns on data dir without git" {
-    mkdir -p "$DATA_DIR"
-    run bash "$TA" check
-    [[ "$output" == *"WARN"*"not git-tracked"* ]]
-}
-
 @test "check detects profiles" {
     mkdir -p "$STACK_DIR/profiles/global/countries"
     echo '{}' > "$STACK_DIR/profiles/global/countries/USA.json"

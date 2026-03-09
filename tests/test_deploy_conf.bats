@@ -18,10 +18,8 @@ teardown() {
     [[ -n "$UBER_HOST" ]]
     [[ -n "$GH_USER" ]]
     [[ -n "$GH_REPO" ]]
-    [[ -n "$GH_REPO_DATA" ]]
     [[ -n "$STACK_DIR" ]]
     [[ -n "$APP_DIR" ]]
-    [[ -n "$DATA_DIR" ]]
     [[ -n "$LC_PORT" ]]
     [[ -n "$NODE_VERSION" ]]
 }

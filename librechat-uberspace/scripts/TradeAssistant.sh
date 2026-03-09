@@ -19,7 +19,6 @@ GH_USER="${GH_USER:-ManuelKugelmann}"
 GH_REPO="${GH_REPO:-TradingAssistant}"
 STACK_DIR="${STACK_DIR:-$HOME/mcps}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
-DATA_DIR="${DATA_DIR:-$HOME/TradeAssistant_Data}"
 LC_PORT="${LC_PORT:-3080}"
 NODE_VERSION="${NODE_VERSION:-22}"
 BRANCH="${BRANCH:-main}"
@@ -35,7 +34,6 @@ done
 unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
-DATA="${DATA_DIR:-$HOME/TradeAssistant_Data}"
 STACK="${STACK_DIR:-$HOME/mcps}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -69,7 +67,7 @@ _do_install() {
 
     # ── 1. Node.js ──────────────────────────────
     log "Setting Node.js ${NODE_VERSION}..."
-    uberspace tools version use node "$NODE_VERSION" 2>/dev/null || true
+    uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
     command -v node &>/dev/null || die "Node.js not available"
     log "Node.js $(node -v)"
 
@@ -152,7 +150,7 @@ autorestart=true
 startsecs=60
 SVCEOF
     # Register /charts route to chart server port
-    uberspace web backend set /charts --http --port 8066 2>/dev/null || true
+    uberspace web backend set /charts --http --port 8066 || warn "Failed to set /charts web backend"
     log "Services registered (trading, charts)"
 
     # ── 6. LibreChat — download prebuilt release bundle ──
@@ -254,7 +252,7 @@ SVCEOF
             supervisorctl add librechat 2>/dev/null || true
             log "Supervisord service re-registered"
         fi
-        uberspace web backend set / --http --port "${LC_PORT}" 2>/dev/null || true
+        uberspace web backend set / --http --port "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
     fi
 
     # ── 8. Install ta shortcut ──────────────────
@@ -263,11 +261,7 @@ SVCEOF
     chmod +x "$HOME/bin/ta" 2>/dev/null || true
     ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
-    # ── 9. Data directory ───────────────────────
-    mkdir -p "${DATA}/files"
-    log "Data dir ready at ${DATA}"
-
-    # ── 10. Reload supervisord ──────────────────
+    # ── 9. Reload supervisord ──────────────────
     supervisorctl reread 2>/dev/null || true
     supervisorctl update 2>/dev/null || true
 
@@ -294,28 +288,53 @@ SVCEOF
         fi
     fi
 
-    # ── 12. Auto-setup data repo (if SSH key exists) ──
-    if [[ ! -d "${DATA}/.git" ]] && [[ -f "$HOME/.ssh/id_ed25519" || -f "$HOME/.ssh/id_rsa" ]]; then
-        if [[ -f "$STACK/librechat-uberspace/scripts/setup-data-repo.sh" ]]; then
-            log "Setting up data repo..."
-            bash "$STACK/librechat-uberspace/scripts/setup-data-repo.sh" \
-                "${GH_USER:-ManuelKugelmann}/${GH_REPO_DATA:-TradeAssistant_Data}" 2>&1 || \
-                warn "Data repo setup failed (run manually: bash $STACK/librechat-uberspace/scripts/setup-data-repo.sh)"
-        fi
-    fi
-
-    # ── 13. Rebuild profile indexes ───────────────
+    # ── 12. Seed profile data into MongoDB (no overwrites) ──
     if [[ -x "$STACK/venv/bin/python" ]]; then
-        PROFILES_DIR="$STACK/profiles" "$STACK/venv/bin/python" -c "
+        log "Seeding profiles from disk into MongoDB..."
+        PROFILES_DIR="$STACK/profiles" MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
+        "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
+from dotenv import load_dotenv
+load_dotenv(os.path.join('$STACK', '.env'))
 try:
-    from server import rebuild_index
-    result = rebuild_index()
-    print(f'Profile indexes rebuilt: {result}')
+    from server import seed_profiles
+    result = seed_profiles()
+    if 'error' in result:
+        print(f'Seed skipped: {result[\"error\"]}')
+    else:
+        total_seeded = sum(v.get('seeded', 0) for v in result.values())
+        total_skipped = sum(v.get('skipped', 0) for v in result.values())
+        print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
+        for kind, counts in sorted(result.items()):
+            print(f'  {kind}: {counts[\"seeded\"]} seeded, {counts[\"skipped\"]} skipped')
 except Exception as e:
-    print(f'Index rebuild skipped: {e}')
+    print(f'Seed skipped: {e}')
 " 2>&1 | while read -r line; do log "$line"; done
+    fi
+
+    # ── 13. Bootstrap profile data via agent (if credentials available) ──
+    if [[ -n "${TA_AGENTS_API_KEY:-}" ]] && [[ -n "${TA_BOOTSTRAP_AGENT_ID:-}" ]]; then
+        local LC_URL="http://localhost:${LC_PORT:-3080}"
+        local LC_READY=false
+        for i in $(seq 1 15); do
+            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                LC_READY=true
+                break
+            fi
+            sleep 2
+        done
+        if [[ "$LC_READY" == true ]]; then
+            log "Bootstrapping profile data via agent..."
+            "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
+                --api-key "$TA_AGENTS_API_KEY" \
+                --agent-id "$TA_BOOTSTRAP_AGENT_ID" \
+                --base-url "$LC_URL" \
+                --timeseries 2>&1 | while read -r line; do log "bootstrap: $line"; done \
+                || warn "Bootstrap failed (run manually: ta bootstrap)"
+        else
+            warn "LibreChat not ready — run bootstrap manually: ta bootstrap"
+        fi
     fi
 
     # ── Done ────────────────────────────────────
@@ -481,21 +500,6 @@ case "$CMD" in
             exit 1
         fi
         ;;
-    sync)
-        if [[ -d "$DATA/.git" ]]; then
-            cd "$DATA"
-            git add -A
-            if ! git diff --cached --quiet; then
-                git commit -m "sync $(date -Is)"
-                git push
-                echo -e "${GREEN}✓${NC} Data synced to GitHub"
-            else
-                echo -e "${YELLOW}⚠${NC} No changes to sync"
-            fi
-        else
-            echo -e "${RED}✗${NC} Data repo not initialized. Run: bash $APP/scripts/setup-data-repo.sh"
-        fi
-        ;;
     cron)
         # ── Unified cron hook (every 15 min) ─────────────────────
         # Install: crontab -e → */15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
@@ -506,18 +510,11 @@ case "$CMD" in
 
         _cron_log() { echo "[ta-cron] $1"; }
 
-        # ── Every 15 min: data sync ──
-        if [[ -d "$DATA/.git" ]]; then
-            cd "$DATA"
-            git add -A
-            if ! git diff --cached --quiet; then
-                git commit -m "sync $(date -Is)"
-                git push && _cron_log "data synced" || _cron_log "data sync push failed"
-            fi
-            cd - >/dev/null
-        fi
+        # Random jitter (0–90s) so cron tasks don't all fire at exact :00/:15/:30/:45
+        _jitter() { sleep "$((RANDOM % 90))"; }
 
         # ── Every 15 min: profile auto-commit ──
+        _jitter
         if [[ -d "$STACK/.git" ]]; then
             cd "$STACK"
             git add -A profiles/
@@ -530,6 +527,7 @@ case "$CMD" in
 
         # ── Daily at 02:00 UTC: compact old snapshots to archive ──
         if [[ "$HOUR" == "02" ]]; then
+            sleep "$((RANDOM % 300))"   # 0–5 min extra jitter for daily tasks
             _cron_log "running daily compact"
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
@@ -586,6 +584,7 @@ PYEOF
 
         # ── Every 6 hours (00, 06, 12, 18): invoke cron-planner agent ──
         if [[ "$((10#$HOUR % 6))" -eq 0 ]] && [[ "$((10#$MIN))" -lt 15 ]]; then
+            sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
             if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
                 LC_URL="http://localhost:${LC_PORT:-3080}"
                 # Find cron-planner agent ID from agents list
@@ -865,18 +864,7 @@ SVCEOF
             _warn "Signals .env missing (optional if run via LibreChat)"
         fi
 
-        # 10. Data directory
-        if [[ -d "$DATA" ]]; then
-            if [[ -d "$DATA/.git" ]]; then
-                _ok "Data dir: git-tracked at $DATA"
-            else
-                _warn "Data dir exists but not git-tracked"
-            fi
-        else
-            _warn "Data dir missing at $DATA"
-        fi
-
-        # 11. Supervisord services
+        # 10. Supervisord services
         echo ""
         echo -e "${CYAN}── Services ──${NC}"
         echo ""
@@ -1146,8 +1134,7 @@ SVCEOF
         echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
         echo "  ta backups      List available backups"
-        echo "  ta sync         Force git sync of data dir"
-        echo "  ta cron         Run cron hook (sync + profiles + compact + agent invocation)"
+        echo "  ta cron         Run cron hook (profiles + compact + agent invocation)"
         echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"
