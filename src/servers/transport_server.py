@@ -20,20 +20,24 @@ _opensky_token_exp: float = 0
 
 
 async def _opensky_headers() -> dict:
-    """Get Authorization header for OpenSky (OAuth2 client credentials)."""
+    """Get Authorization header for OpenSky (OAuth2 client credentials).
+    Supports both public clients (client_id only) and confidential clients
+    (client_id + client_secret)."""
     global _opensky_token, _opensky_token_exp
-    if not OPENSKY_CLIENT_ID or not OPENSKY_CLIENT_SECRET:
+    if not OPENSKY_CLIENT_ID:
         return {}
     if _opensky_token and time.time() < _opensky_token_exp:
         return {"Authorization": f"Bearer {_opensky_token}"}
     try:
+        token_data: dict = {"grant_type": "client_credentials",
+                            "client_id": OPENSKY_CLIENT_ID}
+        if OPENSKY_CLIENT_SECRET:
+            token_data["client_secret"] = OPENSKY_CLIENT_SECRET
         async with httpx.AsyncClient(timeout=15) as c:
             r = await c.post(
                 "https://auth.opensky-network.org/auth/realms/opensky-network"
                 "/protocol/openid-connect/token",
-                data={"grant_type": "client_credentials",
-                      "client_id": OPENSKY_CLIENT_ID,
-                      "client_secret": OPENSKY_CLIENT_SECRET})
+                data=token_data)
             r.raise_for_status()
             data = r.json()
             _opensky_token = data["access_token"]
@@ -96,7 +100,7 @@ async def own_states(icao24: str = "", serials: str = "") -> dict:
     Optional: icao24 hex address, serials (comma-separated receiver serial numbers)."""
     headers = await _opensky_headers()
     if not headers:
-        return {"error": "OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET required"}
+        return {"error": "OPENSKY_CLIENT_ID required (set in .env)"}
     params: dict = {}
     if icao24:
         params["icao24"] = icao24
@@ -141,7 +145,7 @@ async def all_flights(begin: int, end: int) -> dict:
     begin/end are Unix timestamps. Updated nightly."""
     headers = await _opensky_headers()
     if not headers:
-        return {"error": "OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET required"}
+        return {"error": "OPENSKY_CLIENT_ID required (set in .env)"}
     try:
         async with httpx.AsyncClient(timeout=15) as c:
             r = await c.get(f"{_OPENSKY_BASE}/flights/all",
@@ -160,7 +164,7 @@ async def airport_arrivals(airport: str, begin: int, end: int) -> dict:
     Updated nightly — historical data only."""
     headers = await _opensky_headers()
     if not headers:
-        return {"error": "OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET required"}
+        return {"error": "OPENSKY_CLIENT_ID required (set in .env)"}
     try:
         async with httpx.AsyncClient(timeout=15) as c:
             r = await c.get(f"{_OPENSKY_BASE}/flights/arrival",
@@ -180,7 +184,7 @@ async def airport_departures(airport: str, begin: int, end: int) -> dict:
     Updated nightly — historical data only."""
     headers = await _opensky_headers()
     if not headers:
-        return {"error": "OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET required"}
+        return {"error": "OPENSKY_CLIENT_ID required (set in .env)"}
     try:
         async with httpx.AsyncClient(timeout=15) as c:
             r = await c.get(f"{_OPENSKY_BASE}/flights/departure",
@@ -200,7 +204,7 @@ async def flight_track(icao24: str, time_stamp: int = 0) -> dict:
     Max 30 days history. Experimental endpoint."""
     headers = await _opensky_headers()
     if not headers:
-        return {"error": "OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET required"}
+        return {"error": "OPENSKY_CLIENT_ID required (set in .env)"}
     params: dict = {"icao24": icao24.lower()}
     if time_stamp:
         params["time"] = time_stamp
