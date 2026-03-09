@@ -1,0 +1,22 @@
+{
+  "id": "CRM",
+  "name": "Salesforce Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Information Technology",
+  "industry": "Application Software",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1999,
+    "employees": 72682
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "JPN", "DEU", "AUS", "CAN"],
+    "commodities": [],
+    "supply_chain": ["AWS", "Google Cloud", "Tableau"],
+    "risk_factors": ["enterprise_spending_slowdown", "ai_integration_costs", "saas_competition", "acquisition_integration"]
+  },
+  "tags": ["mega_cap", "saas", "crm", "cloud", "ai", "enterprise_software"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

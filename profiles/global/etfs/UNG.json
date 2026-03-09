@@ -1,0 +1,16 @@
+{
+  "id": "UNG",
+  "name": "United States Natural Gas Fund",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "USCF Investments",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "commodities": ["natural_gas"],
+    "risk_factors": ["natural_gas_price_risk", "contango_risk", "seasonality", "weather_sensitivity"]
+  },
+  "tags": ["natural_gas", "commodity", "futures_based", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["USCF Investments", "Yahoo Finance"]
+}

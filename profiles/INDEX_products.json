@@ -1,0 +1,103 @@
+[
+  {
+    "id": "automotive",
+    "kind": "products",
+    "name": "Automotive",
+    "region": "global",
+    "tags": [
+      "manufacturing",
+      "ev_transition"
+    ]
+  },
+  {
+    "id": "drones",
+    "kind": "products",
+    "name": "Drones",
+    "region": "global",
+    "tags": [
+      "dual_use",
+      "defense",
+      "emerging_tech"
+    ]
+  },
+  {
+    "id": "ev_batteries",
+    "kind": "products",
+    "name": "EV Batteries",
+    "region": "global",
+    "tags": [
+      "green_transition",
+      "critical_minerals"
+    ]
+  },
+  {
+    "id": "fertilizers",
+    "kind": "products",
+    "name": "Fertilizers",
+    "region": "global",
+    "tags": [
+      "food_security",
+      "sanctions_sensitive"
+    ]
+  },
+  {
+    "id": "lng_terminals",
+    "kind": "products",
+    "name": "LNG Terminals",
+    "region": "global",
+    "tags": [
+      "energy_security",
+      "infrastructure"
+    ]
+  },
+  {
+    "id": "pharmaceuticals",
+    "kind": "products",
+    "name": "Pharmaceuticals",
+    "region": "global",
+    "tags": [
+      "essential_goods",
+      "ip_intensive"
+    ]
+  },
+  {
+    "id": "semiconductors",
+    "kind": "products",
+    "name": "Semiconductors",
+    "region": "global",
+    "tags": [
+      "critical_tech",
+      "dual_use"
+    ]
+  },
+  {
+    "id": "smartphones",
+    "kind": "products",
+    "name": "Smartphones",
+    "region": "global",
+    "tags": [
+      "consumer_electronics",
+      "critical_tech"
+    ]
+  },
+  {
+    "id": "solar_panels",
+    "kind": "products",
+    "name": "Solar Panels",
+    "region": "global",
+    "tags": [
+      "green_transition",
+      "trade_sensitive"
+    ]
+  },
+  {
+    "id": "steel",
+    "kind": "products",
+    "name": "Steel",
+    "region": "global",
+    "tags": [
+      "industrial_base",
+      "trade_sensitive"
+    ]
+  }
+]

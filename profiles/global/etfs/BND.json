@@ -1,0 +1,16 @@
+{
+  "id": "BND",
+  "name": "Vanguard Total Bond Market ETF",
+  "type": "etf",
+  "exchange": "NASDAQ",
+  "issuer": "Vanguard",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Government Bonds", "Corporate Bonds", "Mortgage-Backed Securities"],
+    "risk_factors": ["interest_rate_risk", "credit_risk", "inflation_risk"]
+  },
+  "tags": ["bonds", "fixed_income", "aggregate", "investment_grade", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Vanguard", "Yahoo Finance"]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "TLT",
+  "name": "iShares 20+ Year Treasury Bond ETF",
+  "type": "etf",
+  "exchange": "NASDAQ",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["USA"],
+    "sectors": ["Government Bonds"],
+    "risk_factors": ["interest_rate_risk", "duration_risk", "inflation_risk"]
+  },
+  "tags": ["treasury", "long_duration", "bonds", "fixed_income", "safe_haven", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

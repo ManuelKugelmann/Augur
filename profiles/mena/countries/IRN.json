@@ -1,0 +1,122 @@
+{
+  "id": "IRN",
+  "name": "Iran",
+  "iso2": "IR",
+  "region": "Middle East & North Africa",
+  "currency": "IRR",
+  "capital": "Tehran",
+  "population": 87000000,
+  "trade": {
+    "top_exports": [
+      "petroleum",
+      "petrochemicals",
+      "iron_steel",
+      "plastics",
+      "fruits"
+    ],
+    "top_partners": [
+      "CHN",
+      "IRQ",
+      "TUR",
+      "ARE",
+      "IND"
+    ],
+    "major_ports": [
+      "Bandar Abbas",
+      "Chabahar",
+      "Bandar Imam Khomeini"
+    ],
+    "chokepoint_exposure": [
+      "hormuz"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "cereals",
+      "electronics"
+    ],
+    "energy_mix": {
+      "gas": 0.65,
+      "oil": 0.25,
+      "hydro": 0.05,
+      "renewables": 0.02,
+      "nuclear": 0.01,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "sanctions",
+      "oil_price_dependence",
+      "water_crisis",
+      "regional_proxy_conflicts"
+    ]
+  },
+  "ratings": {
+    "credit": "unrated",
+    "democracy_index": 1.96,
+    "press_freedom_rank": 176,
+    "corruption_perception": 24
+  },
+  "neighbors": [
+    {
+      "id": "IRQ",
+      "name": "Iraq",
+      "relevance": "Longest border; Shia political influence; militia proxies; trade"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Kurdish issue; gas trade; regional rivalry"
+    },
+    {
+      "id": "AFG",
+      "name": "Afghanistan",
+      "relevance": "Drug trafficking; refugee flows; water disputes"
+    },
+    {
+      "id": "PAK",
+      "name": "Pakistan",
+      "relevance": "Baluchistan border; pipeline projects; sectarian dynamics"
+    },
+    {
+      "id": "AZE",
+      "name": "Azerbaijan",
+      "relevance": "Ethnic Azeri population; Israel-Azerbaijan axis concern"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "sanctions",
+      "description": "Comprehensive sanctions; nuclear standoff; regional proxy conflicts"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Major oil buyer despite sanctions; 25-year cooperation agreement"
+    },
+    {
+      "target": "RUS",
+      "type": "alliance",
+      "description": "Drone supply for Ukraine war; UN coordination; sanctions solidarity"
+    },
+    {
+      "target": "ISR",
+      "type": "rivalry",
+      "description": "Existential enmity; proxy wars (Hezbollah, Hamas); nuclear threat perception"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "sanctioned"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

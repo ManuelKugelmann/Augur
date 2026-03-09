@@ -1,0 +1,22 @@
+{
+  "id": "META",
+  "name": "Meta Platforms Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Communication Services",
+  "industry": "Interactive Media & Services",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 2004,
+    "employees": 67317
+  },
+  "exposure": {
+    "countries": ["USA", "IND", "BRA", "GBR", "IDN", "MEX"],
+    "commodities": ["rare_earths"],
+    "supply_chain": ["NVIDIA", "TSMC", "Broadcom"],
+    "risk_factors": ["privacy_regulation", "ad_market_cyclicality", "metaverse_investment", "content_moderation", "antitrust"]
+  },
+  "tags": ["mega_cap", "social_media", "advertising", "ai", "metaverse", "magnificent_seven"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

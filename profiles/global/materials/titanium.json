@@ -1,0 +1,17 @@
+{
+  "id": "titanium",
+  "name": "Titanium",
+  "category": "metals",
+  "producers": ["CHN", "AUS", "ZAF", "CAN", "MOZ"],
+  "reserves": ["AUS", "CHN", "IND", "ZAF", "KEN"],
+  "processing": ["CHN", "RUS", "JPN", "USA", "KAZ"],
+  "end_uses": ["aerospace", "defense", "medical implants", "pigments (TiO2)", "chemical processing"],
+  "substitutes": ["aluminum alloys (some aerospace)", "steel (structural)"],
+  "exposure": {
+    "countries": ["CHN", "AUS", "ZAF", "RUS", "JPN"],
+    "risk_factors": ["aerospace_demand_cycles", "russia_sponge_dependency", "defense_applications", "pigment_demand"]
+  },
+  "tags": ["strategic", "aerospace", "defense", "industrial_metal"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "TiO2 World"]
+}

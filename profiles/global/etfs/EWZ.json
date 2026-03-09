@@ -1,0 +1,17 @@
+{
+  "id": "EWZ",
+  "name": "iShares MSCI Brazil ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["BRA"],
+    "sectors": ["Financials", "Energy", "Materials", "Consumer Staples", "Utilities"],
+    "commodities": ["oil", "iron_ore", "soybeans"],
+    "risk_factors": ["single_country_risk", "currency_risk", "political_risk", "commodity_dependence"]
+  },
+  "tags": ["brazil", "single_country", "emerging_markets", "latin_america", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

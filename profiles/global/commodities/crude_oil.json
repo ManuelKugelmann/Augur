@@ -1,0 +1,18 @@
+{
+  "id": "crude_oil",
+  "name": "Crude Oil",
+  "category": "energy",
+  "unit": "barrel",
+  "benchmark": "WTI / Brent",
+  "producers": ["USA", "SAU", "RUS", "CAN", "IRQ"],
+  "consumers": ["USA", "CHN", "IND", "JPN", "KOR"],
+  "chokepoints": ["hormuz", "suez", "malacca", "bab_el_mandeb"],
+  "seasonality": "Winter heating demand peaks; summer driving season in US",
+  "exposure": {
+    "countries": ["USA", "SAU", "RUS", "CHN", "IND", "IRQ", "CAN"],
+    "risk_factors": ["geopolitical_disruption", "OPEC_policy", "energy_transition", "sanctions"]
+  },
+  "tags": ["energy", "fossil_fuel", "benchmark"],
+  "_updated": "2026-03-09",
+  "_sources": ["EIA", "IEA", "OPEC"]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "acled",
+  "name": "Armed Conflict Location & Event Data",
+  "mcp": "conflict",
+  "tool": "acled_events",
+  "api_base": "https://api.acleddata.com/acled/",
+  "auth": "api_key",
+  "refresh": {
+    "frequency": "weekly",
+    "snapshot_type": "events",
+    "default_params": {}
+  },
+  "ttl_days": 7,
+  "_updated": "2026-03-09",
+  "_sources": ["ACLED API Docs"]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "lng",
+  "name": "Liquefied Natural Gas (LNG)",
+  "category": "energy",
+  "unit": "MMBtu",
+  "benchmark": "JKM (Asia) / TTF (Europe) / Henry Hub (US)",
+  "producers": ["QAT", "USA", "AUS", "RUS", "MYS"],
+  "consumers": ["JPN", "CHN", "KOR", "IND", "TWN", "DEU"],
+  "chokepoints": ["hormuz", "malacca", "suez", "panama_canal"],
+  "seasonality": "Winter demand peaks in Asia and Europe; summer restocking",
+  "exposure": {
+    "countries": ["QAT", "USA", "AUS", "JPN", "CHN", "KOR", "DEU"],
+    "risk_factors": ["liquefaction_capacity", "shipping_rates", "terminal_bottlenecks", "long_term_contracts"]
+  },
+  "tags": ["energy", "fossil_fuel", "lng", "shipping"],
+  "_updated": "2026-03-09",
+  "_sources": ["IGU", "EIA", "IEA"]
+}

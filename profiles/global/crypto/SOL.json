@@ -1,0 +1,15 @@
+{
+  "id": "SOL",
+  "name": "Solana",
+  "type": "crypto",
+  "network": "Solana",
+  "consensus": "PoH/PoS",
+  "max_supply": null,
+  "exposure": {
+    "countries": ["USA", "KOR", "DEU", "GBR"],
+    "risk_factors": ["regulatory_risk", "volatility", "network_outage_history", "validator_concentration"]
+  },
+  "tags": ["high_throughput", "layer1", "defi", "nft", "pos"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

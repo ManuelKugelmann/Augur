@@ -1,0 +1,15 @@
+{
+  "id": "ETH",
+  "name": "Ethereum",
+  "type": "crypto",
+  "network": "Ethereum",
+  "consensus": "PoS",
+  "max_supply": null,
+  "exposure": {
+    "countries": ["USA", "CHN", "GBR", "DEU", "KOR", "JPN"],
+    "risk_factors": ["regulatory_risk", "volatility", "smart_contract_risk", "scaling_competition", "staking_centralization"]
+  },
+  "tags": ["smart_contracts", "defi", "layer1", "pos", "programmable_money"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

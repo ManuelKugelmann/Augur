@@ -1,0 +1,16 @@
+{
+  "id": "VGK",
+  "name": "Vanguard FTSE Europe ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "Vanguard",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["GBR", "FRA", "CHE", "DEU", "NLD", "SWE", "DNK", "ESP", "ITA", "FIN"],
+    "sectors": ["Financials", "Healthcare", "Industrials", "Consumer Staples", "Technology", "Energy"],
+    "risk_factors": ["currency_risk", "european_slowdown", "political_fragmentation", "energy_dependence"]
+  },
+  "tags": ["europe", "developed_markets", "diversified", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["Vanguard", "Yahoo Finance"]
+}

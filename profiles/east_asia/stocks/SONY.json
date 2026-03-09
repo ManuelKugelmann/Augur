@@ -1,0 +1,22 @@
+{
+  "id": "SONY",
+  "name": "Sony Group Corporation",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Consumer Discretionary",
+  "industry": "Consumer Electronics",
+  "country": "JPN",
+  "fundamentals": {
+    "founded": 1946,
+    "employees": 113000
+  },
+  "exposure": {
+    "countries": ["JPN", "USA", "CHN", "GBR", "DEU", "IND"],
+    "commodities": ["lithium", "rare_earths"],
+    "supply_chain": ["TSMC", "Samsung", "Bungie", "Crunchyroll"],
+    "risk_factors": ["gaming_cycle", "content_costs", "sensor_competition", "yen_weakness", "streaming_competition"]
+  },
+  "tags": ["gaming", "entertainment", "semiconductors", "imaging", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

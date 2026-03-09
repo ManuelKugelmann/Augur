@@ -1,0 +1,75 @@
+{
+  "id": "g20",
+  "name": "Group of Twenty",
+  "type": "economic_zone",
+  "countries": [
+    "ARG", "AUS", "BRA", "CAN", "CHN", "FRA", "DEU", "IND", "IDN", "ITA",
+    "JPN", "MEX", "RUS", "SAU", "ZAF", "KOR", "TUR", "GBR", "USA"
+  ],
+  "bbox": [-179.2, -55.1, 180.0, 83.1],
+  "climate": "All major climate zones represented: tropical, arid, temperate, continental, polar",
+  "hazards": [
+    "hurricanes",
+    "typhoons",
+    "earthquakes",
+    "tsunamis",
+    "flooding",
+    "drought",
+    "wildfires",
+    "extreme_heat",
+    "winter_storms"
+  ],
+  "chokepoints": [
+    "Strait of Malacca",
+    "Suez Canal",
+    "Panama Canal",
+    "Strait of Hormuz",
+    "Bosphorus",
+    "English Channel"
+  ],
+  "neighbors": [
+    {"id": "g7", "name": "Group of Seven", "relevance": "G7 is core advanced-economy caucus within G20; sets agenda on many issues"},
+    {"id": "brics", "name": "BRICS+", "relevance": "Major emerging-economy bloc within G20; counterweight to G7 positions"},
+    {"id": "eu", "name": "European Union", "relevance": "EU has its own G20 seat alongside individual European member states"},
+    {"id": "asean", "name": "ASEAN", "relevance": "Indonesia is G20 member; ASEAN economies are systemic trade partners"},
+    {"id": "opec_plus", "name": "OPEC+", "relevance": "Saudi Arabia and Russia in both G20 and OPEC+; energy prices dominate G20 macro agenda"},
+    {"id": "african_union", "name": "African Union", "relevance": "AU gained permanent G20 seat; South Africa represents broader African interests"}
+  ],
+  "links": [
+    {"target": "g7", "type": "overlap", "description": "All G7 members are G20 members; G7 coordinates positions within G20 framework"},
+    {"target": "brics", "type": "overlap", "description": "All original BRICS members are in G20; competing governance visions within the forum"},
+    {"target": "rcep", "type": "trade", "description": "Several G20 members (China, Japan, Korea, Australia, Indonesia) are in RCEP"},
+    {"target": "opec_plus", "type": "trade", "description": "G20 energy discussions directly shaped by OPEC+ production decisions"},
+    {"target": "nafta_usmca", "type": "trade", "description": "USA, Canada, Mexico all G20 members; North American trade bloc within G20"},
+    {"target": "mercosur", "type": "trade", "description": "Brazil and Argentina link G20 to South American trade integration"},
+    {"target": "eu", "type": "overlap", "description": "EU participates as institution plus France, Germany, Italy as individual members"},
+    {"target": "sco", "type": "overlap", "description": "China, Russia, India, Turkey bridge G20 and SCO membership"}
+  ],
+  "exposure": {
+    "commodities": [
+      "crude_oil",
+      "natural_gas",
+      "iron_ore",
+      "gold",
+      "wheat",
+      "corn",
+      "soybeans",
+      "semiconductors",
+      "automobiles",
+      "rare_earths"
+    ],
+    "risk_factors": [
+      "global_trade_fragmentation",
+      "climate_policy_divergence",
+      "monetary_policy_spillovers",
+      "sovereign_debt",
+      "geopolitical_rivalry",
+      "energy_transition",
+      "ai_governance",
+      "financial_system_stability"
+    ]
+  },
+  "tags": ["g20", "global_governance", "major_economies", "systemic_importance"],
+  "_updated": "2026-03-09",
+  "_sources": ["G20 Secretariat", "CIA World Factbook", "IMF", "World Bank"]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "GOOGL",
+  "name": "Alphabet Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Communication Services",
+  "industry": "Interactive Media & Services",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1998,
+    "employees": 182000
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "IND", "JPN", "BRA", "DEU"],
+    "commodities": ["rare_earths"],
+    "supply_chain": ["Broadcom", "TSMC", "Samsung"],
+    "risk_factors": ["antitrust_regulation", "ad_market_cyclicality", "ai_competition", "privacy_regulation"]
+  },
+  "tags": ["mega_cap", "search", "advertising", "cloud", "ai", "autonomous_vehicles", "magnificent_seven"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

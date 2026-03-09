@@ -1,0 +1,18 @@
+{
+  "id": "gold",
+  "name": "Gold",
+  "category": "precious_metals",
+  "unit": "troy_ounce",
+  "benchmark": "LBMA Gold Price / COMEX",
+  "producers": ["CHN", "AUS", "RUS", "CAN", "USA", "GHA", "ZAF"],
+  "consumers": ["CHN", "IND", "USA", "DEU", "TUR"],
+  "chokepoints": [],
+  "seasonality": "Indian wedding season (Oct-Dec) and Chinese New Year boost demand",
+  "exposure": {
+    "countries": ["CHN", "AUS", "RUS", "IND", "USA", "ZAF"],
+    "risk_factors": ["interest_rates", "usd_strength", "geopolitical_uncertainty", "central_bank_reserves"]
+  },
+  "tags": ["precious_metal", "safe_haven", "reserve_asset"],
+  "_updated": "2026-03-09",
+  "_sources": ["World Gold Council", "USGS", "LBMA"]
+}

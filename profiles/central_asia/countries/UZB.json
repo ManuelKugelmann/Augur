@@ -1,0 +1,113 @@
+{
+  "id": "UZB",
+  "name": "Uzbekistan",
+  "iso2": "UZ",
+  "region": "Central Asia",
+  "currency": "UZS",
+  "capital": "Tashkent",
+  "population": 36000000,
+  "trade": {
+    "top_exports": [
+      "gold",
+      "natural_gas",
+      "cotton",
+      "copper",
+      "uranium"
+    ],
+    "top_partners": [
+      "CHN",
+      "RUS",
+      "TUR",
+      "KAZ",
+      "KOR"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "iron_steel",
+      "food_products"
+    ],
+    "energy_mix": {
+      "gas": 0.75,
+      "hydro": 0.1,
+      "coal": 0.05,
+      "oil": 0.05,
+      "renewables": 0.03,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "water_scarcity",
+      "cotton_monoculture",
+      "landlocked",
+      "authoritarian_governance"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 2.12,
+    "press_freedom_rank": 137,
+    "corruption_perception": 31
+  },
+  "neighbors": [
+    {
+      "id": "KAZ",
+      "name": "Kazakhstan",
+      "relevance": "Largest regional economy; shared infrastructure and labor flows"
+    },
+    {
+      "id": "AFG",
+      "name": "Afghanistan",
+      "relevance": "Security frontier; drug transit and refugee pressure"
+    },
+    {
+      "id": "TKM",
+      "name": "Turkmenistan",
+      "relevance": "Gas pipeline routes; shared Amu Darya water resources"
+    },
+    {
+      "id": "TJK",
+      "name": "Tajikistan",
+      "relevance": "Water-energy nexus; upstream dam disputes"
+    },
+    {
+      "id": "KGZ",
+      "name": "Kyrgyzstan",
+      "relevance": "Border disputes; Fergana Valley ethnic complexity"
+    }
+  ],
+  "links": [
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Remittances from migrant workers; legacy security ties"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Growing BRI investment; textile and mineral exports"
+    },
+    {
+      "target": "TUR",
+      "type": "alliance",
+      "description": "Turkic cultural ties; Organization of Turkic States membership"
+    },
+    {
+      "target": "AFG",
+      "type": "corridor",
+      "description": "Trans-Afghan railway project linking to South Asian markets"
+    }
+  ],
+  "tags": [],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "VALE",
+  "name": "Vale S.A.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Materials",
+  "industry": "Diversified Metals & Mining",
+  "country": "BRA",
+  "fundamentals": {
+    "founded": 1942,
+    "employees": 67000
+  },
+  "exposure": {
+    "countries": ["BRA", "CHN", "CAN", "IDN", "JPN", "OMN"],
+    "commodities": ["iron_ore", "nickel", "copper", "cobalt"],
+    "supply_chain": ["BHP", "Rio Tinto", "Fortescue"],
+    "risk_factors": ["iron_ore_prices", "china_steel_demand", "environmental_liability", "dam_safety", "brazil_regulation"]
+  },
+  "tags": ["mining", "metals", "iron_ore", "nickel", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

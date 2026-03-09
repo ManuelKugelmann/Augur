@@ -1,0 +1,22 @@
+{
+  "id": "CAT",
+  "name": "Caterpillar Inc.",
+  "type": "stock",
+  "exchange": "NYSE",
+  "sector": "Industrials",
+  "industry": "Construction Machinery & Heavy Transportation Equipment",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1925,
+    "employees": 114000
+  },
+  "exposure": {
+    "countries": ["USA", "CHN", "AUS", "BRA", "CAN", "IND"],
+    "commodities": ["steel", "iron_ore", "copper", "crude_oil"],
+    "supply_chain": ["Cummins", "Komatsu", "Joy Global"],
+    "risk_factors": ["infrastructure_spending", "commodity_cycles", "china_construction", "tariffs", "interest_rates"]
+  },
+  "tags": ["heavy_equipment", "construction", "mining", "infrastructure", "large_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

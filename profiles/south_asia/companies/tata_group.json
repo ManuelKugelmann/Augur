@@ -1,0 +1,21 @@
+{
+  "id": "tata_group",
+  "name": "Tata Group",
+  "country": "IND",
+  "sector": "Industrials",
+  "industry": "Diversified Conglomerate",
+  "revenue": 150000000000,
+  "employees": 1000000,
+  "publicly_traded": true,
+  "ticker": "TCS.NS",
+  "subsidiaries": ["Tata Consultancy Services", "Tata Motors", "Tata Steel", "Titan Company", "Tata Power"],
+  "exposure": {
+    "countries": ["IND", "GBR", "USA", "CHN", "NLD"],
+    "products": ["automotive", "steel", "ev_batteries"],
+    "materials": ["steel", "iron_ore", "lithium"],
+    "risk_factors": ["india_regulatory", "steel_overcapacity", "ev_transition"]
+  },
+  "tags": ["conglomerate", "it_services", "manufacturing"],
+  "_updated": "2026-03-09",
+  "_sources": ["Tata Group Annual Report", "Bloomberg"]
+}

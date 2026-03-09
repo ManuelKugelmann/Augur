@@ -1,0 +1,107 @@
+{
+  "id": "SGP",
+  "name": "Singapore",
+  "iso2": "SG",
+  "region": "Southeast Asia",
+  "currency": "SGD",
+  "capital": "Singapore",
+  "population": 5900000,
+  "trade": {
+    "top_exports": [
+      "electronics",
+      "petroleum_products",
+      "machinery",
+      "pharmaceuticals",
+      "chemicals"
+    ],
+    "top_partners": [
+      "CHN",
+      "HKG",
+      "MYS",
+      "USA",
+      "IDN"
+    ],
+    "major_ports": [
+      "Port of Singapore"
+    ],
+    "chokepoint_exposure": [
+      "malacca"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "petroleum",
+      "electronics",
+      "machinery",
+      "food_products"
+    ],
+    "energy_mix": {
+      "gas": 0.92,
+      "renewables": 0.03,
+      "oil": 0.02,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "trade_hub_dependence",
+      "water_import_dependence",
+      "sea_level_rise"
+    ]
+  },
+  "ratings": {
+    "credit": "AAA",
+    "democracy_index": 6.02,
+    "press_freedom_rank": 129,
+    "corruption_perception": 83
+  },
+  "neighbors": [
+    {
+      "id": "MYS",
+      "name": "Malaysia",
+      "relevance": "Causeway; water supply; airspace; Johor economic competition"
+    },
+    {
+      "id": "IDN",
+      "name": "Indonesia",
+      "relevance": "Riau Islands; sand supply; maritime boundary; investment destination"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Strategic partner; naval logistics hub; Changi Naval Base; tech investment"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner; financial intermediary; Suzhou Industrial Park"
+    },
+    {
+      "target": "ASEAN",
+      "type": "alliance",
+      "description": "Founding member; ASEAN secretariat support; financial hub for region"
+    },
+    {
+      "target": "IND",
+      "type": "trade",
+      "description": "CECA; diaspora; financial services; growing tech corridor"
+    },
+    {
+      "target": "RUS",
+      "type": "sanctions",
+      "description": "Rare unilateral sanctions for Singapore; export controls; financial restrictions"
+    }
+  ],
+  "tags": [
+    "ASEAN",
+    "APEC"
+  ],
+  "_updated": "2026-03-09",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

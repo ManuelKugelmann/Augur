@@ -1,0 +1,18 @@
+{
+  "id": "oats",
+  "name": "Oats",
+  "category": "grains",
+  "growing_season": "Spring oats: Mar-Aug; some winter varieties",
+  "producers": ["RUS", "CAN", "AUS", "POL", "FIN", "USA"],
+  "exporters": ["CAN", "AUS", "FIN", "SWE"],
+  "water_intensity": "low",
+  "climate_sensitivity": ["drought", "heat_stress", "excessive_moisture"],
+  "exposure": {
+    "countries": ["CAN", "RUS", "AUS", "USA", "EU"],
+    "commodities": [],
+    "risk_factors": ["health_food_demand", "gluten_free_trend", "feed_substitution"]
+  },
+  "tags": ["grains", "feed", "food", "health"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT"]
+}

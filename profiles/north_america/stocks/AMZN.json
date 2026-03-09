@@ -1,0 +1,22 @@
+{
+  "id": "AMZN",
+  "name": "Amazon.com Inc.",
+  "type": "stock",
+  "exchange": "NASDAQ",
+  "sector": "Consumer Discretionary",
+  "industry": "Broadline Retail",
+  "country": "USA",
+  "fundamentals": {
+    "founded": 1994,
+    "employees": 1540000
+  },
+  "exposure": {
+    "countries": ["USA", "GBR", "DEU", "JPN", "IND", "CAN"],
+    "commodities": ["natural_gas", "diesel"],
+    "supply_chain": ["NVIDIA", "Intel", "UPS", "FedEx"],
+    "risk_factors": ["labor_costs", "antitrust_regulation", "cloud_competition", "logistics_disruption"]
+  },
+  "tags": ["mega_cap", "ecommerce", "cloud", "aws", "ai", "magnificent_seven"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

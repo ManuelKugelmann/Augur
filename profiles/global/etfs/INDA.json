@@ -1,0 +1,16 @@
+{
+  "id": "INDA",
+  "name": "iShares MSCI India ETF",
+  "type": "etf",
+  "exchange": "NASDAQ",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["IND"],
+    "sectors": ["Financials", "Technology", "Energy", "Consumer Staples", "Materials", "Healthcare"],
+    "risk_factors": ["single_country_risk", "currency_risk", "regulatory_risk", "liquidity_risk"]
+  },
+  "tags": ["india", "single_country", "emerging_markets", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

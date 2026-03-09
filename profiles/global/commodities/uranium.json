@@ -1,0 +1,18 @@
+{
+  "id": "uranium",
+  "name": "Uranium",
+  "category": "energy",
+  "unit": "pound_U3O8",
+  "benchmark": "UxC / TradeTech spot",
+  "producers": ["KAZ", "CAN", "NAM", "AUS", "UZB", "RUS"],
+  "consumers": ["USA", "FRA", "CHN", "KOR", "RUS"],
+  "chokepoints": [],
+  "seasonality": "Contract-driven market; reactor refueling outages in spring/autumn",
+  "exposure": {
+    "countries": ["KAZ", "CAN", "AUS", "NAM", "RUS", "USA", "FRA"],
+    "risk_factors": ["nuclear_policy", "enrichment_concentration", "geopolitical_supply_risk", "smr_demand"]
+  },
+  "tags": ["energy", "nuclear", "critical_mineral"],
+  "_updated": "2026-03-09",
+  "_sources": ["WNA", "USGS", "EIA"]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "world-bank",
+  "name": "World Bank Open Data",
+  "mcp": "macro",
+  "tool": "wb_indicator",
+  "api_base": "https://api.worldbank.org/v2/",
+  "auth": "none",
+  "refresh": {
+    "frequency": "monthly",
+    "snapshot_type": "indicators",
+    "default_params": {}
+  },
+  "ttl_days": 30,
+  "_updated": "2026-03-09",
+  "_sources": ["World Bank API Docs"]
+}

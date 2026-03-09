@@ -1,0 +1,18 @@
+{
+  "id": "platinum",
+  "name": "Platinum",
+  "category": "precious_metals",
+  "unit": "troy_ounce",
+  "benchmark": "LPPM / NYMEX",
+  "producers": ["ZAF", "RUS", "ZWE", "CAN", "USA"],
+  "consumers": ["CHN", "USA", "JPN", "DEU", "IND"],
+  "chokepoints": [],
+  "seasonality": "Automotive production cycles drive catalytic converter demand",
+  "exposure": {
+    "countries": ["ZAF", "RUS", "ZWE", "CHN", "JPN"],
+    "risk_factors": ["south_africa_supply_concentration", "ev_transition_reducing_autocatalyst", "hydrogen_fuel_cell_demand", "power_outages_ZAF"]
+  },
+  "tags": ["precious_metal", "pgm", "autocatalyst", "hydrogen"],
+  "_updated": "2026-03-09",
+  "_sources": ["WPIC", "USGS", "Johnson Matthey"]
+}

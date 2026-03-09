@@ -1,0 +1,16 @@
+{
+  "id": "FXI",
+  "name": "iShares China Large-Cap ETF",
+  "type": "etf",
+  "exchange": "NYSE",
+  "issuer": "BlackRock",
+  "strategy": "passive",
+  "exposure": {
+    "countries": ["CHN", "HKG"],
+    "sectors": ["Financials", "Communication Services", "Consumer Discretionary", "Energy", "Technology"],
+    "risk_factors": ["china_regulatory_risk", "geopolitical_risk", "currency_risk", "state_intervention"]
+  },
+  "tags": ["china", "large_cap", "emerging_markets", "passive"],
+  "_updated": "2026-03-09",
+  "_sources": ["BlackRock", "Yahoo Finance"]
+}

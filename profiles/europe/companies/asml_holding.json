@@ -1,0 +1,21 @@
+{
+  "id": "asml_holding",
+  "name": "ASML Holding",
+  "country": "NLD",
+  "sector": "Information Technology",
+  "industry": "Semiconductor Equipment",
+  "revenue": 28000000000,
+  "employees": 42000,
+  "publicly_traded": true,
+  "ticker": "ASML",
+  "subsidiaries": ["Cymer", "Berliner Glas", "HMI"],
+  "exposure": {
+    "countries": ["NLD", "USA", "TWN", "KOR", "JPN", "CHN"],
+    "products": ["semiconductors"],
+    "materials": ["rare_earths"],
+    "risk_factors": ["euv_monopoly_scrutiny", "china_export_controls", "supply_chain_bottleneck"]
+  },
+  "tags": ["monopoly", "critical_infrastructure", "export_controlled"],
+  "_updated": "2026-03-09",
+  "_sources": ["ASML Annual Report", "Reuters"]
+}

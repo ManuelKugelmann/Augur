@@ -1,0 +1,21 @@
+{
+  "id": "siemens_ag",
+  "name": "Siemens AG",
+  "country": "DEU",
+  "sector": "Industrials",
+  "industry": "Industrial Conglomerate",
+  "revenue": 80000000000,
+  "employees": 320000,
+  "publicly_traded": true,
+  "ticker": "SIE.DE",
+  "subsidiaries": ["Siemens Healthineers", "Siemens Mobility", "Siemens Digital Industries"],
+  "exposure": {
+    "countries": ["DEU", "USA", "CHN", "IND", "GBR"],
+    "products": ["automotive", "semiconductors"],
+    "materials": ["steel", "copper"],
+    "risk_factors": ["china_exposure", "industrial_slowdown", "digital_transformation"]
+  },
+  "tags": ["industrial", "automation", "dax"],
+  "_updated": "2026-03-09",
+  "_sources": ["Siemens Annual Report", "Bloomberg"]
+}

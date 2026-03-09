@@ -1,0 +1,21 @@
+{
+  "id": "spacex",
+  "name": "Space Exploration Technologies Corp. (SpaceX)",
+  "country": "USA",
+  "sector": "Industrials",
+  "industry": "Aerospace & Defense",
+  "revenue": 13000000000,
+  "employees": 13000,
+  "publicly_traded": false,
+  "ticker": null,
+  "subsidiaries": ["Starlink", "SpaceX Services"],
+  "exposure": {
+    "countries": ["USA", "GBR", "AUS", "JPN"],
+    "products": ["drones", "semiconductors"],
+    "materials": ["steel", "carbon_fiber", "aluminum"],
+    "risk_factors": ["regulatory_approval", "launch_failure_risk", "starlink_competition"]
+  },
+  "tags": ["private", "defense", "satellite_internet"],
+  "_updated": "2026-03-09",
+  "_sources": ["Bloomberg", "Reuters"]
+}

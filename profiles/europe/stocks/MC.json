@@ -1,0 +1,22 @@
+{
+  "id": "MC",
+  "name": "LVMH Moët Hennessy Louis Vuitton SE",
+  "type": "stock",
+  "exchange": "EPA",
+  "sector": "Consumer Discretionary",
+  "industry": "Apparel, Accessories & Luxury Goods",
+  "country": "FRA",
+  "fundamentals": {
+    "founded": 1987,
+    "employees": 213000
+  },
+  "exposure": {
+    "countries": ["FRA", "USA", "CHN", "JPN", "KOR", "GBR", "ITA"],
+    "commodities": ["leather", "gold", "diamonds"],
+    "supply_chain": ["Tiffany", "Bulgari", "Sephora", "Dior"],
+    "risk_factors": ["luxury_demand_china", "consumer_confidence", "fx_euro_exposure", "counterfeiting"]
+  },
+  "tags": ["luxury", "fashion", "retail", "mega_cap"],
+  "_updated": "2026-03-09",
+  "_sources": ["SEC EDGAR", "Yahoo Finance"]
+}

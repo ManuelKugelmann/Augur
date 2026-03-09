@@ -1,0 +1,21 @@
+{
+  "id": "openai",
+  "name": "OpenAI",
+  "country": "USA",
+  "sector": "Information Technology",
+  "industry": "Artificial Intelligence",
+  "revenue": 13000000000,
+  "employees": 3500,
+  "publicly_traded": false,
+  "ticker": null,
+  "subsidiaries": ["OpenAI Global LLC"],
+  "exposure": {
+    "countries": ["USA", "GBR", "IRL", "JPN"],
+    "products": ["semiconductors"],
+    "materials": [],
+    "risk_factors": ["gpu_supply_dependence", "regulatory_uncertainty", "competition", "compute_costs"]
+  },
+  "tags": ["ai", "private", "emerging_tech"],
+  "_updated": "2026-03-09",
+  "_sources": ["Bloomberg", "The Information"]
+}

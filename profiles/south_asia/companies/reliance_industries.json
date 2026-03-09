@@ -1,0 +1,21 @@
+{
+  "id": "reliance_industries",
+  "name": "Reliance Industries Limited",
+  "country": "IND",
+  "sector": "Energy",
+  "industry": "Oil & Gas / Telecom / Retail Conglomerate",
+  "revenue": 110000000000,
+  "employees": 360000,
+  "publicly_traded": true,
+  "ticker": "RELIANCE.NS",
+  "subsidiaries": ["Jio Platforms", "Reliance Retail", "Reliance Petroleum"],
+  "exposure": {
+    "countries": ["IND", "USA", "SAU", "ARE"],
+    "products": ["smartphones", "solar_panels"],
+    "materials": [],
+    "risk_factors": ["regulatory_risk", "oil_refining_margins", "telecom_competition"]
+  },
+  "tags": ["conglomerate", "telecom", "energy"],
+  "_updated": "2026-03-09",
+  "_sources": ["Reliance Industries Annual Report", "Bloomberg"]
+}

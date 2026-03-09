@@ -1,0 +1,15 @@
+{
+  "id": "AVAX",
+  "name": "Avalanche",
+  "type": "crypto",
+  "network": "Avalanche",
+  "consensus": "PoS",
+  "max_supply": 720000000,
+  "exposure": {
+    "countries": ["USA", "KOR", "DEU", "GBR"],
+    "risk_factors": ["regulatory_risk", "volatility", "l1_competition", "subnet_adoption"]
+  },
+  "tags": ["smart_contracts", "layer1", "subnets", "pos", "defi"],
+  "_updated": "2026-03-09",
+  "_sources": ["CoinGecko", "CoinMarketCap"]
+}

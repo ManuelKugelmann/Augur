@@ -1,0 +1,18 @@
+{
+  "id": "iron_ore",
+  "name": "Iron Ore",
+  "category": "base_metals",
+  "unit": "metric_ton",
+  "benchmark": "SGX 62% Fe CFR China",
+  "producers": ["AUS", "BRA", "CHN", "IND", "RUS"],
+  "consumers": ["CHN", "JPN", "IND", "KOR", "DEU"],
+  "chokepoints": ["pilbara_ports", "vale_terminals", "cape_of_good_hope"],
+  "seasonality": "Chinese steel production peaks spring-autumn; winter cuts for pollution control",
+  "exposure": {
+    "countries": ["AUS", "BRA", "CHN", "IND", "RUS"],
+    "risk_factors": ["china_steel_demand", "brazil_dam_risks", "australian_weather", "decarbonization"]
+  },
+  "tags": ["base_metal", "steel", "construction", "infrastructure"],
+  "_updated": "2026-03-09",
+  "_sources": ["USGS", "World Steel Association"]
+}

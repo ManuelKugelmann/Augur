@@ -1,0 +1,18 @@
+{
+  "id": "sunflower",
+  "name": "Sunflower",
+  "category": "oilseeds",
+  "growing_season": "Apr-Sep (Northern Hemisphere); sowing after last frost",
+  "producers": ["UKR", "RUS", "ARG", "ROU", "CHN", "TUR"],
+  "exporters": ["UKR", "RUS", "ARG", "ROU", "BGR"],
+  "water_intensity": "low",
+  "climate_sensitivity": ["drought", "heat_stress", "bird_damage"],
+  "exposure": {
+    "countries": ["UKR", "RUS", "ARG", "EU", "IND", "CHN"],
+    "commodities": ["sunflower_oil", "sunflower_meal"],
+    "risk_factors": ["black_sea_conflict", "export_restrictions", "substitution_with_palm_oil"]
+  },
+  "tags": ["oilseeds", "vegetable_oil", "food"],
+  "_updated": "2026-03-09",
+  "_sources": ["USDA", "FAOSTAT"]
+}

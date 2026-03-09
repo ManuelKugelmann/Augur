@@ -1,0 +1,35 @@
+{
+  "id": "south_china_sea",
+  "name": "South China Sea",
+  "type": "maritime",
+  "countries": ["CHN", "VNM", "PHL", "MYS", "BRN", "TWN", "IDN"],
+  "bbox": [99.0, 0.0, 122.0, 23.5],
+  "climate": "Tropical maritime; hot and humid; monsoon-driven; typhoon-prone (June-November); heavy rainfall",
+  "hazards": ["typhoon", "territorial_confrontation", "naval_incident", "oil_spill", "tsunami", "coral_reef_destruction"],
+  "chokepoints": ["Strait_of_Malacca_eastern_approach", "Luzon_Strait", "Paracel_Islands", "Spratly_Islands", "Scarborough_Shoal"],
+  "neighbors": [
+    {"id": "asean", "name": "ASEAN", "relevance": "Multiple ASEAN members (VNM, PHL, MYS, BRN, IDN) are claimant states in SCS disputes"},
+    {"id": "strait_of_malacca", "name": "Strait of Malacca", "relevance": "Western gateway to the SCS; Malacca traffic feeds directly into SCS shipping lanes"},
+    {"id": "taiwan_strait", "name": "Taiwan Strait", "relevance": "Northern exit of the SCS; Taiwan controls Pratas Islands; linked military escalation scenarios"},
+    {"id": "indo_pacific", "name": "Indo-Pacific", "relevance": "SCS is the central flashpoint of Indo-Pacific strategic competition"},
+    {"id": "pearl_river_delta", "name": "Pearl River Delta", "relevance": "PRD ports are the largest origin/destination for SCS shipping traffic"},
+    {"id": "greater_bay_area", "name": "Greater Bay Area", "relevance": "GBA's economic output depends on unimpeded SCS maritime access"}
+  ],
+  "links": [
+    {"target": "asean", "type": "rivalry", "description": "ASEAN claimant states contest China's nine-dash line; ASEAN unity strained by competing claims"},
+    {"target": "strait_of_malacca", "type": "corridor", "description": "Malacca is the western chokepoint feeding into SCS; disruption in either affects the other"},
+    {"target": "taiwan_strait", "type": "corridor", "description": "Northern SCS connects to Taiwan Strait; combined blockade scenarios threaten global shipping"},
+    {"target": "quad", "type": "alliance", "description": "Quad nations conduct freedom of navigation operations in the SCS"},
+    {"target": "aukus", "type": "alliance", "description": "AUKUS submarine capability is partly aimed at maintaining SCS access and deterrence"},
+    {"target": "pearl_river_delta", "type": "dependency", "description": "PRD manufacturing exports are routed through SCS; disruption would halt global electronics supply"},
+    {"target": "indo_pacific", "type": "overlap", "description": "SCS is the most contested maritime space within the broader Indo-Pacific framework"},
+    {"target": "belt_and_road", "type": "corridor", "description": "Maritime Silk Road routes pass through the SCS connecting China to Southeast Asia and beyond"}
+  ],
+  "exposure": {
+    "commodities": ["crude_oil", "natural_gas", "fish", "container_goods", "electronics", "LNG"],
+    "risk_factors": ["territorial_disputes", "nine-dash_line_claims", "island_militarization", "freedom_of_navigation_tensions", "fishing_conflicts", "undersea_cable_vulnerability", "oil_exploration_disputes", "ASEAN_unity_strain", "US-China_naval_rivalry"]
+  },
+  "tags": ["disputed-waters", "territorial-claims", "3.4T-annual-trade", "UNCLOS", "island-building", "naval-flashpoint"],
+  "_updated": "2026-03-09",
+  "_sources": ["CIA World Factbook", "CSIS Asia Maritime Transparency Initiative", "UNCLOS", "EIA"]
+}

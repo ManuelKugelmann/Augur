@@ -10,6 +10,8 @@
     "climate": "Dominant climate classification (Köppen or descriptive)",
     "hazards": "Array of natural hazard types common to region",
     "chokepoints": "Shipping/trade chokepoints in region",
+    "neighbors": "Array of {id, name, relevance} — nearby/bordering regions with why they matter",
+    "links": "Array of {target, type, description} — trade, alliance, dependency, rivalry ties to other regions",
     "exposure": {
       "commodities": "Key commodities produced/transited",
       "risk_factors": "Regional risk factors"

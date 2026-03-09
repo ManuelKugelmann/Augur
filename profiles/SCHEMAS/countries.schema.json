@@ -26,6 +26,8 @@
       "press_freedom_rank": "RSF rank",
       "corruption_perception": "TI CPI score"
     },
+    "neighbors": "Array of {id, name, relevance} — bordering/adjacent countries with why they matter",
+    "links": "Array of {target, type, description} — trade, alliance, dependency, rivalry, corridor, sanctions ties to other countries or regions",
     "tags": "Array of group memberships (e.g. EU, G7, NATO)",
     "_updated": "ISO date of last update",
     "_sources": "Array of source labels"

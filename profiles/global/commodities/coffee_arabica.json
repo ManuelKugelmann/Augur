@@ -1,0 +1,18 @@
+{
+  "id": "coffee_arabica",
+  "name": "Coffee (Arabica)",
+  "category": "agricultural",
+  "unit": "pound",
+  "benchmark": "ICE Coffee C (Arabica)",
+  "producers": ["BRA", "COL", "ETH", "HND", "GTM", "PER"],
+  "consumers": ["USA", "EU", "JPN", "BRA", "CAN"],
+  "chokepoints": ["santos_port"],
+  "seasonality": "Brazil harvest May-Sep; Colombia has two harvests; frost risk Jun-Aug (Brazil)",
+  "exposure": {
+    "countries": ["BRA", "COL", "ETH", "VNM", "USA", "DEU"],
+    "risk_factors": ["brazil_frost", "drought", "coffee_leaf_rust", "brl_exchange_rate"]
+  },
+  "tags": ["agricultural", "soft", "beverage"],
+  "_updated": "2026-03-09",
+  "_sources": ["ICO", "USDA", "FAOSTAT"]
+}
