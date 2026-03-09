@@ -231,7 +231,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp
+        run: pip install pytest pytest-asyncio pytest-timeout httpx python-dotenv pymongo fastmcp pandas ta
 
       - name: Derive MongoDB URIs from cluster secret
         env:
@@ -277,7 +277,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python dependencies
-        run: pip install pytest pytest-timeout httpx python-dotenv pymongo fastmcp
+        run: pip install pytest pytest-timeout httpx python-dotenv pymongo fastmcp pandas ta
 
       - name: Derive MongoDB URIs
         env:

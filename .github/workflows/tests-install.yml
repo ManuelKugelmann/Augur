@@ -33,7 +33,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python deps (for real venv in install tests)
-        run: pip install httpx python-dotenv pymongo
+        run: pip install -r requirements.txt
 
       - name: Install bats
         run: |
