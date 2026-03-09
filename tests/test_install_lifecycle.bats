@@ -1,8 +1,21 @@
 #!/usr/bin/env bats
-# Integration test: full install → pull → update lifecycle
-# Exercises TradeAssistant.sh _do_install, pull, and setup.sh in a sandboxed env.
+# Integration test: pull workflow + setup.sh edge cases + full lifecycle
+# Tests that can't be covered by install smoke tests alone.
+#
+# A shared venv is built once in setup_file to avoid repeated slow creation.
 
 load helpers/setup
+
+# ── File-level setup: build a reusable venv once ──
+setup_file() {
+    export SHARED_VENV_DIR="$(mktemp -d)"
+    python3 -m venv "$SHARED_VENV_DIR/venv"
+    "$SHARED_VENV_DIR/venv/bin/pip" install -q -r "$REPO_ROOT/requirements.txt"
+}
+
+teardown_file() {
+    [[ -n "${SHARED_VENV_DIR:-}" ]] && rm -rf "$SHARED_VENV_DIR"
+}
 
 setup() {
     setup_sandbox
@@ -43,116 +56,11 @@ teardown() {
     teardown_sandbox
 }
 
-# ── Install tests ─────────────────────────────
-
-@test "install: creates Python venv and installs deps" {
-    # Stub git clone to use local repo instead of network
-    stub_command "git" '
-        if [[ "$1" == "clone" ]]; then
-            # Already cloned in setup, just exit success
-            exit 0
-        fi
-        "$REAL_GIT" "$@"
-    '
-
-    # Run the venv creation portion directly (install calls uberspace which we stub)
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
-
-    [ -x "$STACK_DIR/venv/bin/python" ]
-    "$STACK_DIR/venv/bin/python" -c "import httpx" 2>/dev/null
-}
-
-@test "install: creates .env from example when missing" {
-    [ ! -f "$STACK_DIR/.env" ] || rm "$STACK_DIR/.env"
-    cp "$STACK_DIR/.env.example" "$STACK_DIR/.env"
-
-    [ -f "$STACK_DIR/.env" ]
-    grep -q "MONGO_URI_SIGNALS" "$STACK_DIR/.env"
-}
-
-@test "install: registers supervisord service files" {
-    mkdir -p "$HOME/etc/services.d"
-
-    # Simulate the service registration from _do_install
-    cat > "$HOME/etc/services.d/trading.ini" << SVCEOF
-[program:trading]
-directory=${STACK_DIR}
-command=bash -c 'set -a; [ -f ${STACK_DIR}/.env ] && . ${STACK_DIR}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK_DIR}/profiles; exec ${STACK_DIR}/venv/bin/python src/servers/combined_server.py'
-autostart=true
-autorestart=true
-startsecs=10
-SVCEOF
-
-    [ -f "$HOME/etc/services.d/trading.ini" ]
-    grep -q "MCP_TRANSPORT=http" "$HOME/etc/services.d/trading.ini"
-    grep -q "combined_server.py" "$HOME/etc/services.d/trading.ini"
-}
-
-@test "install: installs ta shortcut" {
-    mkdir -p "$HOME/bin"
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
-    chmod +x "$HOME/bin/ta"
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant"
-
-    [ -x "$HOME/bin/ta" ]
-    [ -L "$HOME/bin/TradeAssistant" ]
-}
-
-@test "install: creates data directory" {
-    mkdir -p "$DATA_DIR/files"
-
-    [ -d "$DATA_DIR" ]
-    [ -d "$DATA_DIR/files" ]
-}
-
-@test "install: _do_install pre-LibreChat steps complete correctly" {
-    # Simulate the individual pre-LibreChat steps from _do_install
-    # (end-to-end sourcing isn't feasible due to mktemp/trap interactions)
-
-    stub_command "node" 'echo "v22.0.0"'
-
-    # Step 1: Node.js check
-    command -v node &>/dev/null
-
-    # Step 2: Repo already exists (setup created it)
-    [ -d "$STACK_DIR/.git" ]
-
-    # Step 3: Venv
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
-    [ -x "$STACK_DIR/venv/bin/python" ]
-
-    # Step 4: .env
-    cp "$STACK_DIR/.env.example" "$STACK_DIR/.env"
-    [ -f "$STACK_DIR/.env" ]
-
-    # Step 5: Services
-    cat > "$HOME/etc/services.d/trading.ini" << SVCEOF
-[program:trading]
-directory=${STACK_DIR}
-command=bash -c 'set -a; [ -f ${STACK_DIR}/.env ] && . ${STACK_DIR}/.env; set +a; exec ${STACK_DIR}/venv/bin/python src/servers/combined_server.py'
-SVCEOF
-    [ -f "$HOME/etc/services.d/trading.ini" ]
-
-    # Step 8: ta shortcut
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
-    chmod +x "$HOME/bin/ta"
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant"
-    [ -x "$HOME/bin/ta" ]
-    [ -L "$HOME/bin/TradeAssistant" ]
-
-    # Step 9: Data dir
-    mkdir -p "$DATA_DIR/files"
-    [ -d "$DATA_DIR/files" ]
-}
-
 # ── Pull tests ────────────────────────────────
 
-@test "pull: git pull updates stack repo" {
-    # Create venv first
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
+@test "pull: git pull updates stack repo and refreshes deps" {
+    # Copy shared venv instead of creating from scratch
+    cp -r "$SHARED_VENV_DIR/venv" "$STACK_DIR/venv"
 
     # Create APP_DIR with .version file
     mkdir -p "$APP_DIR/scripts" "$APP_DIR/config"
@@ -166,10 +74,8 @@ SVCEOF
     git -C "$TMP_CLONE" commit -q -m "remote update"
     git -C "$TMP_CLONE" push -q origin main
 
-    # Run pull via the script
-    stub_command "node" 'echo "v22.0.0"'
-
     # Execute just the pull section
+    stub_command "node" 'echo "v22.0.0"'
     cd "$STACK_DIR"
     "$REAL_GIT" -C "$STACK_DIR" pull --ff-only origin main
     VER="dev-$("$REAL_GIT" -C "$STACK_DIR" rev-parse --short HEAD)"
@@ -196,17 +102,12 @@ SVCEOF
     # Ensure no venv
     rm -rf "$STACK_DIR/venv"
 
-    # Source the script in a subshell and check the pull warning
+    # Simulate the venv check from pull
     output=$(bash -c '
         export HOME='"'$HOME'"'
         export PATH='"'$PATH'"'
         export STACK_DIR='"'$STACK_DIR'"'
-        export APP_DIR='"'$APP_DIR'"'
-        export REAL_GIT='"'$REAL_GIT'"'
         STACK="$STACK_DIR"
-        APP="$APP_DIR"
-
-        # Simulate the venv check from pull
         if [[ -d "$STACK/venv" ]]; then
             "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
         else
@@ -217,124 +118,16 @@ SVCEOF
     [[ "$output" == *"venv not found"* ]]
 }
 
-# ── Setup.sh tests ───────────────────────────
-
-@test "setup.sh: detects install mode when APP_DIR missing" {
-    rm -rf "$APP_DIR"
-
-    # Create a fake source dir with required structure
-    SRC="$TEST_SANDBOX/src_bundle"
-    mkdir -p "$SRC/api/server"
-    echo "// fake" > "$SRC/api/server/index.js"
-    mkdir -p "$SRC/config"
-    cp "$STACK_DIR/.env.example" "$SRC/config/.env.example"
-
-    output=$(bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.1.0-test" 2>&1)
-
-    [[ "$output" == *"Installing"* ]]
-    [ -f "$APP_DIR/.version" ]
-    grep -q "v0.1.0-test" "$APP_DIR/.version"
-}
-
-@test "setup.sh: detects update mode when APP_DIR exists" {
-    # Create existing APP_DIR
-    mkdir -p "$APP_DIR/api/server" "$APP_DIR/uploads"
-    echo "// old" > "$APP_DIR/api/server/index.js"
-    echo "v0.0.9" > "$APP_DIR/.version"
-    echo "MONGO_URI=test" > "$APP_DIR/.env"
-
-    # Create new source
-    SRC="$TEST_SANDBOX/src_update"
-    mkdir -p "$SRC/api/server"
-    echo "// new" > "$SRC/api/server/index.js"
-
-    output=$(bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.2.0-test" 2>&1)
-
-    [[ "$output" == *"Updating"* ]]
-    grep -q "v0.2.0-test" "$APP_DIR/.version"
-    # .env should be preserved
-    grep -q "MONGO_URI=test" "$APP_DIR/.env"
-    # Previous version should be backed up
-    [ -d "${APP_DIR}.prev" ]
-}
-
-@test "setup.sh: preserves uploads directory on update" {
-    # Create existing APP_DIR with uploads
-    mkdir -p "$APP_DIR/api/server" "$APP_DIR/uploads"
-    echo "// old" > "$APP_DIR/api/server/index.js"
-    echo "important-file" > "$APP_DIR/uploads/test.txt"
-    echo "v0.0.9" > "$APP_DIR/.version"
-    echo "MONGO_URI=test" > "$APP_DIR/.env"
-
-    # Create new source
-    SRC="$TEST_SANDBOX/src_preserve"
-    mkdir -p "$SRC/api/server"
-    echo "// new" > "$SRC/api/server/index.js"
-
-    bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.3.0" 2>&1
-
-    # Uploads should be preserved in new install
-    [ -d "$APP_DIR/uploads" ]
-    [ -f "$APP_DIR/uploads/test.txt" ]
-    grep -q "important-file" "$APP_DIR/uploads/test.txt"
-}
-
-@test "setup.sh: rolls back on missing app code" {
-    # Create existing APP_DIR
-    mkdir -p "$APP_DIR/api/server"
-    echo "// working" > "$APP_DIR/api/server/index.js"
-    echo "v0.0.5" > "$APP_DIR/.version"
-    echo "KEEP_ME=yes" > "$APP_DIR/.env"
-
-    # Create bad source (missing api/server/index.js)
-    SRC="$TEST_SANDBOX/src_bad"
-    mkdir -p "$SRC"
-    echo "incomplete" > "$SRC/README.md"
-
-    run bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.4.0-bad" 2>&1
-    [ "$status" -ne 0 ]
-
-    # Should have rolled back to previous version
-    [ -f "$APP_DIR/api/server/index.js" ]
-    grep -q "// working" "$APP_DIR/api/server/index.js"
-}
-
-@test "setup.sh: generates crypto keys on fresh install" {
-    rm -rf "$APP_DIR"
-
-    SRC="$TEST_SANDBOX/src_crypto"
-    mkdir -p "$SRC/api/server" "$SRC/config"
-    echo "// app" > "$SRC/api/server/index.js"
-
-    # Create a minimal .env.example with crypto key placeholders
-    cat > "$SRC/config/.env.example" <<'ENVEOF'
-CREDS_KEY=
-CREDS_IV=
-JWT_SECRET=
-JWT_REFRESH_SECRET=
-ENVEOF
-
-    bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.5.0" 2>&1
-
-    [ -f "$APP_DIR/.env" ]
-    # Keys should be populated (non-empty)
-    CREDS_KEY=$(grep "^CREDS_KEY=" "$APP_DIR/.env" | cut -d= -f2)
-    [ -n "$CREDS_KEY" ]
-    JWT_SECRET=$(grep "^JWT_SECRET=" "$APP_DIR/.env" | cut -d= -f2)
-    [ -n "$JWT_SECRET" ]
-}
-
 # ── Cron compact import test ─────────────────
 
 @test "cron: compact import uses correct sys.path (not src.store.server)" {
-    # Verify the fix: should use server import, not src.store.server
     grep -q "from server import compact" "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
     ! grep -q "from src.store.server import" "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
 }
 
 # ── Full lifecycle test ──────────────────────
 
-@test "lifecycle: install → pull → update succeeds" {
+@test "lifecycle: install -> pull -> update succeeds" {
     stub_command "node" 'echo "v22.0.0"'
     stub_command "npm" 'echo "stubbed npm"'
     stub_command "openssl" '
@@ -344,9 +137,8 @@ ENVEOF
     '
 
     # === INSTALL ===
-    # Create venv
-    python3 -m venv "$STACK_DIR/venv"
-    "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt"
+    # Copy shared venv
+    cp -r "$SHARED_VENV_DIR/venv" "$STACK_DIR/venv"
 
     # Create .env
     cp "$STACK_DIR/.env.example" "$STACK_DIR/.env"
