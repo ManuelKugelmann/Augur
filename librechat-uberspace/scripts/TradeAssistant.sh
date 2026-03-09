@@ -1013,7 +1013,35 @@ SVCEOF
             fi
         done
 
-        # 12. Web backend (LibreChat HTTP)
+        # 11. Web backends (uberspace routing)
+        echo ""
+        echo -e "${CYAN}── Web Backends ──${NC}"
+        echo ""
+        if command -v uberspace &>/dev/null; then
+            WB_LIST="$(uberspace web backend list 2>/dev/null || true)"
+            if [[ -n "$WB_LIST" ]]; then
+                echo "$WB_LIST" | while read -r line; do
+                    echo -e "  ${CYAN}│${NC} $line"
+                done
+                # Check for expected routes
+                if echo "$WB_LIST" | grep -q "${LC_PORT:-3080}"; then
+                    _ok "Web backend: / → port ${LC_PORT:-3080}"
+                else
+                    _warn "Web backend: / not routed to port ${LC_PORT:-3080}"
+                fi
+                if echo "$WB_LIST" | grep -q "8066"; then
+                    _ok "Web backend: /charts → port 8066"
+                else
+                    _warn "Web backend: /charts not routed to port 8066"
+                fi
+            else
+                _warn "Web backends: could not list (uberspace web backend list)"
+            fi
+        else
+            _skip "Web backends: uberspace CLI not available"
+        fi
+
+        # 12. HTTP connectivity
         echo ""
         echo -e "${CYAN}── Connectivity ──${NC}"
         echo ""
