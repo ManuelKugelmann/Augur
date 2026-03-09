@@ -42,7 +42,6 @@ PROFILES_DIR = os.path.join(REPO_ROOT, "profiles")
 DEFAULT_BASE_URL = "http://localhost:3080"
 DEFAULT_BATCH_SIZE = 10
 API_TIMEOUT = 300  # 5 min per batch (agent may call many tools)
-INDEX_FIELDS = ("tags", "sector")  # optional fields copied into index entries
 
 VALID_KINDS = {
     "countries", "stocks", "etfs", "crypto", "indices", "sources",
@@ -374,59 +373,6 @@ def run_bootstrap(
     return stats
 
 
-def rebuild_indexes(profiles_dir: str) -> dict[str, int]:
-    """Rebuild INDEX_{kind}.json files by scanning profiles on disk.
-
-    Mirrors _rebuild_all_indexes() from src/store/server.py so bootstrap
-    can update indexes without importing the store (which needs pymongo etc.).
-
-    Returns {kind: entry_count} for each kind that had profiles.
-    """
-    pdir = os.path.abspath(profiles_dir)
-    results: dict[str, int] = {}
-
-    for kind in sorted(VALID_KINDS):
-        index: list[dict] = []
-        # Scan all region directories
-        for region_name in sorted(os.listdir(pdir)):
-            region_path = os.path.join(pdir, region_name)
-            if not os.path.isdir(region_path) or region_name.startswith((".", "_")):
-                continue
-            if region_name in ("SCHEMAS",):
-                continue
-            kind_path = os.path.join(region_path, kind)
-            if not os.path.isdir(kind_path):
-                continue
-            for fname in sorted(os.listdir(kind_path)):
-                if not fname.endswith(".json") or fname.startswith("_"):
-                    continue
-                fpath = os.path.join(kind_path, fname)
-                try:
-                    with open(fpath) as f:
-                        data = json.load(f)
-                    entry: dict = {
-                        "id": fname[:-5],
-                        "kind": kind,
-                        "name": data.get("name", fname[:-5]),
-                        "region": region_name,
-                    }
-                    for key in INDEX_FIELDS:
-                        if key in data:
-                            entry[key] = data[key]
-                    index.append(entry)
-                except Exception:
-                    pass
-
-        index.sort(key=lambda e: e["id"])
-        idx_path = os.path.join(pdir, f"INDEX_{kind}.json")
-        with open(idx_path, "w") as f:
-            json.dump(index, f, indent=2, ensure_ascii=False)
-        if index:
-            results[kind] = len(index)
-
-    return results
-
-
 def main():
     parser = argparse.ArgumentParser(
         description="Bootstrap profile data via LibreChat Agents API"
@@ -515,16 +461,6 @@ def main():
 
     client.close()
 
-    # Rebuild INDEX files
-    print(f"\n{'='*60}")
-    print("Rebuilding INDEX files")
-    print(f"{'='*60}")
-    idx_results = rebuild_indexes(args.profiles_dir)
-    for kind, count in sorted(idx_results.items()):
-        print(f"  INDEX_{kind}.json: {count} entries")
-    total_indexed = sum(idx_results.values())
-    print(f"  Total indexed: {total_indexed} profiles across {len(idx_results)} kinds")
-
     # Summary
     print(f"\n{'='*60}")
     print("Bootstrap Summary")
@@ -534,7 +470,6 @@ def main():
     print(f"  Total targets:   {stats['targets']}")
     print(f"  Successful:      {stats['ok']}")
     print(f"  Errors:          {stats['errors']}")
-    print(f"  Indexed:         {total_indexed} profiles")
 
     if stats["errors"] > 0:
         sys.exit(1)

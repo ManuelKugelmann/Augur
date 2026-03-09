@@ -17,11 +17,6 @@ on:
         required: false
         default: true
         type: boolean
-      data_branch:
-        description: 'Branch to push profile data to (blank = skip push)'
-        required: false
-        default: 'data/bootstrap'
-        type: string
 
 jobs:
   bootstrap:
@@ -101,47 +96,3 @@ jobs:
 
           python librechat-uberspace/scripts/bootstrap-data.py $ARGS
 
-      - name: Validate profiles after bootstrap
-        if: inputs.dry_run != true
-        run: |
-          pip install pytest pytest-asyncio python-dotenv pyyaml pandas ./wheels/ta-0.11.0-py3-none-any.whl
-          python -m pytest tests/test_store.py -v -k "lint" --tb=short || true
-
-      - name: Push profiles and INDEX files to data branch
-        if: inputs.dry_run != true && inputs.data_branch != ''
-        run: |
-          set -euo pipefail
-
-          BRANCH="${{ inputs.data_branch }}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Create or switch to data branch
-          git checkout -B "$BRANCH"
-
-          # Stage profiles and INDEX files
-          git add profiles/
-
-          # Check if there are changes to commit
-          if git diff --cached --quiet; then
-            echo "No profile changes to commit"
-            exit 0
-          fi
-
-          # Build commit message
-          KIND_MSG="${{ inputs.kind || 'all kinds' }}"
-          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
-          PROFILE_COUNT=$(find profiles -name '*.json' -not -path '*/SCHEMAS/*' -not -name 'INDEX_*' | wc -l)
-          INDEX_COUNT=$(find profiles -name 'INDEX_*.json' | wc -l)
-
-          git commit -m "$(cat <<EOF
-          bootstrap: ${KIND_MSG} — ${PROFILE_COUNT} profiles, ${INDEX_COUNT} indexes
-
-          Automated bootstrap run at ${TIMESTAMP}.
-          Batch size: ${{ inputs.batch_size }}
-          EOF
-          )"
-
-          git push -u origin "$BRANCH"
-          echo "Pushed to branch: $BRANCH"

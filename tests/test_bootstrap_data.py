@@ -324,176 +324,39 @@ class TestDryRun:
         assert stats["kinds"] == 0
 
 
-# ── Index rebuild tests ─────────────────────────
-
-
-class TestRebuildIndexes:
-    """Test the rebuild_indexes function."""
-
-    def test_builds_index_from_profiles(self, profiles_dir):
-        results = bootstrap.rebuild_indexes(str(profiles_dir))
-        assert "countries" in results
-        assert results["countries"] == 2  # USA + DEU
-
-        idx_path = profiles_dir / "INDEX_countries.json"
-        assert idx_path.exists()
-        index = json.loads(idx_path.read_text())
-        ids = [e["id"] for e in index]
-        assert "USA" in ids
-        assert "DEU" in ids
-
-    def test_index_sorted_by_id(self, profiles_dir):
-        bootstrap.rebuild_indexes(str(profiles_dir))
-        idx_path = profiles_dir / "INDEX_countries.json"
-        index = json.loads(idx_path.read_text())
-        ids = [e["id"] for e in index]
-        assert ids == sorted(ids)
-
-    def test_index_entry_fields(self, profiles_dir):
-        bootstrap.rebuild_indexes(str(profiles_dir))
-        idx_path = profiles_dir / "INDEX_countries.json"
-        index = json.loads(idx_path.read_text())
-        usa = next(e for e in index if e["id"] == "USA")
-        assert usa["kind"] == "countries"
-        assert usa["name"] == "United States"
-        assert usa["region"] == "north_america"
-
-    def test_index_includes_optional_fields(self, profiles_dir):
-        # Write a profile with tags and sector
-        (profiles_dir / "north_america" / "stocks" / "MSFT.json").write_text(
-            json.dumps({"id": "MSFT", "name": "Microsoft", "tags": ["tech"], "sector": "Technology"})
-        )
-        bootstrap.rebuild_indexes(str(profiles_dir))
-        idx_path = profiles_dir / "INDEX_stocks.json"
-        index = json.loads(idx_path.read_text())
-        msft = next(e for e in index if e["id"] == "MSFT")
-        assert msft["tags"] == ["tech"]
-        assert msft["sector"] == "Technology"
-
-    def test_empty_kinds_get_empty_index(self, profiles_dir):
-        bootstrap.rebuild_indexes(str(profiles_dir))
-        idx_path = profiles_dir / "INDEX_crypto.json"
-        assert idx_path.exists()
-        index = json.loads(idx_path.read_text())
-        assert index == []
-
-    def test_skips_schema_and_hidden_dirs(self, profiles_dir):
-        (profiles_dir / "SCHEMAS" / "countries").mkdir(parents=True)
-        (profiles_dir / "SCHEMAS" / "countries" / "FAKE.json").write_text(
-            json.dumps({"id": "FAKE", "name": "Fake"})
-        )
-        (profiles_dir / ".hidden" / "countries").mkdir(parents=True)
-        (profiles_dir / ".hidden" / "countries" / "HID.json").write_text(
-            json.dumps({"id": "HID", "name": "Hidden"})
-        )
-        results = bootstrap.rebuild_indexes(str(profiles_dir))
-        assert results.get("countries", 0) == 2  # only USA + DEU
-
-    def test_skips_underscore_files(self, profiles_dir):
-        (profiles_dir / "north_america" / "countries" / "_template.json").write_text(
-            json.dumps({"id": "_template", "name": "Template"})
-        )
-        results = bootstrap.rebuild_indexes(str(profiles_dir))
-        idx_path = profiles_dir / "INDEX_countries.json"
-        index = json.loads(idx_path.read_text())
-        ids = [e["id"] for e in index]
-        assert "_template" not in ids
-
-    def test_all_valid_kinds_get_index_files(self, profiles_dir):
-        bootstrap.rebuild_indexes(str(profiles_dir))
-        for kind in bootstrap.VALID_KINDS:
-            idx_path = profiles_dir / f"INDEX_{kind}.json"
-            assert idx_path.exists(), f"Missing INDEX_{kind}.json"
-
-
-# ── E2E: bootstrap → index rebuild ───────────────
+# ── E2E: bootstrap dry-run ─────────────────────
 
 
 class TestE2EBootstrap:
-    """End-to-end test: bootstrap dry-run → rebuild indexes → verify output."""
+    """End-to-end test: bootstrap dry-run with real targets."""
 
-    @pytest.fixture
-    def rich_profiles_dir(self, tmp_path):
-        """Profiles directory with multiple kinds for e2e testing."""
-        p = tmp_path
-        (p / "north_america" / "countries").mkdir(parents=True)
-        (p / "europe" / "stocks").mkdir(parents=True)
-        (p / "global" / "commodities").mkdir(parents=True)
-
-        (p / "north_america" / "countries" / "USA.json").write_text(
-            json.dumps({"id": "USA", "name": "United States", "iso2": "US",
-                         "region": "north_america", "tags": ["g7", "nato"]})
-        )
-        (p / "north_america" / "countries" / "CAN.json").write_text(
-            json.dumps({"id": "CAN", "name": "Canada", "iso2": "CA",
-                         "region": "north_america", "tags": ["g7", "nato"]})
-        )
-        (p / "europe" / "stocks" / "SAP.json").write_text(
-            json.dumps({"id": "SAP", "name": "SAP SE", "type": "stock",
-                         "sector": "Technology", "tags": ["dax", "tech"]})
-        )
-        (p / "global" / "commodities" / "gold.json").write_text(
-            json.dumps({"id": "gold", "name": "Gold", "category": "precious_metals",
-                         "tags": ["safe_haven"]})
-        )
-        return p
-
-    def test_e2e_dry_run_then_rebuild_indexes(self, rich_profiles_dir, targets):
-        """Full e2e: dry-run bootstrap, rebuild indexes, verify INDEX files."""
-        profiles = rich_profiles_dir
-
-        # 1. Run bootstrap in dry-run mode
+    def test_e2e_dry_run_single_kind(self, profiles_dir, targets):
+        """Dry-run bootstrap for a single kind, verify stats."""
         client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
             client=client,
             agent_id="dry-run",
             targets=targets,
-            profiles_dir=str(profiles),
+            profiles_dir=str(profiles_dir),
             kind_filter="countries",
             dry_run=True,
         )
         client.close()
+        assert stats["kinds"] == 1
         assert stats["errors"] == 0
+        assert stats["targets"] > 0
 
-        # 2. Rebuild indexes
-        idx_results = bootstrap.rebuild_indexes(str(profiles))
-        assert idx_results["countries"] == 2  # USA + CAN
-        assert idx_results["stocks"] == 1     # SAP
-        assert idx_results["commodities"] == 1  # gold
-
-        # 3. Verify INDEX files exist and contain correct entries
-        for kind, expected_count in [("countries", 2), ("stocks", 1), ("commodities", 1)]:
-            idx_path = profiles / f"INDEX_{kind}.json"
-            assert idx_path.exists()
-            index = json.loads(idx_path.read_text())
-            assert len(index) == expected_count
-            for entry in index:
-                assert "id" in entry
-                assert "kind" in entry
-                assert "name" in entry
-                assert "region" in entry
-
-        # 4. Verify tag/sector propagation into indexes
-        stocks_idx = json.loads((profiles / "INDEX_stocks.json").read_text())
-        sap = stocks_idx[0]
-        assert sap["tags"] == ["dax", "tech"]
-        assert sap["sector"] == "Technology"
-
-    def test_e2e_all_kinds_dry_run(self, rich_profiles_dir, targets):
-        """Dry-run all kinds and rebuild indexes."""
+    def test_e2e_dry_run_all_kinds(self, profiles_dir, targets):
+        """Dry-run all kinds, verify no errors."""
         client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
             client=client,
             agent_id="dry-run",
             targets=targets,
-            profiles_dir=str(rich_profiles_dir),
+            profiles_dir=str(profiles_dir),
             dry_run=True,
         )
         client.close()
 
         assert stats["kinds"] == len(targets)
         assert stats["errors"] == 0
-
-        idx_results = bootstrap.rebuild_indexes(str(rich_profiles_dir))
-        total = sum(idx_results.values())
-        assert total == 4  # USA, CAN, SAP, gold
