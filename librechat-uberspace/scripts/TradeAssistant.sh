@@ -177,7 +177,7 @@ SVCEOF
     fi
     if [[ -n "$RELEASE_JSON" ]]; then
         # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
-        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
+        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
     fi
 
     # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")

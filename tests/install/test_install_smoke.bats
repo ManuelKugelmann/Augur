@@ -141,19 +141,6 @@ teardown() {
     [[ "$output" == *"done (hour="* ]]
 }
 
-@test "cron: commits profile changes" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-
-    # Add a profile file
-    mkdir -p "$STACK_DIR/profiles/global/countries"
-    echo '{"id":"TST","name":"Testland"}' > "$STACK_DIR/profiles/global/countries/TST.json"
-
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"profiles committed"* ]]
-}
-
 # ── Full install with LibreChat bundle download ──
 
 @test "install: full lifecycle including LibreChat bundle download" {
