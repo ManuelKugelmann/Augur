@@ -135,24 +135,6 @@ EOF
     [[ "$status" -eq 0 ]]
 }
 
-@test "setup.sh creates data directory with .gitignore" {
-    local src="$TEST_SANDBOX/src_app"
-    create_src_app "$src"
-    cat > "$src/config/.env.example" <<'EOF'
-CREDS_KEY=placeholder
-CREDS_IV=placeholder
-JWT_SECRET=placeholder
-JWT_REFRESH_SECRET=placeholder
-EOF
-    rm -rf "$APP_DIR"
-    stub_command "openssl" 'echo "deadbeef1234567890abcdef12345678"'
-
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
-    [[ "$status" -eq 0 ]]
-    [[ -d "$DATA_DIR/files" ]]
-    [[ -f "$DATA_DIR/.gitignore" ]]
-}
-
 @test "setup.sh copies librechat.yaml and replaces __HOME__" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"

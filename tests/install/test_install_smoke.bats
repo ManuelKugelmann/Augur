@@ -114,12 +114,6 @@ teardown() {
     [[ -L "$HOME/bin/TradeAssistant" ]]
 }
 
-@test "install creates data directory" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
-    [[ "$status" -eq 0 ]]
-    [[ -d "$DATA_DIR/files" ]]
-}
-
 @test "install is idempotent (re-run succeeds)" {
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
     [[ "$status" -eq 0 ]]

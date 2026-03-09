@@ -19,7 +19,6 @@ GH_USER="${GH_USER:-ManuelKugelmann}"
 GH_REPO="${GH_REPO:-TradingAssistant}"
 STACK_DIR="${STACK_DIR:-$HOME/mcps}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
-DATA_DIR="${DATA_DIR:-$HOME/TradeAssistant_Data}"
 LC_PORT="${LC_PORT:-3080}"
 NODE_VERSION="${NODE_VERSION:-22}"
 BRANCH="${BRANCH:-main}"
@@ -35,7 +34,6 @@ done
 unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
-DATA="${DATA_DIR:-$HOME/TradeAssistant_Data}"
 STACK="${STACK_DIR:-$HOME/mcps}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -263,11 +261,7 @@ SVCEOF
     chmod +x "$HOME/bin/ta" 2>/dev/null || true
     ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
-    # ── 9. Data directory ───────────────────────
-    mkdir -p "${DATA}/files"
-    log "Data dir ready at ${DATA}"
-
-    # ── 10. Reload supervisord ──────────────────
+    # ── 9. Reload supervisord ──────────────────
     supervisorctl reread 2>/dev/null || true
     supervisorctl update 2>/dev/null || true
 
@@ -870,18 +864,7 @@ SVCEOF
             _warn "Signals .env missing (optional if run via LibreChat)"
         fi
 
-        # 10. Data directory
-        if [[ -d "$DATA" ]]; then
-            if [[ -d "$DATA/.git" ]]; then
-                _ok "Data dir: git-tracked at $DATA"
-            else
-                _warn "Data dir exists but not git-tracked"
-            fi
-        else
-            _warn "Data dir missing at $DATA"
-        fi
-
-        # 11. Supervisord services
+        # 10. Supervisord services
         echo ""
         echo -e "${CYAN}── Services ──${NC}"
         echo ""

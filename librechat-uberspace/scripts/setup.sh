@@ -13,7 +13,6 @@ SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
 BAK="${APP}.prev"
-DATA="${DATA_DIR:-$HOME/TradeAssistant_Data}"
 STACK="${STACK_DIR:-$HOME/mcps}"
 SVC="$HOME/etc/services.d/librechat.ini"
 PORT="${LC_PORT:-3080}"
@@ -79,15 +78,6 @@ if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$_LC_YAML_SRC" ]]; then
 elif [[ ! -f "$APP/librechat.yaml" ]]; then
     warn "librechat.yaml not found in mcps repo — configure manually"
 fi
-
-# ── Data directory ──────────────────────────
-mkdir -p "$DATA/files"
-[[ ! -f "$DATA/.gitignore" ]] && cat > "$DATA/.gitignore" <<'GITIGNORE'
-# Large binary uploads go here but don't sync
-*.bin
-*.zip
-*.tar.gz
-GITIGNORE
 
 # No additional MCP npm packages needed — trading server is Python-only.
 
@@ -258,10 +248,7 @@ EOF
     echo -e "  ${YELLOW}2.${NC} Configure MCP servers (optional, defaults are fine):"
     echo "     nano $APP/librechat.yaml"
     echo ""
-    echo -e "  ${YELLOW}3.${NC} Set up git-versioned data (optional):"
-    echo "     bash $STACK/librechat-uberspace/scripts/setup-data-repo.sh ${GH_USER:-YOUR_USER}/${GH_REPO_DATA:-TradeAssistant_Data}"
-    echo ""
-    echo -e "  ${YELLOW}4.${NC} Start:"
+    echo -e "  ${YELLOW}3.${NC} Start:"
     echo "     supervisorctl start librechat"
     echo ""
     echo -e "  ${YELLOW}5.${NC} Access:"
