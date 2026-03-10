@@ -258,6 +258,16 @@ SVCEOF
         BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
     fi
 
+    # /releases/latest only returns non-prerelease releases, but librechat-build.yml
+    # marks all builds as prerelease. Fall back to the rolling "librechat-build" tag.
+    if [[ -z "$BUNDLE_URL" && -z "${RELEASE_TAG:-}" ]]; then
+        log "No bundle in latest release, trying librechat-build tag..."
+        RELEASE_JSON=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build" 2>/dev/null) || RELEASE_JSON=""
+        if [[ -n "$RELEASE_JSON" ]]; then
+            BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
+        fi
+    fi
+
     # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")
     local INSTALLED_VER=""
     [[ -f "$APP/.version" ]] && INSTALLED_VER=$(cat "$APP/.version")

@@ -40,6 +40,18 @@ fi
 # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
 URL=$(echo "$JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
 VER=$(echo "$JSON" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4)
+
+# /releases/latest only returns non-prerelease releases, but librechat-build.yml
+# marks all builds as prerelease. Fall back to the rolling "librechat-build" tag.
+if [[ -z "$URL" && -z "${RELEASE_TAG:-}" ]]; then
+    log "No bundle in latest release, trying librechat-build tag..."
+    JSON=$(gh_curl "https://api.github.com/repos/${REPO}/releases/tags/librechat-build" 2>/dev/null) || JSON=""
+    if [[ -n "$JSON" ]]; then
+        URL=$(echo "$JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
+        VER=$(echo "$JSON" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4)
+    fi
+fi
+
 [[ -z "$URL" ]] && die "No bundle found in release"
 
 TMP=$(mktemp -d)
