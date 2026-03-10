@@ -1,0 +1,21 @@
+{% assign brand = site.data.brands[post.brand] %}
+{% assign horizon_label = "" %}
+{% for h in brand.horizons %}
+  {% if h.key == post.horizon %}
+    {% assign horizon_label = h.label %}
+  {% endif %}
+{% endfor %}
+<article class="card">
+  <div class="card__horizon">{{ horizon_label }}</div>
+  <h2 class="card__headline">
+    <a href="{{ post.url | relative_url }}">{{ post.headline | default: post.title }}</a>
+  </h2>
+  <div class="card__date">{{ post.fictive_date | default: post.date | date: "%Y-%m-%d" }}</div>
+  {% if post.tags.size > 0 %}
+  <div class="card__tags">
+    {% for tag in post.tags %}
+    <span class="card__tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+</article>

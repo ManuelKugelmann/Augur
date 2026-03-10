@@ -1,0 +1,108 @@
+title: The Augur
+description: "AI-generated speculative predictions — not news."
+url: "https://augur.news"
+baseurl: ""
+
+markdown: kramdown
+highlighter: rouge
+permalink: /:categories/:title/
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - LICENSE
+
+defaults:
+  - scope:
+      path: "_posts/the/tomorrow"
+    values:
+      layout: article
+      brand: the
+      horizon: tomorrow
+      categories: the/tomorrow
+  - scope:
+      path: "_posts/the/soon"
+    values:
+      layout: article
+      brand: the
+      horizon: soon
+      categories: the/soon
+  - scope:
+      path: "_posts/the/future"
+    values:
+      layout: article
+      brand: the
+      horizon: future
+      categories: the/future
+  - scope:
+      path: "_posts/der/morgen"
+    values:
+      layout: article
+      brand: der
+      horizon: tomorrow
+      categories: der/morgen
+  - scope:
+      path: "_posts/der/bald"
+    values:
+      layout: article
+      brand: der
+      horizon: soon
+      categories: der/bald
+  - scope:
+      path: "_posts/der/zukunft"
+    values:
+      layout: article
+      brand: der
+      horizon: future
+      categories: der/zukunft
+  - scope:
+      path: "_posts/financial/tomorrow"
+    values:
+      layout: article
+      brand: financial
+      horizon: tomorrow
+      categories: financial/tomorrow
+  - scope:
+      path: "_posts/financial/soon"
+    values:
+      layout: article
+      brand: financial
+      horizon: soon
+      categories: financial/soon
+  - scope:
+      path: "_posts/financial/future"
+    values:
+      layout: article
+      brand: financial
+      horizon: future
+      categories: financial/future
+  - scope:
+      path: "_posts/finanz/morgen"
+    values:
+      layout: article
+      brand: finanz
+      horizon: tomorrow
+      categories: finanz/morgen
+  - scope:
+      path: "_posts/finanz/bald"
+    values:
+      layout: article
+      brand: finanz
+      horizon: soon
+      categories: finanz/bald
+  - scope:
+      path: "_posts/finanz/zukunft"
+    values:
+      layout: article
+      brand: finanz
+      horizon: future
+      categories: finanz/zukunft
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+sass:
+  sass_dir: _sass
+  style: compressed

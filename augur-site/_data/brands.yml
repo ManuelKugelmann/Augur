@@ -1,0 +1,95 @@
+the:
+  name: "The Augur"
+  masthead: "THE AUGUR"
+  subtitle: "Foresight from the signal noise"
+  locale: en
+  module: general
+  slug: the
+  palette:
+    bg: "#f4f0e8"
+    ink: "#1a1a1a"
+    accent: "#8b0000"
+    meta: "#6b5b4f"
+  horizons:
+    - key: tomorrow
+      slug: tomorrow
+      label: Tomorrow
+    - key: soon
+      slug: soon
+      label: Soon
+    - key: future
+      slug: future
+      label: Future
+  disclaimer: "AI-generated speculation — not news. Not financial advice."
+
+der:
+  name: "Der Augur"
+  masthead: "DER AUGUR"
+  subtitle: "Voraussicht aus dem Signalrauschen"
+  locale: de
+  module: general
+  slug: der
+  palette:
+    bg: "#f4f0e8"
+    ink: "#1a1a1a"
+    accent: "#1a3a5c"
+    meta: "#6b5b4f"
+  horizons:
+    - key: tomorrow
+      slug: morgen
+      label: Morgen
+    - key: soon
+      slug: bald
+      label: Bald
+    - key: future
+      slug: zukunft
+      label: Zukunft
+  disclaimer: "KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung."
+
+financial:
+  name: "Financial Augur"
+  masthead: "FINANCIAL AUGUR"
+  subtitle: "Market foresight from open signals"
+  locale: en
+  module: markets
+  slug: financial
+  palette:
+    bg: "#f0f2f4"
+    ink: "#1a1a1a"
+    accent: "#0a6e3a"
+    meta: "#5a6570"
+  horizons:
+    - key: tomorrow
+      slug: tomorrow
+      label: Tomorrow
+    - key: soon
+      slug: soon
+      label: Soon
+    - key: future
+      slug: future
+      label: Future
+  disclaimer: "AI-generated opinion — not financial advice. The Augur may hold positions in discussed sectors."
+
+finanz:
+  name: "Finanz Augur"
+  masthead: "FINANZ AUGUR"
+  subtitle: "Marktvoraussicht aus offenen Signalen"
+  locale: de
+  module: markets
+  slug: finanz
+  palette:
+    bg: "#f0f2f4"
+    ink: "#1a1a1a"
+    accent: "#0a6e3a"
+    meta: "#5a6570"
+  horizons:
+    - key: tomorrow
+      slug: morgen
+      label: Morgen
+    - key: soon
+      slug: bald
+      label: Bald
+    - key: future
+      slug: zukunft
+      label: Zukunft
+  disclaimer: "KI-generierte Einschätzung — keine Finanzberatung. Der Augur kann Positionen in besprochenen Sektoren halten."

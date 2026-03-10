@@ -1,0 +1,55 @@
+---
+layout: default
+---
+<div class="listing">
+  <div class="listing__header">
+    <h1>Scorecard</h1>
+    <p style="color: var(--meta); font-style: italic;">How accurate are the Augur's predictions?</p>
+    <hr class="rule">
+  </div>
+
+  {{ content }}
+
+  {% assign confirmed = 0 %}
+  {% assign partial = 0 %}
+  {% assign wrong = 0 %}
+  {% assign pending = 0 %}
+
+  {% for post in site.posts %}
+    {% case post.outcome %}
+      {% when "confirmed" %}{% assign confirmed = confirmed | plus: 1 %}
+      {% when "partial" %}{% assign partial = partial | plus: 1 %}
+      {% when "wrong" %}{% assign wrong = wrong | plus: 1 %}
+      {% else %}{% assign pending = pending | plus: 1 %}
+    {% endcase %}
+  {% endfor %}
+
+  {% assign total_evaluated = confirmed | plus: partial | plus: wrong %}
+
+  <table style="width: 100%; border-collapse: collapse; margin: 1.5rem 0;">
+    <tr style="border-bottom: 2px solid var(--ink);">
+      <th style="text-align: left; padding: 0.5rem 0;">Outcome</th>
+      <th style="text-align: right; padding: 0.5rem 0;">Count</th>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+      <td style="padding: 0.4rem 0;">Confirmed</td>
+      <td style="text-align: right;">{{ confirmed }}</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+      <td style="padding: 0.4rem 0;">Partial</td>
+      <td style="text-align: right;">{{ partial }}</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+      <td style="padding: 0.4rem 0;">Wrong</td>
+      <td style="text-align: right;">{{ wrong }}</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+      <td style="padding: 0.4rem 0;">Pending</td>
+      <td style="text-align: right;">{{ pending }}</td>
+    </tr>
+    <tr style="border-top: 2px solid var(--ink);">
+      <td style="padding: 0.4rem 0; font-weight: bold;">Total evaluated</td>
+      <td style="text-align: right; font-weight: bold;">{{ total_evaluated }}</td>
+    </tr>
+  </table>
+</div>
