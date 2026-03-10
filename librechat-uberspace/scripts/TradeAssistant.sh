@@ -195,9 +195,25 @@ _lc_download_and_setup() {
 
     log "Downloading LibreChat release..."
     _download "$_BUNDLE_URL" "$lc_tmp/bundle.tar.gz" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
-    log "Extracting bundle..."
+    local bundle_size
+    bundle_size=$(stat -c%s "$lc_tmp/bundle.tar.gz" 2>/dev/null || stat -f%z "$lc_tmp/bundle.tar.gz" 2>/dev/null || echo "")
+    local size_info=""
+    if [[ -n "$bundle_size" && "$bundle_size" -gt 0 ]] 2>/dev/null; then
+        size_info=" ($(awk "BEGIN {printf \"%.1f\", $bundle_size / 1048576}") MB)"
+    fi
     mkdir -p "$lc_tmp/app"
-    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+    if command -v pv &>/dev/null && [[ -n "$bundle_size" ]]; then
+        log "Extracting bundle${size_info}..."
+        pv -p -e -r "$lc_tmp/bundle.tar.gz" | tar xzf - -C "$lc_tmp/app"
+    else
+        echo -ne "${GREEN}✓${NC} Extracting bundle${size_info}..."
+        local count=0
+        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v | while IFS= read -r _; do
+            count=$((count + 1))
+            if (( count % 500 == 0 )); then echo -n "."; fi
+        done
+        echo " done"
+    fi
 
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
