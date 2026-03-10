@@ -409,37 +409,31 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 ┌─────────────────────────────────────────────────────────────┐
 │ Uberspace (assist.uber.space)                            │
 │                                                             │
-│  augur-engine (cron-triggered pipeline)                     │
+│  LibreChat agents (cron-triggered per brand)                │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                                                      │   │
-│  │  Signal Collector                                    │   │
-│  │     ├── Tavily API (news search)                     │   │
-│  │     ├── GDELT Cloud API (geopolitical events)        │   │
-│  │     ├── RSS feeds (curated per brand/locale)         │   │
-│  │     ├── Yahoo Finance API (financial brands)         │   │
-│  │     └── trade.sh sentiment.json (financial brands)   │   │
+│  │  Signal Collection (agentic via MCP tools)           │   │
+│  │     ├── 50+ trading MCP tools (12 data domains)      │   │
+│  │     ├── Weather, conflict, disaster, health, macro    │   │
+│  │     └── Agent decides what to query per brand/horizon │   │
 │  │              │                                       │   │
-│  │  Extrapolation Pipeline (Anthropic API)              │   │
-│  │     ├── Pass 1: Signals → neutral extrapolation      │   │
-│  │     ├── Pass 2: Add "In The Works" + positive angle  │   │
-│  │     └── Pass 3: Social captions per platform         │   │
+│  │  Extrapolation (agent conversation)                  │   │
+│  │     └── Agent writes signal → extrapolation →        │   │
+│  │         in_the_works using research results           │   │
 │  │              │                                       │   │
-│  │  Asset Generator                                     │   │
-│  │     ├── Image gen (Replicate FLUX.2 klein 4B)        │   │
-│  │     │   └── Fallback: fal.ai FLUX.2 klein 4B        │   │
-│  │     ├── Watermark overlay (sharp)                    │   │
-│  │     └── Social cards: 1:1, 9:16, 16:9 (sharp)       │   │
-│  │              │                                       │   │
-│  │  Publisher                                           │   │
-│  │     ├── Write Markdown + images to augur_news branch │   │
-│  │     ├── git push → Actions workflow builds Jekyll    │   │
-│  │     ├── Social queue → JSON files → platform APIs    │   │
-│  │     └── ntfy → pipeline status alerts                │   │
+│  │  Publishing (augur MCP tools)                        │   │
+│  │     ├── publish_article → Jekyll Markdown            │   │
+│  │     ├── generate_article_image → Replicate FLUX.2    │   │
+│  │     ├── generate_social_cards → 1:1, 9:16, 16:9     │   │
+│  │     ├── post_social → Bluesky/Mastodon API + ntfy    │   │
+│  │     └── push_site → git push → GitHub Pages          │   │
+│  │                                                      │   │
+│  │  Scoring (augur_score MCP tools)                     │   │
+│  │     ├── score_due → find expired predictions         │   │
+│  │     ├── score_prediction → update front matter       │   │
+│  │     └── generate_scorecard → accuracy stats          │   │
 │  │                                                      │   │
 │  └──────────────────────────────────────────────────────┘   │
-│                                                             │
-│  Social poster (cron: */30)                                 │
-│     └── Reads _data/social/pending/ → posts → moves files   │
 │                                                             │
 └────────────────────────┬────────────────────────────────────┘
                          │ git push (augur_news branch)
@@ -692,59 +686,26 @@ Stored directly in post front matter (`outcome`, `outcome_note`, `outcome_date`)
 
 ## File Structure
 
-Two parts: the **pipeline engine** (in this repo, runs on Uberspace) and the **Jekyll site** (on `augur_news` branch, served by GitHub Pages).
+Two parts: the **MCP server tools** (in `src/servers/augur_*.py`, mounted into the combined trading server) and the **Jekyll site** (on `augur_news` branch, served by GitHub Pages).
 
-### Pipeline Engine (main branch: `augur-engine/`)
+### MCP Server Tools (main branch: `src/servers/`)
 
 ```
-augur-engine/
-├── package.json
-├── tsconfig.json
-├── .env.example                    # API key template
-│
-├── src/
-│   ├── index.ts                    # CLI entry: augur-cycle, augur-post, augur-scorecard
-│   │
-│   ├── config/
-│   │   ├── brands.ts               # BrandConfig[] — all 4 brands
-│   │   ├── horizons.ts             # HorizonConfig per locale
-│   │   └── types.ts                # Shared TypeScript types/interfaces
-│   │
-│   ├── collect/
-│   │   ├── index.ts                # Orchestrator: collect all signals for a brand/horizon
-│   │   ├── tavily.ts               # Tavily API wrapper
-│   │   ├── gdelt.ts                # GDELT Cloud API wrapper
-│   │   ├── rss.ts                  # RSS/Atom feed fetcher
-│   │   ├── yahoo.ts                # Yahoo Finance API wrapper
-│   │   └── trade-sentiment.ts      # Reads trade.sh sentiment.json output
-│   │
-│   ├── extrapolate/
-│   │   ├── pipeline.ts             # 3-pass LLM chain orchestrator
-│   │   └── prompts.ts              # System prompts per brand/horizon/locale
-│   │
-│   ├── assets/
-│   │   ├── imagegen.ts             # Replicate primary + fal.ai fallback (FLUX.2 klein 4B)
-│   │   ├── watermark.ts            # sharp: overlay watermark text
-│   │   └── cards.ts                # sharp: social card compositing (3 ratios)
-│   │
-│   ├── publish/
-│   │   ├── jekyll.ts               # Write Markdown + front matter → augur_news branch
-│   │   ├── git-push.ts             # Commit + push to augur_news branch
-│   │   ├── social-queue.ts         # Queue manager: write JSON files to _data/social/
-│   │   └── social/
-│   │       ├── x.ts                # Twitter/X API v2
-│   │       ├── bluesky.ts          # AT Protocol
-│   │       ├── mastodon.ts         # Mastodon REST API
-│   │       ├── facebook.ts         # Meta Graph API
-│   │       ├── linkedin.ts         # LinkedIn Marketing API
-│   │       └── instagram.ts        # Meta Graph API (add later)
-│   │
-│   └── scorecard/
-│       └── tracker.ts              # Outcome evaluation (semi-automated via LLM)
-│
-└── deploy/
-    ├── setup.sh                    # Uberspace setup script
-    └── crontab.txt                 # cron jobs reference
+src/servers/
+├── augur_common.py                 # Shared config: brands, horizons, schedules, helpers
+├── augur_publish.py                # Publishing MCP tools (augur namespace)
+│   ├── list_brands()               # List available brands + horizons
+│   ├── publish_due()               # Check which brand/horizon is due now
+│   ├── publish_article()           # Write Jekyll Markdown with dedup check
+│   ├── generate_article_image()    # Replicate FLUX.2 klein 4B + watermark
+│   ├── generate_social_cards()     # Social cards: 1:1, 9:16, 16:9
+│   ├── post_social()               # Bluesky/Mastodon API + ntfy for manual platforms
+│   └── push_site()                 # git add + commit + push to augur_news
+└── augur_score.py                  # Scoring MCP tools (augur_score namespace)
+    ├── score_due()                 # Find expired predictions needing scoring
+    ├── list_pending_scores()       # List unscored articles past horizon date
+    ├── score_prediction()          # Update front matter + append to score log
+    └── generate_scorecard()        # Aggregate accuracy stats + write data file
 ```
 
 ### Jekyll Site (`augur_news` branch)

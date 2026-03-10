@@ -1,37 +1,20 @@
-name: Augur Engine Tests
+name: Augur Tests
 
 on:
   push:
     paths:
-      - 'augur-engine/**'
+      - 'src/servers/augur_*.py'
       - 'augur-site/**'
+      - 'tests/test_augur.py'
       - '.github/workflows/augur-tests.yml'
   pull_request:
     paths:
-      - 'augur-engine/**'
+      - 'src/servers/augur_*.py'
       - 'augur-site/**'
+      - 'tests/test_augur.py'
       - '.github/workflows/augur-tests.yml'
 
 jobs:
-  augur-engine-tests:
-    name: augur-engine unit tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: augur-engine
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt pytest
-
-      - name: Run tests
-        run: python -m pytest tests/ -v
-
   augur-site-validate:
     name: augur-site Jekyll validation
     runs-on: ubuntu-latest

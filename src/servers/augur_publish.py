@@ -20,7 +20,9 @@ from src.servers.augur_common import (
     apply_watermark,
     article_url,
     compute_fictive_date,
+    find_articles,
     is_due,
+    parse_front_matter,
     site_dir,
     slugify,
     to_yaml,
@@ -107,6 +109,14 @@ async def publish_article(
     labels = SECTION_LABELS[locale]
     now = datetime.now(timezone.utc)
     date_key = now.strftime("%Y-%m-%d")
+
+    # Dedup: check if an article for this brand/horizon already exists today
+    site = site_dir()
+    existing = find_articles(site, brand, horizon_slug)
+    for art_path in existing:
+        if art_path.name.startswith(date_key):
+            return {"error": f"Article already published today: {art_path.name}",
+                    "existing_path": str(art_path)}
     fictive_date = compute_fictive_date(horizon, now)
     slug = slugify(headline)
     url = article_url(brand, horizon_slug, fictive_date)
@@ -195,10 +205,12 @@ async def generate_article_image(
         if not token:
             return {"error": "REPLICATE_API_TOKEN not set"}
 
-        async with httpx.AsyncClient(timeout=30) as client:
+        auth_headers = {"Authorization": f"Bearer {token}"}
+
+        async with httpx.AsyncClient(timeout=120) as client:
             resp = await client.post(
                 "https://api.replicate.com/v1/models/black-forest-labs/flux-2-klein-4b/predictions",
-                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                headers={**auth_headers, "Content-Type": "application/json"},
                 json={"input": {
                     "prompt": full_prompt, "width": 1024, "height": 768,
                     "num_outputs": 1, "output_format": "webp", "output_quality": 85,
@@ -207,25 +219,23 @@ async def generate_article_image(
             resp.raise_for_status()
             prediction = resp.json()
 
-        poll_url = prediction.get("urls", {}).get(
-            "get", f"https://api.replicate.com/v1/predictions/{prediction['id']}"
-        )
-        async with httpx.AsyncClient(timeout=30) as client:
+            poll_url = prediction.get("urls", {}).get(
+                "get", f"https://api.replicate.com/v1/predictions/{prediction['id']}"
+            )
             for _ in range(60):
                 if prediction["status"] in ("succeeded", "failed"):
                     break
                 await asyncio.sleep(1)
-                r = await client.get(poll_url, headers={"Authorization": f"Bearer {token}"})
+                r = await client.get(poll_url, headers=auth_headers)
                 prediction = r.json()
 
-        if prediction["status"] == "failed":
-            return {"error": f"Image generation failed: {prediction.get('error')}"}
+            if prediction["status"] == "failed":
+                return {"error": f"Image generation failed: {prediction.get('error')}"}
 
-        image_url = prediction.get("output", [None])[0]
-        if not image_url:
-            return {"error": "No image URL in output"}
+            image_url = prediction.get("output", [None])[0]
+            if not image_url:
+                return {"error": "No image URL in output"}
 
-        async with httpx.AsyncClient(timeout=30) as client:
             r = await client.get(image_url)
             r.raise_for_status()
             Path(image_path).parent.mkdir(parents=True, exist_ok=True)
@@ -372,9 +382,6 @@ async def generate_social_cards(
 _AUTO_PLATFORMS = {"bluesky", "mastodon"}
 _MANUAL_PLATFORMS = {"x", "facebook", "linkedin", "instagram"}
 
-_NTFY_BASE = os.environ.get("NTFY_BASE_URL", "https://ntfy.sh")
-_NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
-
 
 async def _post_bluesky(caption: str, article_url: str,
                         image_path: str = "") -> dict:
@@ -490,8 +497,9 @@ async def _notify_manual_post(platform: str, brand: str, caption: str,
     """Send ntfy notification with deep link for manual social posting."""
     import httpx
 
-    topic = _NTFY_TOPIC
-    if not topic:
+    ntfy_base = os.environ.get("NTFY_BASE_URL", "https://ntfy.sh")
+    ntfy_topic = os.environ.get("NTFY_TOPIC", "")
+    if not ntfy_topic:
         return {"error": "NTFY_TOPIC not set — cannot notify admin"}
 
     b = BRANDS.get(brand, {})
@@ -509,10 +517,10 @@ async def _notify_manual_post(platform: str, brand: str, caption: str,
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.post(f"{_NTFY_BASE}/{topic}",
+            r = await client.post(f"{ntfy_base}/{ntfy_topic}",
                                   content=body, headers=headers)
             r.raise_for_status()
-        return {"notified": True, "platform": platform, "topic": topic}
+        return {"notified": True, "platform": platform, "topic": ntfy_topic}
     except Exception as e:
         return {"error": f"ntfy failed: {e}"}
 
@@ -573,7 +581,7 @@ async def push_site(message: str = "") -> dict:
         stdout, stderr = await proc.communicate()
         return proc.returncode or 0, stdout.decode(), stderr.decode()
 
-    await _run(["git", "add", "."])
+    await _run(["git", "add", "_posts/", "assets/", "_data/"])
 
     rc, status_out, _ = await _run(["git", "status", "--porcelain"])
     if not status_out.strip():

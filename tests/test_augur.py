@@ -484,8 +484,7 @@ class TestPostSocial:
         assert "MASTODON" in result["error"]
 
     def test_manual_platform_missing_ntfy(self, augur, monkeypatch):
-        from src.servers import augur_publish
-        monkeypatch.setattr(augur_publish, "_NTFY_TOPIC", "")
+        monkeypatch.delenv("NTFY_TOPIC", raising=False)
         result = _run(augur.post_social("the", "x", "caption", "https://example.com"))
         assert "error" in result
 
@@ -525,8 +524,7 @@ class TestPostSocial:
         assert "url" in result
 
     def test_manual_ntfy_success(self, augur, monkeypatch):
-        from src.servers import augur_publish
-        monkeypatch.setattr(augur_publish, "_NTFY_TOPIC", "test-topic")
+        monkeypatch.setenv("NTFY_TOPIC", "test-topic")
 
         ntfy_resp = _mock_httpx_response()
 
@@ -965,3 +963,134 @@ class TestPostSocialImage:
             "the", "bluesky", "test", "https://example.com",
             image_path="/tmp/card.webp"))
         assert "BLUESKY" in result.get("error", "")
+
+
+# ---------------------------------------------------------------------------
+# publish_article dedup check
+# ---------------------------------------------------------------------------
+
+class TestPublishDedup:
+    def test_duplicate_publish_blocked(self, augur, site_dir):
+        """Publishing the same brand/horizon twice on the same day is blocked."""
+        result1 = _run(augur.publish_article(
+            brand="the", horizon="tomorrow", headline="First Article",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=["test"], sources=[],
+        ))
+        assert "path" in result1
+
+        result2 = _run(augur.publish_article(
+            brand="the", horizon="tomorrow", headline="Second Article",
+            signal="s2", extrapolation="e2", in_the_works="i2",
+            tags=["test"], sources=[],
+        ))
+        assert "error" in result2
+        assert "already published" in result2["error"]
+        assert "existing_path" in result2
+
+    def test_different_horizon_not_blocked(self, augur, site_dir):
+        """Same brand but different horizon is allowed on the same day."""
+        result1 = _run(augur.publish_article(
+            brand="the", horizon="tomorrow", headline="Tomorrow Article",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "path" in result1
+
+        result2 = _run(augur.publish_article(
+            brand="the", horizon="soon", headline="Soon Article",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "path" in result2
+
+    def test_different_brand_not_blocked(self, augur, site_dir):
+        """Same horizon but different brand is allowed on the same day."""
+        result1 = _run(augur.publish_article(
+            brand="the", horizon="tomorrow", headline="The Article",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "path" in result1
+
+        result2 = _run(augur.publish_article(
+            brand="financial", horizon="tomorrow", headline="Financial Article",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "path" in result2
+
+
+# ---------------------------------------------------------------------------
+# ntfy env var reads at call time (not import time)
+# ---------------------------------------------------------------------------
+
+class TestNtfyCallTime:
+    def test_ntfy_topic_read_at_call_time(self, augur, monkeypatch):
+        """NTFY_TOPIC should be read at call time, not module import time."""
+        monkeypatch.delenv("NTFY_TOPIC", raising=False)
+        result1 = _run(augur._notify_manual_post(
+            "x", "the", "caption", "https://example.com"))
+        assert "error" in result1
+
+        monkeypatch.setenv("NTFY_TOPIC", "test-topic")
+        ntfy_resp = _mock_httpx_response()
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=ntfy_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result2 = _run(augur._notify_manual_post(
+                "x", "the", "caption", "https://example.com"))
+        assert result2.get("notified") is True
+        assert result2["topic"] == "test-topic"
+
+    def test_ntfy_base_url_read_at_call_time(self, augur, monkeypatch):
+        """NTFY_BASE_URL should be read at call time."""
+        monkeypatch.setenv("NTFY_TOPIC", "test-topic")
+        monkeypatch.setenv("NTFY_BASE_URL", "https://custom-ntfy.example.com")
+
+        ntfy_resp = _mock_httpx_response()
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=ntfy_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            _run(augur._notify_manual_post(
+                "x", "the", "caption", "https://example.com"))
+
+        call_args = mock_client.post.call_args
+        assert "custom-ntfy.example.com" in call_args[0][0]
+
+
+# ---------------------------------------------------------------------------
+# push_site targeted git add
+# ---------------------------------------------------------------------------
+
+class TestPushSiteTargeted:
+    def test_push_site_adds_specific_dirs(self, augur, site_dir):
+        """push_site should add _posts/, assets/, _data/ — not git add ."""
+        run_calls = []
+
+        async def mock_run(*args, **kwargs):
+            run_calls.append(list(args))
+            proc = MagicMock()
+            proc.returncode = 0
+            if "status" in args:
+                proc.communicate = AsyncMock(return_value=(b"", b""))
+            else:
+                proc.communicate = AsyncMock(return_value=(b"ok", b""))
+            return proc
+
+        with patch("asyncio.create_subprocess_exec", side_effect=mock_run):
+            result = _run(augur.push_site())
+
+        git_add_cmd = run_calls[0]
+        assert git_add_cmd[0] == "git"
+        assert git_add_cmd[1] == "add"
+        assert "_posts/" in git_add_cmd
+        assert "assets/" in git_add_cmd
+        assert "_data/" in git_add_cmd
+        assert "." not in git_add_cmd[2:]
