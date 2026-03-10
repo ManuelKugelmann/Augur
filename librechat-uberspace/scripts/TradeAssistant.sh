@@ -304,7 +304,6 @@ WorkingDirectory=${STACK}
 EnvironmentFile=${STACK}/.env
 Environment=MCP_TRANSPORT=http
 Environment=MCP_PORT=8071
-Environment=PROFILES_DIR=${STACK}/profiles
 ExecStart=${STACK}/venv/bin/python src/servers/combined_server.py
 Restart=always
 RestartSec=10
@@ -334,7 +333,7 @@ SVCEOF
         cat > ~/etc/services.d/trading.ini << SVCEOF
 [program:trading]
 directory=${STACK}
-command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
+command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
 autostart=true
 autorestart=true
 startsecs=10
@@ -450,13 +449,12 @@ SVCEOF
     fi
 
     # ── 12. Seed profile data into MongoDB (no overwrites) ──
-    if [[ -x "$STACK/venv/bin/python" ]]; then
+    if [[ -x "$STACK/venv/bin/python" ]] && [[ -d "$STACK/profiles" ]]; then
         log "Seeding profiles from disk into MongoDB..."
-        PROFILES_DIR="$STACK/profiles" MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
+        MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
         "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-# Load .env if python-dotenv available (env vars also passed from shell)
 try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join('$STACK', '.env'))
@@ -464,15 +462,13 @@ except ImportError:
     pass
 try:
     from server import seed_profiles
-    result = seed_profiles()
+    result = seed_profiles('$STACK/profiles')
     if 'error' in result:
         print(f'Seed skipped: {result[\"error\"]}')
     else:
         total_seeded = sum(v.get('seeded', 0) for v in result.values())
         total_skipped = sum(v.get('skipped', 0) for v in result.values())
         print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
-        for kind, counts in sorted(result.items()):
-            print(f'  {kind}: {counts[\"seeded\"]} seeded, {counts[\"skipped\"]} skipped')
 except Exception as e:
     print(f'Seed skipped: {e}')
 " 2>&1 | while read -r line; do log "$line"; done

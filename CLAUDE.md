@@ -57,22 +57,10 @@ TradingAssistant/
 │       ├── water_server.py            ← USGS Water, US Drought Monitor, GloFAS
 │       └── weather_server.py          ← Open-Meteo, NOAA SWPC
 │
-├── profiles/                            ← organized by region, then kind
+├── profiles/                            ← seed data for install (JSON → MongoDB)
 │   ├── INFO.md                        ← structure reference
-│   ├── INDEX_{kind}.json              ← per-kind indexes (auto-generated)
-│   ├── europe/                        ← seed data by region
-│   │   ├── countries/DEU.json
-│   │   └── stocks/SAP.json
-│   ├── north_america/
-│   │   ├── countries/USA.json
-│   │   └── stocks/AAPL.json
-│   ├── global/                        ← non-geographic kinds
-│   │   ├── etfs/VWO.json
-│   │   ├── commodities/
-│   │   ├── crops/
-│   │   ├── materials/
-│   │   └── sources/faostat.json
-│   └── ... (mena, east_asia, arctic, antarctic, etc.)
+│   ├── europe/, north_america/, ...   ← {region}/{kind}/{id}.json
+│   └── global/                        ← non-geographic kinds (etfs, commodities, etc.)
 │
 ├── librechat-uberspace/
 │   ├── README.md                      ← deployment docs with QuickStart
@@ -160,12 +148,12 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 - Individual servers (`store/server.py`, `weather_server.py`, etc.) still work standalone for testing
 
 #### Signals Store (store_* namespace)
-- **Profiles** (shared): JSON files at `profiles/{region}/{kind}/{id}.json`, git-tracked
-- **MongoDB** (shared): Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`); snapshots/events include `user_id` in meta
+- **Profiles** (shared): MongoDB collections `profiles_{kind}` (one per kind), text + geo indexes
+- **Snapshots** (shared): Per-kind timeseries collections (`snap_{kind}`, `arch_{kind}`, `events`); snapshots/events include `user_id` in meta
 - **Notes** (per-user): `user_notes` collection keyed by `user_id` — plans, watchlists, journal entries
 - **Risk gate** (per-user): `risk_status()` tool, `_risk_check()` guard for trading actions, configurable daily limit
 - **Geo support**: Optional GeoJSON `location` field, 2dsphere indexes, `nearby()` tool
-- **Profile tools**: `store_get_profile`, `store_put_profile`, `store_list_profiles`, `store_find_profile`, `store_search_profiles`, `store_list_regions`, `store_rebuild_index`, `store_lint_profiles`
+- **Profile tools**: `store_get_profile`, `store_put_profile`, `store_list_profiles`, `store_find_profile`, `store_search_profiles`, `store_list_regions`, `store_lint_profiles`
 - **Snapshot tools**: `store_snapshot`, `store_history`, `store_trend`, `store_nearby`, `store_event`, `store_recent_events`, `store_archive_snapshot`, `store_archive_history`, `store_compact`, `store_aggregate`, `store_chart`
 - **Notes tools** (per-user): `store_save_note`, `store_get_notes`, `store_update_note`, `store_delete_note`
 - **Research tools** (shared): `store_save_research`, `store_get_research`, `store_update_research`, `store_delete_research`
@@ -240,17 +228,8 @@ ta conf        edit deploy.conf
 
 ## Profiles
 
-**Target scale: 1000+ profiles** (current seed data is ~8 placeholders).
-Profiles describe anything tradeable or trade-relevant. Organized by geographic region then kind.
-See `profiles/INFO.md` for full reference.
-
-### Layout
-
-`profiles/{region}/{kind}/{id}.json`
-
-### Regions
-
-north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
+**Target scale: 1000+ profiles.** All profiles stored in MongoDB (`profiles_{kind}` collections).
+Profiles describe anything tradeable or trade-relevant. Organized by kind + region.
 
 ### Kinds
 
@@ -268,26 +247,20 @@ north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east
 | `companies` | lowercase slug | `tsmc`, `aramco` |
 | `sources` | lowercase slug | `faostat`, `open-meteo` |
 
-### Indexes
+### Regions
 
-`profiles/INDEX_{kind}.json` — top-level, auto-generated.
-Each entry: `{id, kind, name, region, tags?, sector?}`.
-
-- Updated incrementally on `put_profile()`
-- Full rebuild via `rebuild_index(kind?)`
-- `find_profile(query, region?)` merges all for cross-kind search
+north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
 
 ### Profile tools
 
 | Tool | Purpose |
 |------|---------|
-| `get_profile(kind, id, region?)` | Read a profile (scans all regions if omitted) |
+| `get_profile(kind, id, region?)` | Read a profile |
 | `put_profile(kind, id, data, region?)` | Create/merge (default: global) |
 | `list_profiles(kind, region?)` | List profiles, optionally by region |
 | `find_profile(query, region?)` | Cross-kind search by name/ID/tag |
 | `search_profiles(kind, field, value, region?)` | Field-level search |
 | `list_regions()` | List regions and their kinds |
-| `rebuild_index(kind?)` | Rebuild indexes from disk |
 | `lint_profiles(kind?, id?)` | Validate required fields (id, name) |
 
 ### Snapshot tools (same API + time fields)

@@ -16,7 +16,7 @@ combining multiple indicators into an actionable assessment.
 Reference:
   nexustrade.io/blog/i-analyzed-100000-backtests-to-find-the-best-trading-indicator
 """
-from __future__ import annotations
+from datetime import datetime, timezone
 
 import httpx
 import pandas as pd
@@ -62,7 +62,6 @@ async def _fetch_yahoo_ohlcv(
         quote = result["indicators"]["quote"][0]
         currency = result.get("meta", {}).get("currency", "USD")
 
-        from datetime import datetime, timezone
         df = pd.DataFrame({
             "open": quote.get("open"),
             "high": quote.get("high"),

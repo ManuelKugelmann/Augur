@@ -2,7 +2,6 @@
 
 Profiles: MongoDB collections ``profiles_{kind}`` (one per kind).
   Shared across all users. Text + geo indexes for fast search.
-  Seed data loaded from repo JSON on install (no overwrite on update).
 
 Snapshots: Per-kind timeseries collections with geo support:
   snap_{kind}  — recent data, 1-year TTL, hours granularity
@@ -29,7 +28,6 @@ load_dotenv()
 
 mcp = FastMCP("signals-store", instructions="MongoDB-backed profile/snapshot store")
 
-PROFILES_DIR = Path(os.environ.get("PROFILES_DIR", "./profiles"))
 _client = None
 _cols_ready = set()
 
@@ -203,23 +201,23 @@ def _validate_profile_args(kind: str, id: str, region: str = "") -> dict | None:
     return None
 
 
-# ── Seed / init helpers ──────────────────────────
+# ── Seed helper (install-time only) ──────────────
 
 
-def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
-    """Load profile JSON files from disk into MongoDB.
+def seed_profiles(profiles_dir: str, clear: bool = False) -> dict:
+    """Bulk-load profile JSON files from a directory into MongoDB.
 
-    Called during install to populate profiles_{kind} collections from the
-    repo's profiles/ directory. Uses upsert with $setOnInsert so existing
-    user data is never overwritten on update — only new profiles are added.
+    Used during install to populate profiles_{kind} collections.
+    Uses upsert so existing data is never overwritten (only new profiles added).
+    The source directory can be cleaned up after seeding.
 
     Args:
-        profiles_dir: Path to profiles directory (default: PROFILES_DIR).
-        clear: If True, drop all profiles_{kind} collections first (reinit).
+        profiles_dir: Path to directory with {region}/{kind}/{id}.json layout.
+        clear: If True, drop collections first (reinit).
 
     Returns: {kind: {seeded: N, skipped: N}} summary.
     """
-    pdir = Path(profiles_dir) if profiles_dir else PROFILES_DIR
+    pdir = Path(profiles_dir)
     if not pdir.exists():
         return {"error": f"profiles directory not found: {pdir}"}
 
@@ -234,11 +232,8 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
             _cols_ready.discard(f"profiles_{kind}")
             col = _profiles_col(kind)
 
-        # Scan known region dirs only (skip unknown directories like SCHEMAS)
         for region_dir in sorted(pdir.iterdir()):
-            if not region_dir.is_dir():
-                continue
-            if region_dir.name not in VALID_REGIONS:
+            if not region_dir.is_dir() or region_dir.name not in VALID_REGIONS:
                 continue
             kind_dir = region_dir / kind
             if not kind_dir.is_dir():
@@ -255,13 +250,10 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
                         "region": region_dir.name,
                         **data,
                     }
-                    doc["_seeded"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
                     if clear:
-                        # Reinit mode: insert everything
                         col.insert_one(doc)
                         seeded += 1
                     else:
-                        # Normal mode: only insert if not exists
                         r = col.update_one(
                             {"_id_str": profile_id},
                             {"$setOnInsert": doc},
@@ -480,10 +472,11 @@ def region_links(id: str = "", link_type: str = "") -> dict:
     - no args → return the global graph (clusters, corridors, rivalry axes, dependency chains)
     """
     if not id:
-        graph = PROFILES_DIR / "global" / "regions" / "graph.json"
-        if graph.exists():
-            return json.loads(graph.read_text())
-        return {"error": "graph.json not found — run rebuild or create it"}
+        # Return graph from MongoDB (stored as a special profile)
+        doc = _profiles_col("regions").find_one({"_id_str": "_graph"})
+        if doc:
+            return _strip_mongo_id(doc)
+        return {"error": "region graph not found — create it with put_profile('regions', '_graph', data)"}
     prof = get_profile("regions", id)
     if "error" in prof:
         return prof
@@ -559,12 +552,6 @@ def nearby_profiles(kind: str, lon: float, lat: float,
     ]
     col = _profiles_col(kind)
     return [_strip_mongo_id(d) for d in col.aggregate(pipeline)]
-
-
-@mcp.tool()
-def seed_profiles_tool(clear: bool = False) -> dict:
-    """Seed profiles from repo JSON into MongoDB. clear=True drops and reinits."""
-    return seed_profiles(clear=clear)
 
 
 @mcp.tool()

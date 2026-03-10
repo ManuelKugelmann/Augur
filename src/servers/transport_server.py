@@ -238,12 +238,15 @@ async def vessels_in_area(lat_min: float, lat_max: float,
     Hormuz 26.0,27.0,55.5,57.0 — Panama 8.8,9.4,-79.9,-79.5."""
     if not AIS_KEY:
         return {"error": "AISSTREAM_API_KEY not set"}
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get("https://api.aisstream.io/v0/vessel-positions", params={
-            "apiKey": AIS_KEY,
-            "boundingBox": f"{lat_min},{lon_min},{lat_max},{lon_max}"})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get("https://api.aisstream.io/v0/vessel-positions", params={
+                "apiKey": AIS_KEY,
+                "boundingBox": f"{lat_min},{lon_min},{lat_max},{lon_max}"})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"AIS vessel request failed: {e}"}
 
 
 if __name__ == "__main__":
