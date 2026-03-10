@@ -269,13 +269,17 @@ _do_install() {
 
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
-        "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+        log "Upgrading pip..."
+        "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
+        log "Installing requirements..."
+        "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv "$STACK/venv"
-        "$STACK/venv/bin/pip" install -q --upgrade pip
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt"
+        log "Venv created. Upgrading pip..."
+        "$STACK/venv/bin/pip" install --upgrade pip
+        log "Installing requirements (this may take a few minutes)..."
+        "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt"
     fi
     log "Python venv ready"
 
@@ -621,8 +625,10 @@ case "$CMD" in
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
-            "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
-            "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+            log "Upgrading pip..."
+            "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
+            log "Installing requirements..."
+            "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt" 2>/dev/null || true
         else
             warn "Python venv not found at $STACK/venv — run 'ta install' first"
         fi

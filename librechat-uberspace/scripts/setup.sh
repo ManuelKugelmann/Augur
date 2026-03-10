@@ -123,7 +123,7 @@ if [[ -d "$STACK/venv" ]]; then
     # finance-mcp-server (provides python -m finance_mcp)
     if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
         log "Installing finance-mcp-server..."
-        "$VPIP" install -q finance-mcp-server || warn "finance-mcp-server install failed"
+        "$VPIP" install finance-mcp-server || warn "finance-mcp-server install failed"
     fi
 fi
 
@@ -162,9 +162,12 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
     else
         log "Setting up signals stack Python environment..."
         cd "$STACK"
+        log "Creating Python venv with $_PYTHON_BIN..."
         "$_PYTHON_BIN" -m venv venv
-        venv/bin/pip install -q --upgrade pip
-        venv/bin/pip install -q -r requirements.txt
+        log "Venv created. Upgrading pip..."
+        venv/bin/pip install --upgrade pip
+        log "Installing requirements (this may take a few minutes)..."
+        venv/bin/pip install -r requirements.txt
         cd - >/dev/null
         log "Signals stack ready"
     fi
