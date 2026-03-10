@@ -20,7 +20,14 @@ mcp = FastMCP("augur", instructions=(
     "social media. Bluesky/Mastodon auto-post via API; X/Facebook/LinkedIn/"
     "Instagram send ntfy to admin with deep link. Brands: the (EN general), "
     "der (DE general), financial (EN markets), finanz (DE markets). "
-    "Horizons: tomorrow, soon, future, leap."
+    "Horizons: tomorrow, soon, future, leap.\n\n"
+    "SCORING WORKFLOW: When due_now() returns score_pending items, you MUST "
+    "score each one. For each pending prediction: (1) read its signal and "
+    "extrapolation from the pending entry, (2) use news/finance/data tools "
+    "to verify whether the prediction came true, (3) call score_prediction "
+    "with outcome (confirmed/partial/wrong), a brief outcome_note, and "
+    "evidence links from your research. Score ALL pending items before "
+    "moving to publish tasks."
 ))
 
 log = logging.getLogger("augur")
@@ -36,6 +43,7 @@ BRANDS = {
         "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "leap": "leap"},
         "image_prefix": "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. ",
         "disclaimer": "AI-generated speculation — not news. Not financial advice.",
+        "accent_color": "#FFD700",
     },
     "der": {
         "name": "Der Augur", "locale": "de", "module": "general",
@@ -43,6 +51,7 @@ BRANDS = {
         "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "leap": "sprung"},
         "image_prefix": "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. ",
         "disclaimer": "KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung.",
+        "accent_color": "#FFD700",
     },
     "financial": {
         "name": "Financial Augur", "locale": "en", "module": "markets",
@@ -50,6 +59,7 @@ BRANDS = {
         "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "leap": "leap"},
         "image_prefix": "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. ",
         "disclaimer": "AI-generated opinion — not financial advice.",
+        "accent_color": "#00BFFF",
     },
     "finanz": {
         "name": "Finanz Augur", "locale": "de", "module": "markets",
@@ -57,6 +67,7 @@ BRANDS = {
         "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "leap": "sprung"},
         "image_prefix": "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. ",
         "disclaimer": "KI-generierte Einschätzung — keine Finanzberatung.",
+        "accent_color": "#00BFFF",
     },
 }
 
@@ -174,11 +185,16 @@ async def list_brands() -> dict:
 
 @mcp.tool()
 async def due_now() -> dict:
-    """Check which brand/horizon combos are due for production right now.
+    """Check what work is due right now: publishing + scoring.
 
-    Called by the cron-news agent at each cron tick. Returns a list of
-    {brand, horizon} pairs that should be produced this cycle, plus any
-    predictions that are past their horizon and need scoring.
+    Called by the cron-news agent at each cron tick. Returns:
+    - due: {brand, horizon} pairs to publish this cycle
+    - score_pending: predictions past their horizon that need scoring,
+      with full context (headline, signal, extrapolation, fictive_date)
+      so the agent can research and score them automatically
+
+    The agent should score ALL pending predictions FIRST (using other MCP
+    tools to verify outcomes), then proceed to publish new articles.
     """
     now = datetime.now(timezone.utc)
     due: list[dict] = []
@@ -378,6 +394,128 @@ async def generate_article_image(
         return {"error": f"Image generation failed: {exc}"}
 
 
+# ---------------------------------------------------------------------------
+# Social card compositing (1:1, 9:16, 16:9)
+# ---------------------------------------------------------------------------
+
+CARD_SIZES = {
+    "1x1": (1080, 1080),
+    "9x16": (1080, 1920),
+    "16x9": (1200, 675),
+}
+
+
+def _generate_card(
+    image_path: str, headline: str, brand_name: str,
+    horizon_label: str, fictive_date: str, accent_color: str,
+    width: int, height: int, output_path: str,
+) -> None:
+    """Generate a single social card with overlay text."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    def _font(size: int):
+        try:
+            return ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", size)
+        except OSError:
+            return ImageFont.load_default()
+
+    def _mono(size: int):
+        try:
+            return ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", size)
+        except OSError:
+            return ImageFont.load_default()
+
+    # Load and cover-resize
+    src = Image.open(image_path).convert("RGB")
+    src_ratio = src.width / src.height
+    target_ratio = width / height
+    if src_ratio > target_ratio:
+        new_h, new_w = height, round(src.width * (height / src.height))
+    else:
+        new_w, new_h = width, round(src.height * (width / src.width))
+    src = src.resize((new_w, new_h), Image.LANCZOS)
+    left, top = (new_w - width) // 2, (new_h - height) // 2
+    card = src.crop((left, top, left + width, top + height))
+
+    draw = ImageDraw.Draw(card, "RGBA")
+    fs = round(width * 0.04)
+    hfs = round(width * 0.05)
+    pad = round(width * 0.06)
+
+    # Semi-transparent overlay at bottom
+    draw.rectangle([(0, round(height * 0.55)), (width, height)], fill=(0, 0, 0, 178))
+
+    draw.text((pad, round(height * 0.60)), f"\u263d {brand_name}",
+              fill=(255, 255, 255, 230), font=_font(fs))
+    draw.text((pad, round(height * 0.66)),
+              f"\u2500\u2500 {horizon_label.upper()} \u2500\u2500",
+              fill=accent_color, font=_font(round(fs * 0.7)))
+
+    max_chars = (width - 2 * pad) // max(1, round(hfs * 0.5))
+    display = headline[:max_chars - 3] + "..." if len(headline) > max_chars else headline
+    draw.text((pad, round(height * 0.74)), display,
+              fill=(255, 255, 255), font=_font(hfs))
+    draw.text((pad, round(height * 0.86)), f"Foreseen: {fictive_date}",
+              fill=(255, 255, 255, 178), font=_mono(round(fs * 0.6)))
+    draw.text((pad, round(height * 0.92)), "AI-generated speculation",
+              fill=(255, 255, 255, 128), font=_mono(round(fs * 0.5)))
+    draw.rectangle([(0, height - 4), (width, height)], fill=accent_color)
+
+    card.convert("RGB").save(output_path, "WEBP", quality=85)
+
+
+@mcp.tool()
+async def generate_social_cards(
+    image_path: str,
+    headline: str,
+    brand: str,
+    horizon: str,
+    fictive_date: str,
+) -> dict:
+    """Generate social sharing cards in 1:1, 9:16, 16:9 from an article image.
+
+    Creates cropped/overlaid versions suitable for each social platform.
+    Returns paths to generated card files.
+
+    Args:
+        image_path: Path to the source article image.
+        headline: Article headline for overlay text.
+        brand: Brand slug (the, der, financial, finanz).
+        horizon: Horizon slug (tomorrow, soon, future, leap).
+        fictive_date: The fictive target date for the overlay.
+    """
+    if brand not in BRANDS:
+        return {"error": f"Unknown brand: {brand}"}
+    if not Path(image_path).exists():
+        return {"error": f"Image not found: {image_path}"}
+
+    b = BRANDS[brand]
+    brand_name = b["masthead"]
+    accent = b.get("accent_color", "#FFD700")
+    horizon_label = b["horizons"].get(horizon, horizon)
+
+    site = _site_dir()
+    out_dir = os.path.join(site, "assets", "cards", brand, horizon)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+
+    slug = _slugify(headline, 30)
+    paths = {}
+
+    try:
+        for ratio, (w, h) in CARD_SIZES.items():
+            out_path = os.path.join(out_dir, f"{slug}-{ratio}.webp")
+            _generate_card(image_path, headline, brand_name, horizon_label,
+                           fictive_date, accent, w, h, out_path)
+            paths[ratio] = out_path
+        return {"cards": paths, "count": len(paths)}
+    except ImportError:
+        return {"error": "Pillow not installed — run: pip install Pillow"}
+    except Exception as e:
+        return {"error": f"Card generation failed: {e}"}
+
+
 # Platforms that support auto-posting via API
 _AUTO_PLATFORMS = {"bluesky", "mastodon"}
 # Platforms that need manual posting — admin gets ntfy with caption + deep link
@@ -387,8 +525,9 @@ _NTFY_BASE = os.environ.get("NTFY_BASE_URL", "https://ntfy.sh")
 _NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
 
 
-async def _post_bluesky(caption: str, article_url: str) -> dict:
-    """Post to Bluesky via AT Protocol."""
+async def _post_bluesky(caption: str, article_url: str,
+                        image_path: str = "") -> dict:
+    """Post to Bluesky via AT Protocol, optionally with an image card."""
     import httpx
 
     handle = os.environ.get("BLUESKY_HANDLE", "")
@@ -406,11 +545,29 @@ async def _post_bluesky(caption: str, article_url: str) -> dict:
         session = r.json()
         token = session["accessJwt"]
         did = session["did"]
+        auth_headers = {"Authorization": f"Bearer {token}"}
+
+        # Upload image blob if provided
+        embed = None
+        if image_path and Path(image_path).exists():
+            img_data = Path(image_path).read_bytes()
+            mime = "image/webp" if image_path.endswith(".webp") else "image/jpeg"
+            r = await client.post(
+                f"{pds}/xrpc/com.atproto.repo.uploadBlob",
+                headers={**auth_headers, "Content-Type": mime},
+                content=img_data,
+            )
+            r.raise_for_status()
+            blob = r.json().get("blob")
+            if blob:
+                embed = {
+                    "$type": "app.bsky.embed.images",
+                    "images": [{"alt": caption[:300], "image": blob}],
+                }
 
         # Build post with link facet
         text = f"{caption}\n\n{article_url}"
-        # Facet for the URL (byte offsets)
-        url_start = len(caption.encode("utf-8")) + 2  # +2 for \n\n
+        url_start = len(caption.encode("utf-8")) + 2
         url_end = url_start + len(article_url.encode("utf-8"))
         facets = [{
             "index": {"byteStart": url_start, "byteEnd": url_end},
@@ -423,19 +580,23 @@ async def _post_bluesky(caption: str, article_url: str) -> dict:
             "facets": facets,
             "createdAt": datetime.now(timezone.utc).isoformat(),
         }
+        if embed:
+            record["embed"] = embed
 
         r = await client.post(
             f"{pds}/xrpc/com.atproto.repo.createRecord",
-            headers={"Authorization": f"Bearer {token}"},
+            headers=auth_headers,
             json={"repo": did, "collection": "app.bsky.feed.post", "record": record},
         )
         r.raise_for_status()
         data = r.json()
-        return {"posted": True, "uri": data.get("uri", "")}
+        return {"posted": True, "uri": data.get("uri", ""),
+                "has_image": embed is not None}
 
 
-async def _post_mastodon(caption: str, article_url: str) -> dict:
-    """Post to Mastodon via API."""
+async def _post_mastodon(caption: str, article_url: str,
+                         image_path: str = "") -> dict:
+    """Post to Mastodon via API, optionally with an image card."""
     import httpx
 
     token = os.environ.get("MASTODON_ACCESS_TOKEN", "")
@@ -445,16 +606,36 @@ async def _post_mastodon(caption: str, article_url: str) -> dict:
 
     instance = instance.rstrip("/")
     text = f"{caption}\n\n{article_url}"
+    auth_headers = {"Authorization": f"Bearer {token}"}
 
     async with httpx.AsyncClient(timeout=30) as client:
+        # Upload image if provided
+        media_ids = []
+        if image_path and Path(image_path).exists():
+            img_data = Path(image_path).read_bytes()
+            mime = "image/webp" if image_path.endswith(".webp") else "image/jpeg"
+            r = await client.post(
+                f"{instance}/api/v2/media",
+                headers=auth_headers,
+                files={"file": ("card.webp", img_data, mime)},
+                data={"description": caption[:1500]},
+            )
+            r.raise_for_status()
+            media_ids.append(r.json()["id"])
+
+        payload: dict = {"status": text, "visibility": "public"}
+        if media_ids:
+            payload["media_ids"] = media_ids
+
         r = await client.post(
             f"{instance}/api/v1/statuses",
-            headers={"Authorization": f"Bearer {token}"},
-            json={"status": text, "visibility": "public"},
+            headers=auth_headers,
+            json=payload,
         )
         r.raise_for_status()
         data = r.json()
-        return {"posted": True, "url": data.get("url", "")}
+        return {"posted": True, "url": data.get("url", ""),
+                "has_image": bool(media_ids)}
 
 
 async def _notify_manual_post(platform: str, brand: str, caption: str,
@@ -495,20 +676,24 @@ async def post_social(
     platform: str,
     caption: str,
     article_url: str,
+    image_path: str = "",
 ) -> dict:
     """Post or notify for a social media platform.
 
-    Auto-posts to Bluesky and Mastodon via API.
+    Auto-posts to Bluesky and Mastodon via API (with optional image card).
     For X, Facebook, LinkedIn, and Instagram: sends an ntfy notification
     to the admin with the caption and a deep link to the article.
 
-    Call once per platform after publish_article + push_site.
+    Call once per platform after publish_article + generate_social_cards + push_site.
+    For image_path, use the appropriate ratio from generate_social_cards:
+    16:9 for Bluesky/X/Facebook/LinkedIn, 1:1 for Mastodon/Instagram.
 
     Args:
         brand: Brand slug (the, der, financial, finanz).
         platform: Target platform (bluesky, mastodon, x, facebook, linkedin, instagram).
         caption: The social media caption/text.
         article_url: Public URL of the published article (used as deep link).
+        image_path: Optional path to a social card image to attach.
     """
     platform = platform.lower()
     all_platforms = _AUTO_PLATFORMS | _MANUAL_PLATFORMS
@@ -516,9 +701,9 @@ async def post_social(
         return {"error": f"Unknown platform: {platform}. Use: {', '.join(sorted(all_platforms))}"}
 
     if platform == "bluesky":
-        return await _post_bluesky(caption, article_url)
+        return await _post_bluesky(caption, article_url, image_path)
     elif platform == "mastodon":
-        return await _post_mastodon(caption, article_url)
+        return await _post_mastodon(caption, article_url, image_path)
     else:
         return await _notify_manual_post(platform, brand, caption, article_url)
 
@@ -569,9 +754,45 @@ async def push_site(message: str = "") -> dict:
 # tomorrow=+3d → scoreable after 3d, soon=+3mo → 90d, future=+3yr → 1095d, leap=+30yr → 10950d
 HORIZON_DAYS = {"tomorrow": 3, "soon": 90, "future": 1095, "leap": 10950}
 
+# Section header patterns (EN/DE) for extracting prediction content from body
+_SIGNAL_HEADERS = re.compile(r"^##\s+(?:The Signal|Das Signal)\s*$", re.MULTILINE)
+_EXTRAP_HEADERS = re.compile(r"^##\s+(?:The Extrapolation|Die Extrapolation)\s*$", re.MULTILINE)
+_ITW_HEADERS = re.compile(r"^##\s+(?:In The Works|In Arbeit)\s*$", re.MULTILINE)
+
+
+def _extract_sections(body: str) -> dict:
+    """Extract signal/extrapolation/in_the_works from article body text."""
+    sections: dict = {}
+    # Find section boundaries
+    sig_m = _SIGNAL_HEADERS.search(body)
+    ext_m = _EXTRAP_HEADERS.search(body)
+    itw_m = _ITW_HEADERS.search(body)
+
+    boundaries = sorted(
+        [(m.end(), name) for m, name in [
+            (sig_m, "signal"), (ext_m, "extrapolation"), (itw_m, "in_the_works"),
+        ] if m],
+        key=lambda x: x[0],
+    )
+
+    for i, (start, name) in enumerate(boundaries):
+        end = boundaries[i + 1][0] if i + 1 < len(boundaries) else len(body)
+        # Strip from start to next header (which includes the "## " prefix)
+        text = body[start:end]
+        # Remove trailing header line if present
+        next_header = re.search(r"^##\s+", text, re.MULTILINE)
+        if next_header and next_header.start() > 0:
+            text = text[:next_header.start()]
+        sections[name] = text.strip()
+
+    return sections
+
 
 def _parse_front_matter(text: str) -> tuple[dict, str]:
-    """Parse YAML front matter from Jekyll markdown. Returns (fm_dict, body)."""
+    """Parse YAML front matter from Jekyll markdown. Returns (fm_dict, body).
+
+    Handles multi-line values: lists of dicts (sources) and indented blocks.
+    """
     if not text.startswith("---"):
         return {}, text
     end = text.find("---", 3)
@@ -581,50 +802,127 @@ def _parse_front_matter(text: str) -> tuple[dict, str]:
     body = text[end + 3:].lstrip("\n")
 
     fm: dict = {}
-    for line in fm_raw.split("\n"):
-        if ":" not in line:
+    lines = fm_raw.split("\n")
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if ":" not in line or line.startswith("-") or line.startswith(" "):
+            i += 1
             continue
         key, _, val = line.partition(":")
         key = key.strip()
         val = val.strip()
-        if not key or key.startswith("-"):
+        if not key:
+            i += 1
             continue
-        # Parse simple values
-        if val == "" or val.lower() == "null":
-            fm[key] = None
-        elif val.startswith('"') and val.endswith('"'):
-            fm[key] = val[1:-1]
-        elif val.startswith("["):
-            try:
-                fm[key] = json.loads(val)
-            except json.JSONDecodeError:
-                fm[key] = val
-        elif val.replace(".", "", 1).isdigit():
-            fm[key] = float(val) if "." in val else int(val)
-        else:
-            fm[key] = val
+
+        # Check if next lines are indented (multi-line value)
+        if val == "" and i + 1 < len(lines) and lines[i + 1].startswith((" ", "-")):
+            # Collect all continuation lines
+            block_lines = []
+            j = i + 1
+            while j < len(lines) and (lines[j].startswith((" ", "-")) or lines[j].strip() == ""):
+                block_lines.append(lines[j])
+                j += 1
+            # Try to parse as YAML-like list of dicts
+            block = "\n".join(block_lines)
+            parsed = _parse_yaml_block(block)
+            fm[key] = parsed
+            i = j
+            continue
+
+        # Simple single-line value
+        fm[key] = _parse_yaml_value(val)
+        i += 1
+
     return fm, body
 
 
+def _parse_yaml_value(val: str):
+    """Parse a single YAML value string."""
+    if val == "" or val.lower() == "null":
+        return None
+    if val.lower() == "true":
+        return True
+    if val.lower() == "false":
+        return False
+    if val.startswith('"') and val.endswith('"'):
+        return val[1:-1]
+    if val.startswith("["):
+        try:
+            return json.loads(val)
+        except json.JSONDecodeError:
+            return val
+    if val.replace(".", "", 1).lstrip("-").isdigit():
+        return float(val) if "." in val else int(val)
+    return val
+
+
+def _parse_yaml_block(block: str) -> list:
+    """Parse indented YAML block (list of dicts or simple list)."""
+    items: list = []
+    current: dict = {}
+    for line in block.split("\n"):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("- ") and ":" in stripped:
+            # New dict item: "- key: value"
+            if current:
+                items.append(current)
+            current = {}
+            kv = stripped[2:]
+            k, _, v = kv.partition(":")
+            current[k.strip()] = _parse_yaml_value(v.strip())
+        elif stripped.startswith("-"):
+            # Simple list item: "- value"
+            if current:
+                items.append(current)
+                current = {}
+            items.append(_parse_yaml_value(stripped[1:].strip()))
+        elif ":" in stripped and current is not None:
+            # Continuation key in current dict: "  key: value"
+            k, _, v = stripped.partition(":")
+            current[k.strip()] = _parse_yaml_value(v.strip())
+    if current:
+        items.append(current)
+    return items
+
+
 def _find_articles(site: str, brand: str = "", horizon: str = "") -> list[Path]:
-    """Find all Jekyll post files, optionally filtered by brand/horizon."""
+    """Find all Jekyll post files, optionally filtered by brand/horizon.
+
+    Uses directory structure (_posts/{brand}/{horizon}/) for filtering
+    instead of reading every file — O(1) directory lookups vs O(n) file reads.
+    """
     posts_dir = Path(site) / "_posts"
     if not posts_dir.exists():
         return []
-    articles = sorted(posts_dir.rglob("*.md"), reverse=True)
-    if not brand and not horizon:
-        return articles
 
-    filtered = []
-    for path in articles:
-        text = path.read_text(encoding="utf-8")
-        fm, _ = _parse_front_matter(text)
-        if brand and fm.get("brand") != brand:
-            continue
-        if horizon and fm.get("horizon") != horizon:
-            continue
-        filtered.append(path)
-    return filtered
+    if brand and horizon:
+        # Narrow: _posts/{brand}/{horizon}/*.md
+        target = posts_dir / brand / horizon
+        if not target.exists():
+            return []
+        return sorted(target.glob("*.md"), reverse=True)
+    elif brand:
+        # All horizons for one brand: _posts/{brand}/**/*.md
+        target = posts_dir / brand
+        if not target.exists():
+            return []
+        return sorted(target.rglob("*.md"), reverse=True)
+    elif horizon:
+        # One horizon across all brands: _posts/*/{horizon}/*.md
+        articles = []
+        for brand_dir in sorted(posts_dir.iterdir()):
+            if not brand_dir.is_dir():
+                continue
+            target = brand_dir / horizon
+            if target.exists():
+                articles.extend(target.glob("*.md"))
+        return sorted(articles, reverse=True)
+    else:
+        return sorted(posts_dir.rglob("*.md"), reverse=True)
 
 
 @mcp.tool()
@@ -741,7 +1039,7 @@ async def list_pending_scores(
         if len(pending) >= limit:
             break
         text = path.read_text(encoding="utf-8")
-        fm, _ = _parse_front_matter(text)
+        fm, body = _parse_front_matter(text)
 
         # Skip already scored unless re-scoring requested
         current_outcome = fm.get("outcome")
@@ -771,13 +1069,20 @@ async def list_pending_scores(
             except (json.JSONDecodeError, ValueError):
                 pass
 
+        # Extract prediction content so the agent can evaluate
+        sections = _extract_sections(body)
+
         entry = {
             "path": str(path.relative_to(site)),
             "brand": fm.get("brand"),
             "horizon": h,
             "date": str(date_str),
+            "fictive_date": fm.get("fictive_date", ""),
             "headline": fm.get("headline", path.stem),
+            "signal": sections.get("signal", ""),
+            "extrapolation": sections.get("extrapolation", ""),
             "tags": fm.get("tags", []),
+            "confidence": fm.get("confidence", "medium"),
             "days_ago": (now - pub_date).days,
             "current_outcome": current_outcome,
             "revision": revision,
@@ -858,27 +1163,12 @@ async def generate_scorecard(
         t = v["total"]
         v["accuracy"] = round((v["confirmed"] + v["partial"] * 0.5) / t, 3) if t else 0
 
-    # Streak (most recent first by date, not path)
-    scored.sort(key=lambda s: s["date"], reverse=True)
-    current_streak = 0
-    streak_type = None
-    for s in scored:
-        if streak_type is None:
-            streak_type = s["outcome"]
-            current_streak = 1
-        elif s["outcome"] == streak_type:
-            current_streak += 1
-        else:
-            break
-
     summary = {
         "total": total,
         "confirmed": confirmed,
         "partial": partial,
         "wrong": wrong,
         "accuracy": accuracy,
-        "streak": current_streak,
-        "streak_type": streak_type,
         "period_days": last_n_days,
     }
 

@@ -411,14 +411,13 @@ class TestGenerateScorecard:
         data = json.loads(sc_file.read_text(encoding="utf-8"))
         assert data["summary"]["total"] == 1
 
-    def test_streak_tracking(self, augur, site_dir):
+    def test_no_streak_in_summary(self, augur, site_dir):
         recent = (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d")
-        for i in range(3):
-            _write_article(site_dir, "the", "tomorrow", recent, f"Win {i}",
-                           outcome="confirmed", outcome_date=recent)
+        _write_article(site_dir, "the", "tomorrow", recent, "Win",
+                       outcome="confirmed", outcome_date=recent)
         result = _run(augur.generate_scorecard())
-        assert result["summary"]["streak"] == 3
-        assert result["summary"]["streak_type"] == "confirmed"
+        assert "streak" not in result["summary"]
+        assert "streak_type" not in result["summary"]
 
     def test_filter_by_brand(self, augur, site_dir):
         recent = (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d")
@@ -570,6 +569,82 @@ class TestFictiveDateLeapYear:
 # ---------------------------------------------------------------------------
 # score_prediction — body corruption protection
 # ---------------------------------------------------------------------------
+
+class TestExtractSections:
+    def test_extract_english(self, augur):
+        body = (
+            "## The Signal\n\nOil supply is tightening.\n\n"
+            "## The Extrapolation\n\nPrices will rise 10%.\n\n"
+            "## In The Works\n\nOPEC meets next week.\n"
+        )
+        sections = augur._extract_sections(body)
+        assert "Oil supply is tightening." in sections["signal"]
+        assert "Prices will rise 10%." in sections["extrapolation"]
+        assert "OPEC meets next week." in sections["in_the_works"]
+
+    def test_extract_german(self, augur):
+        body = (
+            "## Das Signal\n\nÖlversorgung wird knapp.\n\n"
+            "## Die Extrapolation\n\nPreise steigen 10%.\n\n"
+            "## In Arbeit\n\nOPEC tagt nächste Woche.\n"
+        )
+        sections = augur._extract_sections(body)
+        assert "Ölversorgung wird knapp." in sections["signal"]
+        assert "Preise steigen 10%." in sections["extrapolation"]
+        assert "OPEC tagt nächste Woche." in sections["in_the_works"]
+
+    def test_extract_empty_body(self, augur):
+        sections = augur._extract_sections("")
+        assert sections == {}
+
+
+class TestPendingScoringContent:
+    def test_pending_includes_prediction_content(self, augur, site_dir):
+        """Pending scores should include signal + extrapolation for auto-scoring."""
+        old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
+        _run(augur.publish_article(
+            brand="the", horizon="tomorrow", headline="Oil Will Rise",
+            signal="Oil supply is tight", extrapolation="Prices will rise 10%",
+            in_the_works="OPEC meeting", tags=["oil"], sources=[],
+        ))
+        # Backdate the article so it's past horizon
+        posts_dir = site_dir / "_posts" / "the" / "tomorrow"
+        articles = list(posts_dir.glob("*.md"))
+        assert len(articles) == 1
+        art = articles[0]
+        text = art.read_text(encoding="utf-8")
+        text = text.replace(
+            f'date: "{datetime.now(timezone.utc).strftime("%Y-%m-%d")}"',
+            f'date: "{old_date}"'
+        )
+        # Rename file to match old date
+        new_name = art.name.replace(
+            datetime.now(timezone.utc).strftime("%Y-%m-%d"), old_date
+        )
+        art.unlink()
+        new_path = posts_dir / new_name
+        new_path.write_text(text, encoding="utf-8")
+
+        result = _run(augur.list_pending_scores())
+        assert result["count"] == 1
+        entry = result["pending"][0]
+        assert "Oil supply is tight" in entry["signal"]
+        assert "Prices will rise 10%" in entry["extrapolation"]
+        assert entry["fictive_date"] != ""
+        assert entry["confidence"] == "medium"
+
+    def test_pending_includes_fictive_date(self, augur, site_dir):
+        """Fictive date tells the agent WHEN the prediction was supposed to materialize."""
+        old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
+        path = _write_article(site_dir, "the", "tomorrow", old_date, "Date Check")
+        # Add fictive_date to front matter
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("---\n\n", f'fictive_date: "2026-03-15"\n---\n\n', 1)
+        path.write_text(text, encoding="utf-8")
+
+        result = _run(augur.list_pending_scores())
+        assert result["pending"][0]["fictive_date"] == "2026-03-15"
+
 
 class TestScoreEvidence:
     def test_evidence_stored_in_log(self, augur, site_dir):
@@ -786,26 +861,107 @@ class TestPublishArticle:
 
 
 # ---------------------------------------------------------------------------
-# Scorecard streak ordering
+# _parse_front_matter multi-line YAML
 # ---------------------------------------------------------------------------
 
-class TestScorecardStreak:
-    def test_streak_uses_date_order_not_path(self, augur, site_dir):
-        """Streak should be chronological, not path-alphabetical."""
-        # Write articles from different brands on different dates
-        d1 = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%d")
-        d2 = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
-        d3 = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+class TestParseFrontMatterMultiLine:
+    def test_sources_list_of_dicts(self, augur):
+        text = (
+            '---\n'
+            'brand: "the"\n'
+            'sources:\n'
+            '- name: "Reuters"\n'
+            '  url: "https://reuters.com"\n'
+            '- name: "BBC"\n'
+            '  url: "https://bbc.com"\n'
+            '---\n\nBody.'
+        )
+        fm, body = augur._parse_front_matter(text)
+        assert fm["brand"] == "the"
+        assert len(fm["sources"]) == 2
+        assert fm["sources"][0]["name"] == "Reuters"
+        assert fm["sources"][1]["url"] == "https://bbc.com"
 
-        # Most recent (d3) = wrong, then d2 = confirmed, d1 = confirmed
-        _write_article(site_dir, "the", "tomorrow", d1, "First",
-                       outcome="confirmed", outcome_date=d1)
-        _write_article(site_dir, "financial", "tomorrow", d2, "Second",
-                       outcome="confirmed", outcome_date=d2)
-        _write_article(site_dir, "the", "tomorrow", d3, "Third",
-                       outcome="wrong", outcome_date=d3)
+    def test_simple_list_block(self, augur):
+        text = '---\ntags:\n- oil\n- energy\n---\n'
+        fm, _ = augur._parse_front_matter(text)
+        assert fm["tags"] == ["oil", "energy"]
 
-        result = _run(augur.generate_scorecard())
-        # Most recent is "wrong" — streak should be 1, not 2
-        assert result["summary"]["streak"] == 1
-        assert result["summary"]["streak_type"] == "wrong"
+    def test_inline_list_still_works(self, augur):
+        text = '---\ntags: ["oil", "energy"]\n---\n'
+        fm, _ = augur._parse_front_matter(text)
+        assert fm["tags"] == ["oil", "energy"]
+
+    def test_bool_parsing(self, augur):
+        text = '---\nflag: true\noff: false\n---\n'
+        fm, _ = augur._parse_front_matter(text)
+        assert fm["flag"] is True
+        assert fm["off"] is False
+
+    def test_negative_number(self, augur):
+        text = '---\nchange: -5.2\n---\n'
+        fm, _ = augur._parse_front_matter(text)
+        assert fm["change"] == -5.2
+
+
+# ---------------------------------------------------------------------------
+# _find_articles directory-based filtering
+# ---------------------------------------------------------------------------
+
+class TestFindArticlesDirectory:
+    def test_filter_brand_uses_directory(self, augur, site_dir):
+        _write_article(site_dir, "the", "tomorrow", "2026-03-01", "A")
+        _write_article(site_dir, "financial", "tomorrow", "2026-03-01", "B")
+        result = augur._find_articles(str(site_dir), brand="the")
+        assert len(result) == 1
+        assert "the" in str(result[0])
+
+    def test_filter_horizon_uses_directory(self, augur, site_dir):
+        _write_article(site_dir, "the", "tomorrow", "2026-03-01", "A")
+        _write_article(site_dir, "the", "soon", "2026-03-01", "B")
+        result = augur._find_articles(str(site_dir), horizon="soon")
+        assert len(result) == 1
+        assert "soon" in str(result[0])
+
+    def test_filter_brand_and_horizon(self, augur, site_dir):
+        _write_article(site_dir, "the", "tomorrow", "2026-03-01", "A")
+        _write_article(site_dir, "the", "soon", "2026-03-01", "B")
+        _write_article(site_dir, "financial", "tomorrow", "2026-03-01", "C")
+        result = augur._find_articles(str(site_dir), brand="the", horizon="tomorrow")
+        assert len(result) == 1
+
+    def test_nonexistent_brand_returns_empty(self, augur, site_dir):
+        _write_article(site_dir, "the", "tomorrow", "2026-03-01", "A")
+        result = augur._find_articles(str(site_dir), brand="nope")
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
+# generate_social_cards
+# ---------------------------------------------------------------------------
+
+class TestGenerateSocialCards:
+    def test_unknown_brand(self, augur, site_dir):
+        result = _run(augur.generate_social_cards(
+            "/tmp/img.jpg", "Test", "invalid", "tomorrow", "2026-03-13"))
+        assert "error" in result
+
+    def test_missing_image(self, augur, site_dir):
+        result = _run(augur.generate_social_cards(
+            "/nonexistent/img.jpg", "Test", "the", "tomorrow", "2026-03-13"))
+        assert "error" in result
+
+
+# ---------------------------------------------------------------------------
+# post_social with image_path
+# ---------------------------------------------------------------------------
+
+class TestPostSocialImage:
+    def test_post_social_accepts_image_path(self, augur, monkeypatch):
+        """post_social should accept image_path parameter."""
+        monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
+        # Should not crash — just hit missing creds
+        result = _run(augur.post_social(
+            "the", "bluesky", "test", "https://example.com",
+            image_path="/tmp/card.webp"))
+        assert "BLUESKY" in result.get("error", "")
