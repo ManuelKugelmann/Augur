@@ -1,6 +1,6 @@
 #!/bin/bash
 # LibreChat Lite — install or update on Uberspace
-# Called by bootstrap.sh or directly: bash setup.sh <app-dir> <version>
+# Called by TradeAssistant.sh (_lc_download_and_setup) or directly: bash setup.sh <app-dir> <version>
 set -euo pipefail
 
 # ── Load central config ──
