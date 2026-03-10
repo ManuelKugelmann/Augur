@@ -106,8 +106,12 @@ _do_install() {
         command -v node &>/dev/null || die "Node.js not available"
         log "Node.js $(node -v) (U8 system-provided)"
     else
-        log "Setting Node.js ${NODE_VERSION}..."
-        uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        local current_node
+        current_node="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)" || true
+        if [[ "$current_node" != "$NODE_VERSION" ]]; then
+            log "Setting Node.js ${NODE_VERSION} (current: ${current_node:-none})..."
+            uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        fi
         command -v node &>/dev/null || die "Node.js not available"
         log "Node.js $(node -v)"
     fi
