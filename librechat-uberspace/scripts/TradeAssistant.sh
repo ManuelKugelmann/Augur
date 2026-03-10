@@ -72,16 +72,13 @@ _web_backend() {
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
 _pip_install() {
     local pip="$1" req="$2"
-    local constraint=""
-    if ! _is_u8; then
-        # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
-        constraint=$(mktemp)
-        echo 'pandas<3' > "$constraint"
-    fi
-    "$pip" install --prefer-binary \
-        ${constraint:+-c "$constraint"} \
-        -r "$req" "${@:3}"
-    [[ -n "$constraint" ]] && rm -f "$constraint"
+    local constraint
+    constraint=$(mktemp)
+    # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
+    # U8: empty constraint file (no-op)
+    if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
+    "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    rm -f "$constraint"
 }
 
 # ── HTTP helpers ──
@@ -540,6 +537,37 @@ except Exception as e:
         else
             warn "LibreChat not ready — run bootstrap manually: ta bootstrap"
         fi
+    fi
+
+    # ── 14. Verify services and cron ──────────────
+    echo ""
+    echo -e "${CYAN}── Post-install checks ──${NC}"
+    echo ""
+
+    # Check service registrations
+    for svc in librechat trading charts; do
+        if _is_u8; then
+            if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        else
+            if [[ -f "$HOME/etc/services.d/${svc}.ini" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        fi
+    done
+
+    # Check cron
+    if crontab -l 2>/dev/null | grep -q "ta cron"; then
+        log "Cron: ta cron scheduled"
+    else
+        warn "Cron: ta cron not scheduled"
+        echo -e "      Add with: ${CYAN}crontab -e${NC}"
+        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron${NC}"
     fi
 
     # ── Done ────────────────────────────────────

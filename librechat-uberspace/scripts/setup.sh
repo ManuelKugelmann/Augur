@@ -167,15 +167,12 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Venv created. Upgrading pip..."
         timeout 60 venv/bin/pip install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
-        _pip_constraint=""
-        if ! _is_u8; then
-            _pip_constraint=$(mktemp)
-            echo 'pandas<3' > "$_pip_constraint"
-        fi
+        _pip_constraint=$(mktemp)
+        # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
+        if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
         timeout 180 venv/bin/pip install --prefer-binary \
-            ${_pip_constraint:+-c "$_pip_constraint"} \
-            -r requirements.txt
-        [[ -n "$_pip_constraint" ]] && rm -f "$_pip_constraint"
+            -c "$_pip_constraint" -r requirements.txt
+        rm -f "$_pip_constraint"
         cd - >/dev/null
         log "Signals stack ready"
     fi
@@ -239,12 +236,6 @@ if [[ "$MODE" == "install" ]]; then
                 fi
             fi
             sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$STACK/.env"
-            # Also set in LibreChat .env for the trading service
-            if ! grep -q "^MONGO_URI_SIGNALS=" "$APP/.env"; then
-                echo "MONGO_URI_SIGNALS=$DERIVED" >> "$APP/.env"
-            else
-                sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$APP/.env"
-            fi
             log "Auto-derived MONGO_URI_SIGNALS from MONGO_URI (database: signals)"
         fi
     fi
