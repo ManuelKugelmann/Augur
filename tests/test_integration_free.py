@@ -102,7 +102,7 @@ class TestDisasters:
 
     def test_natural_events(self):
         result = run(self.m.get_natural_events(days=60, limit=5))
-        assert "events" in result or "title" in result
+        _check_upstream(result, "events")
 
 
 # ── health_server (WHO GHO, OpenFDA) ────────────────────

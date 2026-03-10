@@ -391,6 +391,11 @@ SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta --no-build-isolation
 
 If `ta` is not installed, `test_indicators.py` and `TestCombinedServer` in `test_servers.py` are automatically skipped.
 
+If `httpx` is not installed, `TestEdgeResolution` in `test_agents_seed.py` and all integration tests (`test_integration_free.py`, `test_integration_keyed.py`) are automatically skipped. Install with:
+```bash
+pip install httpx
+```
+
 Bats tests require `/dev/fd` (process substitution). If `/dev/fd` is missing (common in containers), create the symlink:
 ```bash
 ln -sf /proc/self/fd /dev/fd
