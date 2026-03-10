@@ -15,6 +15,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+pytest.importorskip("httpx", reason="httpx required for server tests")
+
 # Add servers dir to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "servers"))
 

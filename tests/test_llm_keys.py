@@ -8,8 +8,9 @@ Marked with pytest.mark.integration — not included in normal CI runs.
 """
 import os
 
-import httpx
 import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required")
 
 pytestmark = pytest.mark.integration
 

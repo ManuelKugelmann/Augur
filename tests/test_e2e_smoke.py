@@ -20,8 +20,9 @@ import textwrap
 import time
 from pathlib import Path
 
-import httpx
 import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required")
 
 # ── Config ──────────────────────────────────────
 
