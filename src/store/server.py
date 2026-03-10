@@ -23,6 +23,11 @@ import json
 import os
 import re
 
+try:
+    from bson import ObjectId
+except ImportError:
+    ObjectId = None  # type: ignore[misc,assignment]
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -222,6 +227,7 @@ def seed_profiles(profiles_dir: str, clear: bool = False) -> dict:
         return {"error": f"profiles directory not found: {pdir}"}
 
     results: dict = {}
+    errors: list[str] = []
     for kind in sorted(VALID_KINDS):
         seeded = 0
         skipped = 0
@@ -263,10 +269,12 @@ def seed_profiles(profiles_dir: str, clear: bool = False) -> dict:
                             seeded += 1
                         else:
                             skipped += 1
-                except Exception:
-                    pass
+                except Exception as exc:
+                    errors.append(f"{fpath.name}: {exc}")
         if seeded or skipped:
             results[kind] = {"seeded": seeded, "skipped": skipped}
+    if errors:
+        results["_errors"] = errors
     return results
 
 
@@ -1033,7 +1041,6 @@ def update_note(note_id: str, content: str = "", title: str = "",
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified"}
-    from bson import ObjectId
     try:
         oid = ObjectId(note_id)
     except Exception:
@@ -1060,7 +1067,6 @@ def delete_note(note_id: str) -> dict:
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified"}
-    from bson import ObjectId
     try:
         oid = ObjectId(note_id)
     except Exception:
