@@ -131,7 +131,7 @@ async def hazard_alerts(hazard: str = "", days: int = 7,
 
 | Capability | Store Already Does | Utility MCP Adds |
 |------------|-------------------|------------------|
-| Document storage | Profiles (structured JSON, git-tracked) | Arbitrary files (exports, reports, PDFs) |
+| Document storage | Profiles (structured, MongoDB collections) | Arbitrary files (exports, reports, PDFs) |
 | Knowledge persistence | Notes + memory (per-user, MongoDB) | N/A |
 **Verdict**: **No functional overlap.** The store handles domain-specific structured data (profiles, snapshots, notes, memory). The filesystem MCP handles ad-hoc user data (files). Keep separate.
 

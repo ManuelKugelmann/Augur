@@ -310,7 +310,7 @@ via `streamable-http` on port 8071. FastMCP 3.1+ with `stateless_http=True`.
 
 ### What's shared (OSINT data)
 
-- **Profiles**: JSON files at `profiles/{region}/{kind}/{id}.json`
+- **Profiles**: MongoDB collections (`profiles_{kind}`), organized by region
 - **Snapshots/events**: MongoDB timeseries (tagged with `user_id` in meta)
 - **12 data domain servers**: weather, disasters, macro, agri, conflict,
   commodities, health, politics, humanitarian, transport, water, infra
@@ -438,7 +438,7 @@ ssh -T git@github.com   # should say "Hi youruser!"
 ├── mcps/                          ← TradingAssistant repo clone
 │   ├── src/servers/               ← 12 domain servers + combined_server.py
 │   ├── src/store/                 ← signals store (server.py)
-│   ├── profiles/                  ← profile JSON files
+│   ├── profiles/                  ← seed profile data (JSON, for initial import)
 │   ├── venv/                      ← Python virtual environment
 │   ├── .env                       ← signals stack config
 │   └── deploy.conf                ← central config

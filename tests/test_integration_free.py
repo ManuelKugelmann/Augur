@@ -286,6 +286,7 @@ class TestTransportFree:
         import transport_server as mod
         self.m = mod
 
+    @pytest.mark.xfail(reason="OpenSky API is frequently unavailable", strict=False)
     def test_flights_in_area(self):
         # Small bounding box over Frankfurt airport
         result = run(self.m.flights_in_area(
