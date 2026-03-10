@@ -281,14 +281,14 @@ _do_install() {
         log "Upgrading pip..."
         "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
         log "Installing requirements..."
-        "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt" 2>/dev/null || true
+        "$STACK/venv/bin/pip" install --prefer-binary -r "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv "$STACK/venv"
         log "Venv created. Upgrading pip..."
         "$STACK/venv/bin/pip" install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
-        "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt"
+        "$STACK/venv/bin/pip" install --prefer-binary -r "$STACK/requirements.txt"
     fi
     log "Python venv ready"
 
@@ -633,7 +633,7 @@ case "$CMD" in
             log "Upgrading pip..."
             "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
             log "Installing requirements..."
-            "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt" 2>/dev/null || true
+            "$STACK/venv/bin/pip" install --prefer-binary -r "$STACK/requirements.txt" 2>/dev/null || true
         else
             warn "Python venv not found at $STACK/venv — run 'ta install' first"
         fi

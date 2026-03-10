@@ -167,7 +167,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Venv created. Upgrading pip..."
         timeout 60 venv/bin/pip install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
-        timeout 180 venv/bin/pip install -r requirements.txt
+        timeout 180 venv/bin/pip install --prefer-binary -r requirements.txt
         cd - >/dev/null
         log "Signals stack ready"
     fi
