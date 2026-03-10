@@ -1,5 +1,6 @@
 """Disasters — USGS Earthquakes + GDACS + NASA EONET."""
 from fastmcp import FastMCP
+from _http import api_get, api_multi
 import httpx
 from datetime import datetime, timedelta, timezone
 
@@ -36,14 +37,10 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
 @mcp.tool()
 async def get_disasters() -> dict:
     """GDACS global disaster alerts (earthquakes, floods, cyclones, volcanoes)."""
-    try:
-        async with httpx.AsyncClient(timeout=15) as c:
-            r = await c.get("https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH",
-                            params={"eventlist": "", "fromDate": "", "toDate": "", "alertlevel": ""})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"GDACS request failed: {e}"}
+    return await api_get(
+        "https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH",
+        params={"eventlist": "", "fromDate": "", "toDate": "", "alertlevel": ""},
+        timeout=15, label="GDACS")
 
 
 @mcp.tool()
@@ -54,13 +51,8 @@ async def get_natural_events(category: str = "", days: int = 30,
     params = {"status": status, "limit": limit, "days": days}
     if category:
         params["category"] = category
-    try:
-        async with httpx.AsyncClient(timeout=15) as c:
-            r = await c.get("https://eonet.gsfc.nasa.gov/api/v3/events", params=params)
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"NASA EONET request failed: {e}"}
+    return await api_get("https://eonet.gsfc.nasa.gov/api/v3/events",
+                         params=params, timeout=15, label="NASA EONET")
 
 
 # ── Provider-agnostic routing ──────────────────────────
@@ -83,32 +75,17 @@ async def hazard_alerts(hazard: str = "", days: int = 7,
     For earthquakes: returns detailed USGS data (magnitude, alert, tsunami).
     For other/all hazards: returns GDACS alerts + NASA EONET events."""
     hazard = hazard.lower().strip()
-    results: dict = {}
-
-    # Earthquakes → USGS (detailed) is always best
+    calls: dict = {}
     if hazard in ("earthquake", "quake", ""):
-        try:
-            results["usgs_earthquakes"] = await get_earthquakes(
-                min_magnitude=min_magnitude, days=days)
-        except Exception as e:
-            results["usgs_earthquakes"] = {"error": str(e)}
-
-    # Non-earthquake or "all" → GDACS + EONET
+        calls["usgs_earthquakes"] = get_earthquakes(
+            min_magnitude=min_magnitude, days=days)
     if hazard != "earthquake":
-        try:
-            results["gdacs_alerts"] = await get_disasters()
-        except Exception as e:
-            results["gdacs_alerts"] = {"error": str(e)}
-
+        calls["gdacs_alerts"] = get_disasters()
         eonet_cat = _EONET_CATEGORIES.get(hazard, "")
-        try:
-            results["eonet_events"] = await get_natural_events(
-                category=eonet_cat, days=days)
-        except Exception as e:
-            results["eonet_events"] = {"error": str(e)}
-
+        calls["eonet_events"] = get_natural_events(category=eonet_cat, days=days)
+    results = await api_multi(calls)
     results["_meta"] = {"hazard": hazard or "all", "days": days,
-                        "sources": list(results.keys())}
+                        "sources": [k for k in results if k != "_meta"]}
     return results
 
 
