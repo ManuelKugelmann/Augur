@@ -19,14 +19,15 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
         r = await c.get("https://earthquake.usgs.gov/fdsnws/event/1/query", params=params)
         r.raise_for_status()
         data = r.json()
-        return {"count": data["metadata"]["count"],
+        features = data.get("features", [])
+        return {"count": data.get("metadata", {}).get("count", len(features)),
                 "earthquakes": [{"mag": f["properties"]["mag"],
                     "place": f["properties"]["place"],
                     "time": f["properties"]["time"],
                     "tsunami": f["properties"].get("tsunami"),
                     "alert": f["properties"].get("alert"),
                     "coords": f["geometry"]["coordinates"]}
-                    for f in data["features"]]}
+                    for f in features]}
 
 
 @mcp.tool()
