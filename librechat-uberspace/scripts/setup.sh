@@ -236,12 +236,6 @@ if [[ "$MODE" == "install" ]]; then
                 fi
             fi
             sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$STACK/.env"
-            # Also set in LibreChat .env for the trading service
-            if ! grep -q "^MONGO_URI_SIGNALS=" "$APP/.env"; then
-                echo "MONGO_URI_SIGNALS=$DERIVED" >> "$APP/.env"
-            else
-                sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$APP/.env"
-            fi
             log "Auto-derived MONGO_URI_SIGNALS from MONGO_URI (database: signals)"
         fi
     fi

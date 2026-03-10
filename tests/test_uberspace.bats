@@ -190,16 +190,14 @@ setup() {
 # ══════════════════════════════════════════
 
 @test "uberspace: signals store can reach MongoDB" {
-    if ! grep -q "^MONGO_URI_SIGNALS=" "$STACK_DIR/.env" 2>/dev/null && \
-       ! grep -q "^MONGO_URI_SIGNALS=" "$APP_DIR/.env" 2>/dev/null; then
-        skip "MONGO_URI_SIGNALS not configured"
+    if ! grep -q "^MONGO_URI_SIGNALS=" "$STACK_DIR/.env" 2>/dev/null; then
+        skip "MONGO_URI_SIGNALS not configured in $STACK_DIR/.env"
     fi
     run "$STACK_DIR/venv/bin/python" -c "
 import os, sys
 sys.path.insert(0, os.environ.get('STACK_DIR', os.path.expanduser('~/assist')))
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.environ.get('STACK_DIR', os.path.expanduser('~/assist')), '.env'))
-load_dotenv(os.path.join(os.environ.get('APP_DIR', os.path.expanduser('~/LibreChat')), '.env'))
 uri = os.environ.get('MONGO_URI_SIGNALS', '')
 if not uri:
     print('SKIP: no MONGO_URI_SIGNALS'); sys.exit(0)
