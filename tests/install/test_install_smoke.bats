@@ -32,9 +32,11 @@ setup() {
     stub_command "crontab" 'echo ""'
     stub_command "nano" 'echo "stubbed nano $*"'
 
-    # Pre-create LibreChat dir with .version so install skips LC download
-    mkdir -p "$APP_DIR"
-    echo "v0.0.0-test" > "$APP_DIR/.version"
+    # Pre-create LibreChat dir with .version matching the real prerelease tag
+    # so install skips the LC download (version check: already up-to-date)
+    mkdir -p "$APP_DIR/api/server"
+    echo "module.exports = {};" > "$APP_DIR/api/server/index.js"
+    echo "librechat-build" > "$APP_DIR/.version"
 
     # Use real git, but intercept clone to use local repo (no network).
     # Also inject the shared venv into STACK_DIR after clone to skip venv creation.
@@ -143,67 +145,12 @@ teardown() {
 
 # ── Full install with LibreChat bundle download ──
 
-@test "install: full lifecycle including LibreChat bundle download" {
+@test "install: full lifecycle with real LibreChat bundle download" {
     # Remove pre-created APP_DIR so install must download LibreChat
     rm -rf "$APP_DIR"
 
-    # Build a fake release bundle (mimics CI output from release.yml)
-    local BUNDLE_DIR="$TEST_SANDBOX/fake_bundle"
-    mkdir -p "$BUNDLE_DIR/api/server" "$BUNDLE_DIR/client" "$BUNDLE_DIR/config" "$BUNDLE_DIR/scripts"
-    echo "module.exports = {};" > "$BUNDLE_DIR/api/server/index.js"
-    echo "{}" > "$BUNDLE_DIR/package.json"
-
-    # Include our config and scripts (as release.yml does)
-    cp "$REPO_ROOT/librechat-uberspace/config/librechat.yaml" "$BUNDLE_DIR/config/"
-    cp "$REPO_ROOT/librechat-uberspace/config/.env.example" "$BUNDLE_DIR/config/"
-    cp "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$BUNDLE_DIR/scripts/"
-    cp "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" "$BUNDLE_DIR/scripts/"
-    cp "$REPO_ROOT/deploy.conf" "$BUNDLE_DIR/"
-
-    # Embed LC version in bundle (as CI does)
-    echo "1.0.0+abc1234" > "$BUNDLE_DIR/.version"
-
-    # Create the tarball
-    tar czf "$TEST_SANDBOX/librechat-bundle.tar.gz" -C "$BUNDLE_DIR" .
-
-    # Stub curl to serve our fake bundle for GitHub API calls
-    local bundle_path="$TEST_SANDBOX/librechat-bundle.tar.gz"
-    local real_curl
-    real_curl="$(command -v curl)"
-    cat > "$HOME/bin/curl" <<CURLEOF
-#!/bin/bash
-# Intercept GitHub release API calls, pass everything else through
-for arg in "\$@"; do
-    if [[ "\$arg" == *"api.github.com/repos"*"releases/latest" ]]; then
-        # Return fake release JSON pointing to our local bundle
-        echo '{"tag_name":"v0.0.1-test","assets":[{"browser_download_url":"file://$bundle_path","name":"librechat-bundle.tar.gz"}]}'
-        exit 0
-    fi
-    if [[ "\$arg" == "file://"* ]]; then
-        # Handle file:// download — extract path and copy
-        local_path="\${arg#file://}"
-        # Find -o flag value for output
-        out=""
-        prev=""
-        for a in "\$@"; do
-            if [[ "\$prev" == "-o" ]]; then
-                out="\$a"
-                break
-            fi
-            prev="\$a"
-        done
-        if [[ -n "\$out" ]]; then
-            cp "\$local_path" "\$out"
-        else
-            cat "\$local_path"
-        fi
-        exit 0
-    fi
-done
-# Default: pass through to real curl
-exec "$real_curl" "\$@"
-CURLEOF
-    chmod +x "$HOME/bin/curl"
+    # Use the real librechat-build prerelease from GitHub — no stubs for curl.
+    # This test requires network access and downloads the real bundle (~200 MB).
 
     # Stub openssl for crypto key generation in setup.sh
     stub_command "openssl" '
@@ -212,14 +159,13 @@ CURLEOF
         fi
     '
 
-    # Run full install (no APP_DIR/.version → will download bundle)
+    # Run full install (no APP_DIR/.version → will download real bundle)
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
     echo "$output"
     [[ "$status" -eq 0 ]]
 
-    # Verify LibreChat was installed from bundle with LC version
+    # Verify LibreChat was installed from real bundle
     [[ -f "$APP_DIR/.version" ]]
-    grep -q "1.0.0+abc1234" "$APP_DIR/.version"
     [[ -f "$APP_DIR/api/server/index.js" ]]
 
     # Verify .env was generated with crypto keys
@@ -239,45 +185,14 @@ CURLEOF
 }
 
 @test "install: skips download when LC version already matches" {
-    # Pre-create APP_DIR with matching version
+    # Pre-create APP_DIR with version matching the real prerelease tag.
+    # Uses real GitHub API to resolve the release — no curl stubs.
     mkdir -p "$APP_DIR/api/server"
     echo "module.exports = {};" > "$APP_DIR/api/server/index.js"
-    echo "1.0.0+abc1234" > "$APP_DIR/.version"
-
-    # Build a bundle with the same version
-    local BUNDLE_DIR="$TEST_SANDBOX/fake_bundle"
-    mkdir -p "$BUNDLE_DIR/api/server"
-    echo "module.exports = {};" > "$BUNDLE_DIR/api/server/index.js"
-    echo "1.0.0+abc1234" > "$BUNDLE_DIR/.version"
-    tar czf "$TEST_SANDBOX/librechat-bundle.tar.gz" -C "$BUNDLE_DIR" .
-
-    # Stub curl to serve bundle
-    local bundle_path="$TEST_SANDBOX/librechat-bundle.tar.gz"
-    local real_curl
-    real_curl="$(command -v curl)"
-    cat > "$HOME/bin/curl" <<CURLEOF
-#!/bin/bash
-for arg in "\$@"; do
-    if [[ "\$arg" == *"api.github.com/repos"*"releases/latest" ]]; then
-        echo '{"tag_name":"v0.0.1","assets":[{"browser_download_url":"file://$bundle_path","name":"librechat-bundle.tar.gz"}]}'
-        exit 0
-    fi
-    if [[ "\$arg" == "file://"* ]]; then
-        local_path="\${arg#file://}"
-        out=""; prev=""
-        for a in "\$@"; do
-            [[ "\$prev" == "-o" ]] && { out="\$a"; break; }
-            prev="\$a"
-        done
-        [[ -n "\$out" ]] && cp "\$local_path" "\$out" || cat "\$local_path"
-        exit 0
-    fi
-done
-exec "$real_curl" "\$@"
-CURLEOF
-    chmod +x "$HOME/bin/curl"
+    echo "librechat-build" > "$APP_DIR/.version"
 
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    echo "$output"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"already up-to-date"* ]]
 }

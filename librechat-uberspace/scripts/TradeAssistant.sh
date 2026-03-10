@@ -97,6 +97,7 @@ _download() {
     else
         echo -e "  ${CYAN}↓${NC} ${desc}"
     fi
+    echo -e "  ${CYAN}  URL:${NC} ${url}"
 
     while (( attempt < retries )); do
         attempt=$((attempt + 1))
@@ -170,6 +171,21 @@ _lc_download_and_setup() {
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
 
+    # Check installed version against release tag before downloading
+    if [[ "$skip_current" == true ]]; then
+        local installed_ver=""
+        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
+        if [[ -n "$installed_ver" && -n "$_BUNDLE_TAG" ]]; then
+            # Strip leading 'v' from tag for comparison
+            local tag_ver="${_BUNDLE_TAG#v}"
+            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ]]; then
+                log "LibreChat already up-to-date (${installed_ver})"
+                return 0
+            fi
+            log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
+        fi
+    fi
+
     local lc_tmp
     lc_tmp=$(mktemp -d)
     # shellcheck disable=SC2064
@@ -177,25 +193,16 @@ _lc_download_and_setup() {
 
     log "Downloading LibreChat release..."
     _download "$_BUNDLE_URL" "$lc_tmp/bundle.tar.gz" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
+    log "Extracting bundle..."
     mkdir -p "$lc_tmp/app"
     tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
 
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
-    [[ -z "$bundle_ver" ]] && bundle_ver="unknown"
-
-    if [[ "$skip_current" == true ]]; then
-        local installed_ver=""
-        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
-        if [[ -n "$installed_ver" && "$installed_ver" == "$bundle_ver" ]]; then
-            log "LibreChat already up-to-date (${installed_ver})"
-            rm -rf "$lc_tmp"
-            return 0
-        fi
-        [[ -n "$installed_ver" ]] && log "Updating LibreChat ${installed_ver} → ${bundle_ver}..."
-    fi
+    [[ -z "$bundle_ver" ]] && bundle_ver="${_BUNDLE_TAG:-unknown}"
 
     log "LibreChat version: ${bundle_ver}"
+    log "Running setup..."
     bash "$STACK/librechat-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
     return 0
 }
