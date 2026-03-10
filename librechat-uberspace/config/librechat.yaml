@@ -76,11 +76,11 @@ mcpServers:
         Non-geographic kinds (etfs, indices, commodities, crops, materials, products, sources)
           live under global/. Geographic kinds (countries, stocks, companies) live under their region.
         Indexes: profiles/INDEX_{kind}.json — auto-generated, searchable via store_find_profile.
-        Schemas: profiles/SCHEMAS/{kind}.schema.json — descriptive, per-kind.
 
-      PROFILES: Field schemas in profiles/SCHEMAS/{kind}.schema.json. Validate with store_lint_profiles.
+      PROFILES: put_profile validates required fields on create (extra fields always OK, use 'notes' for freeform).
         ID conventions: countries=ISO3 uppercase (DEU), stocks/etfs/crypto/indices=ticker uppercase (AAPL),
         commodities/crops/materials/products/companies/sources=lowercase slug (crude_oil).
+        Use store_lint_profiles to audit existing profiles.
 
       DATA: Tools prefixed by domain (weather_, disaster_, econ_, agri_, conflict_,
         commodity_, health_, politics_, transport_, water_, humanitarian_, infra_).

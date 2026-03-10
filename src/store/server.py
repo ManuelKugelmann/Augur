@@ -281,37 +281,14 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
 
 # ── Schema + lint helpers ─────────────────────────
 
-
-def _load_schema(kind: str) -> dict | None:
-    """Load the schema for a kind from SCHEMAS/{kind}.schema.json."""
-    p = PROFILES_DIR / "SCHEMAS" / f"{kind}.schema.json"
-    if not p.exists():
-        return None
-    try:
-        return json.loads(p.read_text())
-    except Exception:
-        return None
+# Minimal required fields: just identifiers. Extra fields (including freeform 'notes') always allowed.
+_REQUIRED_FIELDS: dict[str, list[str]] = {k: ["id", "name"] for k in VALID_KINDS}
 
 
-def _lint_one(kind: str, id: str, data: dict, schema: dict | None) -> list[str]:
-    """Lint a single profile. Returns list of issue strings."""
-    issues = []
-    if not schema:
-        return issues
-    required = schema.get("required", [])
-    props = schema.get("properties", {})
-    for field in required:
-        if field not in data:
-            issues.append(f"missing required field: {field}")
-    for field, desc in props.items():
-        if field not in data:
-            continue
-        val = data[field]
-        if isinstance(desc, dict) and not isinstance(val, dict):
-            issues.append(f"{field}: expected object, got {type(val).__name__}")
-        if isinstance(desc, str) and "array" in desc.lower() and not isinstance(val, list):
-            issues.append(f"{field}: expected array, got {type(val).__name__}")
-    return issues
+def _lint_one(kind: str, id: str, data: dict) -> list[str]:
+    """Lint a single profile against required fields. Returns list of issue strings."""
+    required = _REQUIRED_FIELDS.get(kind, [])
+    return [f"missing required field: {f}" for f in required if f not in data]
 
 
 # ── Profile tools ─────────────────────────────────
@@ -355,7 +332,7 @@ def put_profile(kind: str, id: str, data: dict,
     col = _profiles_col(kind)
     existing = col.find_one({"_id_str": id})
     if existing:
-        # Merge: update in-place, keep existing region
+        # Merge: update in-place, keep existing region (skip lint — partial update)
         actual_region = existing.get("region", region)
         update_data = {**data}
         update_data["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -364,7 +341,12 @@ def put_profile(kind: str, id: str, data: dict,
         col.update_one({"_id_str": id}, {"$set": update_data})
         return {"id": id, "region": actual_region, "status": "ok"}
     else:
-        # New profile
+        # New profile — lint required fields
+        full = {"id": id, "kind": kind, "region": region, **data}
+        issues = _lint_one(kind, id, full)
+        if issues:
+            return {"error": f"validation failed for {kind}/{id}",
+                    "issues": issues}
         doc = {
             "_id_str": id,
             "kind": kind,
@@ -566,12 +548,11 @@ def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
             for entry in list_profiles(k):
                 targets.append((k, entry["id"]))
     for k, pid in targets:
-        schema = _load_schema(k)
         prof = get_profile(k, pid)
         if "error" in prof:
             results["issues"][f"{k}/{pid}"] = [prof["error"]]
             continue
-        issues = _lint_one(k, pid, prof, schema)
+        issues = _lint_one(k, pid, prof)
         key = f"{k}/{pid}"
         if issues:
             results["issues"][key] = issues
@@ -991,6 +972,9 @@ def compact(kind: str, entity: str, type: str, older_than_days: int = 90,
 # Stored in MongoDB "user_notes" collection, keyed by user_id.
 # user_id comes from X-User-ID header (streamable-http) or env var.
 
+_VALID_NOTE_KINDS = frozenset({"note", "plan", "watchlist", "journal"})
+_VALID_RESEARCH_KINDS = frozenset({"research", "report", "briefing", "alert"})
+
 
 def _notes_col():
     """Return the user_notes collection."""
@@ -1001,6 +985,8 @@ def _notes_col():
 def save_note(title: str, content: str, tags: list[str] | None = None,
               kind: str = "note") -> dict:
     """Save a personal note/plan/watchlist/journal (per-user)."""
+    if kind not in _VALID_NOTE_KINDS:
+        return {"error": f"invalid note kind: {kind} (use: {', '.join(sorted(_VALID_NOTE_KINDS))})"}
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified (X-User-ID header missing)"}
@@ -1105,6 +1091,8 @@ def save_research(title: str, content: str,
 
     kind: research | report | briefing | alert (default: research)
     """
+    if kind not in _VALID_RESEARCH_KINDS:
+        return {"error": f"invalid research kind: {kind} (use: {', '.join(sorted(_VALID_RESEARCH_KINDS))})"}
     now = datetime.now(timezone.utc)
     col = _shared_notes_col()
     r = col.update_one(
