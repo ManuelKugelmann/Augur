@@ -81,7 +81,7 @@ _pip_install() {
     "$pip" install --prefer-binary \
         ${constraint:+-c "$constraint"} \
         -r "$req" "${@:3}"
-    [[ -n "$constraint" ]] && rm -f "$constraint"
+    if [[ -n "$constraint" ]]; then rm -f "$constraint"; fi
 }
 
 # ── HTTP helpers ──

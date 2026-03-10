@@ -175,7 +175,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         timeout 180 venv/bin/pip install --prefer-binary \
             ${_pip_constraint:+-c "$_pip_constraint"} \
             -r requirements.txt
-        [[ -n "$_pip_constraint" ]] && rm -f "$_pip_constraint"
+        if [[ -n "$_pip_constraint" ]]; then rm -f "$_pip_constraint"; fi
         cd - >/dev/null
         log "Signals stack ready"
     fi
