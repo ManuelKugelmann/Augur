@@ -50,21 +50,8 @@ VALID_KINDS = {
     "regions",
 }
 
-# Schema required fields per kind (for prompt generation)
-SCHEMA_REQUIRED = {
-    "countries": ["id", "name", "iso2", "region"],
-    "stocks": ["id", "name", "type"],
-    "etfs": ["id", "name", "type"],
-    "crypto": ["id", "name", "type"],
-    "indices": ["id", "name", "type"],
-    "commodities": ["id", "name", "category"],
-    "crops": ["id", "name", "category"],
-    "materials": ["id", "name", "category"],
-    "products": ["id", "name", "category"],
-    "companies": ["id", "name", "country"],
-    "sources": ["id", "name", "mcp", "auth"],
-    "regions": ["id", "name", "type"],
-}
+# Minimal required fields per kind (id + name for all)
+REQUIRED_FIELDS = {k: ["id", "name"] for k in VALID_KINDS}
 
 # Kind-specific data enrichment instructions
 KIND_INSTRUCTIONS = {
@@ -217,7 +204,7 @@ def find_existing_profiles(profiles_dir: str, kind: str) -> set[str]:
 
 def build_prompt(kind: str, targets: list[dict], existing_ids: set[str]) -> str:
     """Build the bootstrap prompt for a batch of targets."""
-    required = SCHEMA_REQUIRED.get(kind, [])
+    required = REQUIRED_FIELDS.get(kind, [])
     instructions = KIND_INSTRUCTIONS.get(kind, "Populate all schema fields accurately.")
 
     # Classify targets as new or existing (for enrichment)

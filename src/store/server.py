@@ -39,7 +39,7 @@ VALID_KINDS = frozenset({
     "regions",
 })
 
-_RESERVED_DIRS = frozenset({"SCHEMAS"})
+_RESERVED_DIRS = frozenset({"SCHEMAS"})  # legacy, kept for seed_profiles safety
 VALID_REGIONS = frozenset({
     "north_america", "latin_america", "europe", "mena",
     "sub_saharan_africa", "south_asia", "east_asia",

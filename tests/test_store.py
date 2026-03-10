@@ -170,20 +170,6 @@ def profiles_dir(tmp_path, monkeypatch):
 
     monkeypatch.setattr(server, "PROFILES_DIR", tmp_path)
 
-    # Create SCHEMAS dir with a countries schema
-    schemas = tmp_path / "SCHEMAS"
-    schemas.mkdir()
-    schema = {
-        "$schema": "Profile schema for countries",
-        "required": ["id", "name"],
-        "properties": {
-            "id": "ISO3 country code",
-            "name": "Full country name",
-            "tags": "Array of group memberships",
-        },
-    }
-    (schemas / "countries.schema.json").write_text(json.dumps(schema))
-
     # Create seed data directories for seed_profiles tests
     for region in ("europe", "north_america", "global"):
         for kind in ("countries", "stocks", "sources"):

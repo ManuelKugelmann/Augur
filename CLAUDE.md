@@ -60,8 +60,7 @@ TradingAssistant/
 ├── profiles/                            ← organized by region, then kind
 │   ├── INFO.md                        ← structure reference
 │   ├── INDEX_{kind}.json              ← per-kind indexes (auto-generated)
-│   ├── SCHEMAS/                       ← descriptive schemas per kind
-│   ├── europe/                        ← economic regions
+│   ├── europe/                        ← seed data by region
 │   │   ├── countries/DEU.json
 │   │   └── stocks/SAP.json
 │   ├── north_america/
@@ -269,10 +268,6 @@ north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east
 | `companies` | lowercase slug | `tsmc`, `aramco` |
 | `sources` | lowercase slug | `faostat`, `open-meteo` |
 
-### Schemas
-
-`profiles/SCHEMAS/{kind}.schema.json` — descriptive schema per kind.
-
 ### Indexes
 
 `profiles/INDEX_{kind}.json` — top-level, auto-generated.
@@ -293,7 +288,7 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `search_profiles(kind, field, value, region?)` | Field-level search |
 | `list_regions()` | List regions and their kinds |
 | `rebuild_index(kind?)` | Rebuild indexes from disk |
-| `lint_profiles(kind?, id?)` | Validate against schema |
+| `lint_profiles(kind?, id?)` | Validate required fields (id, name) |
 
 ### Snapshot tools (same API + time fields)
 
