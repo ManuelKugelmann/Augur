@@ -428,12 +428,17 @@ def find_profile(query: str, region: str = "",
             docs = list(col.find(q, projection).limit(limit))
         except Exception:
             docs = []
-        # Regex fallback for ID partial match
+        # Regex fallback for ID and name partial match
         regex = re.compile(re.escape(query), re.IGNORECASE)
         id_q: dict = {"_id_str": regex}
         if region:
             id_q["region"] = region
         id_docs = list(col.find(id_q, projection).limit(limit))
+        name_q: dict = {"name": regex}
+        if region:
+            name_q["region"] = region
+        name_docs = list(col.find(name_q, projection).limit(limit))
+        id_docs.extend(name_docs)
         # Merge deduplicated
         seen = {d["_id_str"] for d in docs}
         for d in id_docs:
