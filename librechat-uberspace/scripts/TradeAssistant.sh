@@ -407,8 +407,12 @@ SVCEOF
         "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-from dotenv import load_dotenv
-load_dotenv(os.path.join('$STACK', '.env'))
+# Load .env if python-dotenv available (env vars also passed from shell)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join('$STACK', '.env'))
+except ImportError:
+    pass
 try:
     from server import seed_profiles
     result = seed_profiles()
@@ -637,8 +641,11 @@ import os, sys
 stack = os.environ.get("STACK", os.path.expanduser("~/assist"))
 sys.path.insert(0, os.path.join(stack, "src", "store"))
 sys.path.insert(0, os.path.join(stack, "src", "servers"))
-from dotenv import load_dotenv
-load_dotenv(os.path.join(stack, ".env"))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(stack, ".env"))
+except ImportError:
+    pass
 from server import compact, _snap_col, VALID_KINDS
 
 for kind in VALID_KINDS:
