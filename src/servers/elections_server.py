@@ -153,6 +153,8 @@ async def eu_parliament_votes(year: str = "2025", limit: int = 20) -> dict:
 
 
 # ── Google Civic Info (US, needs key) ────────────────────
+# Note: us_representatives removed — Google Civic Representatives API
+# was shut down April 2025.
 
 
 @mcp.tool()
