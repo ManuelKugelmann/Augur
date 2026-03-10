@@ -10,6 +10,8 @@ import tempfile
 
 import pytest
 
+httpx = pytest.importorskip("httpx", reason="httpx required for bootstrap-data tests")
+
 # Add the script directory to path so we can import bootstrap-data
 SCRIPT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),

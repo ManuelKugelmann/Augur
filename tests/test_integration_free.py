@@ -10,8 +10,9 @@ import asyncio
 import sys
 from pathlib import Path
 
-import httpx
 import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required")
 
 # Allow importing server modules
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "servers"))

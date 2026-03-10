@@ -90,11 +90,12 @@ _download() {
     else
         echo -e "  ${CYAN}↓${NC} ${desc}"
     fi
+    echo -e "  ${CYAN}  URL:${NC} ${url}"
 
     while (( attempt < retries )); do
         attempt=$((attempt + 1))
         rc=0
-        if command -v wget &>/dev/null; then
+        if command -v wget &>/dev/null && [[ "$url" == http://* || "$url" == https://* ]]; then
             wget --progress=dot:mega --timeout=30 --tries=1 \
                  -O "$out" "$url" 2>&1 \
                 | grep -E --line-buffered '^\s+[0-9]|saved' \
@@ -125,15 +126,21 @@ _download() {
 # Sets global: _BUNDLE_URL, _BUNDLE_TAG
 _resolve_bundle_url() {
     _BUNDLE_URL="" _BUNDLE_TAG=""
-    local json=""
+    local json="" api_url=""
 
     if [[ -z "${RELEASE_TAG:-}" ]]; then
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
+        log "Checking latest release: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
     elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1"
+        log "Checking prereleases: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
         json=$(echo "$json" | sed -n 's/^\[//;s/\]$//;p' | head -1)
     else
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}"
+        log "Checking release tag: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
     fi
 
     if [[ -n "$json" ]]; then
@@ -143,13 +150,16 @@ _resolve_bundle_url() {
 
     # Fallback: rolling "librechat-build" prerelease tag
     if [[ -z "$_BUNDLE_URL" && -z "${RELEASE_TAG:-}" ]]; then
-        log "No bundle in latest release, trying librechat-build tag..."
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build"
+        log "No bundle in latest release, trying: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
         if [[ -n "$json" ]]; then
             _BUNDLE_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
             _BUNDLE_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
         fi
     fi
+
+    [[ -n "$_BUNDLE_URL" ]] && log "Found bundle: ${_BUNDLE_URL} (tag: ${_BUNDLE_TAG})"
 }
 
 # ── Download, extract, and install/update LibreChat bundle ──
@@ -163,6 +173,21 @@ _lc_download_and_setup() {
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
 
+    # Check installed version against release tag before downloading
+    if [[ "$skip_current" == true ]]; then
+        local installed_ver=""
+        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
+        if [[ -n "$installed_ver" && -n "$_BUNDLE_TAG" ]]; then
+            # Strip leading 'v' from tag for comparison
+            local tag_ver="${_BUNDLE_TAG#v}"
+            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ]]; then
+                log "LibreChat already up-to-date (${installed_ver})"
+                return 0
+            fi
+            log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
+        fi
+    fi
+
     local lc_tmp
     lc_tmp=$(mktemp -d)
     # shellcheck disable=SC2064
@@ -170,25 +195,16 @@ _lc_download_and_setup() {
 
     log "Downloading LibreChat release..."
     _download "$_BUNDLE_URL" "$lc_tmp/bundle.tar.gz" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
+    log "Extracting bundle..."
     mkdir -p "$lc_tmp/app"
     tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
 
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
-    [[ -z "$bundle_ver" ]] && bundle_ver="unknown"
-
-    if [[ "$skip_current" == true ]]; then
-        local installed_ver=""
-        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
-        if [[ -n "$installed_ver" && "$installed_ver" == "$bundle_ver" ]]; then
-            log "LibreChat already up-to-date (${installed_ver})"
-            rm -rf "$lc_tmp"
-            return 0
-        fi
-        [[ -n "$installed_ver" ]] && log "Updating LibreChat ${installed_ver} → ${bundle_ver}..."
-    fi
+    [[ -z "$bundle_ver" ]] && bundle_ver="${_BUNDLE_TAG:-unknown}"
 
     log "LibreChat version: ${bundle_ver}"
+    log "Running setup..."
     bash "$STACK/librechat-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
     return 0
 }
@@ -262,13 +278,17 @@ _do_install() {
 
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
-        "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+        log "Upgrading pip..."
+        "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
+        log "Installing requirements..."
+        "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv "$STACK/venv"
-        "$STACK/venv/bin/pip" install -q --upgrade pip
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt"
+        log "Venv created. Upgrading pip..."
+        "$STACK/venv/bin/pip" install --upgrade pip
+        log "Installing requirements (this may take a few minutes)..."
+        "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt"
     fi
     log "Python venv ready"
 
@@ -610,8 +630,10 @@ case "$CMD" in
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
-            "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
-            "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+            log "Upgrading pip..."
+            "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
+            log "Installing requirements..."
+            "$STACK/venv/bin/pip" install -r "$STACK/requirements.txt" 2>/dev/null || true
         else
             warn "Python venv not found at $STACK/venv — run 'ta install' first"
         fi

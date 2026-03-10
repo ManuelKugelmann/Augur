@@ -111,7 +111,7 @@ fi
 if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
     log "Installing rss-mcp..."
     cd "$STACK"
-    npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
+    timeout 60 npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
     cd - >/dev/null
 else
     log "rss-mcp already installed"
@@ -123,7 +123,7 @@ if [[ -d "$STACK/venv" ]]; then
     # finance-mcp-server (provides python -m finance_mcp)
     if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
         log "Installing finance-mcp-server..."
-        "$VPIP" install -q finance-mcp-server || warn "finance-mcp-server install failed"
+        timeout 60 "$VPIP" install finance-mcp-server || warn "finance-mcp-server install failed"
     fi
 fi
 
@@ -133,7 +133,7 @@ CFG_DIR="$VENDOR_DIR/crypto-feargreed-mcp"
 if [[ ! -d "$CFG_DIR" ]]; then
     mkdir -p "$VENDOR_DIR"
     log "Cloning crypto-feargreed-mcp..."
-    git clone -q --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
+    timeout 30 git clone -q --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
 else
     log "crypto-feargreed-mcp already installed"
 fi
@@ -141,7 +141,7 @@ fi
 # uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
 if ! command -v uvx &>/dev/null; then
     log "Installing uv (Python package runner)..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
+    timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
 fi
 
 # ── Install signals stack (Python MCP servers) ──
@@ -162,9 +162,12 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
     else
         log "Setting up signals stack Python environment..."
         cd "$STACK"
+        log "Creating Python venv with $_PYTHON_BIN..."
         "$_PYTHON_BIN" -m venv venv
-        venv/bin/pip install -q --upgrade pip
-        venv/bin/pip install -q -r requirements.txt
+        log "Venv created. Upgrading pip..."
+        timeout 60 venv/bin/pip install --upgrade pip
+        log "Installing requirements (this may take a few minutes)..."
+        timeout 180 venv/bin/pip install -r requirements.txt
         cd - >/dev/null
         log "Signals stack ready"
     fi

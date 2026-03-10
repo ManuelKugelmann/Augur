@@ -8,6 +8,16 @@ _FakeCollection fallback. See _USE_MONGOMOCK flag.
 import sys
 from unittest.mock import MagicMock
 
+# Mock dotenv if not installed (only load_dotenv is used at module level)
+if "dotenv" not in sys.modules:
+    try:
+        import dotenv as _real_dotenv  # noqa: F401
+        del _real_dotenv
+    except ImportError:
+        mock_dotenv = MagicMock()
+        mock_dotenv.load_dotenv = lambda *a, **kw: None
+        sys.modules["dotenv"] = mock_dotenv
+
 # Detect whether real pymongo can import (cffi/cryptography chain).
 # Must happen before mongomock import since mongomock imports pymongo.
 _USE_MONGOMOCK = False

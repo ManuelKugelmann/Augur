@@ -7,8 +7,9 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import httpx
 import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required")
 
 # Add servers dir to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "servers"))
