@@ -133,15 +133,21 @@ _download() {
 # Sets global: _BUNDLE_URL, _BUNDLE_TAG
 _resolve_bundle_url() {
     _BUNDLE_URL="" _BUNDLE_TAG=""
-    local json=""
+    local json="" api_url=""
 
     if [[ -z "${RELEASE_TAG:-}" ]]; then
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
+        log "Checking latest release: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
     elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1"
+        log "Checking prereleases: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
         json=$(echo "$json" | sed -n 's/^\[//;s/\]$//;p' | head -1)
     else
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}"
+        log "Checking release tag: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
     fi
 
     if [[ -n "$json" ]]; then
@@ -151,13 +157,16 @@ _resolve_bundle_url() {
 
     # Fallback: rolling "librechat-build" prerelease tag
     if [[ -z "$_BUNDLE_URL" && -z "${RELEASE_TAG:-}" ]]; then
-        log "No bundle in latest release, trying librechat-build tag..."
-        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build" 2>/dev/null) || json=""
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build"
+        log "No bundle in latest release, trying: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
         if [[ -n "$json" ]]; then
             _BUNDLE_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
             _BUNDLE_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
         fi
     fi
+
+    [[ -n "$_BUNDLE_URL" ]] && log "Found bundle: ${_BUNDLE_URL} (tag: ${_BUNDLE_TAG})"
 }
 
 # ── Download, extract, and install/update LibreChat bundle ──

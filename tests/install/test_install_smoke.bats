@@ -185,11 +185,22 @@ teardown() {
 }
 
 @test "install: skips download when LC version already matches" {
-    # Pre-create APP_DIR with version matching the real prerelease tag.
-    # Uses real GitHub API to resolve the release — no curl stubs.
+    # Pre-create APP_DIR with version matching the prerelease tag
     mkdir -p "$APP_DIR/api/server"
     echo "module.exports = {};" > "$APP_DIR/api/server/index.js"
     echo "librechat-build" > "$APP_DIR/.version"
+
+    # Stub curl to return release metadata (avoids GitHub API rate limits in CI).
+    # The real release uses tag "librechat-build" with asset "librechat-build.tar.gz".
+    stub_command "curl" '
+        for arg in "$@"; do
+            if [[ "$arg" == *"api.github.com/repos"*"releases"* ]]; then
+                echo "{\"tag_name\":\"librechat-build\",\"assets\":[{\"browser_download_url\":\"https://github.com/ManuelKugelmann/TradingAssistant/releases/download/librechat-build/librechat-build.tar.gz\",\"name\":\"librechat-build.tar.gz\"}]}"
+                exit 0
+            fi
+        done
+        exit 1
+    '
 
     run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
     echo "$output"
