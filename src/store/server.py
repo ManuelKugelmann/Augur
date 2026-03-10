@@ -39,7 +39,6 @@ VALID_KINDS = frozenset({
     "regions",
 })
 
-_RESERVED_DIRS = frozenset({"SCHEMAS"})  # legacy, kept for seed_profiles safety
 VALID_REGIONS = frozenset({
     "north_america", "latin_america", "europe", "mena",
     "sub_saharan_africa", "south_asia", "east_asia",
@@ -235,11 +234,11 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
             _cols_ready.discard(f"profiles_{kind}")
             col = _profiles_col(kind)
 
-        # Scan all region dirs
+        # Scan known region dirs only (skip unknown directories like SCHEMAS)
         for region_dir in sorted(pdir.iterdir()):
-            if not region_dir.is_dir() or region_dir.name in _RESERVED_DIRS:
+            if not region_dir.is_dir():
                 continue
-            if region_dir.name.startswith("."):
+            if region_dir.name not in VALID_REGIONS:
                 continue
             kind_dir = region_dir / kind
             if not kind_dir.is_dir():
@@ -481,7 +480,7 @@ def region_links(id: str = "", link_type: str = "") -> dict:
     - no args → return the global graph (clusters, corridors, rivalry axes, dependency chains)
     """
     if not id:
-        graph = PROFILES / "global" / "regions" / "graph.json"
+        graph = PROFILES_DIR / "global" / "regions" / "graph.json"
         if graph.exists():
             return json.loads(graph.read_text())
         return {"error": "graph.json not found — run rebuild or create it"}
@@ -506,17 +505,16 @@ def country_links(id: str = "", link_type: str = "") -> dict:
     - no args → return all country link data across regions
     """
     if not id:
-        # Aggregate links from all country profiles
+        # Aggregate links from all country profiles via MongoDB
         all_links: list[dict] = []
-        for region in _regions():
-            cdir = PROFILES / region / "countries"
-            if not cdir.is_dir():
-                continue
-            for fp in sorted(cdir.glob("*.json")):
-                prof = json.loads(fp.read_text())
-                links = prof.get("links", [])
-                if links:
-                    all_links.append({"id": prof.get("id", fp.stem), "name": prof.get("name", ""), "links": links})
+        col = _profiles_col("countries")
+        for doc in col.find({"links": {"$exists": True, "$ne": []}},
+                            {"_id": 0, "_id_str": 1, "name": 1, "links": 1}):
+            all_links.append({
+                "id": doc.get("_id_str", ""),
+                "name": doc.get("name", ""),
+                "links": doc.get("links", []),
+            })
         return {"countries_with_links": all_links}
     prof = get_profile("countries", id)
     if "error" in prof:
@@ -602,11 +600,11 @@ def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
 # Each kind has its own MongoDB timeseries collection (snap_{kind} / arch_{kind}).
 
 
-@mcp.tool()
-def snapshot(kind: str, entity: str, type: str, data: dict,
-             region: str = "", source: str = "", ts: str = "",
-             lon: float | None = None, lat: float | None = None) -> dict:
-    """Store a timestamped data point. type: indicators, price, fundamentals, etc."""
+def _insert_snapshot(kind: str, entity: str, type: str, data: dict,
+                     region: str, source: str, ts: str,
+                     lon: float | None, lat: float | None,
+                     archive: bool = False) -> dict:
+    """Shared insert logic for snapshot() and archive_snapshot()."""
     if kind not in VALID_KINDS:
         return {"error": f"unknown kind: {kind}"}
     now = datetime.now(timezone.utc)
@@ -618,15 +616,49 @@ def snapshot(kind: str, entity: str, type: str, data: dict,
     parsed_ts = _parse_ts(ts) if ts else now
     if ts and parsed_ts is None:
         return {"error": f"invalid ISO date: {ts}"}
-    doc = {
-        "ts": parsed_ts,
-        "meta": meta,
-        "data": data,
-    }
+    doc = {"ts": parsed_ts, "meta": meta, "data": data}
     if lon is not None and lat is not None:
         doc["location"] = {"type": "Point", "coordinates": [lon, lat]}
-    r = _snap_col(kind).insert_one(doc)
-    return {"id": str(r.inserted_id), "collection": f"snap_{kind}", "status": "ok"}
+    col = _arch_col(kind) if archive else _snap_col(kind)
+    prefix = "arch" if archive else "snap"
+    r = col.insert_one(doc)
+    return {"id": str(r.inserted_id), "collection": f"{prefix}_{kind}", "status": "ok"}
+
+
+def _query_history(kind: str, entity: str, type: str, region: str,
+                   after: str, before: str, limit: int,
+                   archive: bool = False) -> list[dict]:
+    """Shared query logic for history() and archive_history()."""
+    if kind not in VALID_KINDS:
+        return [{"error": f"unknown kind: {kind}"}]
+    q: dict = {"meta.entity": entity}
+    if type:
+        q["meta.type"] = type
+    if region:
+        q["meta.region"] = region
+    if after or before:
+        q["ts"] = {}
+        if after:
+            parsed = _parse_ts(after)
+            if not parsed:
+                return [{"error": f"invalid after date: {after}"}]
+            q["ts"]["$gte"] = parsed
+        if before:
+            parsed = _parse_ts(before)
+            if not parsed:
+                return [{"error": f"invalid before date: {before}"}]
+            q["ts"]["$lt"] = parsed
+    col = _arch_col(kind) if archive else _snap_col(kind)
+    rows = col.find(q).sort("ts", -1).limit(limit)
+    return [_ser(r) for r in rows]
+
+
+@mcp.tool()
+def snapshot(kind: str, entity: str, type: str, data: dict,
+             region: str = "", source: str = "", ts: str = "",
+             lon: float | None = None, lat: float | None = None) -> dict:
+    """Store a timestamped data point. type: indicators, price, fundamentals, etc."""
+    return _insert_snapshot(kind, entity, type, data, region, source, ts, lon, lat)
 
 
 @mcp.tool()
@@ -669,27 +701,7 @@ def history(kind: str, entity: str, type: str = "",
             region: str = "", after: str = "", before: str = "",
             limit: int = 100) -> list[dict]:
     """Snapshot history for an entity. Newest first. after/before: ISO dates."""
-    if kind not in VALID_KINDS:
-        return [{"error": f"unknown kind: {kind}"}]
-    q: dict = {"meta.entity": entity}
-    if type:
-        q["meta.type"] = type
-    if region:
-        q["meta.region"] = region
-    if after or before:
-        q["ts"] = {}
-        if after:
-            parsed = _parse_ts(after)
-            if not parsed:
-                return [{"error": f"invalid after date: {after}"}]
-            q["ts"]["$gte"] = parsed
-        if before:
-            parsed = _parse_ts(before)
-            if not parsed:
-                return [{"error": f"invalid before date: {before}"}]
-            q["ts"]["$lt"] = parsed
-    rows = _snap_col(kind).find(q).sort("ts", -1).limit(limit)
-    return [_ser(r) for r in rows]
+    return _query_history(kind, entity, type, region, after, before, limit)
 
 
 @mcp.tool()
@@ -861,24 +873,8 @@ def chart(kind: str, entity: str, type: str, fields: list[str],
 def archive_snapshot(kind: str, entity: str, type: str, data: dict,
                      region: str = "", source: str = "", ts: str = "") -> dict:
     """Long-term archive snapshot (no TTL). For historical/yearly data."""
-    if kind not in VALID_KINDS:
-        return {"error": f"unknown kind: {kind}"}
-    now = datetime.now(timezone.utc)
-    meta = {"entity": entity, "kind": kind, "region": region,
-            "type": type, "source": source}
-    uid = _get_user_id()
-    if uid:
-        meta["user_id"] = uid
-    parsed_ts = _parse_ts(ts) if ts else now
-    if ts and parsed_ts is None:
-        return {"error": f"invalid ISO date: {ts}"}
-    doc = {
-        "ts": parsed_ts,
-        "meta": meta,
-        "data": data,
-    }
-    r = _arch_col(kind).insert_one(doc)
-    return {"id": str(r.inserted_id), "collection": f"arch_{kind}", "status": "ok"}
+    return _insert_snapshot(kind, entity, type, data, region, source, ts,
+                            None, None, archive=True)
 
 
 @mcp.tool()
@@ -886,27 +882,8 @@ def archive_history(kind: str, entity: str, type: str = "",
                     region: str = "", after: str = "", before: str = "",
                     limit: int = 200) -> list[dict]:
     """Query long-term archive for an entity."""
-    if kind not in VALID_KINDS:
-        return [{"error": f"unknown kind: {kind}"}]
-    q: dict = {"meta.entity": entity}
-    if type:
-        q["meta.type"] = type
-    if region:
-        q["meta.region"] = region
-    if after or before:
-        q["ts"] = {}
-        if after:
-            parsed = _parse_ts(after)
-            if not parsed:
-                return [{"error": f"invalid after date: {after}"}]
-            q["ts"]["$gte"] = parsed
-        if before:
-            parsed = _parse_ts(before)
-            if not parsed:
-                return [{"error": f"invalid before date: {before}"}]
-            q["ts"]["$lt"] = parsed
-    rows = _arch_col(kind).find(q).sort("ts", -1).limit(limit)
-    return [_ser(r) for r in rows]
+    return _query_history(kind, entity, type, region, after, before, limit,
+                          archive=True)
 
 
 @mcp.tool()

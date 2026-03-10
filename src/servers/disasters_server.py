@@ -15,29 +15,35 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
               "minmagnitude": min_magnitude, "limit": limit, "orderby": "time"}
     if alert_level:
         params["alertlevel"] = alert_level
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get("https://earthquake.usgs.gov/fdsnws/event/1/query", params=params)
-        r.raise_for_status()
-        data = r.json()
-        features = data.get("features", [])
-        return {"count": data.get("metadata", {}).get("count", len(features)),
-                "earthquakes": [{"mag": f["properties"]["mag"],
-                    "place": f["properties"]["place"],
-                    "time": f["properties"]["time"],
-                    "tsunami": f["properties"].get("tsunami"),
-                    "alert": f["properties"].get("alert"),
-                    "coords": f["geometry"]["coordinates"]}
-                    for f in features]}
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get("https://earthquake.usgs.gov/fdsnws/event/1/query", params=params)
+            r.raise_for_status()
+            data = r.json()
+            features = data.get("features", [])
+            return {"count": data.get("metadata", {}).get("count", len(features)),
+                    "earthquakes": [{"mag": f["properties"]["mag"],
+                        "place": f["properties"]["place"],
+                        "time": f["properties"]["time"],
+                        "tsunami": f["properties"].get("tsunami"),
+                        "alert": f["properties"].get("alert"),
+                        "coords": f["geometry"]["coordinates"]}
+                        for f in features]}
+    except httpx.HTTPError as e:
+        return {"error": f"USGS earthquake request failed: {e}"}
 
 
 @mcp.tool()
 async def get_disasters() -> dict:
     """GDACS global disaster alerts (earthquakes, floods, cyclones, volcanoes)."""
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get("https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH",
-                        params={"eventlist": "", "fromDate": "", "toDate": "", "alertlevel": ""})
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get("https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH",
+                            params={"eventlist": "", "fromDate": "", "toDate": "", "alertlevel": ""})
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"GDACS request failed: {e}"}
 
 
 @mcp.tool()
@@ -48,10 +54,13 @@ async def get_natural_events(category: str = "", days: int = 30,
     params = {"status": status, "limit": limit, "days": days}
     if category:
         params["category"] = category
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get("https://eonet.gsfc.nasa.gov/api/v3/events", params=params)
-        r.raise_for_status()
-        return r.json()
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get("https://eonet.gsfc.nasa.gov/api/v3/events", params=params)
+            r.raise_for_status()
+            return r.json()
+    except httpx.HTTPError as e:
+        return {"error": f"NASA EONET request failed: {e}"}
 
 
 # ── Provider-agnostic routing ──────────────────────────
