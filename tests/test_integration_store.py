@@ -99,12 +99,18 @@ class TestStoreLive:
         assert result["name"] == "France"
 
     def test_list_profiles(self):
+        self.s.put_profile(
+            kind="countries", id="DEU", region="europe",
+            data={"name": "Germany", "tags": ["eu", "g7"]})
         result = self.s.list_profiles(kind="countries", region="europe")
-        assert any(p["id"] == "DEU" for p in result)
+        assert any(p["id"] == "DEU" for p in result), f"DEU not in result: {result}"
 
     def test_find_profile(self):
+        self.s.put_profile(
+            kind="countries", id="DEU", region="europe",
+            data={"name": "Germany", "tags": ["eu", "g7"]})
         result = self.s.find_profile(query="Germany")
-        assert any(p["id"] == "DEU" for p in result)
+        assert any(p["id"] == "DEU" for p in result), f"DEU not in result: {result}"
 
     # ── Snapshot tools ───────────────────────────────
 
