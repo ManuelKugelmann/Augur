@@ -13,7 +13,7 @@ async def api_get(url: str, *, params: dict | None = None,
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
-        return {"error": f"{label} request failed: {e}"}
+        return {"error": f"{label} request failed: {type(e).__name__}: {e}"}
 
 
 async def api_post(url: str, *, json: dict | None = None,
@@ -28,7 +28,7 @@ async def api_post(url: str, *, json: dict | None = None,
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
-        return {"error": f"{label} request failed: {e}"}
+        return {"error": f"{label} request failed: {type(e).__name__}: {e}"}
 
 
 async def api_multi(calls: dict) -> dict:
