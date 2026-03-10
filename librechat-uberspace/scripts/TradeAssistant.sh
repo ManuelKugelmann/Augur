@@ -493,7 +493,7 @@ except Exception as e:
             echo -e "  ${CYAN}Step 2:${NC} Configure LibreChat"
             echo "    nano $APP/.env"
             echo "    # Set MONGO_URI=mongodb+srv://..."
-            echo "    # Set ANTHROPIC_API_KEY=sk-ant-...  and/or  OPENAI_API_KEY=sk-..."
+            echo "    # Set at least one LLM key (many free tiers — see docs/llm-keys.md)"
             echo ""
         fi
     fi

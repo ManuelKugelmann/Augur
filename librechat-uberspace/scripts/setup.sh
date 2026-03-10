@@ -293,7 +293,7 @@ EOF
     echo "     Required:"
     echo "       MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/LibreChat"
     echo "       MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster.mongodb.net/signals"
-    echo "       OPENAI_API_KEY=sk-...  and/or  ANTHROPIC_API_KEY=sk-ant-..."
+    echo "       At least one LLM key (many free tiers — see docs/llm-keys.md)"
     echo ""
     echo -e "  ${YELLOW}2.${NC} Configure MCP servers (optional, defaults are fine):"
     echo "     nano $APP/librechat.yaml"
