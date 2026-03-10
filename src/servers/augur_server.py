@@ -120,7 +120,7 @@ def _site_base_url() -> str:
 
 def _slugify(text: str, max_len: int = 60) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return slug[:max_len]
+    return slug[:max_len] or "untitled"
 
 
 def _compute_fictive_date(horizon: str, pub_date: datetime) -> str:
@@ -141,7 +141,11 @@ def _compute_fictive_date(horizon: str, pub_date: datetime) -> str:
         d = min(pub_date.day, max_day)
         target = pub_date.replace(year=y, month=m, day=d)
     elif "years" in offset:
-        target = pub_date.replace(year=pub_date.year + offset["years"])
+        import calendar
+        y = pub_date.year + offset["years"]
+        max_day = calendar.monthrange(y, pub_date.month)[1]
+        d = min(pub_date.day, max_day)
+        target = pub_date.replace(year=y, month=pub_date.month, day=d)
     else:
         target = pub_date + timedelta(days=3)
     return target.strftime("%Y-%m-%d")
@@ -647,16 +651,21 @@ async def score_prediction(
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     now_full = datetime.now(timezone.utc).isoformat()
 
-    # Replace outcome fields in front matter
+    # Replace outcome fields in front matter only (between --- markers)
     def _replace_field(content: str, field: str, value: str) -> str:
+        if not content.startswith("---"):
+            return content
+        fm_end = content.find("---", 3)
+        if fm_end == -1:
+            return content
+        fm_block = content[:fm_end]
+        rest = content[fm_end:]
         pattern = re.compile(rf"^({re.escape(field)}:).*$", re.MULTILINE)
-        if pattern.search(content):
-            return pattern.sub(rf'\1 "{value}"', content)
-        # Field missing — insert before closing ---
-        end = content.find("---", 3)
-        if end != -1:
-            return content[:end] + f'{field}: "{value}"\n' + content[end:]
-        return content
+        if pattern.search(fm_block):
+            fm_block = pattern.sub(rf'\1 "{value}"', fm_block)
+        else:
+            fm_block += f'{field}: "{value}"\n'
+        return fm_block + rest
 
     text = _replace_field(text, "outcome", outcome)
     text = _replace_field(text, "outcome_date", now_iso)
@@ -833,7 +842,8 @@ async def generate_scorecard(
         t = v["total"]
         v["accuracy"] = round((v["confirmed"] + v["partial"] * 0.5) / t, 3) if t else 0
 
-    # Streak (most recent first, already sorted by path descending)
+    # Streak (most recent first by date, not path)
+    scored.sort(key=lambda s: s["date"], reverse=True)
     current_streak = 0
     streak_type = None
     for s in scored:

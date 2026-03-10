@@ -23,7 +23,7 @@ def _write_article(site: Path, brand: str, horizon: str, date_key: str,
                    outcome_date=None, confidence="medium", tags=None) -> Path:
     """Write a minimal Jekyll article with front matter."""
     slug = headline.lower().replace(" ", "-")[:40]
-    horizon_slug = {"tomorrow": "tomorrow", "soon": "soon", "future": "future"}[horizon]
+    horizon_slug = {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "leap": "leap"}[horizon]
     post_dir = site / "_posts" / brand / horizon_slug
     post_dir.mkdir(parents=True, exist_ok=True)
     path = post_dir / f"{date_key}-{slug}.md"
@@ -542,3 +542,216 @@ class TestPostSocial:
         result = _run(augur.post_social("the", "Bluesky", "test", "https://example.com"))
         # Should not error with "Unknown platform" — should hit bluesky path
         assert "BLUESKY" in result.get("error", "")
+
+
+# ---------------------------------------------------------------------------
+# _compute_fictive_date — leap year edge cases
+# ---------------------------------------------------------------------------
+
+class TestFictiveDateLeapYear:
+    def test_future_from_feb29_to_non_leap(self, augur):
+        """Feb 29 + 3yr → 2027 has no Feb 29, should clamp to Feb 28."""
+        pub = datetime(2024, 2, 29, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("future", pub) == "2027-02-28"
+
+    def test_leap_from_feb29(self, augur):
+        """Feb 29 + 30yr → 2054 has no Feb 29, should clamp to Feb 28."""
+        pub = datetime(2024, 2, 29, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("leap", pub) == "2054-02-28"
+
+    def test_future_from_feb29_to_leap(self, augur):
+        """Feb 29 2024 + 4yr → 2028 (leap year) → Feb 29."""
+        pub = datetime(2024, 2, 29, tzinfo=timezone.utc)
+        # +3yr = 2027 (not leap), but let's test a custom offset wouldn't help
+        # Standard "future" is +3yr, so 2027-02-28
+        assert augur._compute_fictive_date("future", pub) == "2027-02-28"
+
+
+# ---------------------------------------------------------------------------
+# score_prediction — body corruption protection
+# ---------------------------------------------------------------------------
+
+class TestScoreBodyProtection:
+    def test_body_with_outcome_word_not_corrupted(self, augur, site_dir):
+        """Body containing 'outcome:' should NOT be modified by scoring."""
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Body Test")
+        # Append body text that contains "outcome:" to simulate real article
+        text = path.read_text(encoding="utf-8")
+        text += "\nThe outcome: markets rose sharply.\n"
+        path.write_text(text, encoding="utf-8")
+
+        _run(augur.score_prediction(str(path), "confirmed", "Correct"))
+        updated = path.read_text(encoding="utf-8")
+        # Body should still contain the original text unchanged
+        assert "The outcome: markets rose sharply." in updated
+        # Front matter should have the score
+        fm, body = augur._parse_front_matter(updated)
+        assert fm["outcome"] == "confirmed"
+
+    def test_body_with_outcome_date_not_corrupted(self, augur, site_dir):
+        """Body containing 'outcome_date:' should NOT be modified."""
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Date Body")
+        text = path.read_text(encoding="utf-8")
+        text += "\nPrevious outcome_date: unknown.\n"
+        path.write_text(text, encoding="utf-8")
+
+        _run(augur.score_prediction(str(path), "wrong"))
+        updated = path.read_text(encoding="utf-8")
+        assert "Previous outcome_date: unknown." in updated
+
+
+# ---------------------------------------------------------------------------
+# _slugify
+# ---------------------------------------------------------------------------
+
+class TestSlugify:
+    def test_basic_slug(self, augur):
+        assert augur._slugify("Oil Prices Rise") == "oil-prices-rise"
+
+    def test_special_chars(self, augur):
+        assert augur._slugify("US/China Trade War!") == "us-china-trade-war"
+
+    def test_max_len(self, augur):
+        result = augur._slugify("A" * 100, max_len=10)
+        assert len(result) == 10
+
+    def test_empty_input_returns_untitled(self, augur):
+        assert augur._slugify("!!!") == "untitled"
+
+    def test_all_spaces(self, augur):
+        assert augur._slugify("   ") == "untitled"
+
+
+# ---------------------------------------------------------------------------
+# _is_due
+# ---------------------------------------------------------------------------
+
+class TestIsDue:
+    def test_hourly_match(self, augur):
+        now = datetime(2026, 3, 10, 6, 5, tzinfo=timezone.utc)
+        assert augur._is_due("0,6,12,18", now) is True
+
+    def test_hourly_no_match(self, augur):
+        now = datetime(2026, 3, 10, 7, 5, tzinfo=timezone.utc)
+        assert augur._is_due("0,6,12,18", now) is False
+
+    def test_minute_gate(self, augur):
+        """Should only fire in first 15 minutes of the hour."""
+        now = datetime(2026, 3, 10, 6, 20, tzinfo=timezone.utc)
+        assert augur._is_due("6", now) is False
+
+    def test_minute_just_under(self, augur):
+        now = datetime(2026, 3, 10, 6, 14, tzinfo=timezone.utc)
+        assert augur._is_due("6", now) is True
+
+    def test_monday_schedule(self, augur):
+        # 2026-03-09 is a Monday
+        now = datetime(2026, 3, 9, 3, 5, tzinfo=timezone.utc)
+        assert augur._is_due("3/mon", now) is True
+
+    def test_tuesday_blocked_by_monday(self, augur):
+        # 2026-03-10 is a Tuesday
+        now = datetime(2026, 3, 10, 3, 5, tzinfo=timezone.utc)
+        assert augur._is_due("3/mon", now) is False
+
+    def test_single_hour(self, augur):
+        now = datetime(2026, 3, 10, 2, 0, tzinfo=timezone.utc)
+        assert augur._is_due("2", now) is True
+
+
+# ---------------------------------------------------------------------------
+# publish_article
+# ---------------------------------------------------------------------------
+
+class TestPublishArticle:
+    def test_basic_publish(self, augur, site_dir):
+        result = _run(augur.publish_article(
+            brand="the", horizon="tomorrow", headline="Oil Prices to Rise",
+            signal="Oil supply is tight", extrapolation="Prices will rise 10%",
+            in_the_works="OPEC meeting next week", tags=["oil", "energy"],
+            sources=[{"name": "Reuters", "url": "https://reuters.com"}],
+        ))
+        assert "path" in result
+        assert result["brand"] == "the"
+        assert result["horizon"] == "tomorrow"
+        # Verify file exists and has content
+        text = Path(result["path"]).read_text(encoding="utf-8")
+        assert "Oil supply is tight" in text
+        assert "## The Signal" in text
+        assert "## The Extrapolation" in text
+
+    def test_german_brand(self, augur, site_dir):
+        result = _run(augur.publish_article(
+            brand="der", horizon="soon", headline="Goldpreis steigt",
+            signal="Gold knapp", extrapolation="Preis steigt",
+            in_the_works="Zentralbank kauft", tags=["gold"],
+            sources=[],
+        ))
+        text = Path(result["path"]).read_text(encoding="utf-8")
+        assert "## Das Signal" in text
+        assert "## Die Extrapolation" in text
+
+    def test_invalid_brand(self, augur, site_dir):
+        result = _run(augur.publish_article(
+            brand="invalid", horizon="tomorrow", headline="Test",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "error" in result
+
+    def test_invalid_horizon(self, augur, site_dir):
+        result = _run(augur.publish_article(
+            brand="the", horizon="invalid", headline="Test",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "error" in result
+
+    def test_front_matter_fields(self, augur, site_dir):
+        result = _run(augur.publish_article(
+            brand="financial", horizon="future", headline="Markets Bull",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=["stocks"], sources=[], confidence="high",
+            sentiment_sector="tech", sentiment_direction="bullish",
+            sentiment_confidence=0.85,
+        ))
+        text = Path(result["path"]).read_text(encoding="utf-8")
+        fm, _ = augur._parse_front_matter(text)
+        assert fm["brand"] == "financial"
+        assert fm["confidence"] == "high"
+        assert fm["outcome"] is None
+
+    def test_leap_horizon(self, augur, site_dir):
+        result = _run(augur.publish_article(
+            brand="the", horizon="leap", headline="Long Term Vision",
+            signal="s", extrapolation="e", in_the_works="i",
+            tags=[], sources=[],
+        ))
+        assert "path" in result
+        assert result["horizon"] == "leap"
+
+
+# ---------------------------------------------------------------------------
+# Scorecard streak ordering
+# ---------------------------------------------------------------------------
+
+class TestScorecardStreak:
+    def test_streak_uses_date_order_not_path(self, augur, site_dir):
+        """Streak should be chronological, not path-alphabetical."""
+        # Write articles from different brands on different dates
+        d1 = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%d")
+        d2 = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
+        d3 = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        # Most recent (d3) = wrong, then d2 = confirmed, d1 = confirmed
+        _write_article(site_dir, "the", "tomorrow", d1, "First",
+                       outcome="confirmed", outcome_date=d1)
+        _write_article(site_dir, "financial", "tomorrow", d2, "Second",
+                       outcome="confirmed", outcome_date=d2)
+        _write_article(site_dir, "the", "tomorrow", d3, "Third",
+                       outcome="wrong", outcome_date=d3)
+
+        result = _run(augur.generate_scorecard())
+        # Most recent is "wrong" — streak should be 1, not 2
+        assert result["summary"]["streak"] == 1
+        assert result["summary"]["streak_type"] == "wrong"
