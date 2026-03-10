@@ -1,4 +1,4 @@
-"""Tests for augur_server.py — scorecard tools + helpers."""
+"""Tests for augur_server.py — scorecard + social posting tools."""
 
 import asyncio
 import json
@@ -6,6 +6,7 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -109,6 +110,45 @@ class TestParseFrontMatter:
 
 
 # ---------------------------------------------------------------------------
+# _compute_fictive_date + _article_url
+# ---------------------------------------------------------------------------
+
+class TestFictiveDate:
+    def test_tomorrow_adds_3_days(self, augur):
+        pub = datetime(2026, 3, 10, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("tomorrow", pub) == "2026-03-13"
+
+    def test_soon_adds_3_months(self, augur):
+        pub = datetime(2026, 3, 10, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("soon", pub) == "2026-06-10"
+
+    def test_future_adds_3_years(self, augur):
+        pub = datetime(2026, 3, 10, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("future", pub) == "2029-03-10"
+
+    def test_far_adds_30_years(self, augur):
+        pub = datetime(2026, 3, 10, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("far", pub) == "2056-03-10"
+
+    def test_soon_month_overflow(self, augur):
+        pub = datetime(2026, 11, 15, tzinfo=timezone.utc)
+        # 11 + 3 = 14 → February next year
+        assert augur._compute_fictive_date("soon", pub) == "2027-02-15"
+
+
+class TestArticleUrl:
+    def test_basic_url(self, augur, monkeypatch):
+        monkeypatch.setenv("AUGUR_SITE_URL", "https://augur.news")
+        # Reload to pick up env
+        mod_key = "src.servers.augur_server"
+        if mod_key in sys.modules:
+            del sys.modules[mod_key]
+        from src.servers import augur_server as aug
+        url = aug._article_url("the", "tomorrow", "2026-03-13")
+        assert url == "https://augur.news/the/tomorrow/2026-03-13"
+
+
+# ---------------------------------------------------------------------------
 # _find_articles
 # ---------------------------------------------------------------------------
 
@@ -145,6 +185,7 @@ class TestScorePrediction:
         path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Oil Rises")
         result = _run(augur.score_prediction(str(path), "confirmed", "Oil rose 5%"))
         assert result["outcome"] == "confirmed"
+        assert result["revision"] == 1
 
         # Verify file was updated
         text = path.read_text(encoding="utf-8")
@@ -180,8 +221,31 @@ class TestScorePrediction:
         path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Date Test")
         result = _run(augur.score_prediction(str(path), "confirmed"))
         assert "outcome_date" in result
-        # Should be today's date
         assert result["outcome_date"] == datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    def test_rescore_updates_front_matter(self, augur, site_dir):
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Rescore Test")
+        _run(augur.score_prediction(str(path), "partial", "Unclear"))
+        result = _run(augur.score_prediction(str(path), "confirmed", "Now confirmed"))
+        assert result["outcome"] == "confirmed"
+        assert result["revision"] == 2
+        text = path.read_text(encoding="utf-8")
+        assert '"confirmed"' in text
+
+    def test_rescore_preserves_history(self, augur, site_dir):
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "History Test")
+        _run(augur.score_prediction(str(path), "partial", "First pass"))
+        _run(augur.score_prediction(str(path), "wrong", "Second pass"))
+        _run(augur.score_prediction(str(path), "confirmed", "Third pass"))
+
+        log_path = path.with_suffix(".scores.json")
+        assert log_path.exists()
+        history = json.loads(log_path.read_text(encoding="utf-8"))
+        assert len(history) == 3
+        assert history[0]["outcome"] == "partial"
+        assert history[1]["outcome"] == "wrong"
+        assert history[2]["outcome"] == "confirmed"
+        assert history[2]["revision"] == 3
 
 
 # ---------------------------------------------------------------------------
@@ -190,12 +254,14 @@ class TestScorePrediction:
 
 class TestListPendingScores:
     def test_finds_unscored_past_horizon(self, augur, site_dir):
-        # Article from 10 days ago, tomorrow horizon (2 day window) — should be pending
+        # Article from 10 days ago, tomorrow horizon (3 day window) — should be pending
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "tomorrow", old_date, "Old Prediction")
         result = _run(augur.list_pending_scores())
         assert result["count"] == 1
         assert result["pending"][0]["headline"] == "Old Prediction"
+        assert result["pending"][0]["current_outcome"] is None
+        assert result["pending"][0]["revision"] == 0
 
     def test_skips_recent_articles(self, augur, site_dir):
         # Article from today, tomorrow horizon — not yet scoreable
@@ -210,6 +276,14 @@ class TestListPendingScores:
                        outcome="confirmed", outcome_date="2026-03-05")
         result = _run(augur.list_pending_scores())
         assert result["count"] == 0
+
+    def test_include_scored_for_rescoring(self, augur, site_dir):
+        old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
+        _write_article(site_dir, "the", "tomorrow", old_date, "Scored Already",
+                       outcome="partial", outcome_date="2026-03-05")
+        result = _run(augur.list_pending_scores(include_scored=True))
+        assert result["count"] == 1
+        assert result["pending"][0]["current_outcome"] == "partial"
 
     def test_filter_by_brand(self, augur, site_dir):
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
@@ -226,18 +300,32 @@ class TestListPendingScores:
         result = _run(augur.list_pending_scores(limit=2))
         assert result["count"] == 2
 
-    def test_soon_horizon_needs_14_days(self, augur, site_dir):
-        # 5 days ago with "soon" horizon (14 day window) — not yet scoreable
+    def test_soon_horizon_needs_90_days(self, augur, site_dir):
+        # 5 days ago with "soon" horizon (90 day window) — not yet scoreable
         date_5d = (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "soon", date_5d, "Soon Prediction")
         result = _run(augur.list_pending_scores())
         assert result["count"] == 0
 
-        # 20 days ago — should be pending
-        date_20d = (datetime.now(timezone.utc) - timedelta(days=20)).strftime("%Y-%m-%d")
-        _write_article(site_dir, "the", "soon", date_20d, "Old Soon Prediction")
+        # 100 days ago — should be pending
+        date_100d = (datetime.now(timezone.utc) - timedelta(days=100)).strftime("%Y-%m-%d")
+        _write_article(site_dir, "the", "soon", date_100d, "Old Soon Prediction")
         result = _run(augur.list_pending_scores())
         assert result["count"] == 1
+
+    def test_tomorrow_needs_3_days(self, augur, site_dir):
+        # 2 days ago — not yet scoreable
+        date_2d = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
+        _write_article(site_dir, "the", "tomorrow", date_2d, "Two Day Prediction")
+        result = _run(augur.list_pending_scores())
+        assert result["count"] == 0
+
+    def test_revision_count_in_listing(self, augur, site_dir):
+        old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
+        path = _write_article(site_dir, "the", "tomorrow", old_date, "Revisited")
+        _run(augur.score_prediction(str(path), "partial"))
+        result = _run(augur.list_pending_scores(include_scored=True))
+        assert result["pending"][0]["revision"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -320,3 +408,116 @@ class TestGenerateScorecard:
         result = _run(augur.generate_scorecard(brand="the"))
         assert result["summary"]["total"] == 1
         assert result["summary"]["confirmed"] == 1
+
+
+# ---------------------------------------------------------------------------
+# post_social
+# ---------------------------------------------------------------------------
+
+def _mock_httpx_response(status_code=200, json_data=None):
+    """Create a mock httpx response."""
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.json.return_value = json_data or {}
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
+class TestPostSocial:
+    def test_unknown_platform(self, augur):
+        result = _run(augur.post_social("the", "tiktok", "caption", "https://example.com"))
+        assert "error" in result
+        assert "tiktok" in result["error"]
+
+    def test_bluesky_missing_creds(self, augur, monkeypatch):
+        monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
+        monkeypatch.delenv("BLUESKY_APP_PASSWORD", raising=False)
+        result = _run(augur.post_social("the", "bluesky", "test", "https://example.com"))
+        assert "error" in result
+        assert "BLUESKY" in result["error"]
+
+    def test_mastodon_missing_creds(self, augur, monkeypatch):
+        monkeypatch.delenv("MASTODON_ACCESS_TOKEN", raising=False)
+        monkeypatch.delenv("MASTODON_INSTANCE", raising=False)
+        result = _run(augur.post_social("the", "mastodon", "test", "https://example.com"))
+        assert "error" in result
+        assert "MASTODON" in result["error"]
+
+    def test_manual_platform_missing_ntfy(self, augur, monkeypatch):
+        monkeypatch.setattr(augur, "_NTFY_TOPIC", "")
+        result = _run(augur.post_social("the", "x", "caption", "https://example.com"))
+        assert "error" in result
+
+    def test_bluesky_success(self, augur, monkeypatch):
+        monkeypatch.setenv("BLUESKY_HANDLE", "test.bsky.social")
+        monkeypatch.setenv("BLUESKY_APP_PASSWORD", "test-pass")
+
+        session_resp = _mock_httpx_response(json_data={"accessJwt": "tok", "did": "did:plc:123"})
+        post_resp = _mock_httpx_response(json_data={"uri": "at://did:plc:123/post/abc"})
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(side_effect=[session_resp, post_resp])
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = _run(augur._post_bluesky("Test caption", "https://example.com/article"))
+
+        assert result.get("posted") is True
+        assert "uri" in result
+
+    def test_mastodon_success(self, augur, monkeypatch):
+        monkeypatch.setenv("MASTODON_ACCESS_TOKEN", "tok")
+        monkeypatch.setenv("MASTODON_INSTANCE", "https://mastodon.social")
+
+        post_resp = _mock_httpx_response(json_data={"url": "https://mastodon.social/@test/123"})
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=post_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = _run(augur._post_mastodon("Test caption", "https://example.com/article"))
+
+        assert result.get("posted") is True
+        assert "url" in result
+
+    def test_manual_ntfy_success(self, augur, monkeypatch):
+        monkeypatch.setattr(augur, "_NTFY_TOPIC", "test-topic")
+
+        ntfy_resp = _mock_httpx_response()
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=ntfy_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = _run(augur._notify_manual_post(
+                "x", "the", "Test caption", "https://example.com/article"))
+
+        assert result.get("notified") is True
+        assert result["platform"] == "x"
+
+        # Verify ntfy was called with deep link headers
+        call_kwargs = mock_client.post.call_args
+        headers = call_kwargs.kwargs.get("headers", {})
+        assert headers["Click"] == "https://example.com/article"
+        assert "Open article" in headers["Actions"]
+
+    def test_manual_platforms_route_to_ntfy(self, augur, monkeypatch):
+        """All manual platforms should route through _notify_manual_post."""
+        for platform in ("x", "facebook", "linkedin", "instagram"):
+            assert platform in augur._MANUAL_PLATFORMS
+
+    def test_auto_platforms_set(self, augur):
+        """Bluesky and Mastodon should be auto-post platforms."""
+        assert "bluesky" in augur._AUTO_PLATFORMS
+        assert "mastodon" in augur._AUTO_PLATFORMS
+
+    def test_post_social_normalizes_case(self, augur, monkeypatch):
+        monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
+        result = _run(augur.post_social("the", "Bluesky", "test", "https://example.com"))
+        # Should not error with "Unknown platform" — should hit bluesky path
+        assert "BLUESKY" in result.get("error", "")

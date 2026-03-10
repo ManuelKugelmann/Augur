@@ -16,9 +16,11 @@ from fastmcp import FastMCP
 
 mcp = FastMCP("augur", instructions=(
     "Augur prediction publisher. After researching signals via other tools, "
-    "use augur tools to write Jekyll articles, generate images, and queue "
-    "social posts. Brands: the (EN general), der (DE general), financial "
-    "(EN markets), finanz (DE markets). Horizons: tomorrow, soon, future."
+    "use augur tools to write Jekyll articles, generate images, and post to "
+    "social media. Bluesky/Mastodon auto-post via API; X/Facebook/LinkedIn/"
+    "Instagram send ntfy to admin with deep link. Brands: the (EN general), "
+    "der (DE general), financial (EN markets), finanz (DE markets). "
+    "Horizons: tomorrow, soon, future."
 ))
 
 log = logging.getLogger("augur")
@@ -31,31 +33,40 @@ BRANDS = {
     "the": {
         "name": "The Augur", "locale": "en", "module": "general",
         "masthead": "THE AUGUR",
-        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future"},
+        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "far": "far"},
         "image_prefix": "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. ",
         "disclaimer": "AI-generated speculation — not news. Not financial advice.",
     },
     "der": {
         "name": "Der Augur", "locale": "de", "module": "general",
         "masthead": "DER AUGUR",
-        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft"},
+        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "far": "fern"},
         "image_prefix": "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. ",
         "disclaimer": "KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung.",
     },
     "financial": {
         "name": "Financial Augur", "locale": "en", "module": "markets",
         "masthead": "FINANCIAL AUGUR",
-        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future"},
+        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "far": "far"},
         "image_prefix": "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. ",
         "disclaimer": "AI-generated opinion — not financial advice.",
     },
     "finanz": {
         "name": "Finanz Augur", "locale": "de", "module": "markets",
         "masthead": "FINANZ AUGUR",
-        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft"},
+        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "far": "fern"},
         "image_prefix": "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. ",
         "disclaimer": "KI-generierte Einschätzung — keine Finanzberatung.",
     },
+}
+
+# Horizon → fictive date offset (days/months/years from publish date)
+# tomorrow=+3d, soon=+3mo, future=+3yr, far=+30yr
+HORIZON_OFFSETS = {
+    "tomorrow": {"days": 3},
+    "soon": {"months": 3},
+    "future": {"years": 3},
+    "far": {"years": 30},
 }
 
 SECTION_LABELS = {
@@ -103,9 +114,41 @@ def _site_dir() -> str:
     return os.environ.get("AUGUR_SITE_DIR", os.path.expanduser("~/augur-site"))
 
 
+def _site_base_url() -> str:
+    return os.environ.get("AUGUR_SITE_URL", "https://augur.example.com")
+
+
 def _slugify(text: str, max_len: int = 60) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return slug[:max_len]
+
+
+def _compute_fictive_date(horizon: str, pub_date: datetime) -> str:
+    """Compute the fictive target date from horizon offset.
+
+    tomorrow=+3d, soon=+3mo, future=+3yr, far=+30yr.
+    Returns ISO date string.
+    """
+    offset = HORIZON_OFFSETS.get(horizon, {"days": 3})
+    if "days" in offset:
+        target = pub_date + timedelta(days=offset["days"])
+    elif "months" in offset:
+        m = pub_date.month + offset["months"]
+        y = pub_date.year + (m - 1) // 12
+        m = (m - 1) % 12 + 1
+        d = min(pub_date.day, 28)  # safe day
+        target = pub_date.replace(year=y, month=m, day=d)
+    elif "years" in offset:
+        target = pub_date.replace(year=pub_date.year + offset["years"])
+    else:
+        target = pub_date + timedelta(days=3)
+    return target.strftime("%Y-%m-%d")
+
+
+def _article_url(brand: str, horizon_slug: str, fictive_date: str) -> str:
+    """Build the public article URL: {base}/{brand}/{horizon_slug}/{fictive_date}."""
+    base = _site_base_url().rstrip("/")
+    return f"{base}/{brand}/{horizon_slug}/{fictive_date}"
 
 
 # ---------------------------------------------------------------------------
@@ -166,8 +209,9 @@ async def publish_article(
     """
     if brand not in BRANDS:
         return {"error": f"Unknown brand: {brand}. Use: {', '.join(BRANDS.keys())}"}
-    if horizon not in ("tomorrow", "soon", "future"):
-        return {"error": "horizon must be: tomorrow, soon, future"}
+    valid_horizons = ("tomorrow", "soon", "future", "far")
+    if horizon not in valid_horizons:
+        return {"error": f"horizon must be: {', '.join(valid_horizons)}"}
 
     b = BRANDS[brand]
     locale = b["locale"]
@@ -175,7 +219,9 @@ async def publish_article(
     labels = SECTION_LABELS[locale]
     now = datetime.now(timezone.utc)
     date_key = now.strftime("%Y-%m-%d")
+    fictive_date = _compute_fictive_date(horizon, now)
     slug = _slugify(headline)
+    url = _article_url(brand, horizon_slug, fictive_date)
 
     # Build front matter
     fm: dict = {
@@ -185,13 +231,14 @@ async def publish_article(
         "categories": f"{brand}/{horizon_slug}",
         "date": date_key,
         "headline": headline,
-        "fictive_date": date_key,
+        "fictive_date": fictive_date,
         "created_at": now.isoformat(),
         "tags": tags,
         "sources": sources,
         "model": os.environ.get("NEWS_MODEL", "claude-sonnet-4-5-20250514"),
         "confidence": confidence,
         "image_prompt": image_prompt,
+        "article_url": url,
         "outcome": None,
         "outcome_note": None,
         "outcome_date": None,
@@ -226,7 +273,10 @@ async def publish_article(
     Path(file_path).write_text(markdown, encoding="utf-8")
 
     log.info("published: %s", file_path)
-    return {"path": file_path, "brand": brand, "horizon": horizon, "headline": headline}
+    return {
+        "path": file_path, "brand": brand, "horizon": horizon,
+        "headline": headline, "fictive_date": fictive_date, "article_url": url,
+    }
 
 
 @mcp.tool()
@@ -312,43 +362,149 @@ async def generate_article_image(
         return {"error": f"Image generation failed: {exc}"}
 
 
-@mcp.tool()
-async def queue_social_post(
-    brand: str,
-    horizon: str,
-    platform: str,
-    caption: str,
-    date_key: str = "",
-    image_path: str = "",
-) -> dict:
-    """Queue a social media post for later publishing.
+# Platforms that support auto-posting via API
+_AUTO_PLATFORMS = {"bluesky", "mastodon"}
+# Platforms that need manual posting — admin gets ntfy with caption + deep link
+_MANUAL_PLATFORMS = {"x", "facebook", "linkedin", "instagram"}
 
-    Writes a JSON file to the social queue directory.
-    """
-    date_key = date_key or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    site = _site_dir()
-    pending_dir = Path(site) / "_data" / "social" / "pending"
-    pending_dir.mkdir(parents=True, exist_ok=True)
+_NTFY_BASE = os.environ.get("NTFY_BASE_URL", "https://ntfy.sh")
+_NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
 
-    entry = {
-        "brand": brand,
-        "horizon": horizon,
-        "date_key": date_key,
-        "platform": platform,
-        "caption": caption,
-        "image_path": image_path,
-        "scheduled_at": datetime.now(timezone.utc).isoformat(),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "post_url": None,
-        "retry_count": 0,
-        "error": None,
-        "posted_at": None,
+
+async def _post_bluesky(caption: str, article_url: str) -> dict:
+    """Post to Bluesky via AT Protocol."""
+    import httpx
+
+    handle = os.environ.get("BLUESKY_HANDLE", "")
+    password = os.environ.get("BLUESKY_APP_PASSWORD", "")
+    if not handle or not password:
+        return {"error": "BLUESKY_HANDLE and BLUESKY_APP_PASSWORD not set"}
+
+    pds = os.environ.get("BLUESKY_PDS", "https://bsky.social")
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        # Create session
+        r = await client.post(f"{pds}/xrpc/com.atproto.server.createSession",
+                              json={"identifier": handle, "password": password})
+        r.raise_for_status()
+        session = r.json()
+        token = session["accessJwt"]
+        did = session["did"]
+
+        # Build post with link facet
+        text = f"{caption}\n\n{article_url}"
+        # Facet for the URL (byte offsets)
+        url_start = len(caption.encode("utf-8")) + 2  # +2 for \n\n
+        url_end = url_start + len(article_url.encode("utf-8"))
+        facets = [{
+            "index": {"byteStart": url_start, "byteEnd": url_end},
+            "features": [{"$type": "app.bsky.richtext.facet#link", "uri": article_url}],
+        }]
+
+        record = {
+            "$type": "app.bsky.feed.post",
+            "text": text,
+            "facets": facets,
+            "createdAt": datetime.now(timezone.utc).isoformat(),
+        }
+
+        r = await client.post(
+            f"{pds}/xrpc/com.atproto.repo.createRecord",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"repo": did, "collection": "app.bsky.feed.post", "record": record},
+        )
+        r.raise_for_status()
+        data = r.json()
+        return {"posted": True, "uri": data.get("uri", "")}
+
+
+async def _post_mastodon(caption: str, article_url: str) -> dict:
+    """Post to Mastodon via API."""
+    import httpx
+
+    token = os.environ.get("MASTODON_ACCESS_TOKEN", "")
+    instance = os.environ.get("MASTODON_INSTANCE", "")
+    if not token or not instance:
+        return {"error": "MASTODON_ACCESS_TOKEN and MASTODON_INSTANCE not set"}
+
+    instance = instance.rstrip("/")
+    text = f"{caption}\n\n{article_url}"
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.post(
+            f"{instance}/api/v1/statuses",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"status": text, "visibility": "public"},
+        )
+        r.raise_for_status()
+        data = r.json()
+        return {"posted": True, "url": data.get("url", "")}
+
+
+async def _notify_manual_post(platform: str, brand: str, caption: str,
+                              article_url: str) -> dict:
+    """Send ntfy notification with deep link for manual social posting."""
+    import httpx
+
+    topic = _NTFY_TOPIC
+    if not topic:
+        return {"error": "NTFY_TOPIC not set — cannot notify admin"}
+
+    b = BRANDS.get(brand, {})
+    brand_name = b.get("name", brand)
+    title = f"Post to {platform.title()} — {brand_name}"
+    body = f"{caption}\n\n{article_url}"
+
+    headers = {
+        "Title": title,
+        "Priority": "default",
+        "Tags": f"mega,{platform}",
+        "Click": article_url,
+        "Actions": f"view, Open article, {article_url}",
     }
 
-    filename = f"{brand}-{date_key}-{platform}.json"
-    (pending_dir / filename).write_text(json.dumps(entry, indent=2), encoding="utf-8")
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(f"{_NTFY_BASE}/{topic}",
+                                  content=body, headers=headers)
+            r.raise_for_status()
+        return {"notified": True, "platform": platform, "topic": topic}
+    except Exception as e:
+        return {"error": f"ntfy failed: {e}"}
 
-    return {"queued": filename}
+
+@mcp.tool()
+async def post_social(
+    brand: str,
+    platform: str,
+    caption: str,
+    article_url: str,
+) -> dict:
+    """Post or notify for a social media platform.
+
+    Auto-posts to Bluesky and Mastodon via API.
+    For X, Facebook, LinkedIn, and Instagram: sends an ntfy notification
+    to the admin with the caption and a deep link to the article.
+
+    Call once per platform after publish_article + push_site.
+
+    Args:
+        brand: Brand slug (the, der, financial, finanz).
+        platform: Target platform (bluesky, mastodon, x, facebook, linkedin, instagram).
+        caption: The social media caption/text.
+        article_url: Public URL of the published article (used as deep link).
+    """
+    platform = platform.lower()
+    all_platforms = _AUTO_PLATFORMS | _MANUAL_PLATFORMS
+    if platform not in all_platforms:
+        return {"error": f"Unknown platform: {platform}. Use: {', '.join(sorted(all_platforms))}"}
+
+    if platform == "bluesky":
+        return await _post_bluesky(caption, article_url)
+    elif platform == "mastodon":
+        return await _post_mastodon(caption, article_url)
+    else:
+        return await _notify_manual_post(platform, brand, caption, article_url)
 
 
 @mcp.tool()
@@ -394,7 +550,8 @@ async def push_site(message: str = "") -> dict:
 # ---------------------------------------------------------------------------
 
 # Horizon → days after publish when a prediction becomes scoreable
-HORIZON_DAYS = {"tomorrow": 2, "soon": 14, "future": 90}
+# tomorrow=+3d → scoreable after 3d, soon=+3mo → 90d, future=+3yr → 1095d, far=+30yr → 10950d
+HORIZON_DAYS = {"tomorrow": 3, "soon": 90, "future": 1095, "far": 10950}
 
 
 def _parse_front_matter(text: str) -> tuple[dict, str]:
@@ -460,9 +617,12 @@ async def score_prediction(
     outcome: str,
     outcome_note: str = "",
 ) -> dict:
-    """Score a prediction article's outcome.
+    """Score (or re-score) a prediction article's outcome.
 
     Updates the front matter outcome fields in the Jekyll markdown file.
+    Can be called multiple times — each scoring is appended to a score log
+    alongside the article so the full history is preserved. The front matter
+    always reflects the latest score.
 
     Args:
         article_path: Path to the article .md file (relative to site dir or absolute).
@@ -482,6 +642,7 @@ async def score_prediction(
 
     text = path.read_text(encoding="utf-8")
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    now_full = datetime.now(timezone.utc).isoformat()
 
     # Replace outcome fields in front matter
     def _replace_field(content: str, field: str, value: str) -> str:
@@ -500,24 +661,47 @@ async def score_prediction(
         text = _replace_field(text, "outcome_note", outcome_note)
 
     path.write_text(text, encoding="utf-8")
-    log.info("scored %s → %s", path.name, outcome)
-    return {"path": str(path), "outcome": outcome, "outcome_date": now_iso}
+
+    # Append to score log (preserves full history for re-scoring)
+    log_path = path.with_suffix(".scores.json")
+    history: list = []
+    if log_path.exists():
+        try:
+            history = json.loads(log_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, ValueError):
+            history = []
+
+    entry = {"outcome": outcome, "outcome_date": now_iso, "scored_at": now_full}
+    if outcome_note:
+        entry["outcome_note"] = outcome_note
+    entry["revision"] = len(history) + 1
+    history.append(entry)
+    log_path.write_text(json.dumps(history, indent=2), encoding="utf-8")
+
+    log.info("scored %s → %s (rev %d)", path.name, outcome, entry["revision"])
+    return {
+        "path": str(path), "outcome": outcome, "outcome_date": now_iso,
+        "revision": entry["revision"],
+    }
 
 
 @mcp.tool()
 async def list_pending_scores(
     brand: str = "",
     horizon: str = "",
+    include_scored: bool = False,
     limit: int = 50,
 ) -> dict:
-    """List prediction articles that are past their horizon date and still unscored.
+    """List prediction articles that are past their horizon date and need scoring.
 
-    These are articles where the prediction window has passed but outcome is still null.
-    The LLM agent should research each one and call score_prediction with the result.
+    By default lists only unscored articles. Set include_scored=True to also
+    list previously scored articles for re-evaluation (e.g. revisiting a
+    "partial" after more data becomes available).
 
     Args:
         brand: Filter by brand slug (optional).
         horizon: Filter by horizon (optional).
+        include_scored: Include already-scored articles for re-scoring (default False).
         limit: Max articles to return (default 50).
     """
     site = _site_dir()
@@ -531,8 +715,9 @@ async def list_pending_scores(
         text = path.read_text(encoding="utf-8")
         fm, _ = _parse_front_matter(text)
 
-        # Skip already scored
-        if fm.get("outcome"):
+        # Skip already scored unless re-scoring requested
+        current_outcome = fm.get("outcome")
+        if current_outcome and not include_scored:
             continue
 
         # Check if past horizon window
@@ -545,11 +730,20 @@ async def list_pending_scores(
             continue
 
         h = fm.get("horizon", "tomorrow")
-        days_needed = HORIZON_DAYS.get(h, 2)
+        days_needed = HORIZON_DAYS.get(h, 3)
         if (now - pub_date).days < days_needed:
             continue
 
-        pending.append({
+        # Check score log for revision count
+        log_path = path.with_suffix(".scores.json")
+        revision = 0
+        if log_path.exists():
+            try:
+                revision = len(json.loads(log_path.read_text(encoding="utf-8")))
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        entry = {
             "path": str(path.relative_to(site)),
             "brand": fm.get("brand"),
             "horizon": h,
@@ -557,7 +751,10 @@ async def list_pending_scores(
             "headline": fm.get("headline", path.stem),
             "tags": fm.get("tags", []),
             "days_ago": (now - pub_date).days,
-        })
+            "current_outcome": current_outcome,
+            "revision": revision,
+        }
+        pending.append(entry)
 
     return {"pending": pending, "count": len(pending)}
 
