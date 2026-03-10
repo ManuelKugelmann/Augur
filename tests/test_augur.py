@@ -464,7 +464,8 @@ class TestPostSocial:
         assert "MASTODON" in result["error"]
 
     def test_manual_platform_missing_ntfy(self, augur, monkeypatch):
-        monkeypatch.setattr(augur, "_NTFY_TOPIC", "")
+        from src.servers import augur_publish
+        monkeypatch.setattr(augur_publish, "_NTFY_TOPIC", "")
         result = _run(augur.post_social("the", "x", "caption", "https://example.com"))
         assert "error" in result
 
@@ -504,7 +505,8 @@ class TestPostSocial:
         assert "url" in result
 
     def test_manual_ntfy_success(self, augur, monkeypatch):
-        monkeypatch.setattr(augur, "_NTFY_TOPIC", "test-topic")
+        from src.servers import augur_publish
+        monkeypatch.setattr(augur_publish, "_NTFY_TOPIC", "test-topic")
 
         ntfy_resp = _mock_httpx_response()
 
@@ -739,20 +741,27 @@ class TestSlugify:
 # ---------------------------------------------------------------------------
 
 class TestDueNow:
-    def test_due_now_includes_pending_scores(self, augur, site_dir):
-        """due_now should surface pending scores for the agent."""
+    def test_publish_due_returns_schedule(self, augur, site_dir):
+        """publish_due (aliased as due_now) returns due list."""
+        result = _run(augur.due_now())
+        assert "due" in result
+        assert "checked_at" in result
+        assert "count" in result
+
+    def test_score_due_includes_pending(self, augur, site_dir):
+        """score_due should surface pending scores for the agent."""
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "tomorrow", old_date, "Needs Scoring")
-        result = _run(augur.due_now())
+        result = _run(augur.score_due())
         assert result["score_due"] >= 1
-        assert len(result["score_pending"]) >= 1
-        assert result["score_pending"][0]["headline"] == "Needs Scoring"
+        assert len(result["pending"]) >= 1
+        assert result["pending"][0]["headline"] == "Needs Scoring"
 
-    def test_due_now_no_pending(self, augur, site_dir):
-        """No articles → score_due=0, score_pending=[]."""
-        result = _run(augur.due_now())
+    def test_score_due_no_pending(self, augur, site_dir):
+        """No articles → score_due=0, pending=[]."""
+        result = _run(augur.score_due())
         assert result["score_due"] == 0
-        assert result["score_pending"] == []
+        assert result["pending"] == []
 
 
 class TestIsDue:
