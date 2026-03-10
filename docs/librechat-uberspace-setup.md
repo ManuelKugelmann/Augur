@@ -75,7 +75,7 @@ curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main
 
 This single command does everything:
 - Sets Node.js 22
-- Clones the TradingAssistant repo → `~/mcps/`
+- Clones the TradingAssistant repo → `~/assist/`
 - Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`
 - Downloads LibreChat release bundle (or builds from source as fallback)
 - Registers supervisord services: `librechat`, `trading`, `charts`
@@ -104,7 +104,7 @@ The installer creates two .env files that need your secrets.
 ### 3a. Signals stack
 
 ```bash
-nano ~/mcps/.env
+nano ~/assist/.env
 ```
 
 Set the MongoDB URI for the signals database:
@@ -202,7 +202,7 @@ Create a **private** repo on GitHub: `YourUser/TradeAssistant_Data`
 Then on Uberspace:
 
 ```bash
-bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
+bash ~/assist/librechat-uberspace/scripts/setup-data-repo.sh
 ```
 
 This:
@@ -402,7 +402,7 @@ dmesg | tail -20
 
 ```bash
 # Test from signals stack Python
-~/mcps/venv/bin/python -c "
+~/assist/venv/bin/python -c "
 from pymongo import MongoClient
 c = MongoClient('your-uri-here')
 print(c.signals.list_collection_names())

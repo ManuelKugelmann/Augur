@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 # Load .env if available
-stack = os.environ.get("STACK", os.path.expanduser("~/mcps"))
+stack = os.environ.get("STACK", os.path.expanduser("~/assist"))
 try:
     from dotenv import load_dotenv
 

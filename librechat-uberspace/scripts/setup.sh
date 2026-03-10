@@ -5,7 +5,7 @@ set -euo pipefail
 
 # ── Load central config ──
 for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
-            "$HOME/mcps/deploy.conf"; do
+            "$HOME/assist/deploy.conf"; do
     [[ -f "$conf" ]] && { source "$conf"; break; }
 done
 
@@ -13,7 +13,7 @@ SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
 BAK="${APP}.prev"
-STACK="${STACK_DIR:-$HOME/mcps}"
+STACK="${STACK_DIR:-$HOME/assist}"
 PORT="${LC_PORT:-3080}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'

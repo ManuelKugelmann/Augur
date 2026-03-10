@@ -4,7 +4,7 @@ set -euo pipefail
 
 # ── Load central config ──
 for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
-            "$HOME/mcps/deploy.conf"; do
+            "$HOME/assist/deploy.conf"; do
     [[ -f "$conf" ]] && { source "$conf"; break; }
 done
 

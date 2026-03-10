@@ -87,7 +87,7 @@ curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main
 This single command does the same thing on both U7 and U8:
 
 1. **Sets Node.js 22** via `uberspace tools version use node 22`
-2. **Clones the repo** → `~/mcps/`
+2. **Clones the repo** → `~/assist/`
 3. **Finds Python 3.10+** — scans `python3.13` → `python3.12` → `python3.11` → `python3.10` → `python3`
    - U7 typically resolves to `python3.12`
    - U8 typically resolves to `python3` (which is 3.11+)
@@ -122,10 +122,10 @@ On U8 this is not an issue — Python 3.11+ is always available as `python3`.
 
 The installer creates two `.env` files that need your secrets. If you're in an interactive terminal, it offers to open `nano` for each one. If piped via `curl | bash`, it prints the paths.
 
-### 4a. Signals stack (`~/mcps/.env`)
+### 4a. Signals stack (`~/assist/.env`)
 
 ```bash
-nano ~/mcps/.env
+nano ~/assist/.env
 ```
 
 **Required:**
@@ -239,7 +239,7 @@ ta agents --dry-run
 1. Create a **private** repo on GitHub: `YourUser/TradeAssistant_Data`
 2. Run:
    ```bash
-   bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
+   bash ~/assist/librechat-uberspace/scripts/setup-data-repo.sh
    ```
 3. Add the SSH public key it prints to your GitHub repo's deploy keys
 4. Verify cron is set up:
@@ -362,7 +362,7 @@ The installer scans all candidates automatically (`python3.14` → `python3.13` 
 ### Filesystem paths
 
 Identical on both except service files. All paths use `$HOME` and `~/`:
-- `~/mcps/` — TradingAssistant repo
+- `~/assist/` — TradingAssistant repo
 - `~/LibreChat/` — LibreChat installation
 - `~/TradeAssistant_Data/` — git-versioned data
 - `~/bin/ta` — ops CLI
@@ -376,7 +376,7 @@ If Uberspace migrates your account from U7 to U8 (or you create a new U8 account
 1. **On the old U7 host** — back up your config:
    ```bash
    ta backup                           # MongoDB backup
-   cat ~/mcps/.env                     # copy signals config
+   cat ~/assist/.env                     # copy signals config
    cat ~/LibreChat/.env                # copy LibreChat config
    ```
 
@@ -387,7 +387,7 @@ If Uberspace migrates your account from U7 to U8 (or you create a new U8 account
 
 3. **Restore config** — paste your saved `.env` contents:
    ```bash
-   nano ~/mcps/.env                    # paste signals config
+   nano ~/assist/.env                    # paste signals config
    nano ~/LibreChat/.env               # paste LibreChat config
    ```
 

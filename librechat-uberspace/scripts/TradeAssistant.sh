@@ -17,7 +17,7 @@ set -euo pipefail
 # and its values take effect for all subsequent variable expansions.
 GH_USER="${GH_USER:-ManuelKugelmann}"
 GH_REPO="${GH_REPO:-TradingAssistant}"
-STACK_DIR="${STACK_DIR:-$HOME/mcps}"
+STACK_DIR="${STACK_DIR:-$HOME/assist}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
 NODE_VERSION="${NODE_VERSION:-22}"
@@ -34,7 +34,7 @@ done
 unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
-STACK="${STACK_DIR:-$HOME/mcps}"
+STACK="${STACK_DIR:-$HOME/assist}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -634,7 +634,7 @@ case "$CMD" in
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
 import os, sys
-stack = os.environ.get("STACK", os.path.expanduser("~/mcps"))
+stack = os.environ.get("STACK", os.path.expanduser("~/assist"))
 sys.path.insert(0, os.path.join(stack, "src", "store"))
 sys.path.insert(0, os.path.join(stack, "src", "servers"))
 from dotenv import load_dotenv

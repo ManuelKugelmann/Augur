@@ -23,7 +23,7 @@
 
 | Path | Purpose |
 |------|---------|
-| `~/mcps/` | Clone of this repo (signals stack) |
+| `~/assist/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
 | `~/backups/mongo/` | Rolling MongoDB backups (daily/weekly/monthly gzipped JSON) |
 | `~/bin/ta` | Ops CLI tool |
@@ -184,7 +184,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 All scripts source this file. Key variables:
 - `UBER_USER=assist`, `UBER_HOST=assist.uber.space`
 - `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`
-- `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
+- `STACK_DIR=$HOME/assist`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
 - `LC_PORT=3080`, `NODE_VERSION=22`
 
 ### Python Dependencies

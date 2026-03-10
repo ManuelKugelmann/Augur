@@ -16,7 +16,7 @@ interface:
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
-# Trading MCP: signals stack under ~/mcps/
+# Trading MCP: signals stack under ~/assist/
 # External MCPs: third-party data sources
 #
 # IMPORTANT: setup.sh replaces __HOME__ with your actual $HOME path.
@@ -131,7 +131,7 @@ mcpServers:
 
   rss:
     command: node
-    args: ["__HOME__/mcps/node_modules/rss-mcp/index.js"]
+    args: ["__HOME__/assist/node_modules/rss-mcp/index.js"]
     chatMenu: false
     serverInstructions: "RSS/Atom feed reader for news, SEC filings, blog monitoring."
 
@@ -205,7 +205,7 @@ mcpServers:
 
   crypto-sentiment:
     command: uv
-    args: ["--directory", "__HOME__/mcps/vendor/crypto-feargreed-mcp", "run", "main.py"]
+    args: ["--directory", "__HOME__/assist/vendor/crypto-feargreed-mcp", "run", "main.py"]
     chatMenu: false
     serverInstructions: "Real-time + historical Crypto Fear & Greed Index. Sentiment signal for crypto markets."
 
