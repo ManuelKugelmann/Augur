@@ -62,25 +62,20 @@ mcpServers:
     serverInstructions: |
       Trading signals server: store_* tools + 12 OSINT data domains + ta_* technical indicators.
 
-      STORE: Profile = what an entity IS (JSON on disk). Snapshot = what was MEASURED when (MongoDB timeseries).
+      STORE: Profile = what an entity IS (MongoDB). Snapshot = what was MEASURED when (MongoDB timeseries).
         store_chart returns Plotly HTML — output it directly as an artifact.
         Notes (store_save_note etc.) are per-user — plans, watchlists, journals.
         Risk gate: dry-run by default. Users enable live trading in Settings > Plugins.
 
-      PROFILE DIRECTORY STRUCTURE:
-        profiles/{region}/{kind}/{id}.json
+      PROFILES: MongoDB-backed (profiles_{kind} collections). Organized by region + kind.
         Regions: north_america, latin_america, europe, mena, sub_saharan_africa,
           south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global.
         Kinds: countries, stocks, etfs, crypto, indices, commodities, crops, materials,
           products, companies, sources.
-        Non-geographic kinds (etfs, indices, commodities, crops, materials, products, sources)
-          live under global/. Geographic kinds (countries, stocks, companies) live under their region.
-        Indexes: profiles/INDEX_{kind}.json — auto-generated, searchable via store_find_profile.
-
-      PROFILES: put_profile validates required fields on create (extra fields always OK, use 'notes' for freeform).
-        ID conventions: countries=ISO3 uppercase (DEU), stocks/etfs/crypto/indices=ticker uppercase (AAPL),
-        commodities/crops/materials/products/companies/sources=lowercase slug (crude_oil).
-        Use store_lint_profiles to audit existing profiles.
+        Non-geographic kinds (etfs, commodities, crops, etc.) use region=global.
+        Required: id + name only. Recommended fields per kind in put_profile docstring.
+        ID conventions: countries=ISO3 (DEU), stocks/etfs/crypto/indices=ticker (AAPL),
+        others=lowercase slug (crude_oil). Use store_lint_profiles to audit.
 
       DATA: Tools prefixed by domain (weather_, disaster_, econ_, agri_, conflict_,
         commodity_, health_, politics_, transport_, water_, humanitarian_, infra_).

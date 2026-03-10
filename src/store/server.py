@@ -325,7 +325,43 @@ def put_profile(kind: str, id: str, data: dict,
                 region: str = "global",
                 lon: float | None = None,
                 lat: float | None = None) -> dict:
-    """Create or merge a profile. Shallow-merges with existing data."""
+    """Create or merge a profile. Shallow-merges with existing data.
+
+    Required: id, name. All other fields optional. Recommended structure per kind:
+
+    countries: iso2, region, currency, capital, population,
+        trade{top_exports, top_partners, major_ports, chokepoint_exposure},
+        exposure{commodities_import, energy_mix, risk_factors},
+        ratings{credit, democracy_index}, tags
+    stocks: type="stock", exchange, sector, industry, country,
+        fundamentals{founded, employees},
+        exposure{countries, commodities, supply_chain, risk_factors}, tags
+    etfs: type="etf", exchange, issuer, strategy,
+        exposure{countries, sectors, commodities, risk_factors}, tags
+    crypto: type="crypto", network, consensus, max_supply,
+        exposure{countries, risk_factors}, tags
+    indices: type="index", country, exchange, components, methodology,
+        exposure{sectors, countries, risk_factors}, tags
+    commodities: category (energy|metals|agriculture|livestock), unit, benchmark,
+        producers[], consumers[], chokepoints[], seasonality,
+        exposure{countries, risk_factors}, tags
+    crops: category (grains|oilseeds|fibers|sugar|fruits|vegetables),
+        growing_season, producers[], exporters[], water_intensity,
+        exposure{countries, commodities, risk_factors}, tags
+    materials: category (metals|minerals|chemicals|forestry|textiles),
+        producers[], reserves[], processing[], end_uses[], substitutes[],
+        exposure{countries, risk_factors}, tags
+    products: category (electronics|energy|pharma|automotive|industrial|consumer),
+        hs_codes[], manufacturers[], inputs[], trade_volume,
+        exposure{countries, materials, commodities, risk_factors}, tags
+    companies: country, sector, industry, revenue, employees,
+        publicly_traded, ticker, subsidiaries[],
+        exposure{countries, products, materials, risk_factors}, tags
+    sources: mcp, tool, api_base, auth (none|api_key|token),
+        refresh{frequency, snapshot_type, default_params}, ttl_days
+
+    Use 'notes' field for freeform data. Use 'tags' for categorization.
+    """
     err = _validate_profile_args(kind, id, region)
     if err:
         return err
