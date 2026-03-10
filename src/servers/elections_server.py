@@ -140,7 +140,7 @@ async def eu_parliament_meps(country: str = "", limit: int = 50) -> dict:
             meps = data.get("data", [])
             return {"count": len(meps), "meps": meps}
     except httpx.HTTPError as e:
-        return {"error": f"EU Parliament request failed: {e}"}
+        return {"error": f"EU Parliament request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()
@@ -154,7 +154,7 @@ async def eu_parliament_votes(year: str = "2025", limit: int = 20) -> dict:
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
-        return {"error": f"EU Parliament request failed: {e}"}
+        return {"error": f"EU Parliament request failed: {type(e).__name__}: {e}"}
 
 
 # ── Google Civic Info (US, needs key) ────────────────────

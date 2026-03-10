@@ -102,7 +102,7 @@ _download() {
     while (( attempt < retries )); do
         attempt=$((attempt + 1))
         rc=0
-        if command -v wget &>/dev/null; then
+        if command -v wget &>/dev/null && [[ "$url" == http://* || "$url" == https://* ]]; then
             wget --progress=dot:mega --timeout=30 --tries=1 \
                  -O "$out" "$url" 2>&1 \
                 | grep -E --line-buffered '^\s+[0-9]|saved' \
