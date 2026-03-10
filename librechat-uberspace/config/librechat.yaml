@@ -23,8 +23,6 @@ interface:
 # If editing manually, replace __HOME__ with e.g. /home/youruser
 mcpServers:
 
-  # ── Utility (secondary to trading store) ───
-
   # ── Trading Server (signals store + 12 data domains, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.
   # Env vars + API keys are set in the supervisord service, not here.
@@ -80,20 +78,9 @@ mcpServers:
         Indexes: profiles/INDEX_{kind}.json — auto-generated, searchable via store_find_profile.
         Schemas: profiles/SCHEMAS/{kind}.schema.json — descriptive, per-kind.
 
-      PROFILE FILE SCHEMAS (key fields per kind):
-        countries: id (ISO3), name, iso2, region, currency, capital, population, trade{top_exports, top_partners, major_ports, chokepoint_exposure}, exposure{commodities_import, energy_mix, risk_factors}, ratings{credit, democracy_index, press_freedom_rank, corruption_perception}, tags
-        stocks: id (ticker), name, type="stock", exchange, sector, industry, country (ISO3), fundamentals{founded, employees}, exposure{countries, commodities, supply_chain, risk_factors}, tags
-        etfs: id (ticker), name, type="etf", exchange, issuer, strategy, exposure{countries, sectors, commodities, risk_factors}, tags
-        crypto: id (symbol), name, type="crypto", network, consensus, max_supply, exposure{countries, risk_factors}, tags
-        indices: id (symbol), name, type="index", country, exchange, components, methodology, exposure{sectors, countries, risk_factors}, tags
-        commodities: id (slug), name, category (energy|metals|agriculture|livestock), unit, benchmark, producers[], consumers[], chokepoints[], seasonality, exposure{countries, risk_factors}, tags
-        crops: id (slug), name, category (grains|oilseeds|fibers|sugar|fruits|vegetables), growing_season, producers[], exporters[], water_intensity, climate_sensitivity[], exposure{countries, commodities, risk_factors}, tags
-        materials: id (slug), name, category (metals|minerals|chemicals|forestry|textiles), producers[], reserves[], processing[], end_uses[], substitutes[], exposure{countries, risk_factors}, tags
-        products: id (slug), name, category (electronics|energy|pharma|automotive|industrial|consumer), hs_codes[], manufacturers[], inputs[], trade_volume, exposure{countries, materials, commodities, risk_factors}, tags
-        companies: id (slug), name, country (ISO3), sector, industry, revenue, employees, publicly_traded, ticker, subsidiaries[], exposure{countries, products, materials, risk_factors}, tags
-        sources: id (slug), name, mcp, tool, api_base, auth (none|api_key|token), refresh{frequency, snapshot_type, default_params}, ttl_days
-
-      ID CONVENTIONS: countries=ISO3 uppercase (DEU, USA), stocks/etfs/crypto/indices=ticker uppercase (AAPL, SPY, BTC, SPX), commodities/crops/materials/products/companies/sources=lowercase slug (crude_oil, lithium, tsmc).
+      PROFILES: Field schemas in profiles/SCHEMAS/{kind}.schema.json. Validate with store_lint_profiles.
+        ID conventions: countries=ISO3 uppercase (DEU), stocks/etfs/crypto/indices=ticker uppercase (AAPL),
+        commodities/crops/materials/products/companies/sources=lowercase slug (crude_oil).
 
       DATA: Tools prefixed by domain (weather_, disaster_, econ_, agri_, conflict_,
         commodity_, health_, politics_, transport_, water_, humanitarian_, infra_).
@@ -221,34 +208,6 @@ endpoints:
       - actions
       - artifacts
       - chain
-
-# ── Model Specs (predefined agents) ─────────
-# Agents are created in Agent Builder UI, then surfaced here via agent_id.
-# Replace agent_ID placeholders with actual IDs after creating agents.
-#
-# modelSpecs:
-#   enforce: false
-#   prioritize: true
-#   list:
-#     - name: "trading-assistant"
-#       label: "Trading Assistant"
-#       description: "Your AI trading assistant. Manages plans, delegates to specialists."
-#       default: true
-#       preset:
-#         endpoint: "agents"
-#         agent_id: "agent_LIVE_CHAT_ID"
-#     - name: "market-data"
-#       label: "Market Data"
-#       description: "Direct access to market data: prices, indicators, profiles."
-#       preset:
-#         endpoint: "agents"
-#         agent_id: "agent_MARKET_DATA_ID"
-#     - name: "osint-data"
-#       label: "OSINT Data"
-#       description: "Direct access to OSINT: disasters, conflicts, weather, health."
-#       preset:
-#         endpoint: "agents"
-#         agent_id: "agent_OSINT_DATA_ID"
 
 # ── LLM Endpoints ──────────────────────────
 # Configure your LLM providers here or in .env
