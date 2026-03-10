@@ -205,8 +205,13 @@ CURLEOF
     '
 
     # Run full install (no APP_DIR/.version → will download bundle)
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    # Timeout prevents stall if an external dep hangs (npm, pip, git clone, curl)
+    run timeout 120 bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
     echo "$output"
+    if [[ "$status" -eq 124 ]]; then
+        echo "FAIL: install timed out after 120s" >&2
+        false
+    fi
     [[ "$status" -eq 0 ]]
 
     # Verify LibreChat was installed from bundle with LC version
