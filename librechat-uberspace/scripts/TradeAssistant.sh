@@ -84,10 +84,21 @@ _web_backend() {
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
 _pip_upgrade() {
     local pip="$1"
+    local venv_dir; venv_dir="$(dirname "$(dirname "$pip")")"
+    local stamp="$venv_dir/.pip-upgraded"
+    # Skip if pip was upgraded less than 7 days ago
+    if [[ -f "$stamp" ]]; then
+        local age=$(( $(date +%s) - $(date -r "$stamp" +%s 2>/dev/null || echo 0) ))
+        if (( age < 604800 )); then
+            log "pip upgrade skipped (last upgraded $(( age / 86400 ))d ago)"
+            return 0
+        fi
+    fi
     local out
     out=$(timeout 60 "$pip" install --upgrade pip 2>&1) || {
         echo "$out" >&2; return 1
     }
+    touch "$stamp"
     if echo "$out" | grep -q "already satisfied"; then
         log "pip is up to date"
     else
