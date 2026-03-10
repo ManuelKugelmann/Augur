@@ -78,10 +78,10 @@ SECTION_LABELS = {
 # Per-brand cron schedules: {brand: {horizon: cron_expression}}
 # Cron format: "H M" pairs when this brand/horizon should run
 SCHEDULES = {
-    "the":       {"tomorrow": "0,6,12,18", "soon": "2",  "future": "3/mon"},
-    "der":       {"tomorrow": "1,7,13,19", "soon": "4",  "future": "5/mon"},
-    "financial": {"tomorrow": "2,8,14,20", "soon": "2",  "future": "6/mon"},
-    "finanz":    {"tomorrow": "3,9,15,21", "soon": "4",  "future": "7/mon"},
+    "the":       {"tomorrow": "0,6,12,18", "soon": "2",  "future": "3/mon", "leap": "3/mon"},
+    "der":       {"tomorrow": "1,7,13,19", "soon": "4",  "future": "5/mon", "leap": "5/mon"},
+    "financial": {"tomorrow": "2,8,14,20", "soon": "2",  "future": "6/mon", "leap": "6/mon"},
+    "finanz":    {"tomorrow": "3,9,15,21", "soon": "4",  "future": "7/mon", "leap": "7/mon"},
 }
 
 
@@ -133,10 +133,12 @@ def _compute_fictive_date(horizon: str, pub_date: datetime) -> str:
     if "days" in offset:
         target = pub_date + timedelta(days=offset["days"])
     elif "months" in offset:
+        import calendar
         m = pub_date.month + offset["months"]
         y = pub_date.year + (m - 1) // 12
         m = (m - 1) % 12 + 1
-        d = min(pub_date.day, 28)  # safe day
+        max_day = calendar.monthrange(y, m)[1]
+        d = min(pub_date.day, max_day)
         target = pub_date.replace(year=y, month=m, day=d)
     elif "years" in offset:
         target = pub_date.replace(year=pub_date.year + offset["years"])
@@ -302,6 +304,8 @@ async def generate_article_image(
     image_path = os.path.join(site, "assets", "images", f"{image_prefix}.webp")
 
     try:
+        import asyncio
+
         import httpx
         token = os.environ.get("REPLICATE_API_TOKEN")
         if not token:
@@ -324,7 +328,6 @@ async def generate_article_image(
         poll_url = prediction.get("urls", {}).get(
             "get", f"https://api.replicate.com/v1/predictions/{prediction['id']}"
         )
-        import asyncio
         async with httpx.AsyncClient(timeout=30) as client:
             for _ in range(60):
                 if prediction["status"] in ("succeeded", "failed"):
@@ -550,7 +553,7 @@ async def push_site(message: str = "") -> dict:
 # ---------------------------------------------------------------------------
 
 # Horizon → days after publish when a prediction becomes scoreable
-# tomorrow=+3d → scoreable after 3d, soon=+3mo → 90d, future=+3yr → 1095d, far=+30yr → 10950d
+# tomorrow=+3d → scoreable after 3d, soon=+3mo → 90d, future=+3yr → 1095d, leap=+30yr → 10950d
 HORIZON_DAYS = {"tomorrow": 3, "soon": 90, "future": 1095, "leap": 10950}
 
 
@@ -906,10 +909,10 @@ def _to_yaml(obj: dict, indent: int = 0) -> str:
                 out += f"{pad}{key}: {json.dumps(val)}\n"
             else:
                 out += f'{pad}{key}: "{val}"\n'
-        elif isinstance(val, (int, float)):
-            out += f"{pad}{key}: {val}\n"
         elif isinstance(val, bool):
             out += f"{pad}{key}: {'true' if val else 'false'}\n"
+        elif isinstance(val, (int, float)):
+            out += f"{pad}{key}: {val}\n"
         elif isinstance(val, list):
             if not val:
                 out += f"{pad}{key}: []\n"

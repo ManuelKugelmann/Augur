@@ -135,6 +135,27 @@ class TestFictiveDate:
         # 11 + 3 = 14 → February next year
         assert augur._compute_fictive_date("soon", pub) == "2027-02-15"
 
+    def test_soon_clamps_day_to_month_end(self, augur):
+        # Jan 31 + 3 months → April 30 (not April 28)
+        pub = datetime(2026, 1, 31, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("soon", pub) == "2026-04-30"
+
+    def test_soon_feb_leap_year(self, augur):
+        # Nov 30 2027 + 3 months → Feb 28 2028 (2028 is leap year → Feb 29)
+        pub = datetime(2027, 11, 30, tzinfo=timezone.utc)
+        assert augur._compute_fictive_date("soon", pub) == "2028-02-29"
+
+
+class TestYamlSerializer:
+    def test_bool_serialized_correctly(self, augur):
+        result = augur._to_yaml({"flag": True, "off": False})
+        assert "flag: true" in result
+        assert "off: false" in result
+
+    def test_bool_not_serialized_as_int(self, augur):
+        result = augur._to_yaml({"flag": True})
+        assert "1" not in result
+
 
 class TestArticleUrl:
     def test_basic_url(self, augur, monkeypatch):
