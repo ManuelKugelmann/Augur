@@ -177,7 +177,8 @@ async def due_now() -> dict:
     """Check which brand/horizon combos are due for production right now.
 
     Called by the cron-news agent at each cron tick. Returns a list of
-    {brand, horizon} pairs that should be produced this cycle.
+    {brand, horizon} pairs that should be produced this cycle, plus any
+    predictions that are past their horizon and need scoring.
     """
     now = datetime.now(timezone.utc)
     due: list[dict] = []
@@ -187,7 +188,15 @@ async def due_now() -> dict:
             if _is_due(schedule, now):
                 due.append({"brand": brand, "horizon": horizon})
 
-    return {"due": due, "checked_at": now.isoformat(), "count": len(due)}
+    # Also surface pending scores so the agent can score them
+    pending = await list_pending_scores(limit=10)
+    score_due = pending.get("count", 0)
+
+    return {
+        "due": due, "checked_at": now.isoformat(), "count": len(due),
+        "score_due": score_due,
+        "score_pending": pending.get("pending", []) if score_due else [],
+    }
 
 
 @mcp.tool()
@@ -623,6 +632,7 @@ async def score_prediction(
     article_path: str,
     outcome: str,
     outcome_note: str = "",
+    evidence: list[dict] = [],
 ) -> dict:
     """Score (or re-score) a prediction article's outcome.
 
@@ -635,6 +645,7 @@ async def score_prediction(
         article_path: Path to the article .md file (relative to site dir or absolute).
         outcome: One of "confirmed", "partial", "wrong".
         outcome_note: Brief explanation of why this outcome was assigned.
+        evidence: List of sources backing the verdict, each {url, title?}.
     """
     if outcome not in ("confirmed", "partial", "wrong"):
         return {"error": "outcome must be: confirmed, partial, wrong"}
@@ -686,15 +697,20 @@ async def score_prediction(
     entry = {"outcome": outcome, "outcome_date": now_iso, "scored_at": now_full}
     if outcome_note:
         entry["outcome_note"] = outcome_note
+    if evidence:
+        entry["evidence"] = evidence
     entry["revision"] = len(history) + 1
     history.append(entry)
     log_path.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
     log.info("scored %s → %s (rev %d)", path.name, outcome, entry["revision"])
-    return {
+    result = {
         "path": str(path), "outcome": outcome, "outcome_date": now_iso,
         "revision": entry["revision"],
     }
+    if evidence:
+        result["evidence"] = evidence
+    return result
 
 
 @mcp.tool()

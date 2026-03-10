@@ -571,6 +571,43 @@ class TestFictiveDateLeapYear:
 # score_prediction — body corruption protection
 # ---------------------------------------------------------------------------
 
+class TestScoreEvidence:
+    def test_evidence_stored_in_log(self, augur, site_dir):
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Evidence Test")
+        evidence = [
+            {"url": "https://reuters.com/oil-rises", "title": "Oil rises 5%"},
+            {"url": "https://bbc.com/energy"},
+        ]
+        result = _run(augur.score_prediction(str(path), "confirmed", "Correct", evidence))
+        assert result["evidence"] == evidence
+
+        # Verify evidence persisted in score log
+        log_path = path.with_suffix(".scores.json")
+        history = json.loads(log_path.read_text(encoding="utf-8"))
+        assert history[0]["evidence"] == evidence
+
+    def test_no_evidence_omitted(self, augur, site_dir):
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "No Evidence")
+        result = _run(augur.score_prediction(str(path), "wrong", "Just wrong"))
+        assert "evidence" not in result
+
+        log_path = path.with_suffix(".scores.json")
+        history = json.loads(log_path.read_text(encoding="utf-8"))
+        assert "evidence" not in history[0]
+
+    def test_rescore_with_new_evidence(self, augur, site_dir):
+        path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Rescore Ev")
+        _run(augur.score_prediction(str(path), "partial", "Unclear",
+             [{"url": "https://a.com"}]))
+        _run(augur.score_prediction(str(path), "confirmed", "Now clear",
+             [{"url": "https://b.com"}, {"url": "https://c.com"}]))
+
+        log_path = path.with_suffix(".scores.json")
+        history = json.loads(log_path.read_text(encoding="utf-8"))
+        assert len(history[0]["evidence"]) == 1
+        assert len(history[1]["evidence"]) == 2
+
+
 class TestScoreBodyProtection:
     def test_body_with_outcome_word_not_corrupted(self, augur, site_dir):
         """Body containing 'outcome:' should NOT be modified by scoring."""
@@ -625,6 +662,23 @@ class TestSlugify:
 # ---------------------------------------------------------------------------
 # _is_due
 # ---------------------------------------------------------------------------
+
+class TestDueNow:
+    def test_due_now_includes_pending_scores(self, augur, site_dir):
+        """due_now should surface pending scores for the agent."""
+        old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
+        _write_article(site_dir, "the", "tomorrow", old_date, "Needs Scoring")
+        result = _run(augur.due_now())
+        assert result["score_due"] >= 1
+        assert len(result["score_pending"]) >= 1
+        assert result["score_pending"][0]["headline"] == "Needs Scoring"
+
+    def test_due_now_no_pending(self, augur, site_dir):
+        """No articles → score_due=0, score_pending=[]."""
+        result = _run(augur.due_now())
+        assert result["score_due"] == 0
+        assert result["score_pending"] == []
+
 
 class TestIsDue:
     def test_hourly_match(self, augur):
