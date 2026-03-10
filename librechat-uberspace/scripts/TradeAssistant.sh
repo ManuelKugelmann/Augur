@@ -539,6 +539,37 @@ except Exception as e:
         fi
     fi
 
+    # ── 14. Verify services and cron ──────────────
+    echo ""
+    echo -e "${CYAN}── Post-install checks ──${NC}"
+    echo ""
+
+    # Check service registrations
+    for svc in librechat trading charts; do
+        if _is_u8; then
+            if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        else
+            if [[ -f "$HOME/etc/services.d/${svc}.ini" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        fi
+    done
+
+    # Check cron
+    if crontab -l 2>/dev/null | grep -q "ta cron"; then
+        log "Cron: ta cron scheduled"
+    else
+        warn "Cron: ta cron not scheduled"
+        echo -e "      Add with: ${CYAN}crontab -e${NC}"
+        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron${NC}"
+    fi
+
     # ── Done ────────────────────────────────────
     local UBER="${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
     echo ""
