@@ -9,7 +9,7 @@ import json
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -387,6 +387,283 @@ async def push_site(message: str = "") -> dict:
             await asyncio.sleep(2 ** (attempt + 1))
 
     return {"error": f"push failed after 5 attempts: {stderr}"}
+
+
+# ---------------------------------------------------------------------------
+# Scorecard tools
+# ---------------------------------------------------------------------------
+
+# Horizon → days after publish when a prediction becomes scoreable
+HORIZON_DAYS = {"tomorrow": 2, "soon": 14, "future": 90}
+
+
+def _parse_front_matter(text: str) -> tuple[dict, str]:
+    """Parse YAML front matter from Jekyll markdown. Returns (fm_dict, body)."""
+    if not text.startswith("---"):
+        return {}, text
+    end = text.find("---", 3)
+    if end == -1:
+        return {}, text
+    fm_raw = text[3:end].strip()
+    body = text[end + 3:].lstrip("\n")
+
+    fm: dict = {}
+    for line in fm_raw.split("\n"):
+        if ":" not in line:
+            continue
+        key, _, val = line.partition(":")
+        key = key.strip()
+        val = val.strip()
+        if not key or key.startswith("-"):
+            continue
+        # Parse simple values
+        if val == "" or val.lower() == "null":
+            fm[key] = None
+        elif val.startswith('"') and val.endswith('"'):
+            fm[key] = val[1:-1]
+        elif val.startswith("["):
+            try:
+                fm[key] = json.loads(val)
+            except json.JSONDecodeError:
+                fm[key] = val
+        elif val.replace(".", "", 1).isdigit():
+            fm[key] = float(val) if "." in val else int(val)
+        else:
+            fm[key] = val
+    return fm, body
+
+
+def _find_articles(site: str, brand: str = "", horizon: str = "") -> list[Path]:
+    """Find all Jekyll post files, optionally filtered by brand/horizon."""
+    posts_dir = Path(site) / "_posts"
+    if not posts_dir.exists():
+        return []
+    articles = sorted(posts_dir.rglob("*.md"), reverse=True)
+    if not brand and not horizon:
+        return articles
+
+    filtered = []
+    for path in articles:
+        text = path.read_text(encoding="utf-8")
+        fm, _ = _parse_front_matter(text)
+        if brand and fm.get("brand") != brand:
+            continue
+        if horizon and fm.get("horizon") != horizon:
+            continue
+        filtered.append(path)
+    return filtered
+
+
+@mcp.tool()
+async def score_prediction(
+    article_path: str,
+    outcome: str,
+    outcome_note: str = "",
+) -> dict:
+    """Score a prediction article's outcome.
+
+    Updates the front matter outcome fields in the Jekyll markdown file.
+
+    Args:
+        article_path: Path to the article .md file (relative to site dir or absolute).
+        outcome: One of "confirmed", "partial", "wrong".
+        outcome_note: Brief explanation of why this outcome was assigned.
+    """
+    if outcome not in ("confirmed", "partial", "wrong"):
+        return {"error": "outcome must be: confirmed, partial, wrong"}
+
+    site = _site_dir()
+    path = Path(article_path)
+    if not path.is_absolute():
+        path = Path(site) / path
+
+    if not path.exists():
+        return {"error": f"Article not found: {path}"}
+
+    text = path.read_text(encoding="utf-8")
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Replace outcome fields in front matter
+    def _replace_field(content: str, field: str, value: str) -> str:
+        pattern = re.compile(rf"^({re.escape(field)}:).*$", re.MULTILINE)
+        if pattern.search(content):
+            return pattern.sub(rf'\1 "{value}"', content)
+        # Field missing — insert before closing ---
+        end = content.find("---", 3)
+        if end != -1:
+            return content[:end] + f'{field}: "{value}"\n' + content[end:]
+        return content
+
+    text = _replace_field(text, "outcome", outcome)
+    text = _replace_field(text, "outcome_date", now_iso)
+    if outcome_note:
+        text = _replace_field(text, "outcome_note", outcome_note)
+
+    path.write_text(text, encoding="utf-8")
+    log.info("scored %s → %s", path.name, outcome)
+    return {"path": str(path), "outcome": outcome, "outcome_date": now_iso}
+
+
+@mcp.tool()
+async def list_pending_scores(
+    brand: str = "",
+    horizon: str = "",
+    limit: int = 50,
+) -> dict:
+    """List prediction articles that are past their horizon date and still unscored.
+
+    These are articles where the prediction window has passed but outcome is still null.
+    The LLM agent should research each one and call score_prediction with the result.
+
+    Args:
+        brand: Filter by brand slug (optional).
+        horizon: Filter by horizon (optional).
+        limit: Max articles to return (default 50).
+    """
+    site = _site_dir()
+    articles = _find_articles(site, brand, horizon)
+    now = datetime.now(timezone.utc)
+    pending: list[dict] = []
+
+    for path in articles:
+        if len(pending) >= limit:
+            break
+        text = path.read_text(encoding="utf-8")
+        fm, _ = _parse_front_matter(text)
+
+        # Skip already scored
+        if fm.get("outcome"):
+            continue
+
+        # Check if past horizon window
+        date_str = fm.get("date") or fm.get("fictive_date")
+        if not date_str:
+            continue
+        try:
+            pub_date = datetime.strptime(str(date_str), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+
+        h = fm.get("horizon", "tomorrow")
+        days_needed = HORIZON_DAYS.get(h, 2)
+        if (now - pub_date).days < days_needed:
+            continue
+
+        pending.append({
+            "path": str(path.relative_to(site)),
+            "brand": fm.get("brand"),
+            "horizon": h,
+            "date": str(date_str),
+            "headline": fm.get("headline", path.stem),
+            "tags": fm.get("tags", []),
+            "days_ago": (now - pub_date).days,
+        })
+
+    return {"pending": pending, "count": len(pending)}
+
+
+@mcp.tool()
+async def generate_scorecard(
+    brand: str = "",
+    horizon: str = "",
+    last_n_days: int = 90,
+) -> dict:
+    """Generate an accuracy scorecard across scored predictions.
+
+    Aggregates outcome stats and writes a Jekyll data file for site rendering.
+    Returns summary stats including accuracy rate, counts, and per-brand breakdown.
+
+    Args:
+        brand: Filter by brand slug (optional, empty = all brands).
+        horizon: Filter by horizon (optional, empty = all horizons).
+        last_n_days: Only include articles from the last N days (default 90).
+    """
+    site = _site_dir()
+    articles = _find_articles(site, brand, horizon)
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=last_n_days)
+
+    # Collect scored articles
+    scored: list[dict] = []
+    for path in articles:
+        text = path.read_text(encoding="utf-8")
+        fm, _ = _parse_front_matter(text)
+        if not fm.get("outcome"):
+            continue
+        date_str = fm.get("date") or fm.get("fictive_date")
+        if not date_str:
+            continue
+        try:
+            pub_date = datetime.strptime(str(date_str), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+        if pub_date < cutoff:
+            continue
+
+        scored.append({
+            "brand": fm.get("brand", "unknown"),
+            "horizon": fm.get("horizon", "unknown"),
+            "date": str(date_str),
+            "headline": fm.get("headline", ""),
+            "outcome": fm["outcome"],
+            "outcome_note": fm.get("outcome_note", ""),
+            "outcome_date": fm.get("outcome_date", ""),
+            "confidence": fm.get("confidence", "medium"),
+        })
+
+    if not scored:
+        return {"summary": {"total": 0, "accuracy": None}, "breakdown": {}, "articles": []}
+
+    # Aggregate
+    total = len(scored)
+    confirmed = sum(1 for s in scored if s["outcome"] == "confirmed")
+    partial = sum(1 for s in scored if s["outcome"] == "partial")
+    wrong = sum(1 for s in scored if s["outcome"] == "wrong")
+    accuracy = round((confirmed + partial * 0.5) / total, 3) if total else 0
+
+    # Per-brand breakdown
+    breakdown: dict[str, dict] = {}
+    for s in scored:
+        key = f"{s['brand']}/{s['horizon']}"
+        if key not in breakdown:
+            breakdown[key] = {"total": 0, "confirmed": 0, "partial": 0, "wrong": 0}
+        breakdown[key]["total"] += 1
+        breakdown[key][s["outcome"]] += 1
+    for k, v in breakdown.items():
+        t = v["total"]
+        v["accuracy"] = round((v["confirmed"] + v["partial"] * 0.5) / t, 3) if t else 0
+
+    # Streak (most recent first, already sorted by path descending)
+    current_streak = 0
+    streak_type = None
+    for s in scored:
+        if streak_type is None:
+            streak_type = s["outcome"]
+            current_streak = 1
+        elif s["outcome"] == streak_type:
+            current_streak += 1
+        else:
+            break
+
+    summary = {
+        "total": total,
+        "confirmed": confirmed,
+        "partial": partial,
+        "wrong": wrong,
+        "accuracy": accuracy,
+        "streak": current_streak,
+        "streak_type": streak_type,
+        "period_days": last_n_days,
+    }
+
+    # Write scorecard data file for Jekyll
+    data_dir = Path(site) / "_data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    scorecard_data = {"generated_at": now.isoformat(), "summary": summary, "breakdown": breakdown}
+    (data_dir / "scorecard.json").write_text(json.dumps(scorecard_data, indent=2), encoding="utf-8")
+
+    log.info("scorecard: %d scored, accuracy=%.1f%%", total, accuracy * 100)
+    return {"summary": summary, "breakdown": breakdown, "articles": scored}
 
 
 # ---------------------------------------------------------------------------
