@@ -13,8 +13,11 @@ set -euo pipefail
 
 # ── Abort trap: Ctrl+C or SIGTERM → immediate full exit ──
 _abort() {
+    # Disable trap first to prevent recursive invocation
+    # (kill 0 sends SIGTERM to our process group, which includes us)
+    trap - INT TERM
     echo -e "\n\033[0;31m✗\033[0m Aborted." >&2
-    # Kill any background jobs we spawned
+    # Kill child processes but not ourselves (avoid recursion + curl segfault)
     kill 0 2>/dev/null || true
     exit 130
 }
@@ -117,9 +120,10 @@ _download() {
         attempt=$((attempt + 1))
         rc=0
         if command -v wget &>/dev/null && [[ "$url" == http://* || "$url" == https://* ]]; then
-            wget --progress=dot:mega --timeout=30 --tries=1 \
-                 -O "$out" "$url" 2>&1 \
-                | grep -E --line-buffered '^\s+[0-9]|saved' \
+            # Use -q (quiet) — piping progress through grep caused pipe
+            # backpressure stalls (same class of bug as the pv/tar fix)
+            wget -q --timeout=30 --tries=1 \
+                 -O "$out" "$url" \
                 || rc=$?
         else
             curl -fL --progress-bar --connect-timeout 15 --max-time 600 \
@@ -210,7 +214,9 @@ _lc_download_and_setup() {
     fi
 
     local lc_tmp
-    lc_tmp=$(mktemp -d)
+    # Use $HOME for temp dir — /tmp is tmpfs on U8 (Arch/systemd) with a size
+    # cap; large bundles fill it and tar stalls. Home dir is on real disk.
+    lc_tmp=$(mktemp -d -p "$HOME" .lc-install.XXXXXX)
     # shellcheck disable=SC2064
     trap "rm -rf '$lc_tmp'" EXIT
 
