@@ -1,4 +1,4 @@
-"""Tests for augur_server.py — scorecard + social posting tools."""
+"""Tests for augur publish + score servers."""
 
 import asyncio
 import json
@@ -6,6 +6,7 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -65,13 +66,46 @@ def _run(coro):
 
 @pytest.fixture
 def augur(site_dir):
-    """Import augur_server after env is set."""
-    # Remove cached module to pick up new AUGUR_SITE_DIR
-    mod_key = "src.servers.augur_server"
-    if mod_key in sys.modules:
-        del sys.modules[mod_key]
-    from src.servers import augur_server
-    return augur_server
+    """Import from split augur modules, reload to pick up env."""
+    for key in list(sys.modules):
+        if "augur" in key:
+            del sys.modules[key]
+    from src.servers import augur_common as common
+    from src.servers import augur_publish as pub
+    from src.servers import augur_score as score
+
+    # Build a flat namespace with all the functions tests need
+    ns = SimpleNamespace(
+        # common helpers (underscore-prefixed for back-compat with tests)
+        _parse_front_matter=common.parse_front_matter,
+        _compute_fictive_date=common.compute_fictive_date,
+        _article_url=common.article_url,
+        _find_articles=common.find_articles,
+        _extract_sections=common.extract_sections,
+        _to_yaml=common.to_yaml,
+        _slugify=common.slugify,
+        _is_due=common.is_due,
+        BRANDS=common.BRANDS,
+        # publish tools
+        list_brands=pub.list_brands,
+        due_now=pub.publish_due,
+        publish_article=pub.publish_article,
+        generate_article_image=pub.generate_article_image,
+        generate_social_cards=pub.generate_social_cards,
+        post_social=pub.post_social,
+        push_site=pub.push_site,
+        _post_bluesky=pub._post_bluesky,
+        _post_mastodon=pub._post_mastodon,
+        _notify_manual_post=pub._notify_manual_post,
+        _AUTO_PLATFORMS=pub._AUTO_PLATFORMS,
+        _MANUAL_PLATFORMS=pub._MANUAL_PLATFORMS,
+        # score tools
+        score_due=score.score_due,
+        list_pending_scores=score.list_pending_scores,
+        score_prediction=score.score_prediction,
+        generate_scorecard=score.generate_scorecard,
+    )
+    return ns
 
 
 # ---------------------------------------------------------------------------
@@ -132,16 +166,13 @@ class TestFictiveDate:
 
     def test_soon_month_overflow(self, augur):
         pub = datetime(2026, 11, 15, tzinfo=timezone.utc)
-        # 11 + 3 = 14 → February next year
         assert augur._compute_fictive_date("soon", pub) == "2027-02-15"
 
     def test_soon_clamps_day_to_month_end(self, augur):
-        # Jan 31 + 3 months → April 30 (not April 28)
         pub = datetime(2026, 1, 31, tzinfo=timezone.utc)
         assert augur._compute_fictive_date("soon", pub) == "2026-04-30"
 
     def test_soon_feb_leap_year(self, augur):
-        # Nov 30 2027 + 3 months → Feb 28 2028 (2028 is leap year → Feb 29)
         pub = datetime(2027, 11, 30, tzinfo=timezone.utc)
         assert augur._compute_fictive_date("soon", pub) == "2028-02-29"
 
@@ -160,12 +191,9 @@ class TestYamlSerializer:
 class TestArticleUrl:
     def test_basic_url(self, augur, monkeypatch):
         monkeypatch.setenv("AUGUR_SITE_URL", "https://augur.news")
-        # Reload to pick up env
-        mod_key = "src.servers.augur_server"
-        if mod_key in sys.modules:
-            del sys.modules[mod_key]
-        from src.servers import augur_server as aug
-        url = aug._article_url("the", "tomorrow", "2026-03-13")
+        # article_url reads env at call time
+        from src.servers import augur_common
+        url = augur_common.article_url("the", "tomorrow", "2026-03-13")
         assert url == "https://augur.news/the/tomorrow/2026-03-13"
 
 
@@ -207,8 +235,6 @@ class TestScorePrediction:
         result = _run(augur.score_prediction(str(path), "confirmed", "Oil rose 5%"))
         assert result["outcome"] == "confirmed"
         assert result["revision"] == 1
-
-        # Verify file was updated
         text = path.read_text(encoding="utf-8")
         assert '"confirmed"' in text
         assert '"Oil rose 5%"' in text
@@ -275,7 +301,6 @@ class TestScorePrediction:
 
 class TestListPendingScores:
     def test_finds_unscored_past_horizon(self, augur, site_dir):
-        # Article from 10 days ago, tomorrow horizon (3 day window) — should be pending
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "tomorrow", old_date, "Old Prediction")
         result = _run(augur.list_pending_scores())
@@ -285,7 +310,6 @@ class TestListPendingScores:
         assert result["pending"][0]["revision"] == 0
 
     def test_skips_recent_articles(self, augur, site_dir):
-        # Article from today, tomorrow horizon — not yet scoreable
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "tomorrow", today, "Fresh Prediction")
         result = _run(augur.list_pending_scores())
@@ -322,20 +346,17 @@ class TestListPendingScores:
         assert result["count"] == 2
 
     def test_soon_horizon_needs_90_days(self, augur, site_dir):
-        # 5 days ago with "soon" horizon (90 day window) — not yet scoreable
         date_5d = (datetime.now(timezone.utc) - timedelta(days=5)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "soon", date_5d, "Soon Prediction")
         result = _run(augur.list_pending_scores())
         assert result["count"] == 0
 
-        # 100 days ago — should be pending
         date_100d = (datetime.now(timezone.utc) - timedelta(days=100)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "soon", date_100d, "Old Soon Prediction")
         result = _run(augur.list_pending_scores())
         assert result["count"] == 1
 
     def test_tomorrow_needs_3_days(self, augur, site_dir):
-        # 2 days ago — not yet scoreable
         date_2d = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "tomorrow", date_2d, "Two Day Prediction")
         result = _run(augur.list_pending_scores())
@@ -369,7 +390,6 @@ class TestGenerateScorecard:
         assert result["summary"]["total"] == 2
         assert result["summary"]["confirmed"] == 1
         assert result["summary"]["wrong"] == 1
-        # accuracy = (1 + 0) / 2 = 0.5
         assert result["summary"]["accuracy"] == 0.5
 
     def test_partial_counts_half(self, augur, site_dir):
@@ -522,26 +542,22 @@ class TestPostSocial:
         assert result.get("notified") is True
         assert result["platform"] == "x"
 
-        # Verify ntfy was called with deep link headers
         call_kwargs = mock_client.post.call_args
         headers = call_kwargs.kwargs.get("headers", {})
         assert headers["Click"] == "https://example.com/article"
         assert "Open article" in headers["Actions"]
 
-    def test_manual_platforms_route_to_ntfy(self, augur, monkeypatch):
-        """All manual platforms should route through _notify_manual_post."""
+    def test_manual_platforms_route_to_ntfy(self, augur):
         for platform in ("x", "facebook", "linkedin", "instagram"):
             assert platform in augur._MANUAL_PLATFORMS
 
     def test_auto_platforms_set(self, augur):
-        """Bluesky and Mastodon should be auto-post platforms."""
         assert "bluesky" in augur._AUTO_PLATFORMS
         assert "mastodon" in augur._AUTO_PLATFORMS
 
     def test_post_social_normalizes_case(self, augur, monkeypatch):
         monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
         result = _run(augur.post_social("the", "Bluesky", "test", "https://example.com"))
-        # Should not error with "Unknown platform" — should hit bluesky path
         assert "BLUESKY" in result.get("error", "")
 
 
@@ -551,20 +567,15 @@ class TestPostSocial:
 
 class TestFictiveDateLeapYear:
     def test_future_from_feb29_to_non_leap(self, augur):
-        """Feb 29 + 3yr → 2027 has no Feb 29, should clamp to Feb 28."""
         pub = datetime(2024, 2, 29, tzinfo=timezone.utc)
         assert augur._compute_fictive_date("future", pub) == "2027-02-28"
 
     def test_leap_from_feb29(self, augur):
-        """Feb 29 + 30yr → 2054 has no Feb 29, should clamp to Feb 28."""
         pub = datetime(2024, 2, 29, tzinfo=timezone.utc)
         assert augur._compute_fictive_date("leap", pub) == "2054-02-28"
 
     def test_future_from_feb29_to_leap(self, augur):
-        """Feb 29 2024 + 4yr → 2028 (leap year) → Feb 29."""
         pub = datetime(2024, 2, 29, tzinfo=timezone.utc)
-        # +3yr = 2027 (not leap), but let's test a custom offset wouldn't help
-        # Standard "future" is +3yr, so 2027-02-28
         assert augur._compute_fictive_date("future", pub) == "2027-02-28"
 
 
@@ -602,14 +613,12 @@ class TestExtractSections:
 
 class TestPendingScoringContent:
     def test_pending_includes_prediction_content(self, augur, site_dir):
-        """Pending scores should include signal + extrapolation for auto-scoring."""
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
         _run(augur.publish_article(
             brand="the", horizon="tomorrow", headline="Oil Will Rise",
             signal="Oil supply is tight", extrapolation="Prices will rise 10%",
             in_the_works="OPEC meeting", tags=["oil"], sources=[],
         ))
-        # Backdate the article so it's past horizon
         posts_dir = site_dir / "_posts" / "the" / "tomorrow"
         articles = list(posts_dir.glob("*.md"))
         assert len(articles) == 1
@@ -619,7 +628,6 @@ class TestPendingScoringContent:
             f'date: "{datetime.now(timezone.utc).strftime("%Y-%m-%d")}"',
             f'date: "{old_date}"'
         )
-        # Rename file to match old date
         new_name = art.name.replace(
             datetime.now(timezone.utc).strftime("%Y-%m-%d"), old_date
         )
@@ -636,10 +644,8 @@ class TestPendingScoringContent:
         assert entry["confidence"] == "medium"
 
     def test_pending_includes_fictive_date(self, augur, site_dir):
-        """Fictive date tells the agent WHEN the prediction was supposed to materialize."""
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
         path = _write_article(site_dir, "the", "tomorrow", old_date, "Date Check")
-        # Add fictive_date to front matter
         text = path.read_text(encoding="utf-8")
         text = text.replace("---\n\n", f'fictive_date: "2026-03-15"\n---\n\n', 1)
         path.write_text(text, encoding="utf-8")
@@ -658,7 +664,6 @@ class TestScoreEvidence:
         result = _run(augur.score_prediction(str(path), "confirmed", "Correct", evidence))
         assert result["evidence"] == evidence
 
-        # Verify evidence persisted in score log
         log_path = path.with_suffix(".scores.json")
         history = json.loads(log_path.read_text(encoding="utf-8"))
         assert history[0]["evidence"] == evidence
@@ -687,23 +692,18 @@ class TestScoreEvidence:
 
 class TestScoreBodyProtection:
     def test_body_with_outcome_word_not_corrupted(self, augur, site_dir):
-        """Body containing 'outcome:' should NOT be modified by scoring."""
         path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Body Test")
-        # Append body text that contains "outcome:" to simulate real article
         text = path.read_text(encoding="utf-8")
         text += "\nThe outcome: markets rose sharply.\n"
         path.write_text(text, encoding="utf-8")
 
         _run(augur.score_prediction(str(path), "confirmed", "Correct"))
         updated = path.read_text(encoding="utf-8")
-        # Body should still contain the original text unchanged
         assert "The outcome: markets rose sharply." in updated
-        # Front matter should have the score
         fm, body = augur._parse_front_matter(updated)
         assert fm["outcome"] == "confirmed"
 
     def test_body_with_outcome_date_not_corrupted(self, augur, site_dir):
-        """Body containing 'outcome_date:' should NOT be modified."""
         path = _write_article(site_dir, "the", "tomorrow", "2026-03-01", "Date Body")
         text = path.read_text(encoding="utf-8")
         text += "\nPrevious outcome_date: unknown.\n"
@@ -737,19 +737,17 @@ class TestSlugify:
 
 
 # ---------------------------------------------------------------------------
-# _is_due
+# _is_due + due_now/score_due
 # ---------------------------------------------------------------------------
 
 class TestDueNow:
     def test_publish_due_returns_schedule(self, augur, site_dir):
-        """publish_due (aliased as due_now) returns due list."""
         result = _run(augur.due_now())
         assert "due" in result
         assert "checked_at" in result
         assert "count" in result
 
     def test_score_due_includes_pending(self, augur, site_dir):
-        """score_due should surface pending scores for the agent."""
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
         _write_article(site_dir, "the", "tomorrow", old_date, "Needs Scoring")
         result = _run(augur.score_due())
@@ -758,7 +756,6 @@ class TestDueNow:
         assert result["pending"][0]["headline"] == "Needs Scoring"
 
     def test_score_due_no_pending(self, augur, site_dir):
-        """No articles → score_due=0, pending=[]."""
         result = _run(augur.score_due())
         assert result["score_due"] == 0
         assert result["pending"] == []
@@ -774,7 +771,6 @@ class TestIsDue:
         assert augur._is_due("0,6,12,18", now) is False
 
     def test_minute_gate(self, augur):
-        """Should only fire in first 15 minutes of the hour."""
         now = datetime(2026, 3, 10, 6, 20, tzinfo=timezone.utc)
         assert augur._is_due("6", now) is False
 
@@ -783,12 +779,10 @@ class TestIsDue:
         assert augur._is_due("6", now) is True
 
     def test_monday_schedule(self, augur):
-        # 2026-03-09 is a Monday
         now = datetime(2026, 3, 9, 3, 5, tzinfo=timezone.utc)
         assert augur._is_due("3/mon", now) is True
 
     def test_tuesday_blocked_by_monday(self, augur):
-        # 2026-03-10 is a Tuesday
         now = datetime(2026, 3, 10, 3, 5, tzinfo=timezone.utc)
         assert augur._is_due("3/mon", now) is False
 
@@ -812,7 +806,6 @@ class TestPublishArticle:
         assert "path" in result
         assert result["brand"] == "the"
         assert result["horizon"] == "tomorrow"
-        # Verify file exists and has content
         text = Path(result["path"]).read_text(encoding="utf-8")
         assert "Oil supply is tight" in text
         assert "## The Signal" in text
@@ -967,9 +960,7 @@ class TestGenerateSocialCards:
 
 class TestPostSocialImage:
     def test_post_social_accepts_image_path(self, augur, monkeypatch):
-        """post_social should accept image_path parameter."""
         monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
-        # Should not crash — just hit missing creds
         result = _run(augur.post_social(
             "the", "bluesky", "test", "https://example.com",
             image_path="/tmp/card.webp"))
