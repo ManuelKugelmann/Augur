@@ -126,9 +126,9 @@ class TestFictiveDate:
         pub = datetime(2026, 3, 10, tzinfo=timezone.utc)
         assert augur._compute_fictive_date("future", pub) == "2029-03-10"
 
-    def test_far_adds_30_years(self, augur):
+    def test_leap_adds_30_years(self, augur):
         pub = datetime(2026, 3, 10, tzinfo=timezone.utc)
-        assert augur._compute_fictive_date("far", pub) == "2056-03-10"
+        assert augur._compute_fictive_date("leap", pub) == "2056-03-10"
 
     def test_soon_month_overflow(self, augur):
         pub = datetime(2026, 11, 15, tzinfo=timezone.utc)

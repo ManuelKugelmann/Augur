@@ -20,7 +20,7 @@ mcp = FastMCP("augur", instructions=(
     "social media. Bluesky/Mastodon auto-post via API; X/Facebook/LinkedIn/"
     "Instagram send ntfy to admin with deep link. Brands: the (EN general), "
     "der (DE general), financial (EN markets), finanz (DE markets). "
-    "Horizons: tomorrow, soon, future."
+    "Horizons: tomorrow, soon, future, leap."
 ))
 
 log = logging.getLogger("augur")
@@ -33,40 +33,40 @@ BRANDS = {
     "the": {
         "name": "The Augur", "locale": "en", "module": "general",
         "masthead": "THE AUGUR",
-        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "far": "far"},
+        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "leap": "leap"},
         "image_prefix": "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. ",
         "disclaimer": "AI-generated speculation — not news. Not financial advice.",
     },
     "der": {
         "name": "Der Augur", "locale": "de", "module": "general",
         "masthead": "DER AUGUR",
-        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "far": "fern"},
+        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "leap": "sprung"},
         "image_prefix": "Editorial documentary photograph, photojournalistic style, natural lighting, high detail, 35mm lens. ",
         "disclaimer": "KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung.",
     },
     "financial": {
         "name": "Financial Augur", "locale": "en", "module": "markets",
         "masthead": "FINANCIAL AUGUR",
-        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "far": "far"},
+        "horizons": {"tomorrow": "tomorrow", "soon": "soon", "future": "future", "leap": "leap"},
         "image_prefix": "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. ",
         "disclaimer": "AI-generated opinion — not financial advice.",
     },
     "finanz": {
         "name": "Finanz Augur", "locale": "de", "module": "markets",
         "masthead": "FINANZ AUGUR",
-        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "far": "fern"},
+        "horizons": {"tomorrow": "morgen", "soon": "bald", "future": "zukunft", "leap": "sprung"},
         "image_prefix": "Professional financial editorial photograph, Bloomberg terminal aesthetic, corporate environment, clean lighting. ",
         "disclaimer": "KI-generierte Einschätzung — keine Finanzberatung.",
     },
 }
 
 # Horizon → fictive date offset (days/months/years from publish date)
-# tomorrow=+3d, soon=+3mo, future=+3yr, far=+30yr
+# tomorrow=+3d, soon=+3mo, future=+3yr, leap=+30yr
 HORIZON_OFFSETS = {
     "tomorrow": {"days": 3},
     "soon": {"months": 3},
     "future": {"years": 3},
-    "far": {"years": 30},
+    "leap": {"years": 30},
 }
 
 SECTION_LABELS = {
@@ -126,7 +126,7 @@ def _slugify(text: str, max_len: int = 60) -> str:
 def _compute_fictive_date(horizon: str, pub_date: datetime) -> str:
     """Compute the fictive target date from horizon offset.
 
-    tomorrow=+3d, soon=+3mo, future=+3yr, far=+30yr.
+    tomorrow=+3d, soon=+3mo, future=+3yr, leap=+30yr.
     Returns ISO date string.
     """
     offset = HORIZON_OFFSETS.get(horizon, {"days": 3})
@@ -209,7 +209,7 @@ async def publish_article(
     """
     if brand not in BRANDS:
         return {"error": f"Unknown brand: {brand}. Use: {', '.join(BRANDS.keys())}"}
-    valid_horizons = ("tomorrow", "soon", "future", "far")
+    valid_horizons = ("tomorrow", "soon", "future", "leap")
     if horizon not in valid_horizons:
         return {"error": f"horizon must be: {', '.join(valid_horizons)}"}
 
@@ -551,7 +551,7 @@ async def push_site(message: str = "") -> dict:
 
 # Horizon → days after publish when a prediction becomes scoreable
 # tomorrow=+3d → scoreable after 3d, soon=+3mo → 90d, future=+3yr → 1095d, far=+30yr → 10950d
-HORIZON_DAYS = {"tomorrow": 3, "soon": 90, "future": 1095, "far": 10950}
+HORIZON_DAYS = {"tomorrow": 3, "soon": 90, "future": 1095, "leap": 10950}
 
 
 def _parse_front_matter(text: str) -> tuple[dict, str]:
