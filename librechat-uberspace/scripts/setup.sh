@@ -120,16 +120,22 @@ fi
 # Python MCPs installed into signals stack venv
 if [[ -d "$STACK/venv" ]]; then
     VPIP="$STACK/venv/bin/pip"
-    # yahoo-finance-mcp
-    if ! "$STACK/venv/bin/python" -c "import yahoo_finance_mcp" 2>/dev/null; then
-        log "Installing yahoo-finance-mcp..."
-        "$VPIP" install -q yahoo-finance-mcp || warn "yahoo-finance-mcp install failed"
+    # finance-mcp-server (provides python -m finance_mcp)
+    if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
+        log "Installing finance-mcp-server..."
+        "$VPIP" install -q finance-mcp-server || warn "finance-mcp-server install failed"
     fi
-    # crypto-feargreed-mcp
-    if ! "$STACK/venv/bin/python" -c "import crypto_feargreed_mcp" 2>/dev/null; then
-        log "Installing crypto-feargreed-mcp..."
-        "$VPIP" install -q crypto-feargreed-mcp || warn "crypto-feargreed-mcp install failed"
-    fi
+fi
+
+# crypto-feargreed-mcp (not on PyPI — clone + uv run)
+VENDOR_DIR="$STACK/vendor"
+CFG_DIR="$VENDOR_DIR/crypto-feargreed-mcp"
+if [[ ! -d "$CFG_DIR" ]]; then
+    mkdir -p "$VENDOR_DIR"
+    log "Cloning crypto-feargreed-mcp..."
+    git clone -q --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
+else
+    log "crypto-feargreed-mcp already installed"
 fi
 
 # uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
@@ -292,7 +298,7 @@ EOF
     echo -e "  ${YELLOW}2.${NC} Configure MCP servers (optional, defaults are fine):"
     echo "     nano $APP/librechat.yaml"
     echo ""
-    echo -e "  ${YELLOW}3.${NC} Start:"
+    echo -e "  ${YELLOW}3.${NC} Start (auto-restarts on reboot):"
     if _is_u8; then
         echo "     systemctl --user start librechat"
     else

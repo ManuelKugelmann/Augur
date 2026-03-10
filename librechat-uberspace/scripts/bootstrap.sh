@@ -58,7 +58,7 @@ TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
 log "Downloading ${VER}..."
-gh_curl -L -o "$TMP/bundle.tar.gz" "$URL"
+curl -fL --progress-bar --connect-timeout 15 --max-time 300 -o "$TMP/bundle.tar.gz" "$URL" || die "Download failed (URL: $URL)"
 
 log "Extracting..."
 mkdir -p "$TMP/app"

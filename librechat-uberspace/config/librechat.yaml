@@ -204,8 +204,8 @@ mcpServers:
     serverInstructions: "OLS + logistic regression, residual diagnostics, VIF, Cook's distance. Reads CSV/Excel/JSON/Parquet/SQLite."
 
   crypto-sentiment:
-    command: python
-    args: ["-m", "crypto_feargreed_mcp"]
+    command: uv
+    args: ["--directory", "__HOME__/mcps/vendor/crypto-feargreed-mcp", "run", "main.py"]
     chatMenu: false
     serverInstructions: "Real-time + historical Crypto Fear & Greed Index. Sentiment signal for crypto markets."
 
