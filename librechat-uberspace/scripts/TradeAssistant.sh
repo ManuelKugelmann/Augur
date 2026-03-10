@@ -100,6 +100,53 @@ _do_install() {
         curl -sf "$@"
     }
 
+    # Robust file download with progress and retries
+    # Usage: _download <url> <output-file> [description]
+    _download() {
+        local url="$1" out="$2" desc="${3:-file}"
+        local retries=4 attempt=0 delay=2 rc=0
+
+        # Fetch file size for progress display (best-effort)
+        local size_bytes=""
+        size_bytes=$(curl -sfI -L "$url" 2>/dev/null | grep -i '^content-length:' | tail -1 | tr -d '[:space:]' | cut -d: -f2 || true)
+        if [[ -n "$size_bytes" && "$size_bytes" -gt 0 ]] 2>/dev/null; then
+            local size_mb
+            size_mb=$(awk "BEGIN {printf \"%.1f\", $size_bytes / 1048576}")
+            echo -e "  ${CYAN}↓${NC} ${desc} (${size_mb} MB)"
+        else
+            echo -e "  ${CYAN}↓${NC} ${desc}"
+        fi
+
+        while (( attempt < retries )); do
+            attempt=$((attempt + 1))
+            rc=0
+            if command -v wget &>/dev/null; then
+                wget --progress=dot:mega --timeout=30 --tries=1 \
+                     -O "$out" "$url" 2>&1 \
+                    | grep -E --line-buffered '^\s+[0-9]|saved' \
+                    || rc=$?
+            else
+                curl -fL --progress-bar --connect-timeout 15 --max-time 600 \
+                     -o "$out" "$url" \
+                    || rc=$?
+            fi
+
+            if [[ $rc -eq 0 && -s "$out" ]]; then
+                local got_mb
+                got_mb=$(awk "BEGIN {printf \"%.1f\", $(stat -c%s "$out" 2>/dev/null || stat -f%z "$out" 2>/dev/null || echo 0) / 1048576}")
+                echo -e "  ${GREEN}✓${NC} Downloaded ${got_mb} MB"
+                return 0
+            fi
+
+            if (( attempt < retries )); then
+                warn "Download attempt ${attempt}/${retries} failed, retrying in ${delay}s..."
+                sleep "$delay"
+                delay=$((delay * 2))
+            fi
+        done
+        die "Download failed after ${retries} attempts: ${desc}"
+    }
+
     # ── 1. Node.js ──────────────────────────────
     if _is_u8; then
         # U8: Node.js is system-provided, no version management CLI
@@ -284,7 +331,7 @@ SVCEOF
             LC_TMP=$(mktemp -d)
             trap 'rm -rf "${LC_TMP:-}"' EXIT
 
-            gh_curl -L -o "$LC_TMP/bundle.tar.gz" "$BUNDLE_URL"
+            _download "$BUNDLE_URL" "$LC_TMP/bundle.tar.gz" "LibreChat bundle"
             mkdir -p "$LC_TMP/app"
             tar xzf "$LC_TMP/bundle.tar.gz" -C "$LC_TMP/app"
 
@@ -310,7 +357,7 @@ SVCEOF
         trap 'rm -rf "${LC_TMP:-}"' EXIT
 
         log "Downloading LibreChat release..."
-        gh_curl -L -o "$LC_TMP/bundle.tar.gz" "$BUNDLE_URL"
+        _download "$BUNDLE_URL" "$LC_TMP/bundle.tar.gz" "LibreChat bundle"
         mkdir -p "$LC_TMP/app"
         tar xzf "$LC_TMP/bundle.tar.gz" -C "$LC_TMP/app"
 
