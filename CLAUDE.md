@@ -213,6 +213,7 @@ ta help        show all commands
 ta s|status    service status + version + host
 ta r|restart   restart LibreChat
 ta l|logs      tail service logs
+ta testrun     run LibreChat in foreground (see errors directly)
 ta v|version   show installed version
 ta u|update    update from latest GitHub release
 ta pull        quick dev update via git pull
