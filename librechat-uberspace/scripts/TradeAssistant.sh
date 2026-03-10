@@ -58,13 +58,6 @@ _svc_reload()  {
         supervisorctl update 2>/dev/null || true
     fi
 }
-_svc_is_running() {
-    if _is_u8; then
-        systemctl --user is-active "$1" &>/dev/null
-    else
-        supervisorctl status "$1" 2>/dev/null | grep -q "RUNNING"
-    fi
-}
 
 # ── Web backend (abstracts U7 set vs U8 add) ──
 _web_backend() {
@@ -790,11 +783,6 @@ except Exception as e:
                 fi
             fi
         fi
-
-        # ── Weekly on Sunday at 03:00 UTC: placeholder for future tasks ──
-        # if [[ "$HOUR" == "03" ]] && [[ "$DOW" == "7" ]]; then
-        #     _cron_log "weekly maintenance"
-        # fi
 
         _cron_log "done (hour=$HOUR dow=$DOW)"
         ;;
