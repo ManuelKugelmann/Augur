@@ -17,7 +17,7 @@ set -euo pipefail
 # and its values take effect for all subsequent variable expansions.
 GH_USER="${GH_USER:-ManuelKugelmann}"
 GH_REPO="${GH_REPO:-TradingAssistant}"
-STACK_DIR="${STACK_DIR:-$HOME/mcps}"
+STACK_DIR="${STACK_DIR:-$HOME/assist}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
 NODE_VERSION="${NODE_VERSION:-22}"
@@ -34,7 +34,7 @@ done
 unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
-STACK="${STACK_DIR:-$HOME/mcps}"
+STACK="${STACK_DIR:-$HOME/assist}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -106,8 +106,12 @@ _do_install() {
         command -v node &>/dev/null || die "Node.js not available"
         log "Node.js $(node -v) (U8 system-provided)"
     else
-        log "Setting Node.js ${NODE_VERSION}..."
-        uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        local current_node
+        current_node="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)" || true
+        if [[ "$current_node" != "$NODE_VERSION" ]]; then
+            log "Setting Node.js ${NODE_VERSION} (current: ${current_node:-none})..."
+            uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        fi
         command -v node &>/dev/null || die "Node.js not available"
         log "Node.js $(node -v)"
     fi
@@ -403,8 +407,12 @@ SVCEOF
         "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-from dotenv import load_dotenv
-load_dotenv(os.path.join('$STACK', '.env'))
+# Load .env if python-dotenv available (env vars also passed from shell)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join('$STACK', '.env'))
+except ImportError:
+    pass
 try:
     from server import seed_profiles
     result = seed_profiles()
@@ -489,7 +497,7 @@ except Exception as e:
             echo -e "  ${CYAN}Step 2:${NC} Configure LibreChat"
             echo "    nano $APP/.env"
             echo "    # Set MONGO_URI=mongodb+srv://..."
-            echo "    # Set ANTHROPIC_API_KEY=sk-ant-...  and/or  OPENAI_API_KEY=sk-..."
+            echo "    # Set at least one LLM key (many free tiers — see docs/llm-keys.md)"
             echo ""
         fi
     fi
@@ -630,11 +638,14 @@ case "$CMD" in
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
 import os, sys
-stack = os.environ.get("STACK", os.path.expanduser("~/mcps"))
+stack = os.environ.get("STACK", os.path.expanduser("~/assist"))
 sys.path.insert(0, os.path.join(stack, "src", "store"))
 sys.path.insert(0, os.path.join(stack, "src", "servers"))
-from dotenv import load_dotenv
-load_dotenv(os.path.join(stack, ".env"))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(stack, ".env"))
+except ImportError:
+    pass
 from server import compact, _snap_col, VALID_KINDS
 
 for kind in VALID_KINDS:

@@ -39,7 +39,7 @@ cat deploy.conf
 | `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
 | `GH_REPO` | `TradingAssistant` | Signals stack repo |
-| `STACK_DIR` | `$HOME/mcps` | Signals stack path |
+| `STACK_DIR` | `$HOME/assist` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
 | `LC_PORT` | `3080` | LibreChat port |
 | `NODE_VERSION` | `22` | Node.js version |
@@ -87,7 +87,7 @@ This clones the repo, creates Python venv, installs LibreChat (release bundle or
 
 ```bash
 # Signals stack — set MONGO_URI_SIGNALS
-nano ~/mcps/.env
+nano ~/assist/.env
 
 # LibreChat — set MONGO_URI + at least one LLM key
 nano ~/LibreChat/.env

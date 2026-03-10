@@ -118,9 +118,9 @@ curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main
 
 What happens:
 1. Sets Node.js 22
-2. Clones `TradingAssistant` repo to `~/mcps/`
+2. Clones `TradingAssistant` repo to `~/assist/`
 3. Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`, `python-dotenv`
-4. Generates `~/mcps/.env` from template
+4. Generates `~/assist/.env` from template
 5. Registers supervisord services (`trading`, `charts`)
 6. **Skips** tagged releases (dev mode)
 7. Downloads `librechat-build.tar.gz` from the CI prebuilt release
@@ -178,7 +178,7 @@ ta r     # restart
 
 After pushing changes to `main` on your dev machine:
 ```bash
-ta pull    # git pull ~/mcps + restart LibreChat
+ta pull    # git pull ~/assist + restart LibreChat
 ```
 
 This pulls the latest signals stack code (servers, profiles, config) and restarts. No tagging, no CI, no release — just push and pull.
@@ -192,7 +192,7 @@ ta install dev    # re-downloads CI build or rebuilds from source
 
 ```bash
 # Create PRIVATE repo on GitHub: ManuelKugelmann/TradeAssistant_Data
-bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
+bash ~/assist/librechat-uberspace/scripts/setup-data-repo.sh
 ```
 
 Auto-syncs every 15 min via cron. Stores filesystem files.
@@ -259,7 +259,7 @@ All deployment settings live in `deploy.conf` (sourced by all scripts):
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
 | `GH_REPO` | `TradingAssistant` | Signals stack repo |
 | `GH_REPO_DATA` | `TradeAssistant_Data` | Data repo (private) |
-| `STACK_DIR` | `$HOME/mcps` | Signals stack path |
+| `STACK_DIR` | `$HOME/assist` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
 | `DATA_DIR` | `$HOME/TradeAssistant_Data` | MCP data path |
 | `LC_PORT` | `3080` | LibreChat port |
@@ -332,7 +332,7 @@ python3 -c "from pymongo import MongoClient; MongoClient('YOUR_URI').server_info
 ### MCP server not finding API keys
 When launched by LibreChat, servers inherit env from `librechat.yaml` `env:` blocks, not from `.env`. Verify the key is in both places:
 ```bash
-grep FRED_API_KEY ~/mcps/.env
+grep FRED_API_KEY ~/assist/.env
 grep FRED_API_KEY ~/LibreChat/librechat.yaml
 ```
 

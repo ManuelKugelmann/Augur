@@ -4,7 +4,7 @@ set -euo pipefail
 
 # ── Load central config ──
 for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
-            "$HOME/mcps/deploy.conf"; do
+            "$HOME/assist/deploy.conf"; do
     [[ -f "$conf" ]] && { source "$conf"; break; }
 done
 
@@ -58,7 +58,7 @@ TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
 log "Downloading ${VER}..."
-gh_curl -L -o "$TMP/bundle.tar.gz" "$URL"
+curl -fL --progress-bar --connect-timeout 15 --max-time 300 -o "$TMP/bundle.tar.gz" "$URL" || die "Download failed (URL: $URL)"
 
 log "Extracting..."
 mkdir -p "$TMP/app"

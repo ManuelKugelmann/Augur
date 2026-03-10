@@ -23,7 +23,7 @@
 
 | Path | Purpose |
 |------|---------|
-| `~/mcps/` | Clone of this repo (signals stack) |
+| `~/assist/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
 | `~/backups/mongo/` | Rolling MongoDB backups (daily/weekly/monthly gzipped JSON) |
 | `~/bin/ta` | Ops CLI tool |
@@ -60,8 +60,7 @@ TradingAssistant/
 ├── profiles/                            ← organized by region, then kind
 │   ├── INFO.md                        ← structure reference
 │   ├── INDEX_{kind}.json              ← per-kind indexes (auto-generated)
-│   ├── SCHEMAS/                       ← descriptive schemas per kind
-│   ├── europe/                        ← economic regions
+│   ├── europe/                        ← seed data by region
 │   │   ├── countries/DEU.json
 │   │   └── stocks/SAP.json
 │   ├── north_america/
@@ -184,7 +183,7 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 All scripts source this file. Key variables:
 - `UBER_USER=assist`, `UBER_HOST=assist.uber.space`
 - `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`
-- `STACK_DIR=$HOME/mcps`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
+- `STACK_DIR=$HOME/assist`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
 - `LC_PORT=3080`, `NODE_VERSION=22`
 
 ### Python Dependencies
@@ -269,10 +268,6 @@ north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east
 | `companies` | lowercase slug | `tsmc`, `aramco` |
 | `sources` | lowercase slug | `faostat`, `open-meteo` |
 
-### Schemas
-
-`profiles/SCHEMAS/{kind}.schema.json` — descriptive schema per kind.
-
 ### Indexes
 
 `profiles/INDEX_{kind}.json` — top-level, auto-generated.
@@ -293,7 +288,7 @@ Each entry: `{id, kind, name, region, tags?, sector?}`.
 | `search_profiles(kind, field, value, region?)` | Field-level search |
 | `list_regions()` | List regions and their kinds |
 | `rebuild_index(kind?)` | Rebuild indexes from disk |
-| `lint_profiles(kind?, id?)` | Validate against schema |
+| `lint_profiles(kind?, id?)` | Validate required fields (id, name) |
 
 ### Snapshot tools (same API + time fields)
 

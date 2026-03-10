@@ -19,7 +19,7 @@ setup() {
         skip "Not on Uberspace host"
     fi
     # Use real HOME, not sandbox — we're testing the live system
-    export STACK_DIR="${STACK_DIR:-$HOME/mcps}"
+    export STACK_DIR="${STACK_DIR:-$HOME/assist}"
     export APP_DIR="${APP_DIR:-$HOME/LibreChat}"
     # Source deploy.conf if available
     [[ -f "$STACK_DIR/deploy.conf" ]] && source "$STACK_DIR/deploy.conf"
@@ -196,9 +196,9 @@ setup() {
     fi
     run "$STACK_DIR/venv/bin/python" -c "
 import os, sys
-sys.path.insert(0, os.environ.get('STACK_DIR', os.path.expanduser('~/mcps')))
+sys.path.insert(0, os.environ.get('STACK_DIR', os.path.expanduser('~/assist')))
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.environ.get('STACK_DIR', os.path.expanduser('~/mcps')), '.env'))
+load_dotenv(os.path.join(os.environ.get('STACK_DIR', os.path.expanduser('~/assist')), '.env'))
 load_dotenv(os.path.join(os.environ.get('APP_DIR', os.path.expanduser('~/LibreChat')), '.env'))
 uri = os.environ.get('MONGO_URI_SIGNALS', '')
 if not uri:

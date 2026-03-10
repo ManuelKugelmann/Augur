@@ -576,7 +576,7 @@ mcpServers:
 
   rss:
     command: node
-    args: ["__HOME__/mcps/node_modules/rss-mcp/index.js"]
+    args: ["__HOME__/assist/node_modules/rss-mcp/index.js"]
     chatMenu: false
 
   reddit:
