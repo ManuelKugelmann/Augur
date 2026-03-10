@@ -18,6 +18,7 @@
   - `~/bin/TradeAssistant` — symlink to `ta`
   - Also works as one-liner: `curl ... TradeAssistant.sh | bash` (auto-detects fresh install)
 - **Uberspace host**: `assist.uber.space`
+- **Platform**: U8 (Arch Linux / systemd). U7 (CentOS 7 / supervisord) support is dormant — code paths remain but are not actively maintained. U7 has glibc 2.17 which blocks modern native modules (e.g. `sharp`).
 
 ## Directory Layout (Uberspace)
 
