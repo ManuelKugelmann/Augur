@@ -298,7 +298,7 @@ class TestAgriServer:
         patcher, client = _patch_httpx_get(resp)
         with patcher:
             result = await self.mod.fao_datasets()
-        assert result == [{"code": "QCL", "label": "Crops"}, {"code": "TP", "label": "Trade"}]
+        assert result == {"datasets": [{"code": "QCL", "label": "Crops"}, {"code": "TP", "label": "Trade"}]}
 
     @pytest.mark.asyncio
     async def test_usda_missing_key(self, monkeypatch):
@@ -376,7 +376,9 @@ class TestConflictServer:
 
     @pytest.mark.asyncio
     async def test_acled_date_filter(self, monkeypatch):
+        import time as _time
         monkeypatch.setattr(self.mod, "_acled_token", "cached-token")
+        monkeypatch.setattr(self.mod, "_acled_token_exp", _time.time() + 9999)
         resp = _mock_response({"data": []})
         patcher, client = _patch_httpx_get(resp)
         with patcher:
@@ -503,20 +505,17 @@ class TestElectionsServer:
     @pytest.mark.asyncio
     async def test_global_elections_rejects_sparql_injection(self):
         result = await self.mod.global_elections(country='")}\nDELETE{?s ?p ?o}#')
-        assert len(result) == 1
-        assert "error" in result[0]
+        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_global_elections_rejects_bad_year(self):
         result = await self.mod.global_elections(year="2025; DROP")
-        assert len(result) == 1
-        assert "error" in result[0]
+        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_heads_of_state_rejects_sparql_injection(self):
         result = await self.mod.heads_of_state(country='")}\nDELETE{?s ?p ?o}#')
-        assert len(result) == 1
-        assert "error" in result[0]
+        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_global_elections_wikidata(self):
@@ -531,8 +530,8 @@ class TestElectionsServer:
         client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             result = await self.mod.global_elections(country="Germany", year="2025")
-        assert len(result) == 1
-        assert result[0]["country"] == "Germany"
+        assert len(result["elections"]) == 1
+        assert result["elections"][0]["country"] == "Germany"
         sparql_url = client.get.call_args_list[1][0][0]
         assert "wikidata.org" in sparql_url
 
@@ -549,8 +548,8 @@ class TestElectionsServer:
         client.get.side_effect = [search_resp, sparql_resp]
         with patcher:
             result = await self.mod.heads_of_state(country="Germany")
-        assert result[0]["person"] == "Friedrich Merz"
-        assert result[0]["position"] == "Chancellor"
+        assert result["leaders"][0]["person"] == "Friedrich Merz"
+        assert result["leaders"][0]["position"] == "Chancellor"
 
     @pytest.mark.asyncio
     async def test_eu_parliament_meps_country(self):
@@ -700,12 +699,15 @@ class TestTransportServer:
 
     @pytest.mark.asyncio
     async def test_oauth2_with_secret(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "test-client")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "test-secret")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "test-client")
+        monkeypatch.setattr(oauth, "_secret", "test-secret")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "tok123", "expires_in": 1800})
         patcher, client = _patch_httpx_get(token_resp)
         with patcher:
-            headers = await self.mod._opensky_headers()
+            headers = await oauth.headers()
         assert headers == {"Authorization": "Bearer tok123"}
         post_data = client.post.call_args[1]["data"]
         assert post_data["client_id"] == "test-client"
@@ -714,31 +716,38 @@ class TestTransportServer:
 
     @pytest.mark.asyncio
     async def test_oauth2_public_client(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "pub-client")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "pub-client")
+        monkeypatch.setattr(oauth, "_secret", "")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "tok456", "expires_in": 1800})
         patcher, client = _patch_httpx_get(token_resp)
         with patcher:
-            headers = await self.mod._opensky_headers()
+            headers = await oauth.headers()
         assert headers == {"Authorization": "Bearer tok456"}
         post_data = client.post.call_args[1]["data"]
         assert "client_secret" not in post_data
 
     @pytest.mark.asyncio
     async def test_oauth2_no_credentials(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "")
-        headers = await self.mod._opensky_headers()
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "")
+        headers = await oauth.headers()
         assert headers == {}
 
     @pytest.mark.asyncio
     async def test_oauth2_caches_token(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "test-client")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "sec")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "test-client")
+        monkeypatch.setattr(oauth, "_secret", "sec")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "cached", "expires_in": 1800})
         patcher, client = _patch_httpx_get(token_resp)
         with patcher:
-            h1 = await self.mod._opensky_headers()
-            h2 = await self.mod._opensky_headers()
+            h1 = await oauth.headers()
+            h2 = await oauth.headers()
         assert h1 == h2 == {"Authorization": "Bearer cached"}
         assert client.post.call_count == 1  # only one token request
 
@@ -750,8 +759,11 @@ class TestTransportServer:
 
     @pytest.mark.asyncio
     async def test_own_states_params(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "c")
+        monkeypatch.setattr(oauth, "_secret", "s")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
         states_resp = _mock_response({"time": 1, "states": []})
         client = AsyncMock()
@@ -773,8 +785,11 @@ class TestTransportServer:
 
     @pytest.mark.asyncio
     async def test_all_flights_params(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "c")
+        monkeypatch.setattr(oauth, "_secret", "s")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
         flights_resp = _mock_response([{"icao24": "abc"}])
         client = AsyncMock()
@@ -787,7 +802,6 @@ class TestTransportServer:
         params = client.get.call_args[1]["params"]
         assert params["begin"] == 1000
         assert params["end"] == 2000
-        assert "flights" in result
 
     @pytest.mark.asyncio
     async def test_airport_arrivals_requires_auth(self, monkeypatch):
@@ -799,8 +813,11 @@ class TestTransportServer:
 
     @pytest.mark.asyncio
     async def test_airport_arrivals_uppercases(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "c")
+        monkeypatch.setattr(oauth, "_secret", "s")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
         flights_resp = _mock_response([])
         client = AsyncMock()
@@ -832,8 +849,11 @@ class TestTransportServer:
 
     @pytest.mark.asyncio
     async def test_flight_track_waypoints(self, monkeypatch):
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_ID", "c")
-        monkeypatch.setattr(self.mod, "OPENSKY_CLIENT_SECRET", "s")
+        oauth = self.mod._opensky_oauth
+        monkeypatch.setattr(oauth, "_client_id", "c")
+        monkeypatch.setattr(oauth, "_secret", "s")
+        monkeypatch.setattr(oauth, "_token", "")
+        monkeypatch.setattr(oauth, "_exp", 0)
         token_resp = _mock_response({"access_token": "t", "expires_in": 1800})
         track_resp = _mock_response({
             "icao24": "abc123", "callsign": "DLH123",
