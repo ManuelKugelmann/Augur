@@ -11,6 +11,15 @@
 # Installed as ~/bin/ta (shorthand) and ~/bin/TradeAssistant
 set -euo pipefail
 
+# ── Abort trap: Ctrl+C or SIGTERM → immediate full exit ──
+_abort() {
+    echo -e "\n\033[0;31m✗\033[0m Aborted." >&2
+    # Kill any background jobs we spawned
+    kill 0 2>/dev/null || true
+    exit 130
+}
+trap '_abort' INT TERM
+
 # ── Defaults (work before repo/config exist) ──
 # These defaults are needed for the curl|bash one-liner where deploy.conf
 # doesn't exist yet.  Once the repo is cloned, deploy.conf is sourced below
@@ -214,18 +223,11 @@ _lc_download_and_setup() {
         size_info=" ($(awk "BEGIN {printf \"%.1f\", $bundle_size / 1048576}") MB)"
     fi
     mkdir -p "$lc_tmp/app"
-    if command -v pv &>/dev/null && [[ -n "$bundle_size" ]]; then
-        log "Extracting bundle${size_info}..."
-        pv -p -e -r "$lc_tmp/bundle.tar.gz" | tar xzf - -C "$lc_tmp/app"
-    else
-        echo -ne "${GREEN}✓${NC} Extracting bundle${size_info}..."
-        local count=0
-        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v | while IFS= read -r _; do
-            count=$((count + 1))
-            if (( count % 500 == 0 )); then echo -n "."; fi
-        done
-        echo " done"
-    fi
+    log "Extracting bundle${size_info}..."
+    # Extract directly (no pv pipe — piping through pv throttles tar to KiB/s
+    # on large archives with many small files due to 64KB pipe buffer backpressure)
+    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+    log "Extraction complete"
 
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
