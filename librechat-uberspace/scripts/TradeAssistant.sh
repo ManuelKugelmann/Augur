@@ -214,7 +214,9 @@ _lc_download_and_setup() {
     fi
 
     local lc_tmp
-    lc_tmp=$(mktemp -d)
+    # Use $HOME for temp dir — /tmp is tmpfs on U8 (Arch/systemd) with a size
+    # cap; large bundles fill it and tar stalls. Home dir is on real disk.
+    lc_tmp=$(mktemp -d -p "$HOME" .lc-install.XXXXXX)
     # shellcheck disable=SC2064
     trap "rm -rf '$lc_tmp'" EXIT
 
