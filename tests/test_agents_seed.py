@@ -243,7 +243,8 @@ class TestEdgeResolution:
     """Test that resolve_edges produces correct GraphEdge objects."""
 
     def _load_resolve_edges(self):
-        """Import resolve_edges from seed-agents.py."""
+        """Import resolve_edges from seed-agents.py (requires httpx)."""
+        pytest.importorskip("httpx", reason="httpx required for seed-agents import")
         import importlib.util
         spec = importlib.util.spec_from_file_location("seed_agents", _seed_module_path)
         mod = importlib.util.module_from_spec(spec)
