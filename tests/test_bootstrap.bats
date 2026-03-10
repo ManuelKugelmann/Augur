@@ -22,7 +22,6 @@ teardown() {
         "$REPO_ROOT/librechat-uberspace/scripts/setup.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/bootstrap.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/claude-auth-daemon.sh"
-        "$REPO_ROOT/scripts/nightly-git-commit.sh"
     )
     for script in "${scripts[@]}"; do
         run bash -n "$script"

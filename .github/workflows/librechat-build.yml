@@ -10,6 +10,10 @@
 name: Build LibreChat
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/librechat-build.yml'
   workflow_dispatch:
     inputs:
       librechat_ref:
@@ -42,7 +46,7 @@ jobs:
           echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
           echo "LC_TAG=lc-${LC_PKG_VER}" >> "$GITHUB_ENV"
           npm ci
-          npm run frontend
+          NODE_OPTIONS="--max-old-space-size=4096" npm run frontend
           cd ..
 
       - name: Assemble bundle
@@ -62,8 +66,9 @@ jobs:
           rm -f package-lock.json
           cd ..
 
-          # Embed LibreChat version
+          # Embed LibreChat version + build date
           echo "${LC_VERSION}" > bundle/.version
+          date -u +%Y-%m-%dT%H:%M:%SZ > bundle/.build-date
 
           tar czf librechat-build.tar.gz -C bundle .
 

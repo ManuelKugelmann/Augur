@@ -32,6 +32,7 @@ if "fastmcp" not in sys.modules:
     mock_fastmcp.FastMCP = _FakeMCP
     sys.modules["fastmcp"] = mock_fastmcp
 
+pytest.importorskip("ta", reason="ta library not installed (sandbox: SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta --no-build-isolation)")
 import indicators_server as ind  # noqa: E402
 
 

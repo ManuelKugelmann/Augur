@@ -1,58 +1,35 @@
-# MCP Signals Store — Hybrid Architecture
+# MCP Signals Store — Architecture
 
-> JSON file profiles (stable, git-tracked) + MongoDB Atlas M0 snapshots (volatile, TTL)
+> MongoDB Atlas M0: profiles (stable, per-kind collections) + snapshots (volatile, TTL)
 
 ## Storage Split
 
 ```
  Stable / slow-changing?              Volatile / time-series?
- Human-editable? Identity?            Auto-collected? Measurements?
+ Identity? Curated?                   Auto-collected? Measurements?
           │                                    │
           ▼                                    ▼
-     📁 JSON files                       ☁️ Atlas M0
-     (git-tracked)                    (signals.snapshots)
+     ☁️ Atlas M0                         ☁️ Atlas M0
+     (profiles_{kind})               (snap_{kind}, events)
 ```
 
-| Criteria | 📁 JSON Profile | ☁️ Atlas Snapshot |
-|----------|----------------|-------------------|
+| Criteria | ☁️ Profile | ☁️ Snapshot |
+|----------|-----------|------------|
 | What | Identity, structure, exposure, curated risk factors | Periodic readings, events, price history |
 | Update freq | Manual / monthly | Hourly → quarterly |
-| Format | 1 file per entity, structured dirs | Documents with TTL |
-| Versioning | `git log` | TTL auto-prune |
-| Size | ~5 MB total (200 countries + 2000 entities) | ~5 MB/year growth |
+| Format | One document per entity in `profiles_{kind}` collection | Documents with TTL in `snap_{kind}` |
+| Versioning | `_updated` timestamp | TTL auto-prune |
+| Size | ~2 MB total (200 countries + 2000 entities) | ~5 MB/year growth |
 
 ---
 
-## 📁 File Profiles — Directory Layout
+## Profiles — MongoDB Collections
 
-```
-profiles/
-├── .git/
-├── countries/
-│   ├── _schema.json
-│   ├── DEU.json
-│   ├── USA.json
-│   └── CHN.json              (~200 files)
-├── entities/
-│   ├── _schema.json
-│   ├── stocks/
-│   │   ├── AAPL.json
-│   │   ├── NVDA.json
-│   │   └── ...
-│   ├── etfs/
-│   │   ├── VWO.json
-│   │   └── SPY.json
-│   ├── indices/
-│   │   └── SPX.json
-│   └── crypto/
-│       └── BTC.json          (~2000 files)
-└── sources/
-    ├── usgs.json
-    ├── faostat.json
-    └── ...                   (MCP source metadata)
-```
+Profiles are stored in per-kind MongoDB collections: `profiles_countries`, `profiles_stocks`, `profiles_etfs`, etc.
 
-### Country Profile (`countries/DEU.json`)
+Each profile document is keyed by `kind` + `id` + `region`.
+
+### Country Profile (`profiles_countries`, id: `DEU`)
 
 ```json
 {
@@ -86,7 +63,7 @@ profiles/
 }
 ```
 
-### Entity Profile (`entities/stocks/NVDA.json`)
+### Entity Profile (`profiles_stocks`, id: `NVDA`)
 
 ```json
 {
@@ -111,7 +88,7 @@ profiles/
 }
 ```
 
-### Source Metadata (`sources/usgs.json`)
+### Source Metadata (`profiles_sources`, id: `usgs`)
 
 ```json
 {
@@ -131,7 +108,7 @@ profiles/
 
 ## ☁️ Atlas M0 — Snapshots Collection
 
-Single collection `signals.snapshots`, discriminated by `type` field.
+Per-kind collections `snap_{kind}`, discriminated by `type` field.
 
 ### Indexes
 
@@ -196,19 +173,19 @@ Single collection `signals.snapshots`, discriminated by `type` field.
 
 ## What Lives Where
 
-| Data | 📁 Profile | ☁️ Atlas |
-|------|-----------|---------|
-| Country name, region, currency | ✅ | |
-| Country GDP quarterly reading | | ✅ `indicators` |
-| Company sector, exchange, employees | ✅ | |
-| Weekly/daily price | | ✅ `price` |
-| ETF holdings, top countries | ✅ | |
-| Quarterly earnings | | ✅ `fundamentals` |
-| Supply chain / risk factors | ✅ | |
-| Earthquake / outbreak events | | ✅ `event` |
-| Trade partners, export structure | ✅ | |
-| Sanctions list changes | | ✅ `event` |
-| MCP source config & thresholds | ✅ | |
+| Data | ☁️ Profile | ☁️ Snapshot |
+|------|-----------|------------|
+| Country name, region, currency | ✅ `profiles_countries` | |
+| Country GDP quarterly reading | | ✅ `snap_countries` |
+| Company sector, exchange, employees | ✅ `profiles_stocks` | |
+| Weekly/daily price | | ✅ `snap_stocks` |
+| ETF holdings, top countries | ✅ `profiles_etfs` | |
+| Quarterly earnings | | ✅ `snap_stocks` |
+| Supply chain / risk factors | ✅ `profiles_*` | |
+| Earthquake / outbreak events | | ✅ `events` |
+| Trade partners, export structure | ✅ `profiles_countries` | |
+| Sanctions list changes | | ✅ `events` |
+| MCP source config & thresholds | ✅ `profiles_sources` | |
 
 **Rule:** Profile = what it **is**. Snapshot = what happened / was measured **when**.
 
@@ -218,7 +195,7 @@ Single collection `signals.snapshots`, discriminated by `type` field.
 
 The signals store is a **single FastMCP server** (`src/store/server.py`) that exposes 20 tools. LibreChat sees it as one MCP server entry in `librechat.yaml` — all profile management, snapshot storage, querying, charting, and archival are tools within that one server.
 
-### Profile Tools (8 tools, file-backed)
+### Profile Tools (8 tools, MongoDB-backed)
 
 | Tool | Description |
 |------|-------------|
@@ -228,7 +205,7 @@ The signals store is a **single FastMCP server** (`src/store/server.py`) that ex
 | `find_profile(query, region?)` | Cross-kind search by name/ID/tag |
 | `search_profiles(kind, field, value, region?)` | Field-level search by dot-path |
 | `list_regions()` | List regions and their kinds |
-| `rebuild_index(kind?)` | Rebuild INDEX files from disk |
+| `rebuild_index(kind?)` | Rebuild indexes from profiles |
 | `lint_profiles(kind?, id?)` | Validate profiles against schema |
 
 ### Snapshot Tools (9 tools, Atlas-backed)
@@ -268,7 +245,7 @@ The signals store is a **single FastMCP server** (`src/store/server.py`) that ex
 │ Events                  │ Continuous   │ USGS, GDACS, FIRMS,      │
 │                         │              │ disease.sh, ReliefWeb    │
 │ Event pruning           │ Nightly      │ TTL auto-delete          │
-│ Profile git commit      │ Nightly      │ Cron                     │
+│ MongoDB backup          │ Nightly      │ Cron (ta backup)         │
 └─────────────────────────┴──────────────┴──────────────────────────┘
 ```
 
@@ -278,8 +255,8 @@ The signals store is a **single FastMCP server** (`src/store/server.py`) that ex
 
 | Store | Records | Size | Growth |
 |-------|---------|------|--------|
-| 📁 Country profiles | ~200 files | ~600 KB | Negligible |
-| 📁 Entity profiles | ~2000 files | ~4 MB | ~100 files/year |
+| ☁️ Country profiles | ~200 docs | ~600 KB | Negligible |
+| ☁️ Entity profiles | ~2000 docs | ~4 MB | ~100 docs/year |
 | ☁️ Indicator snapshots | ~200/month | ~2.4 MB/year | Stable |
 | ☁️ Price snapshots | ~2000/week | ~50 MB/year | Grows with entities |
 | ☁️ Events | ~50-100/week | ~5 MB/year | Pruned by TTL |
@@ -289,20 +266,12 @@ The signals store is a **single FastMCP server** (`src/store/server.py`) that ex
 
 ## Dependencies
 
-- **Profiles:** Zero. Pure `json` + `pathlib` (stdlib).
-- **Atlas:** `pymongo` + `MONGO_URI` env var.
+- **Profiles + Snapshots:** `pymongo` + `MONGO_URI_SIGNALS` env var.
 - **MCP:** `fastmcp` + `httpx` (for data ingestion from source MCPs).
 
-## Git Versioning for Profiles
+## Profile Seeding
 
-```bash
-# Nightly cron on Uberspace
-cd ~/profiles && git add -A && \
-  git diff --cached --quiet || \
-  git commit -m "auto: $(date +%Y-%m-%d) profile updates"
-```
-
-`git log --oneline countries/DEU.json` → full change history.
+Seed profiles can be loaded from JSON files on disk via `seed_profiles()` for initial population. Once seeded, all profile CRUD operates through MongoDB.
 
 ---
 
@@ -325,9 +294,9 @@ cd ~/profiles && git add -A && \
             │ references
             ▼
  ┌──────────────────────┐     ┌─────────────────────┐
- │ 📁 JSON Profiles      │ ──→ │ get_profile()       │
- │  countries, entities,  │     │ search_profiles()   │
- │  sources               │     │ put_profile()       │
+ │ ☁️ MongoDB Profiles    │ ──→ │ get_profile()       │
+ │  profiles_{kind}       │     │ search_profiles()   │
+ │  collections           │     │ put_profile()       │
  └──────────────────────┘     └─────────────────────┘
 ```
 

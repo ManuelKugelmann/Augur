@@ -41,6 +41,41 @@ log()  { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
+# ── Platform detection: U7 (supervisord) vs U8 (systemd) ──
+_is_u8() { [[ -f /etc/arch-release ]]; }
+
+# ── Service management (abstracts supervisord vs systemd) ──
+_svc_start()   { if _is_u8; then systemctl --user start "$1" 2>/dev/null; else supervisorctl start "$1" 2>/dev/null; fi; }
+_svc_stop()    { if _is_u8; then systemctl --user stop "$1" 2>/dev/null; else supervisorctl stop "$1" 2>/dev/null; fi; }
+_svc_restart() { if _is_u8; then systemctl --user restart "$1" 2>/dev/null; else supervisorctl restart "$1" 2>/dev/null; fi; }
+_svc_status()  { if _is_u8; then systemctl --user status "$1" --no-pager 2>/dev/null; else supervisorctl status "$1" 2>/dev/null; fi; }
+_svc_logs()    { if _is_u8; then journalctl --user -u "$1" -f; else supervisorctl tail -f "$1"; fi; }
+_svc_reload()  {
+    if _is_u8; then
+        systemctl --user daemon-reload 2>/dev/null || true
+    else
+        supervisorctl reread 2>/dev/null || true
+        supervisorctl update 2>/dev/null || true
+    fi
+}
+_svc_is_running() {
+    if _is_u8; then
+        systemctl --user is-active "$1" &>/dev/null
+    else
+        supervisorctl status "$1" 2>/dev/null | grep -q "RUNNING"
+    fi
+}
+
+# ── Web backend (abstracts U7 set vs U8 add) ──
+_web_backend() {
+    local path="$1" port="$2"
+    if _is_u8; then
+        uberspace web backend add "$path" port "$port" --force 2>/dev/null
+    else
+        uberspace web backend set "$path" --http --port "$port" 2>/dev/null
+    fi
+}
+
 # ── Auto-detect: piped with no args → install ──
 CMD="${1:-help}"
 if [[ "$CMD" == "help" ]] && ! [[ -d "$STACK/.git" ]]; then
@@ -66,10 +101,16 @@ _do_install() {
     }
 
     # ── 1. Node.js ──────────────────────────────
-    log "Setting Node.js ${NODE_VERSION}..."
-    uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
-    command -v node &>/dev/null || die "Node.js not available"
-    log "Node.js $(node -v)"
+    if _is_u8; then
+        # U8: Node.js is system-provided, no version management CLI
+        command -v node &>/dev/null || die "Node.js not available"
+        log "Node.js $(node -v) (U8 system-provided)"
+    else
+        log "Setting Node.js ${NODE_VERSION}..."
+        uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        command -v node &>/dev/null || die "Node.js not available"
+        log "Node.js $(node -v)"
+    fi
 
     # ── 2. Clone or update repo ─────────────────
     if [[ -d "$STACK/.git" ]]; then
@@ -91,7 +132,7 @@ _do_install() {
     # Resolve Python binary: try explicit PYTHON_VERSION first, then scan
     # descending 3.13→3.10, then bare python3 (works on U7 + U8 + generic Linux)
     PYTHON_BIN=""
-    for _py in "python${PYTHON_VERSION:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+    for _py in "python${PYTHON_VERSION:-}" python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
         [[ -z "$_py" || "$_py" == "python" ]] && continue
         if command -v "$_py" &>/dev/null && \
            "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
@@ -123,15 +164,50 @@ _do_install() {
         log "Signals .env already exists"
     fi
 
-    # ── 5. Register supervisord services ────────
+    # ── 5. Register services (supervisord on U7, systemd on U8) ──
     log "Registering services..."
-    mkdir -p ~/etc/services.d ~/logs
 
-    # trading: combined MCP server (store + 12 domains) via streamable-http
-    # LibreChat connects to localhost:8071/mcp and injects per-user headers.
-    # Uses bash -c to source .env (which may contain MongoDB URIs with special chars)
-    # so we don't need to escape values for supervisord's environment= syntax.
-    cat > ~/etc/services.d/trading.ini << SVCEOF
+    if _is_u8; then
+        mkdir -p ~/.config/systemd/user ~/logs
+
+        # trading: combined MCP server (store + 12 domains) via streamable-http
+        cat > ~/.config/systemd/user/trading.service << SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${STACK}
+EnvironmentFile=${STACK}/.env
+Environment=MCP_TRANSPORT=http
+Environment=MCP_PORT=8071
+Environment=PROFILES_DIR=${STACK}/profiles
+ExecStart=${STACK}/venv/bin/python src/servers/combined_server.py
+Restart=always
+RestartSec=10
+SVCEOF
+
+        # charts: HTTP chart server
+        cat > ~/.config/systemd/user/charts.service << SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${STACK}
+ExecStart=${STACK}/venv/bin/python src/store/charts.py
+Restart=always
+RestartSec=60
+SVCEOF
+
+        systemctl --user daemon-reload
+        systemctl --user enable trading 2>/dev/null || true
+        systemctl --user enable charts 2>/dev/null || true
+    else
+        mkdir -p ~/etc/services.d ~/logs
+
+        # trading: combined MCP server (store + 12 domains) via streamable-http
+        # Uses bash -c to source .env (which may contain MongoDB URIs with special chars)
+        # so we don't need to escape values for supervisord's environment= syntax.
+        cat > ~/etc/services.d/trading.ini << SVCEOF
 [program:trading]
 directory=${STACK}
 command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
@@ -140,8 +216,8 @@ autorestart=true
 startsecs=10
 SVCEOF
 
-    # charts: HTTP chart server, runs independently of LibreChat
-    cat > ~/etc/services.d/charts.ini << SVCEOF
+        # charts: HTTP chart server
+        cat > ~/etc/services.d/charts.ini << SVCEOF
 [program:charts]
 directory=${STACK}
 command=${STACK}/venv/bin/python src/store/charts.py
@@ -149,8 +225,10 @@ autostart=true
 autorestart=true
 startsecs=60
 SVCEOF
+    fi
+
     # Register /charts route to chart server port
-    uberspace web backend set /charts --http --port 8066 || warn "Failed to set /charts web backend"
+    _web_backend /charts 8066 || warn "Failed to set /charts web backend"
     log "Services registered (trading, charts)"
 
     # ── 6. LibreChat — download prebuilt release bundle ──
@@ -177,7 +255,7 @@ SVCEOF
     fi
     if [[ -n "$RELEASE_JSON" ]]; then
         # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
-        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+' || true)
+        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
     fi
 
     # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")
@@ -233,11 +311,31 @@ SVCEOF
     fi
 
     if [[ "$NEED_LC_SETUP" == false ]]; then
-        # Even on re-run, ensure supervisord + web backend are configured
-        local SVC="$HOME/etc/services.d/librechat.ini"
-        if [[ ! -f "$SVC" ]]; then
-            mkdir -p "$(dirname "$SVC")"
-            cat > "$SVC" <<SVCEOF
+        # Even on re-run, ensure service + web backend are configured
+        if _is_u8; then
+            local SVC="$HOME/.config/systemd/user/librechat.service"
+            if [[ ! -f "$SVC" ]]; then
+                mkdir -p "$(dirname "$SVC")"
+                cat > "$SVC" <<SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${APP}
+Environment=NODE_ENV=production
+ExecStart=node --max-old-space-size=1024 api/server/index.js
+Restart=always
+RestartSec=60
+SVCEOF
+                systemctl --user daemon-reload
+                systemctl --user enable librechat 2>/dev/null || true
+                log "Systemd service re-registered"
+            fi
+        else
+            local SVC="$HOME/etc/services.d/librechat.ini"
+            if [[ ! -f "$SVC" ]]; then
+                mkdir -p "$(dirname "$SVC")"
+                cat > "$SVC" <<SVCEOF
 [program:librechat]
 directory=${APP}
 command=node --max-old-space-size=1024 api/server/index.js
@@ -248,11 +346,12 @@ startsecs=60
 stopsignal=TERM
 stopwaitsecs=10
 SVCEOF
-            supervisorctl reread 2>/dev/null
-            supervisorctl add librechat 2>/dev/null || true
-            log "Supervisord service re-registered"
+                supervisorctl reread 2>/dev/null
+                supervisorctl add librechat 2>/dev/null || true
+                log "Supervisord service re-registered"
+            fi
         fi
-        uberspace web backend set / --http --port "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
+        _web_backend / "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
     fi
 
     # ── 8. Install ta shortcut ──────────────────
@@ -261,16 +360,15 @@ SVCEOF
     chmod +x "$HOME/bin/ta" 2>/dev/null || true
     ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
-    # ── 9. Reload supervisord ──────────────────
-    supervisorctl reread 2>/dev/null || true
-    supervisorctl update 2>/dev/null || true
+    # ── 9. Reload service manager ──────────────
+    _svc_reload
 
     # ── 11. Auto-seed agents (if credentials available) ──
     if [[ -n "${TA_SETUP_EMAIL:-}" ]] && [[ -n "${TA_SETUP_PASSWORD:-}" ]]; then
         # Wait for LibreChat to become ready
         local LC_URL="http://localhost:${LC_PORT:-3080}"
         local LC_READY=false
-        supervisorctl start librechat 2>/dev/null || true
+        _svc_start librechat || true
         for i in $(seq 1 30); do
             if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
                 LC_READY=true
@@ -387,7 +485,11 @@ except Exception as e:
     fi
 
     echo -e "  ${CYAN}Start:${NC}"
-    echo "    supervisorctl start librechat"
+    if _is_u8; then
+        echo "    systemctl --user start librechat"
+    else
+        echo "    supervisorctl start librechat"
+    fi
     echo ""
     echo -e "  ${CYAN}Access:${NC}"
     echo "    https://${UBER}"
@@ -409,19 +511,20 @@ except Exception as e:
 # ═══════════════════════════════════════════════
 case "$CMD" in
     s|status)
-        supervisorctl status librechat 2>/dev/null || echo "librechat: not registered"
-        supervisorctl status trading 2>/dev/null || true
-        supervisorctl status charts 2>/dev/null || true
+        _svc_status librechat || echo "librechat: not registered"
+        _svc_status trading || true
+        _svc_status charts || true
         echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
+        echo -e "${CYAN}Platform:${NC} $(_is_u8 && echo 'U8 (Arch/systemd)' || echo 'U7 (CentOS/supervisord)')"
         ;;
     r|restart)
-        supervisorctl restart librechat
-        supervisorctl restart trading 2>/dev/null || true
+        _svc_restart librechat
+        _svc_restart trading || true
         echo -e "${GREEN}✓${NC} Restarted (librechat + trading)"
         ;;
     l|logs)
-        supervisorctl tail -f librechat
+        _svc_logs librechat
         ;;
     v|version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
@@ -458,8 +561,8 @@ case "$CMD" in
         fi
 
         echo "$VER" > "$APP/.version"
-        supervisorctl restart librechat 2>/dev/null || true
-        supervisorctl restart trading 2>/dev/null || true
+        _svc_restart librechat || true
+        _svc_restart trading || true
         echo -e "${GREEN}✓${NC} Updated to ${VER} via git pull"
         ;;
     install)
@@ -470,10 +573,10 @@ case "$CMD" in
             echo -e "${RED}✗${NC} No previous version to rollback to"
             exit 1
         fi
-        supervisorctl stop librechat
+        _svc_stop librechat
         rm -rf "$APP"
         mv "${APP}.prev" "$APP"
-        supervisorctl start librechat
+        _svc_start librechat
         echo -e "${GREEN}✓${NC} Rolled back to $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         ;;
     backup)
@@ -509,21 +612,6 @@ case "$CMD" in
         DOW=$(date +%u)   # 1=Mon .. 7=Sun
 
         _cron_log() { echo "[ta-cron] $1"; }
-
-        # Random jitter (0–90s) so cron tasks don't all fire at exact :00/:15/:30/:45
-        _jitter() { sleep "$((RANDOM % 90))"; }
-
-        # ── Every 15 min: profile auto-commit ──
-        _jitter
-        if [[ -d "$STACK/.git" ]]; then
-            cd "$STACK"
-            git add -A profiles/
-            if ! git diff --cached --quiet; then
-                git commit -m "auto: $(date +%Y-%m-%d) profile updates"
-                _cron_log "profiles committed"
-            fi
-            cd - >/dev/null
-        fi
 
         # ── Daily at 02:00 UTC: compact old snapshots to archive ──
         if [[ "$HOUR" == "02" ]]; then
@@ -648,7 +736,11 @@ except Exception as e:
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
         PROXY_CONFIG="$HOME/.cli-proxy-api/config.yaml"
         PROXY_AUTH="$HOME/.claude-auth.env"
-        PROXY_SVC="$HOME/etc/services.d/cliproxyapi.ini"
+        if _is_u8; then
+            PROXY_SVC="$HOME/.config/systemd/user/cliproxyapi.service"
+        else
+            PROXY_SVC="$HOME/etc/services.d/cliproxyapi.ini"
+        fi
         SUB="${2:-help}"
         case "$SUB" in
             setup)
@@ -687,9 +779,33 @@ CFGEOF
                     echo "    chmod 600 $PROXY_AUTH"
                 fi
 
-                # Register supervisord service
+                # Register service
                 mkdir -p "$(dirname "$PROXY_SVC")"
-                cat > "$PROXY_SVC" << SVCEOF
+                if _is_u8; then
+                    cat > "$PROXY_SVC" << SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${HOME}
+EnvironmentFile=${PROXY_AUTH}
+ExecStart=cliproxyapi --config ${PROXY_CONFIG}
+Restart=always
+RestartSec=10
+SVCEOF
+                else
+                    if [[ -f "$PROXY_AUTH" ]]; then
+                        # supervisord doesn't support EnvironmentFile, so we wrap the command
+                        cat > "$PROXY_SVC" << SVCEOF
+[program:cliproxyapi]
+directory=${HOME}
+command=bash -c 'source ${PROXY_AUTH} && exec cliproxyapi --config ${PROXY_CONFIG}'
+autostart=true
+autorestart=true
+startsecs=10
+SVCEOF
+                    else
+                        cat > "$PROXY_SVC" << SVCEOF
 [program:cliproxyapi]
 directory=${HOME}
 command=cliproxyapi --config ${PROXY_CONFIG}
@@ -698,20 +814,9 @@ autostart=true
 autorestart=true
 startsecs=10
 SVCEOF
-                # Append EnvironmentFile equivalent via env sourcing
-                if [[ -f "$PROXY_AUTH" ]]; then
-                    # supervisord doesn't support EnvironmentFile, so we wrap the command
-                    cat > "$PROXY_SVC" << SVCEOF
-[program:cliproxyapi]
-directory=${HOME}
-command=bash -c 'source ${PROXY_AUTH} && exec cliproxyapi --config ${PROXY_CONFIG}'
-autostart=true
-autorestart=true
-startsecs=10
-SVCEOF
+                    fi
                 fi
-                supervisorctl reread 2>/dev/null || true
-                supervisorctl update 2>/dev/null || true
+                _svc_reload
                 log "Service registered (cliproxyapi)"
 
                 # Install auth daemon
@@ -728,15 +833,15 @@ SVCEOF
                 echo "    5. ta restart"
                 ;;
             start)
-                supervisorctl start cliproxyapi
+                _svc_start cliproxyapi
                 log "CLIProxyAPI started"
                 ;;
             stop)
-                supervisorctl stop cliproxyapi
+                _svc_stop cliproxyapi
                 log "CLIProxyAPI stopped"
                 ;;
             status)
-                supervisorctl status cliproxyapi 2>/dev/null || echo "cliproxyapi: not registered"
+                _svc_status cliproxyapi || echo "cliproxyapi: not registered"
                 ;;
             test)
                 echo -e "${CYAN}Testing proxy at localhost:${PROXY_PORT}...${NC}"
@@ -864,24 +969,64 @@ SVCEOF
             _warn "Signals .env missing (optional if run via LibreChat)"
         fi
 
-        # 10. Supervisord services
+        # 10. Services
         echo ""
-        echo -e "${CYAN}── Services ──${NC}"
+        echo -e "${CYAN}── Services ($(_is_u8 && echo 'systemd' || echo 'supervisord')) ──${NC}"
         echo ""
         for svc in librechat trading charts cliproxyapi; do
-            SVC_STATUS="$(supervisorctl status "$svc" 2>/dev/null || true)"
-            if [[ -z "$SVC_STATUS" ]]; then
-                _skip "$svc: not registered"
-            elif echo "$SVC_STATUS" | grep -q "RUNNING"; then
-                _ok "$svc: RUNNING"
-            elif echo "$SVC_STATUS" | grep -q "STOPPED"; then
-                _warn "$svc: STOPPED"
+            if _is_u8; then
+                if systemctl --user is-active "$svc" &>/dev/null; then
+                    _ok "$svc: RUNNING"
+                elif systemctl --user is-enabled "$svc" &>/dev/null; then
+                    _warn "$svc: STOPPED (enabled)"
+                elif [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
+                    _warn "$svc: STOPPED"
+                else
+                    _skip "$svc: not registered"
+                fi
             else
-                _fail "$svc: $(echo "$SVC_STATUS" | head -1)"
+                SVC_STATUS="$(supervisorctl status "$svc" 2>/dev/null || true)"
+                if [[ -z "$SVC_STATUS" ]]; then
+                    _skip "$svc: not registered"
+                elif echo "$SVC_STATUS" | grep -q "RUNNING"; then
+                    _ok "$svc: RUNNING"
+                elif echo "$SVC_STATUS" | grep -q "STOPPED"; then
+                    _warn "$svc: STOPPED"
+                else
+                    _fail "$svc: $(echo "$SVC_STATUS" | head -1)"
+                fi
             fi
         done
 
-        # 12. Web backend (LibreChat HTTP)
+        # 11. Web backends (uberspace routing)
+        echo ""
+        echo -e "${CYAN}── Web Backends ──${NC}"
+        echo ""
+        if command -v uberspace &>/dev/null; then
+            WB_LIST="$(uberspace web backend list 2>/dev/null || true)"
+            if [[ -n "$WB_LIST" ]]; then
+                echo "$WB_LIST" | while read -r line; do
+                    echo -e "  ${CYAN}│${NC} $line"
+                done
+                # Check for expected routes
+                if echo "$WB_LIST" | grep -q "${LC_PORT:-3080}"; then
+                    _ok "Web backend: / → port ${LC_PORT:-3080}"
+                else
+                    _warn "Web backend: / not routed to port ${LC_PORT:-3080}"
+                fi
+                if echo "$WB_LIST" | grep -q "8066"; then
+                    _ok "Web backend: /charts → port 8066"
+                else
+                    _warn "Web backend: /charts not routed to port 8066"
+                fi
+            else
+                _warn "Web backends: could not list (uberspace web backend list)"
+            fi
+        else
+            _skip "Web backends: uberspace CLI not available"
+        fi
+
+        # 12. HTTP connectivity
         echo ""
         echo -e "${CYAN}── Connectivity ──${NC}"
         echo ""
@@ -904,7 +1049,7 @@ SVCEOF
 
         # 14. CLIProxyAPI (only if configured)
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
-        if [[ -f "$HOME/.claude-auth.env" ]] || [[ -f "$HOME/etc/services.d/cliproxyapi.ini" ]]; then
+        if [[ -f "$HOME/.claude-auth.env" ]] || [[ -f "$HOME/etc/services.d/cliproxyapi.ini" ]] || [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
             PROXY_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${PROXY_PORT}/v1/models" 2>/dev/null || echo "000")"
             if [[ "$PROXY_CODE" == "200" ]]; then
                 _ok "CLIProxyAPI: OK on port ${PROXY_PORT}"
@@ -1134,7 +1279,7 @@ SVCEOF
         echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
         echo "  ta backups      List available backups"
-        echo "  ta cron         Run cron hook (profiles + compact + agent invocation)"
+        echo "  ta cron         Run cron hook (compact + agent invocation)"
         echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  ta agents       Seed multi-agent architecture (11 agents)"
         echo "  ta check        Health check (services, config, connectivity)"
