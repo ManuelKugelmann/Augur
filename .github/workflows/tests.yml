@@ -122,7 +122,6 @@ jobs:
           shellcheck --severity=error \
             librechat-uberspace/scripts/TradeAssistant.sh \
             librechat-uberspace/scripts/setup.sh \
-            librechat-uberspace/scripts/bootstrap.sh \
             deploy.conf \
           || true
 

@@ -76,6 +76,130 @@ _web_backend() {
     fi
 }
 
+# ── HTTP helpers ──
+gh_curl() {
+    curl -sf "$@"
+}
+
+# Robust file download with progress and retries
+# Usage: _download <url> <output-file> [description]
+_download() {
+    local url="$1" out="$2" desc="${3:-file}"
+    local retries=4 attempt=0 delay=2 rc=0
+
+    # Fetch file size for progress display (best-effort)
+    local size_bytes=""
+    size_bytes=$(curl -sfI -L "$url" 2>/dev/null | grep -i '^content-length:' | tail -1 | tr -d '[:space:]' | cut -d: -f2 || true)
+    if [[ -n "$size_bytes" && "$size_bytes" -gt 0 ]] 2>/dev/null; then
+        local size_mb
+        size_mb=$(awk "BEGIN {printf \"%.1f\", $size_bytes / 1048576}")
+        echo -e "  ${CYAN}↓${NC} ${desc} (${size_mb} MB)"
+    else
+        echo -e "  ${CYAN}↓${NC} ${desc}"
+    fi
+
+    while (( attempt < retries )); do
+        attempt=$((attempt + 1))
+        rc=0
+        if command -v wget &>/dev/null; then
+            wget --progress=dot:mega --timeout=30 --tries=1 \
+                 -O "$out" "$url" 2>&1 \
+                | grep -E --line-buffered '^\s+[0-9]|saved' \
+                || rc=$?
+        else
+            curl -fL --progress-bar --connect-timeout 15 --max-time 600 \
+                 -o "$out" "$url" \
+                || rc=$?
+        fi
+
+        if [[ $rc -eq 0 && -s "$out" ]]; then
+            local got_mb
+            got_mb=$(awk "BEGIN {printf \"%.1f\", $(stat -c%s "$out" 2>/dev/null || stat -f%z "$out" 2>/dev/null || echo 0) / 1048576}")
+            echo -e "  ${GREEN}✓${NC} Downloaded ${got_mb} MB"
+            return 0
+        fi
+
+        if (( attempt < retries )); then
+            warn "Download attempt ${attempt}/${retries} failed, retrying in ${delay}s..."
+            sleep "$delay"
+            delay=$((delay * 2))
+        fi
+    done
+    die "Download failed after ${retries} attempts: ${desc}"
+}
+
+# ── Resolve LibreChat bundle URL from GitHub Releases ──
+# Sets global: _BUNDLE_URL, _BUNDLE_TAG
+_resolve_bundle_url() {
+    _BUNDLE_URL="" _BUNDLE_TAG=""
+    local json=""
+
+    if [[ -z "${RELEASE_TAG:-}" ]]; then
+        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest" 2>/dev/null) || json=""
+    elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
+        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1" 2>/dev/null) || json=""
+        json=$(echo "$json" | sed -n 's/^\[//;s/\]$//;p' | head -1)
+    else
+        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}" 2>/dev/null) || json=""
+    fi
+
+    if [[ -n "$json" ]]; then
+        _BUNDLE_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
+        _BUNDLE_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
+    fi
+
+    # Fallback: rolling "librechat-build" prerelease tag
+    if [[ -z "$_BUNDLE_URL" && -z "${RELEASE_TAG:-}" ]]; then
+        log "No bundle in latest release, trying librechat-build tag..."
+        json=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build" 2>/dev/null) || json=""
+        if [[ -n "$json" ]]; then
+            _BUNDLE_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
+            _BUNDLE_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
+        fi
+    fi
+}
+
+# ── Download, extract, and install/update LibreChat bundle ──
+# Usage: _lc_download_and_setup [--skip-if-current]
+#   --skip-if-current: skip if installed version matches bundle version
+# Returns 0 on success/skip, dies on failure
+_lc_download_and_setup() {
+    local skip_current=false
+    [[ "${1:-}" == "--skip-if-current" ]] && skip_current=true
+
+    _resolve_bundle_url
+    [[ -z "$_BUNDLE_URL" ]] && return 1
+
+    local lc_tmp
+    lc_tmp=$(mktemp -d)
+    # shellcheck disable=SC2064
+    trap "rm -rf '$lc_tmp'" EXIT
+
+    log "Downloading LibreChat release..."
+    _download "$_BUNDLE_URL" "$lc_tmp/bundle.tar.gz" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
+    mkdir -p "$lc_tmp/app"
+    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+
+    local bundle_ver=""
+    [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
+    [[ -z "$bundle_ver" ]] && bundle_ver="unknown"
+
+    if [[ "$skip_current" == true ]]; then
+        local installed_ver=""
+        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
+        if [[ -n "$installed_ver" && "$installed_ver" == "$bundle_ver" ]]; then
+            log "LibreChat already up-to-date (${installed_ver})"
+            rm -rf "$lc_tmp"
+            return 0
+        fi
+        [[ -n "$installed_ver" ]] && log "Updating LibreChat ${installed_ver} → ${bundle_ver}..."
+    fi
+
+    log "LibreChat version: ${bundle_ver}"
+    bash "$STACK/librechat-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
+    return 0
+}
+
 # ── Auto-detect: piped with no args → install ──
 CMD="${1:-help}"
 if [[ "$CMD" == "help" ]] && ! [[ -d "$STACK/.git" ]]; then
@@ -95,10 +219,6 @@ _do_install() {
     echo -e "${CYAN} TradingAssistant + LibreChat → Uberspace ${NC}"
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
-
-    gh_curl() {
-        curl -sf "$@"
-    }
 
     # ── 1. Node.js ──────────────────────────────
     if _is_u8; then
@@ -238,90 +358,19 @@ SVCEOF
     # ── 6. LibreChat — download prebuilt release bundle ──
     #       Bundle is a vanilla LibreChat build, versioned by LC's package.json + commit.
     local NEED_LC_SETUP=false
-    local LC_TMP=""
+    local _pre_ver=""
+    [[ -f "$APP/.version" ]] && _pre_ver=$(cat "$APP/.version")
+    [[ ! -f "$APP/.env" ]] && NEED_APP_ENV=true
 
-    # Fetch release info from GitHub
-    # RELEASE_TAG="" → /releases/latest (production)
-    # RELEASE_TAG="prerelease" → newest prerelease
-    # RELEASE_TAG="v0.1.0" or "dev-abc1234" → specific tag
-    local RELEASE_URL="" RELEASE_JSON="" BUNDLE_URL=""
-    if [[ -z "${RELEASE_TAG:-}" ]]; then
-        RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
-        RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
-    elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
-        # Pick the first (newest) release, which includes prereleases
-        RELEASE_JSON=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1" 2>/dev/null) || RELEASE_JSON=""
-        # API returns an array for /releases, extract first element
-        RELEASE_JSON=$(echo "$RELEASE_JSON" | sed -n 's/^\[//;s/\]$//;p' | head -1)
-    else
-        RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}"
-        RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
-    fi
-    if [[ -n "$RELEASE_JSON" ]]; then
-        # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
-        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
-    fi
-
-    # /releases/latest only returns non-prerelease releases, but librechat-build.yml
-    # marks all builds as prerelease. Fall back to the rolling "librechat-build" tag.
-    if [[ -z "$BUNDLE_URL" && -z "${RELEASE_TAG:-}" ]]; then
-        log "No bundle in latest release, trying librechat-build tag..."
-        RELEASE_JSON=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build" 2>/dev/null) || RELEASE_JSON=""
-        if [[ -n "$RELEASE_JSON" ]]; then
-            BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
-        fi
-    fi
-
-    # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")
-    local INSTALLED_VER=""
-    [[ -f "$APP/.version" ]] && INSTALLED_VER=$(cat "$APP/.version")
-
-    if [[ -d "$APP" ]] && [[ -n "$INSTALLED_VER" ]]; then
-        if [[ -z "$BUNDLE_URL" ]]; then
-            log "LibreChat installed (${INSTALLED_VER}), no release info available"
-        else
-            # Download bundle to temp, check .version inside before deciding
-            LC_TMP=$(mktemp -d)
-            trap 'rm -rf "${LC_TMP:-}"' EXIT
-
-            gh_curl -L -o "$LC_TMP/bundle.tar.gz" "$BUNDLE_URL"
-            mkdir -p "$LC_TMP/app"
-            tar xzf "$LC_TMP/bundle.tar.gz" -C "$LC_TMP/app"
-
-            local BUNDLE_VER=""
-            [[ -f "$LC_TMP/app/.version" ]] && BUNDLE_VER=$(cat "$LC_TMP/app/.version")
-
-            if [[ "$INSTALLED_VER" == "$BUNDLE_VER" ]]; then
-                log "LibreChat already up-to-date (${INSTALLED_VER})"
-                rm -rf "$LC_TMP"; LC_TMP=""
-            else
-                NEED_LC_SETUP=true
-                [[ ! -f "$APP/.env" ]] && NEED_APP_ENV=true
-                log "Updating LibreChat ${INSTALLED_VER} → ${BUNDLE_VER}..."
-                bash "$STACK/librechat-uberspace/scripts/setup.sh" "$LC_TMP/app" "$BUNDLE_VER"
-            fi
-        fi
-    elif [[ -n "$BUNDLE_URL" ]]; then
-        # Fresh install — download bundle
-        NEED_LC_SETUP=true
-        NEED_APP_ENV=true
-
-        LC_TMP=$(mktemp -d)
-        trap 'rm -rf "${LC_TMP:-}"' EXIT
-
-        log "Downloading LibreChat release..."
-        gh_curl -L -o "$LC_TMP/bundle.tar.gz" "$BUNDLE_URL"
-        mkdir -p "$LC_TMP/app"
-        tar xzf "$LC_TMP/bundle.tar.gz" -C "$LC_TMP/app"
-
-        local VER=""
-        [[ -f "$LC_TMP/app/.version" ]] && VER=$(cat "$LC_TMP/app/.version")
-        [[ -z "$VER" ]] && VER="unknown"
-        log "LibreChat version: ${VER}"
-
-        bash "$STACK/librechat-uberspace/scripts/setup.sh" "$LC_TMP/app" "$VER"
-    else
+    if ! _lc_download_and_setup --skip-if-current; then
         die "No prebuilt LibreChat release found. Create one via: Actions → Release LibreChat Bundle → Run workflow (or: git tag v0.x.0 && git push --tags)"
+    fi
+
+    # Detect whether setup.sh actually ran (version changed or fresh install)
+    local _post_ver=""
+    [[ -f "$APP/.version" ]] && _post_ver=$(cat "$APP/.version")
+    if [[ "$_pre_ver" != "$_post_ver" ]] || [[ -z "$_pre_ver" ]]; then
+        NEED_LC_SETUP=true
     fi
 
     if [[ "$NEED_LC_SETUP" == false ]]; then
@@ -549,7 +598,7 @@ case "$CMD" in
         ;;
     u|update)
         echo -e "${CYAN}Pulling latest release...${NC}"
-        bash "$STACK/librechat-uberspace/scripts/bootstrap.sh"
+        _lc_download_and_setup || die "No prebuilt LibreChat release found."
         ;;
     pull)
         # Quick dev update — git pull the stack repo, re-copy configs, restart
