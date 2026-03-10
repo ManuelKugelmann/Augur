@@ -463,6 +463,18 @@ SVCEOF
     chmod +x "$HOME/bin/ta" 2>/dev/null || true
     ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
 
+    # ── 8b. Ensure ~/bin is in PATH via .bashrc (idempotent) ──
+    if [[ -f "$HOME/.bashrc" ]] && ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc" 2>/dev/null; then
+        echo '' >> "$HOME/.bashrc"
+        echo '# Added by TradingAssistant installer' >> "$HOME/.bashrc"
+        echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+        log "Added ~/bin to PATH in .bashrc"
+    elif [[ ! -f "$HOME/.bashrc" ]]; then
+        echo '# Added by TradingAssistant installer' > "$HOME/.bashrc"
+        echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+        log "Created .bashrc with ~/bin in PATH"
+    fi
+
     # ── 9. Reload service manager ──────────────
     _svc_reload
 
@@ -660,6 +672,34 @@ case "$CMD" in
         ;;
     l|logs)
         _svc_logs librechat
+        ;;
+    testrun)
+        # Run LibreChat (or trading server) in the foreground to see errors directly.
+        # Usage: ta testrun [trading]
+        _TARGET="${2:-librechat}"
+        case "$_TARGET" in
+            librechat)
+                echo -e "${CYAN}Stopping librechat service...${NC}"
+                _svc_stop librechat 2>/dev/null || true
+                echo -e "${CYAN}Starting LibreChat in foreground (Ctrl+C to stop)...${NC}"
+                cd "$APP"
+                NODE_ENV=production exec node --max-old-space-size=1024 api/server/index.js
+                ;;
+            trading)
+                echo -e "${CYAN}Stopping trading service...${NC}"
+                _svc_stop trading 2>/dev/null || true
+                echo -e "${CYAN}Starting trading server in foreground (Ctrl+C to stop)...${NC}"
+                cd "$STACK"
+                set -a; [[ -f "$STACK/.env" ]] && . "$STACK/.env"; set +a
+                export MCP_TRANSPORT=http MCP_PORT=8071
+                exec "$STACK/venv/bin/python" src/servers/combined_server.py
+                ;;
+            *)
+                echo "Usage: ta testrun [librechat|trading]"
+                echo "  ta testrun             Run LibreChat in foreground"
+                echo "  ta testrun trading     Run trading server in foreground"
+                ;;
+        esac
         ;;
     v|version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
@@ -1404,6 +1444,7 @@ SVCEOF
         echo "  ta s|status     Show service status + version"
         echo "  ta r|restart    Restart LibreChat"
         echo "  ta l|logs       Tail service logs"
+        echo "  ta testrun      Run LibreChat in foreground (see errors directly)"
         echo "  ta v|version    Show installed version"
         echo ""
         echo "  ta u|update     Update from latest GitHub release"

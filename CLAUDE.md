@@ -18,6 +18,7 @@
   - `~/bin/TradeAssistant` — symlink to `ta`
   - Also works as one-liner: `curl ... TradeAssistant.sh | bash` (auto-detects fresh install)
 - **Uberspace host**: `assist.uber.space`
+- **Platform**: U8 (Arch Linux / systemd). U7 (CentOS 7 / supervisord) support is dormant — code paths remain but are not actively maintained. U7 has glibc 2.17 which blocks modern native modules (e.g. `sharp`).
 
 ## Directory Layout (Uberspace)
 
@@ -213,6 +214,7 @@ ta help        show all commands
 ta s|status    service status + version + host
 ta r|restart   restart LibreChat
 ta l|logs      tail service logs
+ta testrun     run LibreChat in foreground (see errors directly)
 ta v|version   show installed version
 ta u|update    update from latest GitHub release
 ta pull        quick dev update via git pull
