@@ -72,16 +72,13 @@ _web_backend() {
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
 _pip_install() {
     local pip="$1" req="$2"
-    local constraint=""
-    if ! _is_u8; then
-        # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
-        constraint=$(mktemp)
-        echo 'pandas<3' > "$constraint"
-    fi
-    "$pip" install --prefer-binary \
-        ${constraint:+-c "$constraint"} \
-        -r "$req" "${@:3}"
-    if [[ -n "$constraint" ]]; then rm -f "$constraint"; fi
+    local constraint
+    constraint=$(mktemp)
+    # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
+    # U8: empty constraint file (no-op)
+    if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
+    "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    rm -f "$constraint"
 }
 
 # ── HTTP helpers ──
