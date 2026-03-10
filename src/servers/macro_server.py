@@ -1,5 +1,6 @@
 """Macro — FRED, World Bank, IMF SDMX."""
 from fastmcp import FastMCP
+from _http import api_get
 import httpx
 import os
 from dotenv import load_dotenv
@@ -16,15 +17,11 @@ async def fred_series(series_id: str, limit: int = 100,
     T10Y2Y (yield curve), M2SL (money supply), VIXCLS, ICSA (jobless claims)."""
     if not FRED_KEY:
         return {"error": "FRED_API_KEY not set"}
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://api.stlouisfed.org/fred/series/observations", params={
-                "series_id": series_id, "api_key": FRED_KEY,
-                "file_type": "json", "limit": limit, "sort_order": sort_order})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"FRED request failed: {e}"}
+    return await api_get(
+        "https://api.stlouisfed.org/fred/series/observations",
+        params={"series_id": series_id, "api_key": FRED_KEY,
+                "file_type": "json", "limit": limit, "sort_order": sort_order},
+        label="FRED")
 
 
 @mcp.tool()
@@ -32,15 +29,11 @@ async def fred_search(query: str, limit: int = 20) -> dict:
     """Search FRED for economic data series."""
     if not FRED_KEY:
         return {"error": "FRED_API_KEY not set"}
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://api.stlouisfed.org/fred/series/search", params={
-                "search_text": query, "api_key": FRED_KEY,
-                "file_type": "json", "limit": limit})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"FRED search request failed: {e}"}
+    return await api_get(
+        "https://api.stlouisfed.org/fred/series/search",
+        params={"search_text": query, "api_key": FRED_KEY,
+                "file_type": "json", "limit": limit},
+        label="FRED search")
 
 
 @mcp.tool()
@@ -50,28 +43,18 @@ async def worldbank_indicator(indicator: str = "NY.GDP.MKTP.CD",
     """World Bank indicator. Examples: NY.GDP.MKTP.CD (GDP), SP.POP.TOTL (population),
     FP.CPI.TOTL.ZG (inflation), SL.UEM.TOTL.ZS (unemployment),
     MS.MIL.XPND.GD.ZS (military spending % GDP)."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get(
-                f"https://api.worldbank.org/v2/country/{country}/indicator/{indicator}",
-                params={"format": "json", "date": date, "per_page": per_page})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"World Bank request failed: {e}"}
+    return await api_get(
+        f"https://api.worldbank.org/v2/country/{country}/indicator/{indicator}",
+        params={"format": "json", "date": date, "per_page": per_page},
+        label="World Bank")
 
 
 @mcp.tool()
 async def worldbank_search(query: str) -> dict:
     """Search World Bank indicators by keyword."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://api.worldbank.org/v2/indicator",
-                            params={"format": "json", "qterm": query, "per_page": 50})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"World Bank search request failed: {e}"}
+    return await api_get("https://api.worldbank.org/v2/indicator",
+                         params={"format": "json", "qterm": query, "per_page": 50},
+                         label="World Bank search")
 
 
 @mcp.tool()
@@ -80,7 +63,6 @@ async def imf_data(database: str = "IFS", frequency: str = "A",
                     start: str = "2020", end: str = "2024") -> dict:
     """IMF data. database: IFS/BOP/DOT/WEO. indicator: NGDP_R_XDC, PCPI_IX, ENDA_XDC_USD_RATE.
     Tries SDMX Central first, falls back to legacy SDMX endpoint."""
-    # IMF migrated from dataservices.imf.org (retired Nov 2025) to sdmxcentral.imf.org
     sdmx_urls = [
         f"https://sdmxcentral.imf.org/ws/public/sdmxapi/rest/data/"
         f"{database}/{frequency}.{ref_area}.{indicator}",
@@ -98,7 +80,6 @@ async def imf_data(database: str = "IFS", frequency: str = "A",
                     return r.json()
                 except httpx.HTTPError:
                     continue
-            # All SDMX endpoints failed — return error
             return {"error": f"IMF SDMX endpoints unavailable for {database}/{indicator}"}
     except httpx.HTTPError as e:
         return {"error": f"IMF SDMX request failed: {e}"}
@@ -106,7 +87,6 @@ async def imf_data(database: str = "IFS", frequency: str = "A",
 
 # ── Provider-agnostic routing ──────────────────────────
 
-# Maps concept → {provider → series/indicator code}
 _INDICATOR_MAP: dict[str, dict[str, str]] = {
     "gdp":            {"fred": "GDP",       "wb": "NY.GDP.MKTP.CD",   "imf": "NGDP_R_XDC"},
     "gdp_growth":     {"fred": "A191RL1Q225SBEA", "wb": "NY.GDP.MKTP.KD.ZG"},
@@ -125,7 +105,6 @@ _INDICATOR_MAP: dict[str, dict[str, str]] = {
     "military_spending": {"wb": "MS.MIL.XPND.GD.ZS"},
 }
 
-# US or US-alias → prefer FRED
 _US_CODES = {"US", "USA", "840", "United States"}
 
 
@@ -153,7 +132,6 @@ async def indicator(concept: str, country: str = "US",
     is_us = country.upper() in _US_CODES
     errors: list[str] = []
 
-    # Try FRED first for US
     if is_us and "fred" in providers and FRED_KEY:
         try:
             return {"provider": "fred", "series_id": providers["fred"],
@@ -161,7 +139,6 @@ async def indicator(concept: str, country: str = "US",
         except Exception as e:
             errors.append(f"fred: {e}")
 
-    # Try World Bank (works for all countries)
     if "wb" in providers:
         try:
             wb_country = country if not is_us else "US"
@@ -171,7 +148,6 @@ async def indicator(concept: str, country: str = "US",
         except Exception as e:
             errors.append(f"worldbank: {e}")
 
-    # Try IMF fallback
     if "imf" in providers:
         try:
             ref = country.upper()[:2] if len(country) <= 3 else country.upper()

@@ -1,5 +1,6 @@
 """Elections — Global election data, EU Parliament, Google Civic Info, Wikidata."""
 from fastmcp import FastMCP
+from _http import api_get
 import httpx
 import os
 import re
@@ -27,7 +28,6 @@ async def _resolve_country_qid(name: str) -> str | None:
                 "format": "json"}, headers=_WD_HEADERS)
             r.raise_for_status()
             for hit in r.json().get("search", []):
-                # Accept items that look like countries (Q-ID exists)
                 qid = hit.get("id", "")
                 if _SAFE_QID.match(qid):
                     return qid
@@ -41,20 +41,20 @@ async def _resolve_country_qid(name: str) -> str | None:
 
 @mcp.tool()
 async def global_elections(country: str = "", year: str = "",
-                           limit: int = 20) -> list[dict]:
+                           limit: int = 20) -> dict:
     """Global elections (Wikidata). country: English name. year: e.g. '2025'."""
     filters = []
     country_filter = ""
     if country:
         if not _SAFE_SPARQL_TEXT.match(country):
-            return [{"error": "invalid country name (letters, spaces, digits only)"}]
+            return {"error": "invalid country name (letters, spaces, digits only)"}
         qid = await _resolve_country_qid(country)
         if not qid:
-            return [{"error": f"Could not resolve country '{country}' on Wikidata"}]
+            return {"error": f"Could not resolve country '{country}' on Wikidata"}
         country_filter = f"VALUES ?country {{ wd:{qid} }}"
     if year:
         if not _SAFE_YEAR.match(year):
-            return [{"error": "invalid year (must be 4 digits, e.g. 2025)"}]
+            return {"error": "invalid year (must be 4 digits, e.g. 2025)"}
         filters.append(f"FILTER(YEAR(?date) = {year})")
     filter_block = "\n    ".join(filters)
     query = f"""SELECT ?election ?electionLabel ?countryLabel ?date ?typeLabel WHERE {{
@@ -73,25 +73,26 @@ async def global_elections(country: str = "", year: str = "",
                             headers=_WD_HEADERS)
             r.raise_for_status()
             bindings = r.json()["results"]["bindings"]
-            return [{"election": b.get("electionLabel", {}).get("value", ""),
-                     "country": b.get("countryLabel", {}).get("value", ""),
-                     "date": b.get("date", {}).get("value", ""),
-                     "type": b.get("typeLabel", {}).get("value", "")}
-                    for b in bindings]
+            return {"elections": [
+                {"election": b.get("electionLabel", {}).get("value", ""),
+                 "country": b.get("countryLabel", {}).get("value", ""),
+                 "date": b.get("date", {}).get("value", ""),
+                 "type": b.get("typeLabel", {}).get("value", "")}
+                for b in bindings]}
     except httpx.HTTPError as e:
-        return [{"error": f"Wikidata request failed: {e}"}]
+        return {"error": f"Wikidata request failed: {e}"}
 
 
 @mcp.tool()
-async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
+async def heads_of_state(country: str = "", limit: int = 10) -> dict:
     """Heads of state/government (Wikidata). country: English name."""
     country_filter = ""
     if country:
         if not _SAFE_SPARQL_TEXT.match(country):
-            return [{"error": "invalid country name (letters, spaces, digits only)"}]
+            return {"error": "invalid country name (letters, spaces, digits only)"}
         qid = await _resolve_country_qid(country)
         if not qid:
-            return [{"error": f"Could not resolve country '{country}' on Wikidata"}]
+            return {"error": f"Could not resolve country '{country}' on Wikidata"}
         country_filter = f"VALUES ?country {{ wd:{qid} }}"
     query = f"""SELECT ?person ?personLabel ?countryLabel ?positionLabel ?start ?end WHERE {{
   {country_filter}
@@ -111,14 +112,15 @@ async def heads_of_state(country: str = "", limit: int = 10) -> list[dict]:
                             headers=_WD_HEADERS)
             r.raise_for_status()
             bindings = r.json()["results"]["bindings"]
-            return [{"person": b.get("personLabel", {}).get("value", ""),
-                     "country": b.get("countryLabel", {}).get("value", ""),
-                     "position": b.get("positionLabel", {}).get("value", ""),
-                     "start": b.get("start", {}).get("value", ""),
-                     "end": b.get("end", {}).get("value", "")}
-                    for b in bindings]
+            return {"leaders": [
+                {"person": b.get("personLabel", {}).get("value", ""),
+                 "country": b.get("countryLabel", {}).get("value", ""),
+                 "position": b.get("positionLabel", {}).get("value", ""),
+                 "start": b.get("start", {}).get("value", ""),
+                 "end": b.get("end", {}).get("value", "")}
+                for b in bindings]}
     except httpx.HTTPError as e:
-        return [{"error": f"Wikidata request failed: {e}"}]
+        return {"error": f"Wikidata request failed: {e}"}
 
 
 # ── EU Parliament (no key) ──────────────────────────────
@@ -130,53 +132,38 @@ async def eu_parliament_meps(country: str = "", limit: int = 50) -> dict:
     params: dict = {"offset": 0, "limit": limit}
     if country:
         params["country-of-representation"] = country.upper()
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://data.europarl.europa.eu/api/v2/meps",
-                            params=params,
-                            headers={"Accept": "application/ld+json"})
-            r.raise_for_status()
-            data = r.json()
-            meps = data.get("data", [])
-            return {"count": len(meps), "meps": meps}
-    except httpx.HTTPError as e:
-        return {"error": f"EU Parliament request failed: {type(e).__name__}: {e}"}
+    result = await api_get("https://data.europarl.europa.eu/api/v2/meps",
+                           params=params,
+                           headers={"Accept": "application/ld+json"},
+                           label="EU Parliament")
+    if "error" not in result:
+        meps = result.get("data", [])
+        return {"count": len(meps), "meps": meps}
+    return result
 
 
 @mcp.tool()
 async def eu_parliament_votes(year: str = "2025", limit: int = 20) -> dict:
     """EU Parliament plenary documents/votes."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://data.europarl.europa.eu/api/v2/plenary-documents",
-                            params={"year": year, "limit": limit},
-                            headers={"Accept": "application/ld+json"})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"EU Parliament request failed: {type(e).__name__}: {e}"}
+    return await api_get(
+        "https://data.europarl.europa.eu/api/v2/plenary-documents",
+        params={"year": year, "limit": limit},
+        headers={"Accept": "application/ld+json"},
+        label="EU Parliament")
 
 
 # ── Google Civic Info (US, needs key) ────────────────────
 
-
-# us_representatives removed — Google Civic Representatives API was permanently
-# shut down April 30, 2025. Use us_voter_info for election/voter data instead.
 
 @mcp.tool()
 async def us_voter_info(address: str) -> dict:
     """US voter/election info for an address. Only during active elections."""
     if not GOOGLE_KEY:
         return {"error": "GOOGLE_API_KEY not set"}
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://www.googleapis.com/civicinfo/v2/voterInfoQuery",
-                            params={"key": GOOGLE_KEY, "address": address})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"Google Civic Info request failed: {e}"}
-
+    return await api_get(
+        "https://www.googleapis.com/civicinfo/v2/voterInfoQuery",
+        params={"key": GOOGLE_KEY, "address": address},
+        label="Google Civic Info")
 
 
 if __name__ == "__main__":

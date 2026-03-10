@@ -168,8 +168,6 @@ def profiles_dir(tmp_path, monkeypatch):
     """Set up a temporary profiles directory and wire up fake MongoDB collections."""
     import server
 
-    monkeypatch.setattr(server, "PROFILES_DIR", tmp_path)
-
     # Create seed data directories for seed_profiles tests
     for region in ("europe", "north_america", "global"):
         for kind in ("countries", "stocks", "sources"):

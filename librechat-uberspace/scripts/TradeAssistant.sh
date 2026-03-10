@@ -58,13 +58,6 @@ _svc_reload()  {
         supervisorctl update 2>/dev/null || true
     fi
 }
-_svc_is_running() {
-    if _is_u8; then
-        systemctl --user is-active "$1" &>/dev/null
-    else
-        supervisorctl status "$1" 2>/dev/null | grep -q "RUNNING"
-    fi
-}
 
 # ── Web backend (abstracts U7 set vs U8 add) ──
 _web_backend() {
@@ -324,7 +317,6 @@ WorkingDirectory=${STACK}
 EnvironmentFile=${STACK}/.env
 Environment=MCP_TRANSPORT=http
 Environment=MCP_PORT=8071
-Environment=PROFILES_DIR=${STACK}/profiles
 ExecStart=${STACK}/venv/bin/python src/servers/combined_server.py
 Restart=always
 RestartSec=10
@@ -354,7 +346,7 @@ SVCEOF
         cat > ~/etc/services.d/trading.ini << SVCEOF
 [program:trading]
 directory=${STACK}
-command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
+command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
 autostart=true
 autorestart=true
 startsecs=10
@@ -470,13 +462,12 @@ SVCEOF
     fi
 
     # ── 12. Seed profile data into MongoDB (no overwrites) ──
-    if [[ -x "$STACK/venv/bin/python" ]]; then
+    if [[ -x "$STACK/venv/bin/python" ]] && [[ -d "$STACK/profiles" ]]; then
         log "Seeding profiles from disk into MongoDB..."
-        PROFILES_DIR="$STACK/profiles" MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
+        MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
         "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-# Load .env if python-dotenv available (env vars also passed from shell)
 try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join('$STACK', '.env'))
@@ -484,15 +475,13 @@ except ImportError:
     pass
 try:
     from server import seed_profiles
-    result = seed_profiles()
+    result = seed_profiles('$STACK/profiles')
     if 'error' in result:
         print(f'Seed skipped: {result[\"error\"]}')
     else:
         total_seeded = sum(v.get('seeded', 0) for v in result.values())
         total_skipped = sum(v.get('skipped', 0) for v in result.values())
         print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
-        for kind, counts in sorted(result.items()):
-            print(f'  {kind}: {counts[\"seeded\"]} seeded, {counts[\"skipped\"]} skipped')
 except Exception as e:
     print(f'Seed skipped: {e}')
 " 2>&1 | while read -r line; do log "$line"; done
@@ -816,11 +805,6 @@ except Exception as e:
                 fi
             fi
         fi
-
-        # ── Weekly on Sunday at 03:00 UTC: placeholder for future tasks ──
-        # if [[ "$HOUR" == "03" ]] && [[ "$DOW" == "7" ]]; then
-        #     _cron_log "weekly maintenance"
-        # fi
 
         _cron_log "done (hour=$HOUR dow=$DOW)"
         ;;
