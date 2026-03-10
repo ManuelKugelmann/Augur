@@ -69,6 +69,21 @@ _web_backend() {
     fi
 }
 
+# ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
+_pip_install() {
+    local pip="$1" req="$2"
+    local constraint=""
+    if ! _is_u8; then
+        # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
+        constraint=$(mktemp)
+        echo 'pandas<3' > "$constraint"
+    fi
+    "$pip" install --prefer-binary \
+        ${constraint:+-c "$constraint"} \
+        -r "$req" "${@:3}"
+    [[ -n "$constraint" ]] && rm -f "$constraint"
+}
+
 # ── HTTP helpers ──
 gh_curl() {
     curl -sf "$@"
@@ -281,14 +296,14 @@ _do_install() {
         log "Upgrading pip..."
         "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
         log "Installing requirements..."
-        "$STACK/venv/bin/pip" install --prefer-binary -r "$STACK/requirements.txt" 2>/dev/null || true
+        _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv "$STACK/venv"
         log "Venv created. Upgrading pip..."
         "$STACK/venv/bin/pip" install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
-        "$STACK/venv/bin/pip" install --prefer-binary -r "$STACK/requirements.txt"
+        _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt"
     fi
     log "Python venv ready"
 
@@ -633,7 +648,7 @@ case "$CMD" in
             log "Upgrading pip..."
             "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
             log "Installing requirements..."
-            "$STACK/venv/bin/pip" install --prefer-binary -r "$STACK/requirements.txt" 2>/dev/null || true
+            _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" 2>/dev/null || true
         else
             warn "Python venv not found at $STACK/venv — run 'ta install' first"
         fi
