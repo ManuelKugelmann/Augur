@@ -94,14 +94,14 @@ _pip_install() {
 }
 
 # ── HTTP helpers ──
-gh_curl() { curl -sf "$@"; }
+gh_curl() { curl -sf --connect-timeout 10 --max-time 30 "$@"; }
 
 _download() {
     local url="$1" out="$2" desc="${3:-file}"
     local retries=4 attempt=0 delay=2 rc=0
 
     local size_bytes=""
-    size_bytes=$(curl -sfI -L "$url" 2>/dev/null | grep -i '^content-length:' | tail -1 | tr -d '[:space:]' | cut -d: -f2 || true)
+    size_bytes=$(curl -sfI -L --connect-timeout 5 --max-time 10 "$url" 2>/dev/null | grep -i '^content-length:' | tail -1 | tr -d '[:space:]' | cut -d: -f2 || true)
     if [[ -n "$size_bytes" && "$size_bytes" -gt 0 ]] 2>/dev/null; then
         local size_mb
         size_mb=$(awk "BEGIN {printf \"%.1f\", $size_bytes / 1048576}")
@@ -224,7 +224,7 @@ _do_install() {
     fi
     if [[ -z "$_hdr_sha" ]]; then
         local _api_json
-        _api_json=$(curl -sf "https://api.github.com/repos/${GH_USER}/${GH_REPO}/commits/${BRANCH}" 2>/dev/null || true)
+        _api_json=$(curl -sf --connect-timeout 5 --max-time 10 "https://api.github.com/repos/${GH_USER}/${GH_REPO}/commits/${BRANCH}" 2>/dev/null || true)
         if [[ -n "$_api_json" ]]; then
             _hdr_sha=$(echo "$_api_json" | grep -o '"sha": *"[^"]*"' | head -1 | cut -d'"' -f4 || true)
             _hdr_sha="${_hdr_sha:0:7}"

@@ -181,6 +181,11 @@ for arg in "\$@"; do
         echo '{"tag_name":"v1.0.0","assets":[{"browser_download_url":"file://$bundle_path","name":"librechat-build.tar.gz"}]}'
         exit 0
     fi
+    # Return empty JSON for other GitHub API calls (e.g. /commits/) to avoid network
+    if [[ "\$arg" == *"api.github.com/"* ]]; then
+        echo '{}'
+        exit 0
+    fi
     if [[ "\$arg" == "file://"* ]]; then
         local_path="\${arg#file://}"
         out=""
