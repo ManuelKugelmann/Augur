@@ -719,12 +719,12 @@ case "$CMD" in
         echo -e "${CYAN}Platform:${NC} $(_is_u8 && echo 'U8 (Arch/systemd)' || echo 'U7 (CentOS/supervisord)')"
         ;;
     r|restart)
-        _svc_restart librechat
+        _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart trading || true
         echo -e "${GREEN}✓${NC} Restarted (librechat + trading)"
         ;;
     l|logs)
-        _svc_logs librechat
+        _svc_logs librechat || die "Failed to tail logs (is librechat registered?)"
         ;;
     testrun)
         # Run LibreChat (or trading server) in the foreground to see errors directly.
@@ -804,10 +804,10 @@ case "$CMD" in
             echo -e "${RED}✗${NC} No previous version to rollback to"
             exit 1
         fi
-        _svc_stop librechat
+        _svc_stop librechat || warn "Could not stop librechat (may not be running)"
         rm -rf "$APP"
         mv "${APP}.prev" "$APP"
-        _svc_start librechat
+        _svc_start librechat || warn "Could not start librechat after rollback"
         echo -e "${GREEN}✓${NC} Rolled back to $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         ;;
     backup)
@@ -1062,11 +1062,11 @@ SVCEOF
                 echo "    5. augur restart"
                 ;;
             start)
-                _svc_start cliproxyapi
+                _svc_start cliproxyapi || die "Failed to start cliproxyapi"
                 log "CLIProxyAPI started"
                 ;;
             stop)
-                _svc_stop cliproxyapi
+                _svc_stop cliproxyapi || die "Failed to stop cliproxyapi"
                 log "CLIProxyAPI stopped"
                 ;;
             status)
