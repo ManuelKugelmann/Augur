@@ -87,9 +87,15 @@ _web_backend() {
 _pip_upgrade() {
     local python="$1" min_ver=22
     log "  → $python -m pip --version"
-    local ver
-    ver=$(timeout 30 "$python" -m pip --version </dev/null 2>&1 | awk '{print $2}' | cut -d. -f1) \
-        || { warn "pip --version timed out or failed"; return 1; }
+    local ver _pip_err
+    _pip_err=$(mktemp)
+    ver=$(timeout 30 "$python" -m pip --version </dev/null 2>"$_pip_err" | awk '{print $2}' | cut -d. -f1)
+    local rc=$?
+    if [[ -s "$_pip_err" ]]; then warn "pip stderr: $(cat "$_pip_err")"; fi
+    rm -f "$_pip_err"
+    if (( rc != 0 )); then
+        warn "pip --version exited $rc (timeout=124)"; return 1
+    fi
     if [[ -z "$ver" ]]; then
         warn "pip --version returned empty output"; return 1
     fi
@@ -302,8 +308,10 @@ _do_install() {
 
     if [[ -d "$STACK/venv" ]]; then
         # Detect stale venv: if the python binary is missing or broken, recreate
-        if ! timeout 10 "$STACK/venv/bin/python" -c 'import sys; print(sys.version)' </dev/null &>/dev/null; then
-            warn "Venv python is broken or stale (system Python may have been upgraded). Recreating venv..."
+        local _venv_check
+        if ! _venv_check=$(timeout 10 "$STACK/venv/bin/python" -c 'import sys; print(sys.version)' </dev/null 2>&1); then
+            warn "Venv python is broken or stale. Output: $_venv_check"
+            warn "Recreating venv..."
             rm -rf "$STACK/venv"
         else
             log "Python venv exists, checking pip..."
