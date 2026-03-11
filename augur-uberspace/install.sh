@@ -63,11 +63,24 @@ _svc_reload()  {
 }
 _web_backend() {
     local path="$1" port="$2"
-    if _is_u8; then
-        uberspace web backend add "$path" port "$port" --force 2>/dev/null
-    else
-        uberspace web backend set "$path" --http --port "$port" 2>/dev/null
+    # Skip if already configured (avoids httpx timeout on U8 uberspace CLI)
+    local existing
+    existing=$(uberspace web backend list 2>/dev/null || true)
+    if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
+        log "Web backend ${path} → port ${port} already set"
+        return 0
     fi
+    local attempt=0 delay=2
+    while (( attempt < 3 )); do
+        attempt=$((attempt + 1))
+        if _is_u8; then
+            uberspace web backend add "$path" port "$port" --force 2>/dev/null && return 0
+        else
+            uberspace web backend set "$path" --http --port "$port" 2>/dev/null && return 0
+        fi
+        (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
+    done
+    return 1
 }
 
 # ── pip helpers ──
@@ -115,11 +128,7 @@ _download() {
     while (( attempt < retries )); do
         attempt=$((attempt + 1))
         rc=0
-        if command -v wget &>/dev/null && [[ "$url" == http://* || "$url" == https://* ]]; then
-            wget -q --timeout=30 --tries=1 -O "$out" "$url" || rc=$?
-        else
-            curl -fL --progress-bar --connect-timeout 15 --max-time 600 -o "$out" "$url" || rc=$?
-        fi
+        curl -fL --progress-bar --connect-timeout 15 --max-time 600 -o "$out" "$url" || rc=$?
         if [[ $rc -eq 0 && -s "$out" ]]; then
             local got_mb
             got_mb=$(awk "BEGIN {printf \"%.1f\", $(stat -c%s "$out" 2>/dev/null || stat -f%z "$out" 2>/dev/null || echo 0) / 1048576}")
@@ -298,9 +307,17 @@ _do_install() {
         timeout 600 "$STACK/venv/bin/python" -m ensurepip </dev/null \
             || die "ensurepip failed or timed out"
     fi
-    log "Installing Python requirements..."
-    _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
-        || die "pip install requirements failed or timed out"
+    local _req_hash _cached_hash=""
+    _req_hash=$(sha256sum "$STACK/requirements.txt" 2>/dev/null | cut -d' ' -f1 || true)
+    [[ -f "$STACK/venv/.req_hash" ]] && _cached_hash=$(cat "$STACK/venv/.req_hash")
+    if [[ -n "$_req_hash" && "$_req_hash" == "$_cached_hash" ]]; then
+        log "Python requirements unchanged, skipping pip install"
+    else
+        log "Installing Python requirements..."
+        _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
+            || die "pip install requirements failed or timed out"
+        echo "$_req_hash" > "$STACK/venv/.req_hash"
+    fi
     log "Python venv ready"
 
     # ── 4. Signals stack .env ──
