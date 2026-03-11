@@ -27,8 +27,8 @@ setup() {
     # Create mcps repo structure that setup.sh expects
     mkdir -p "$STACK_DIR/librechat-uberspace/config"
     mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
-    # Provide a minimal TradeAssistant.sh for the ops shortcut install
-    echo '#!/bin/bash' > "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
+    # Provide a minimal Augur.sh for the ops shortcut install
+    echo '#!/bin/bash' > "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
 }
 
 # Helper: create a minimal source directory that passes setup.sh validation
@@ -205,6 +205,84 @@ EOF
     [ -d "$APP_DIR/uploads" ]
     [ -f "$APP_DIR/uploads/test.txt" ]
     grep -q "important-file" "$APP_DIR/uploads/test.txt"
+}
+
+@test "setup.sh installs finance-mcp-server not yahoo-finance-mcp" {
+    # Create update-mode APP_DIR (skips install-only logic)
+    mkdir -p "$APP_DIR/api/server"
+    echo "// stub" > "$APP_DIR/api/server/index.js"
+    echo "v0.0.1" > "$APP_DIR/.version"
+    echo "KEY=val" > "$APP_DIR/.env"
+
+    # Create venv with pip stub that logs what gets installed
+    mkdir -p "$STACK_DIR/venv/bin"
+    echo '#!/bin/bash
+echo "v22.0.0"' > "$STACK_DIR/venv/bin/python"
+    chmod +x "$STACK_DIR/venv/bin/python"
+    echo '#!/bin/bash
+echo "PIP_INSTALL: $*" >> "$STACK_DIR/pip.log"' > "$STACK_DIR/venv/bin/pip"
+    chmod +x "$STACK_DIR/venv/bin/pip"
+
+    local src="$TEST_SANDBOX/src_mcp"
+    create_src_app "$src"
+
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    [[ "$status" -eq 0 ]]
+
+    # Should install finance-mcp-server, NOT yahoo-finance-mcp
+    if [[ -f "$STACK_DIR/pip.log" ]]; then
+        run grep "yahoo-finance-mcp" "$STACK_DIR/pip.log"
+        [[ "$status" -ne 0 ]]  # must NOT appear
+
+        run grep "finance-mcp-server" "$STACK_DIR/pip.log"
+        [[ "$status" -eq 0 ]]  # must appear
+    fi
+}
+
+@test "setup.sh clones crypto-feargreed-mcp to vendor dir" {
+    mkdir -p "$APP_DIR/api/server"
+    echo "// stub" > "$APP_DIR/api/server/index.js"
+    echo "v0.0.1" > "$APP_DIR/.version"
+    echo "KEY=val" > "$APP_DIR/.env"
+
+    # Stub git to log clone commands
+    stub_command "git" '
+if [[ "$1" == "clone" ]]; then
+    echo "GIT_CLONE: $*" >> "$HOME/git.log"
+    mkdir -p "$5" 2>/dev/null || true
+else
+    echo "stubbed git $*"
+fi'
+
+    local src="$TEST_SANDBOX/src_mcp2"
+    create_src_app "$src"
+
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    [[ "$status" -eq 0 ]]
+
+    # Should attempt to clone crypto-feargreed-mcp into vendor/
+    [[ -f "$HOME/git.log" ]]
+    run grep "crypto-feargreed-mcp" "$HOME/git.log"
+    [[ "$status" -eq 0 ]]
+    run grep "vendor/crypto-feargreed-mcp" "$HOME/git.log"
+    [[ "$status" -eq 0 ]]
+}
+
+@test "setup.sh skips crypto-feargreed-mcp clone when vendor dir exists" {
+    mkdir -p "$APP_DIR/api/server"
+    echo "// stub" > "$APP_DIR/api/server/index.js"
+    echo "v0.0.1" > "$APP_DIR/.version"
+    echo "KEY=val" > "$APP_DIR/.env"
+
+    # Pre-create the vendor dir
+    mkdir -p "$STACK_DIR/vendor/crypto-feargreed-mcp"
+
+    local src="$TEST_SANDBOX/src_mcp3"
+    create_src_app "$src"
+
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"crypto-feargreed-mcp already installed"* ]]
 }
 
 @test "setup.sh rolls back on missing app code" {

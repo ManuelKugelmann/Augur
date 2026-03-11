@@ -1,9 +1,9 @@
 #!/usr/bin/env bats
-# Tests for TradeAssistant.sh — check/health command
+# Tests for Augur.sh — check/health command
 
 load helpers/setup
 
-TA="$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh"
+TA="$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
 
 setup() {
     setup_sandbox
@@ -192,5 +192,5 @@ PYEOF
 @test "check shows --test tip when run without it" {
     run bash "$TA" check
     [[ "$output" == *"--test"* ]]
-    [[ "$output" == *"ta check --test"* ]]
+    [[ "$output" == *"augur check --test"* ]]
 }

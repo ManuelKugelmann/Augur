@@ -245,7 +245,7 @@ The signals store is a **single FastMCP server** (`src/store/server.py`) that ex
 │ Events                  │ Continuous   │ USGS, GDACS, FIRMS,      │
 │                         │              │ disease.sh, ReliefWeb    │
 │ Event pruning           │ Nightly      │ TTL auto-delete          │
-│ MongoDB backup          │ Nightly      │ Cron (ta backup)         │
+│ MongoDB backup          │ Nightly      │ Cron (augur backup)         │
 └─────────────────────────┴──────────────┴──────────────────────────┘
 ```
 

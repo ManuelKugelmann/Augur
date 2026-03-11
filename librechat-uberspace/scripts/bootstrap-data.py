@@ -19,7 +19,7 @@ Usage:
     python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --kind countries --batch-size 5
 
     # Custom LibreChat URL
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --base-url http://assist.uber.space:3080
+    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --base-url http://augur.uber.space:3080
 """
 
 import argparse
@@ -32,8 +32,10 @@ import time
 try:
     import httpx
 except ImportError:
-    print("ERROR: httpx required. Install: pip install httpx", file=sys.stderr)
-    sys.exit(1)
+    httpx = None  # type: ignore[assignment]
+    if __name__ == "__main__":
+        print("ERROR: httpx required. Install: pip install httpx", file=sys.stderr)
+        sys.exit(1)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TARGETS_FILE = os.path.join(SCRIPT_DIR, "bootstrap-targets.json")
@@ -50,21 +52,8 @@ VALID_KINDS = {
     "regions",
 }
 
-# Schema required fields per kind (for prompt generation)
-SCHEMA_REQUIRED = {
-    "countries": ["id", "name", "iso2", "region"],
-    "stocks": ["id", "name", "type"],
-    "etfs": ["id", "name", "type"],
-    "crypto": ["id", "name", "type"],
-    "indices": ["id", "name", "type"],
-    "commodities": ["id", "name", "category"],
-    "crops": ["id", "name", "category"],
-    "materials": ["id", "name", "category"],
-    "products": ["id", "name", "category"],
-    "companies": ["id", "name", "country"],
-    "sources": ["id", "name", "mcp", "auth"],
-    "regions": ["id", "name", "type"],
-}
+# Minimal required fields per kind (id + name for all)
+REQUIRED_FIELDS = {k: ["id", "name"] for k in VALID_KINDS}
 
 # Kind-specific data enrichment instructions
 KIND_INSTRUCTIONS = {
@@ -217,7 +206,7 @@ def find_existing_profiles(profiles_dir: str, kind: str) -> set[str]:
 
 def build_prompt(kind: str, targets: list[dict], existing_ids: set[str]) -> str:
     """Build the bootstrap prompt for a batch of targets."""
-    required = SCHEMA_REQUIRED.get(kind, [])
+    required = REQUIRED_FIELDS.get(kind, [])
     instructions = KIND_INSTRUCTIONS.get(kind, "Populate all schema fields accurately.")
 
     # Classify targets as new or existing (for enrichment)

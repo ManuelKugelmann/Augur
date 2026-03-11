@@ -1,7 +1,7 @@
 # LLM Keys & Endpoints
 
 Complete reference for LLM provider credentials used with LibreChat.
-All keys go in `~/LibreChat/.env` (or via `ta env`).
+All keys go in `~/LibreChat/.env` (or via `augur env`).
 
 At least one LLM provider is required. You can use multiple simultaneously.
 
@@ -11,9 +11,9 @@ At least one LLM provider is required. You can use multiple simultaneously.
 
 1. Sign up at the provider URL
 2. Copy your API key
-3. Add it to `~/LibreChat/.env` (or `ta env`)
-4. Uncomment the matching endpoint in `librechat.yaml` (`ta yaml`) if needed
-5. Restart: `ta restart`
+3. Add it to `~/LibreChat/.env` (or `augur env`)
+4. Uncomment the matching endpoint in `librechat.yaml` (`augur yaml`) if needed
+5. Restart: `augur restart`
 
 ---
 
@@ -195,7 +195,7 @@ Use your Claude Pro/Max subscription as a LibreChat endpoint -- no per-token bil
 | | |
 |---|---|
 | **Requires** | Active Claude Pro or Max subscription |
-| **Setup** | `ta proxy setup` (installs CLIProxyAPI, registers service) |
+| **Setup** | `augur proxy setup` (installs CLIProxyAPI, registers service) |
 | **How it works** | CLIProxyAPI runs locally on `:8317`, translates OpenAI-compatible requests to Claude CLI |
 | **Env var** | `CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...` (in `~/.claude-auth.env`) |
 | **Full guide** | [docs/claude-token-wrapper.md](claude-token-wrapper.md) |

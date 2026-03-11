@@ -1,8 +1,9 @@
 # Profiles Directory
 
 Profiles describe anything tradeable or trade-relevant. Organized by
-**geographic region** then **kind**, with per-kind indexes and schemas
-at the top level.
+**geographic region** then **kind**, with per-kind indexes at the top level.
+Stored in MongoDB (`profiles_{kind}` collections). Seed JSON files on disk
+are loaded via `seed_profiles`.
 
 ## Structure
 
@@ -11,20 +12,7 @@ profiles/
 ├── INFO.md                        ← this file
 ├── INDEX_{kind}.json              ← per-kind indexes (auto-generated)
 │
-├── SCHEMAS/                       ← descriptive schemas (one per kind)
-│   ├── countries.schema.json
-│   ├── stocks.schema.json
-│   ├── etfs.schema.json
-│   ├── crypto.schema.json
-│   ├── indices.schema.json
-│   ├── commodities.schema.json
-│   ├── crops.schema.json
-│   ├── materials.schema.json
-│   ├── products.schema.json
-│   ├── companies.schema.json
-│   └── sources.schema.json
-│
-├── north_america/                 ← economic region folders
+├── north_america/                 ← seed data by region
 │   ├── countries/USA.json
 │   ├── stocks/AAPL.json
 │   └── companies/...
@@ -70,19 +58,21 @@ profiles/
 
 ## Kinds
 
-| Kind | ID Convention | Example IDs | Schema |
-|------|---------------|-------------|--------|
-| countries | ISO3 uppercase | DEU, USA, CHN | [countries.schema.json](SCHEMAS/countries.schema.json) |
-| stocks | Ticker uppercase | AAPL, NVDA, SAP | [stocks.schema.json](SCHEMAS/stocks.schema.json) |
-| etfs | Ticker uppercase | VWO, SPY, QQQ | [etfs.schema.json](SCHEMAS/etfs.schema.json) |
-| crypto | Symbol uppercase | BTC, ETH, SOL | [crypto.schema.json](SCHEMAS/crypto.schema.json) |
-| indices | Symbol uppercase | SPX, NDX, DJI | [indices.schema.json](SCHEMAS/indices.schema.json) |
-| commodities | lowercase slug | crude_oil, gold | [commodities.schema.json](SCHEMAS/commodities.schema.json) |
-| crops | lowercase slug | corn, wheat | [crops.schema.json](SCHEMAS/crops.schema.json) |
-| materials | lowercase slug | lithium, copper | [materials.schema.json](SCHEMAS/materials.schema.json) |
-| products | lowercase slug | semiconductors | [products.schema.json](SCHEMAS/products.schema.json) |
-| companies | lowercase slug | tsmc, aramco | [companies.schema.json](SCHEMAS/companies.schema.json) |
-| sources | lowercase slug | faostat, usgs | [sources.schema.json](SCHEMAS/sources.schema.json) |
+| Kind | ID Convention | Example IDs | Required |
+|------|---------------|-------------|----------|
+| countries | ISO3 uppercase | DEU, USA, CHN | id, name |
+| stocks | Ticker uppercase | AAPL, NVDA, SAP | id, name |
+| etfs | Ticker uppercase | VWO, SPY, QQQ | id, name |
+| crypto | Symbol uppercase | BTC, ETH, SOL | id, name |
+| indices | Symbol uppercase | SPX, NDX, DJI | id, name |
+| commodities | lowercase slug | crude_oil, gold | id, name |
+| crops | lowercase slug | corn, wheat | id, name |
+| materials | lowercase slug | lithium, copper | id, name |
+| products | lowercase slug | semiconductors | id, name |
+| companies | lowercase slug | tsmc, aramco | id, name |
+| sources | lowercase slug | faostat, usgs | id, name |
+
+All extra fields are allowed. Use `notes` for freeform data.
 
 ## Index Files
 
@@ -108,7 +98,7 @@ Optional `location` GeoJSON Point field for spatial queries via `nearby()`.
 
 ## Tools
 
-### Profile tools (file-based)
+### Profile tools (MongoDB-backed)
 
 | Tool | Purpose |
 |------|---------|
@@ -119,7 +109,7 @@ Optional `location` GeoJSON Point field for spatial queries via `nearby()`.
 | `search_profiles(kind, field, value, region?)` | Field-level search |
 | `list_regions()` | List regions and their kinds |
 | `rebuild_index(kind?)` | Rebuild indexes from disk |
-| `lint_profiles(kind?, id?)` | Validate against schema |
+| `lint_profiles(kind?, id?)` | Validate required fields |
 
 ### Snapshot tools (MongoDB, same API + time fields)
 

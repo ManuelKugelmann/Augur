@@ -1,5 +1,6 @@
 """Agriculture — FAOSTAT + USDA NASS."""
 from fastmcp import FastMCP
+from _http import api_get
 import httpx
 import os
 from dotenv import load_dotenv
@@ -31,14 +32,14 @@ async def _fao_get(path: str, params: dict | None = None) -> httpx.Response:
 
 
 @mcp.tool()
-async def fao_datasets() -> list:
+async def fao_datasets() -> dict:
     """List FAOSTAT dataset codes (QCL=crops, TP=trade, PP=prices)."""
     try:
         r = await _fao_get("definitions/domain")
         data = r.json().get("data", [])
-        return [{"code": d["code"], "label": d["label"]} for d in data]
+        return {"datasets": [{"code": d["code"], "label": d["label"]} for d in data]}
     except httpx.HTTPError as e:
-        return [{"error": f"FAOSTAT request failed: {e}"}]
+        return {"error": f"FAOSTAT request failed: {e}"}
 
 
 @mcp.tool()
@@ -56,39 +57,33 @@ async def fao_data(domain: str = "QCL", area: str = "5000>",
         return {"error": f"FAOSTAT request failed: {e}"}
 
 
+# ── USDA NASS (shared endpoint, different stat category) ──
+
+async def _usda_nass(commodity: str, year: int,
+                     statisticcat: str, **extra) -> dict:
+    """Shared USDA NASS query."""
+    if not NASS_KEY:
+        return {"error": "USDA_NASS_API_KEY not set"}
+    params = {"key": NASS_KEY, "commodity_desc": commodity.upper(),
+              "year": year, "statisticcat_desc": statisticcat,
+              "format": "json", **extra}
+    return await api_get("https://quickstats.nass.usda.gov/api/api_GET/",
+                         params=params, label="USDA NASS")
+
+
 @mcp.tool()
 async def usda_crop(commodity: str, year: int = 2025,
                      state: str = "US TOTAL") -> dict:
     """USDA crop production. commodity: CORN, SOYBEANS, WHEAT, etc."""
-    if not NASS_KEY:
-        return {"error": "USDA_NASS_API_KEY not set"}
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://quickstats.nass.usda.gov/api/api_GET/", params={
-                "key": NASS_KEY, "commodity_desc": commodity.upper(),
-                "year": year, "agg_level_desc": "NATIONAL" if state == "US TOTAL" else "STATE",
-                "statisticcat_desc": "PRODUCTION", "format": "json"})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"USDA NASS request failed: {e}"}
+    return await _usda_nass(
+        commodity, year, "PRODUCTION",
+        agg_level_desc="NATIONAL" if state == "US TOTAL" else "STATE")
 
 
 @mcp.tool()
 async def usda_crop_progress(commodity: str, year: int = 2025) -> dict:
     """Weekly crop progress (planted/emerged/harvested %)."""
-    if not NASS_KEY:
-        return {"error": "USDA_NASS_API_KEY not set"}
-    try:
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.get("https://quickstats.nass.usda.gov/api/api_GET/", params={
-                "key": NASS_KEY, "commodity_desc": commodity.upper(),
-                "year": year, "source_desc": "SURVEY",
-                "statisticcat_desc": "PROGRESS", "format": "json"})
-            r.raise_for_status()
-            return r.json()
-    except httpx.HTTPError as e:
-        return {"error": f"USDA NASS request failed: {e}"}
+    return await _usda_nass(commodity, year, "PROGRESS", source_desc="SURVEY")
 
 
 if __name__ == "__main__":

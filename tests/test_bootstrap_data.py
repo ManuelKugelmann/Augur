@@ -10,6 +10,8 @@ import tempfile
 
 import pytest
 
+httpx = pytest.importorskip("httpx", reason="httpx required for bootstrap-data tests")
+
 # Add the script directory to path so we can import bootstrap-data
 SCRIPT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -123,7 +125,7 @@ class TestTargets:
 
     def test_schema_required_covers_all_kinds(self):
         for kind in bootstrap.VALID_KINDS:
-            assert kind in bootstrap.SCHEMA_REQUIRED, \
+            assert kind in bootstrap.REQUIRED_FIELDS, \
                 f"Missing SCHEMA_REQUIRED entry for {kind}"
 
     def test_kind_instructions_covers_all_kinds(self):
@@ -202,7 +204,7 @@ class TestPromptGeneration:
     def test_prompt_includes_required_fields(self):
         targets = [{"id": "BTC", "region": "global"}]
         prompt = bootstrap.build_prompt("crypto", targets, set())
-        for field in bootstrap.SCHEMA_REQUIRED["crypto"]:
+        for field in bootstrap.REQUIRED_FIELDS["crypto"]:
             assert field in prompt
 
     def test_prompt_includes_kind_instructions(self):

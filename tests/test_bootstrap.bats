@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Tests for bootstrap.sh — syntax and basic validation
+# Tests for shell script syntax validation
 
 load helpers/setup
 
@@ -11,16 +11,10 @@ teardown() {
     teardown_sandbox
 }
 
-@test "bootstrap.sh passes syntax check" {
-    run bash -n "$REPO_ROOT/librechat-uberspace/scripts/bootstrap.sh"
-    [[ "$status" -eq 0 ]]
-}
-
 @test "all shell scripts pass syntax check" {
     local scripts=(
-        "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh"
+        "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/setup.sh"
-        "$REPO_ROOT/librechat-uberspace/scripts/bootstrap.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/claude-auth-daemon.sh"
     )
     for script in "${scripts[@]}"; do

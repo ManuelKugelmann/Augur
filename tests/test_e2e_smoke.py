@@ -20,8 +20,9 @@ import textwrap
 import time
 from pathlib import Path
 
-import httpx
 import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required")
 
 # ── Config ──────────────────────────────────────
 
@@ -99,7 +100,7 @@ def lc_app_dir(tmp_path_factory):
     bundle_path = app_dir / "librechat-bundle.tar.gz"
     dl_result = subprocess.run(
         ["gh", "release", "download", "--pattern", "librechat-bundle.tar.gz",
-         "--dir", str(app_dir), "--repo", "ManuelKugelmann/TradingAssistant"],
+         "--dir", str(app_dir), "--repo", "ManuelKugelmann/Augur"],
         capture_output=True, text=True, timeout=120)
 
     if dl_result.returncode != 0 or not bundle_path.exists():

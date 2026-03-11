@@ -125,7 +125,7 @@ async def hazard_alerts(hazard: str = "", days: int = 7,
 | Server | Transport | Package | Purpose |
 |--------|-----------|---------|---------|
 | **trading** | streamable-http :8071 | FastMCP (Python) | Store + 9 data domains |
-| **filesystem** | stdio | `@modelcontextprotocol/server-filesystem` | File read/write in `~/TradeAssistant_Data/files/` |
+| **filesystem** | stdio | `@modelcontextprotocol/server-filesystem` | File read/write in `~/Augur_Data/files/` |
 
 ### Overlap with Trading Store?
 

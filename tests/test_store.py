@@ -168,22 +168,6 @@ def profiles_dir(tmp_path, monkeypatch):
     """Set up a temporary profiles directory and wire up fake MongoDB collections."""
     import server
 
-    monkeypatch.setattr(server, "PROFILES_DIR", tmp_path)
-
-    # Create SCHEMAS dir with a countries schema
-    schemas = tmp_path / "SCHEMAS"
-    schemas.mkdir()
-    schema = {
-        "$schema": "Profile schema for countries",
-        "required": ["id", "name"],
-        "properties": {
-            "id": "ISO3 country code",
-            "name": "Full country name",
-            "tags": "Array of group memberships",
-        },
-    }
-    (schemas / "countries.schema.json").write_text(json.dumps(schema))
-
     # Create seed data directories for seed_profiles tests
     for region in ("europe", "north_america", "global"):
         for kind in ("countries", "stocks", "sources"):
@@ -460,21 +444,20 @@ class TestLintProfiles:
         assert "countries/DEU" in result["ok"]
         assert "countries/DEU" not in result["issues"]
 
-    def test_missing_required_field_flagged(self, store, profiles_dir):
-        # Profile without "name" (required by schema)
-        store.put_profile("countries", "BAD", {"id": "BAD"}, region="europe")
-        result = store.lint_profiles("countries", "BAD")
-        assert "countries/BAD" in result["issues"]
-        issues = result["issues"]["countries/BAD"]
-        assert any("name" in i for i in issues)
+    def test_missing_required_field_rejected_on_create(self, store, profiles_dir):
+        # Profile without "name" — rejected by put_profile
+        result = store.put_profile("countries", "BAD", {"id": "BAD"}, region="europe")
+        assert "error" in result
+        assert any("name" in i for i in result["issues"])
 
     def test_lint_all_of_kind(self, store, profiles_dir):
         store.put_profile("countries", "DEU",
                           {"id": "DEU", "name": "Germany"}, region="europe")
-        store.put_profile("countries", "BAD", {"id": "BAD"}, region="europe")
+        store.put_profile("countries", "FRA",
+                          {"id": "FRA", "name": "France"}, region="europe")
         result = store.lint_profiles("countries")
         assert "countries/DEU" in result["ok"]
-        assert "countries/BAD" in result["issues"]
+        assert "countries/FRA" in result["ok"]
 
     def test_no_schema_means_no_issues(self, store, profiles_dir):
         store.put_profile("stocks", "AAPL",
@@ -488,27 +471,18 @@ class TestLintProfiles:
 
 
 class TestLintOne:
-    def test_type_mismatch_detected(self, store):
-        schema = {
-            "required": [],
-            "properties": {
-                "trade": {"top_exports": "exports"},
-            },
-        }
-        issues = store._lint_one("countries", "X",
-                                 {"trade": "not_a_dict"}, schema)
-        assert any("trade" in i for i in issues)
+    def test_missing_id_detected(self, store):
+        issues = store._lint_one("countries", "X", {"name": "Test"})
+        assert any("id" in i for i in issues)
 
-    def test_array_type_mismatch(self, store):
-        schema = {
-            "required": [],
-            "properties": {
-                "tags": "Array of values",
-            },
-        }
+    def test_missing_name_detected(self, store):
+        issues = store._lint_one("countries", "X", {"id": "X"})
+        assert any("name" in i for i in issues)
+
+    def test_complete_profile_passes(self, store):
         issues = store._lint_one("countries", "X",
-                                 {"tags": "not_an_array"}, schema)
-        assert any("tags" in i for i in issues)
+                                 {"id": "X", "name": "Test", "extra": "ok"})
+        assert issues == []
 
 
 # ── search_profiles ──────────────────────────────
