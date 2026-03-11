@@ -95,7 +95,7 @@ fi
 
 # ── Copy default config from mcps repo if missing ──
 # The LibreChat bundle is vanilla — config lives in the mcps repo.
-_LC_YAML_SRC="$STACK/librechat-uberspace/config/librechat.yaml"
+_LC_YAML_SRC="$STACK/augur-uberspace/config/librechat.yaml"
 if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$_LC_YAML_SRC" ]]; then
     cp "$_LC_YAML_SRC" "$APP/librechat.yaml"
     sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
@@ -203,7 +203,7 @@ fi
 if [[ "$MODE" == "install" ]]; then
     # Generate .env from example (source from mcps repo, not the bundle)
     if [[ ! -f "$APP/.env" ]]; then
-        _ENV_SRC="$STACK/librechat-uberspace/config/.env.example"
+        _ENV_SRC="$STACK/augur-uberspace/config/.env.example"
         if [[ -f "$_ENV_SRC" ]]; then
             cp "$_ENV_SRC" "$APP/.env"
         elif [[ -f "$APP/.env.example" ]]; then

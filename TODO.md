@@ -119,7 +119,7 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
       Run `ta install` on a live Uberspace host.
       Verify supervisord services start, logs rotate, .env is picked up.
 - [ ] **Test LibreChat deployment end-to-end**
-      Run the `librechat-uberspace/` deployment package. Verify LibreChat connects
+      Run the `augur-uberspace/` deployment package. Verify LibreChat connects
       to Atlas, MCP servers respond, git-versioned data sync works.
 - [ ] **Add monitoring / health dashboard**
       Simple status page or script that checks: Atlas connection, each MCP server,

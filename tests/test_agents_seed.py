@@ -10,11 +10,11 @@ import sys
 import pytest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
-AGENTS_FILE = REPO_ROOT / "librechat-uberspace" / "config" / "agents.json"
+AGENTS_FILE = REPO_ROOT / "augur-uberspace" / "config" / "agents.json"
 
 # Import seed-agents.py functions for testing edge resolution
-sys.path.insert(0, str(REPO_ROOT / "librechat-uberspace" / "scripts"))
-_seed_module_path = REPO_ROOT / "librechat-uberspace" / "scripts" / "seed-agents.py"
+sys.path.insert(0, str(REPO_ROOT / "augur-uberspace" / "scripts"))
+_seed_module_path = REPO_ROOT / "augur-uberspace" / "scripts" / "seed-agents.py"
 
 
 @pytest.fixture(scope="module")
