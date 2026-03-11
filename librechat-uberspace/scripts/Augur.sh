@@ -90,7 +90,7 @@ _pip_upgrade() {
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
-    timeout 60 "$pip" install --upgrade pip
+    timeout 300 "$pip" install --upgrade pip
 }
 
 _pip_install() {
@@ -100,7 +100,7 @@ _pip_install() {
     # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
     # U8: empty constraint file (no-op)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    timeout 180 "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    timeout 600 "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
     rm -f "$constraint"
 }
 
@@ -331,7 +331,7 @@ _do_install() {
         # ensurepip (the default) can stall with no output on U8 / Ubuntu.
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
-        timeout 60 "$STACK/venv/bin/python" -m ensurepip --upgrade \
+        timeout 300 "$STACK/venv/bin/python" -m ensurepip --upgrade \
             || die "ensurepip failed or timed out"
     fi
     _pip_upgrade "$STACK/venv/bin/pip" \
