@@ -289,9 +289,9 @@ _do_install() {
         local _api_json
         _api_json=$(curl -sf "https://api.github.com/repos/${GH_USER}/${GH_REPO}/commits/${BRANCH}" 2>/dev/null || true)
         if [[ -n "$_api_json" ]]; then
-            _hdr_sha=$(echo "$_api_json" | grep -o '"sha":"[^"]*"' | head -1 | cut -d'"' -f4)
+            _hdr_sha=$(echo "$_api_json" | grep -o '"sha": *"[^"]*"' | head -1 | cut -d'"' -f4 || true)
             _hdr_sha="${_hdr_sha:0:7}"
-            _hdr_date=$(echo "$_api_json" | grep -o '"date":"[^"]*"' | tail -1 | cut -d'"' -f4)
+            _hdr_date=$(echo "$_api_json" | grep -o '"date": *"[^"]*"' | tail -1 | cut -d'"' -f4 || true)
         fi
     fi
 
