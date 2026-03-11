@@ -63,11 +63,24 @@ _svc_reload()  {
 }
 _web_backend() {
     local path="$1" port="$2"
-    if _is_u8; then
-        uberspace web backend add "$path" port "$port" --force 2>/dev/null
-    else
-        uberspace web backend set "$path" --http --port "$port" 2>/dev/null
+    # Skip if already configured (avoids httpx timeout on U8 uberspace CLI)
+    local existing
+    existing=$(uberspace web backend list 2>/dev/null || true)
+    if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
+        log "Web backend ${path} → port ${port} already set"
+        return 0
     fi
+    local attempt=0 delay=2
+    while (( attempt < 3 )); do
+        attempt=$((attempt + 1))
+        if _is_u8; then
+            uberspace web backend add "$path" port "$port" --force 2>/dev/null && return 0
+        else
+            uberspace web backend set "$path" --http --port "$port" 2>/dev/null && return 0
+        fi
+        (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
+    done
+    return 1
 }
 
 # ── pip helpers ──
