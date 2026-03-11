@@ -73,6 +73,7 @@ _web_backend() {
 # ── pip helpers ──
 _pip_upgrade() {
     local python="$1" min_ver=22
+    log "  → $python -m pip --version"
     local ver; ver=$("$python" -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
     if (( ver >= min_ver )); then
         log "pip $ver is recent enough (>=$min_ver), skipping upgrade"
@@ -286,7 +287,7 @@ _do_install() {
     log "Using $PYTHON_BIN (Python $_pyver)"
 
     if [[ -d "$STACK/venv" ]]; then
-        log "Python venv exists, updating deps..."
+        log "Python venv exists, checking pip..."
         _pip_upgrade "$STACK/venv/bin/python" \
             || die "pip upgrade failed or timed out"
     else

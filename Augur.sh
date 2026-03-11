@@ -115,6 +115,7 @@ case "$CMD" in
             log "Installing Python requirements..."
             _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
                 || die "pip install requirements failed or timed out"
+            log "Python requirements up to date."
         else
             warn "Python venv not found at $STACK/venv — run 'augur install' first"
         fi
