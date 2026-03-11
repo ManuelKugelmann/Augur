@@ -57,9 +57,10 @@ jobs:
             echo "FAIL: no sample posts found"
             exit 1
           fi
-          python3 -c "
+          python3 - "$post" <<'PYEOF'
           import yaml, sys
-          with open('$post') as f:
+          post = sys.argv[1]
+          with open(post) as f:
               content = f.read()
           parts = content.split('---')
           if len(parts) < 3:
@@ -72,24 +73,26 @@ jobs:
               print(f'FAIL: missing front matter keys: {missing}')
               sys.exit(1)
           print(f'OK: {post} has valid front matter')
-          "
+          PYEOF
 
       - name: Check SCSS compiles (syntax check)
         run: |
           # Verify SCSS files have valid syntax by checking for obvious errors
           for f in _sass/*.scss; do
-            if ! python3 -c "
-          import re, sys
-          with open('$f') as fh:
+            if ! python3 - "$f" <<'PYEOF'
+          import sys
+          fname = sys.argv[1]
+          with open(fname) as fh:
               content = fh.read()
           # Check balanced braces
           opens = content.count('{')
           closes = content.count('}')
           if opens != closes:
-              print(f'FAIL: $f has unbalanced braces ({opens} open, {closes} close)')
+              print(f'FAIL: {fname} has unbalanced braces ({opens} open, {closes} close)')
               sys.exit(1)
-          print(f'OK: $f')
-          "; then
+          print(f'OK: {fname}')
+          PYEOF
+            then
               exit 1
             fi
           done
