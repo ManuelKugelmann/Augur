@@ -90,7 +90,7 @@ _pip_upgrade() {
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
-    timeout 300 "$pip" install --upgrade pip
+    timeout 600 "$pip" install --upgrade pip
 }
 
 _pip_install() {
@@ -331,7 +331,7 @@ _do_install() {
         # ensurepip (the default) can stall with no output on U8 / Ubuntu.
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
-        timeout 300 "$STACK/venv/bin/python" -m ensurepip --upgrade \
+        timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade \
             || die "ensurepip failed or timed out"
     fi
     _pip_upgrade "$STACK/venv/bin/pip" \
