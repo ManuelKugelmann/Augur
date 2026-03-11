@@ -63,6 +63,7 @@ _web_backend() {
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
 _pip_upgrade() {
     local python="$1" min_ver=22
+    log "  → $python -m pip --version"
     local ver; ver=$("$python" -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
     if (( ver >= min_ver )); then
         log "pip $ver is recent enough (>=$min_ver), skipping upgrade"

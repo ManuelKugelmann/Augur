@@ -167,11 +167,11 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         # ensurepip (the default) can stall with no output on U8 / Ubuntu.
         "$_PYTHON_BIN" -m venv --without-pip venv
         log "Bootstrapping pip inside venv..."
-        log "  → venv/bin/python -m ensurepip --upgrade"
+        log "  → venv/bin/python -m ensurepip"
         # Redirect stdin to /dev/null for all pip/ensurepip commands —
         # when running via `curl | bash`, inherited stdin is the curl pipe
         # and pip can consume bytes meant for bash or block on the pipe.
-        timeout 600 venv/bin/python -m ensurepip --upgrade </dev/null
+        timeout 600 venv/bin/python -m ensurepip </dev/null
         log "Venv created. Checking pip version..."
         _pip_ver=$(venv/bin/python -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
         if (( _pip_ver >= 22 )); then
