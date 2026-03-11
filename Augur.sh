@@ -329,6 +329,8 @@ _do_install() {
 
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
+        _pip_upgrade "$STACK/venv/bin/python" \
+            || die "pip upgrade failed or timed out"
     else
         log "Creating Python venv..."
         # Use --without-pip: plain venv creation is instant.
@@ -339,8 +341,6 @@ _do_install() {
         timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade </dev/null \
             || die "ensurepip failed or timed out"
     fi
-    _pip_upgrade "$STACK/venv/bin/python" \
-        || die "pip upgrade failed or timed out"
     log "Installing Python requirements..."
     _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
         || die "pip install requirements failed or timed out"
