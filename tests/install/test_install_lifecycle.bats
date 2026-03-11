@@ -110,7 +110,7 @@ SVCEOF
 
 @test "install: installs augur shortcut" {
     mkdir -p "$HOME/bin"
-    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur"
     chmod +x "$HOME/bin/augur"
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur"
 
@@ -147,7 +147,7 @@ SVCEOF
     [ -f "$HOME/etc/services.d/trading.ini" ]
 
     # Step 8: augur shortcut
-    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur"
     chmod +x "$HOME/bin/augur"
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur"
     [ -x "$HOME/bin/augur" ]
@@ -182,7 +182,7 @@ SVCEOF
     VER="dev-$("$REAL_GIT" -C "$STACK_DIR" rev-parse --short HEAD)"
 
     # Copy scripts as pull does
-    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
 
     # Update deps
@@ -335,8 +335,8 @@ ENVEOF
 
 @test "cron: compact import uses correct sys.path (not src.store.server)" {
     # Verify the fix: should use server import, not src.store.server
-    grep -q "from server import compact" "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
-    ! grep -q "from src.store.server import" "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
+    grep -q "from server import compact" "$STACK_DIR/Augur.sh"
+    ! grep -q "from src.store.server import" "$STACK_DIR/Augur.sh"
 }
 
 # ── Full lifecycle test ──────────────────────
@@ -365,7 +365,7 @@ command=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
 SVCEOF
 
     # Install augur shortcut
-    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur"
     chmod +x "$HOME/bin/augur"
 
     # Create APP_DIR with mock LibreChat
@@ -391,7 +391,7 @@ SVCEOF
     # Pull
     "$REAL_GIT" -C "$STACK_DIR" pull --ff-only origin main
     VER="dev-$("$REAL_GIT" -C "$STACK_DIR" rev-parse --short HEAD)"
-    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur"
     chmod +x "$HOME/bin/augur"
     "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt" 2>/dev/null || true
     echo "$VER" > "$APP_DIR/.version"

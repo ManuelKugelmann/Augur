@@ -66,7 +66,7 @@ augur u                       # downloads release, atomic swap, restarts
 augur rb                      # rollback if needed
 
 # Fresh install (one-liner):
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 ```
 
 ## Environment Variables
@@ -94,7 +94,7 @@ python -m pytest tests/ -v
 bats tests/*.bats && python -m pytest tests/ -v
 
 # Syntax check
-bash -n librechat-uberspace/scripts/Augur.sh
+bash -n Augur.sh
 ```
 
 ### Sandbox Workarounds

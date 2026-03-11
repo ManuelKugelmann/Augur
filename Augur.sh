@@ -2,7 +2,7 @@
 # Augur ops — single entry point for install + daily ops
 #
 # Fresh install (one-liner, downloads prebuilt LibreChat from GitHub Release):
-#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 #
 # After install:
 #   augur help              # show all commands
@@ -480,7 +480,7 @@ SVCEOF
 
     # ── 8. Install augur shortcut ─────────────────
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
@@ -744,7 +744,7 @@ case "$CMD" in
         fi
 
         # Update augur/Augur shortcuts
-        cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+        cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
         chmod +x "$HOME/bin/augur" 2>/dev/null || true
         ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
@@ -1488,6 +1488,6 @@ SVCEOF
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Fresh install:"
-        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/librechat-uberspace/scripts/Augur.sh | bash"
+        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/Augur.sh | bash"
         ;;
 esac

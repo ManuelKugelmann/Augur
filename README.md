@@ -37,7 +37,7 @@ Profile = what it **is**. Snapshot = what was measured **when**. MCP = current *
 ## Quick Start
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 ```
 
 Full setup (MongoDB Atlas, API keys, Uberspace deploy): **[docs/setup.md](docs/setup.md)**

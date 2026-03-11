@@ -284,7 +284,7 @@ EOF
 
     # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
