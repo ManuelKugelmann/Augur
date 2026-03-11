@@ -309,6 +309,11 @@ _do_install() {
         log "Cloned → $STACK"
     fi
 
+    # ── Log exact version (commit SHA + timestamp) ─
+    _INSTALL_SHA=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    _INSTALL_COMMIT_DATE=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
+    log "Version: ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+
     # ── Source central config now that it exists ─
     [[ -f "$STACK/deploy.conf" ]] && source "$STACK/deploy.conf"
 
@@ -613,6 +618,7 @@ except Exception as e:
     echo ""
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo -e "${GREEN}✓${NC} Installation complete!"
+    echo -e "  Augur ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
 
