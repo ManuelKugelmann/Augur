@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
-YAML_FILE = REPO_ROOT / "librechat-uberspace" / "config" / "librechat.yaml"
+YAML_FILE = REPO_ROOT / "augur-uberspace" / "config" / "librechat.yaml"
 
 
 @pytest.fixture(scope="module")

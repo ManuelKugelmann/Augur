@@ -110,10 +110,10 @@ This saves your Uberspace ~10 min build time and ~2 GB RAM. The artifact stays c
 ssh augur@augur.uber.space
 ```
 
-#### Step 3: Run the installer in dev mode
+#### Step 3: Run the installer
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash -s install dev
+curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-uberspace/install.sh?$(date +%s)" | bash
 ```
 
 What happens:
@@ -122,12 +122,11 @@ What happens:
 3. Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`, `python-dotenv`
 4. Generates `~/augur/.env` from template
 5. Registers supervisord services (`trading`, `charts`)
-6. **Skips** tagged releases (dev mode)
-7. Downloads `librechat-build.tar.gz` from the CI prebuilt release
-8. If no CI build exists: clones `danny-avila/LibreChat` and builds locally (~10 min, needs ~2 GB RAM)
-9. Runs `setup.sh` — atomic swap into `~/LibreChat/`, generates `.env` with crypto keys
-10. Registers LibreChat supervisord service, sets up web backend on port 3080
-11. Installs `augur` CLI to `~/bin/augur`
+6. Downloads `librechat-build.tar.gz` from the CI prebuilt release (or latest tagged release bundle)
+7. If no CI build exists: clones `danny-avila/LibreChat` and builds locally (~10 min, needs ~2 GB RAM)
+8. Runs `setup.sh` — atomic swap into `~/LibreChat/`, generates `.env` with crypto keys
+9. Registers LibreChat supervisord service, sets up web backend on port 3080
+10. Installs `augur` CLI to `~/bin/augur`
 
 #### Step 4: Configure environment
 
@@ -192,7 +191,7 @@ augur install dev    # re-downloads CI build or rebuilds from source
 
 ```bash
 # Create PRIVATE repo on GitHub: ManuelKugelmann/Augur_Data
-bash ~/augur/librechat-uberspace/scripts/setup-data-repo.sh
+bash ~/augur/augur-uberspace/scripts/setup-data-repo.sh
 ```
 
 Auto-syncs every 15 min via cron. Stores filesystem files.
@@ -207,7 +206,7 @@ For stable deployments using tagged releases.
 
 ```bash
 ssh augur@augur.uber.space
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-uberspace/install.sh?$(date +%s)" | bash
 ```
 
 Requires a tagged release to exist first. On your dev machine:

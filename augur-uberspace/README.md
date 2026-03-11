@@ -78,7 +78,7 @@ ssh augur@augur.uber.space
 Then run the installer:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh?$(date +%s)" | bash
 ```
 
 This clones the repo, creates Python venv, installs LibreChat (release bundle or git fallback), registers supervisord services (`librechat`, `trading`, `charts`), and sets up the `augur` command. Re-run safe.
@@ -198,4 +198,4 @@ augur u                         # on Uberspace
 
 ## Full Guide
 
-See [docs/librechat-uberspace-setup.md](../docs/librechat-uberspace-setup.md) for the complete walkthrough with troubleshooting, security checklist, and architecture details.
+See [docs/augur-uberspace-setup.md](../docs/augur-uberspace-setup.md) for the complete walkthrough with troubleshooting, security checklist, and architecture details.

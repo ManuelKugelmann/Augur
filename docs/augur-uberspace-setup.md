@@ -70,7 +70,7 @@ ssh augur@augur.uber.space
 Run the installer:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh?$(date +%s)" | bash
 ```
 
 This single command does everything:
@@ -202,7 +202,7 @@ Create a **private** repo on GitHub: `YourUser/Augur_Data`
 Then on Uberspace:
 
 ```bash
-bash ~/augur/librechat-uberspace/scripts/setup-data-repo.sh
+bash ~/augur/augur-uberspace/scripts/setup-data-repo.sh
 ```
 
 This:

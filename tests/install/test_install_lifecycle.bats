@@ -43,7 +43,7 @@ setup() {
     cp "$REPO_ROOT/requirements.txt" "$STACK_DIR/"
     cp "$REPO_ROOT/.env.example" "$STACK_DIR/"
     cp "$REPO_ROOT/Augur.sh" "$STACK_DIR/"
-    cp -r "$REPO_ROOT/librechat-uberspace" "$STACK_DIR/"
+    cp -r "$REPO_ROOT/augur-uberspace" "$STACK_DIR/"
     cp -r "$REPO_ROOT/src" "$STACK_DIR/"
     mkdir -p "$STACK_DIR/profiles"
 
@@ -237,7 +237,7 @@ SVCEOF
     mkdir -p "$SRC/config"
     cp "$STACK_DIR/.env.example" "$SRC/config/.env.example"
 
-    output=$(bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.1.0-test" 2>&1)
+    output=$(bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v0.1.0-test" 2>&1)
 
     [[ "$output" == *"Installing"* ]]
     [ -f "$APP_DIR/.version" ]
@@ -256,7 +256,7 @@ SVCEOF
     mkdir -p "$SRC/api/server"
     echo "// new" > "$SRC/api/server/index.js"
 
-    output=$(bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.2.0-test" 2>&1)
+    output=$(bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v0.2.0-test" 2>&1)
 
     [[ "$output" == *"Updating"* ]]
     grep -q "v0.2.0-test" "$APP_DIR/.version"
@@ -279,7 +279,7 @@ SVCEOF
     mkdir -p "$SRC/api/server"
     echo "// new" > "$SRC/api/server/index.js"
 
-    bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.3.0" 2>&1
+    bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v0.3.0" 2>&1
 
     # Uploads should be preserved in new install
     [ -d "$APP_DIR/uploads" ]
@@ -299,7 +299,7 @@ SVCEOF
     mkdir -p "$SRC"
     echo "incomplete" > "$SRC/README.md"
 
-    run bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.4.0-bad" 2>&1
+    run bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v0.4.0-bad" 2>&1
     [ "$status" -ne 0 ]
 
     # Should have rolled back to previous version
@@ -322,7 +322,7 @@ JWT_SECRET=
 JWT_REFRESH_SECRET=
 ENVEOF
 
-    bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v0.5.0" 2>&1
+    bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v0.5.0" 2>&1
 
     [ -f "$APP_DIR/.env" ]
     # Keys should be populated (non-empty)
@@ -407,7 +407,7 @@ SVCEOF
     echo "// updated app" > "$SRC/api/server/index.js"
     echo "KEEP=yes" > "$APP_DIR/.env"
 
-    bash "$STACK_DIR/librechat-uberspace/scripts/setup.sh" "$SRC" "v1.0.0" 2>&1
+    bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v1.0.0" 2>&1
 
     # Verify update state
     grep -q "v1.0.0" "$APP_DIR/.version"

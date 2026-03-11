@@ -66,7 +66,7 @@ augur u                       # downloads release, atomic swap, restarts
 augur rb                      # rollback if needed
 
 # Fresh install (one-liner):
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-uberspace/install.sh?$(date +%s)" | bash
 ```
 
 ## Environment Variables

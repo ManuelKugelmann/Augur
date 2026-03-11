@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'librechat-uberspace/scripts/**'
+      - 'augur-uberspace/scripts/**'
       - 'deploy.conf'
       - 'requirements.txt'
       - '.env.example'
@@ -14,7 +14,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'librechat-uberspace/scripts/**'
+      - 'augur-uberspace/scripts/**'
       - 'deploy.conf'
       - 'requirements.txt'
       - '.env.example'
