@@ -23,12 +23,11 @@ _abort() {
 trap '_abort' INT TERM
 
 # ── Source shared helpers ──
-# Try repo-relative path first (when running from ~/bin/augur → ~/augur/Augur.sh)
+# Resolve script directory (needed for install delegation and common.sh)
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)"
 _AUGUR_DIR="${STACK_DIR:-$HOME/augur}"
 _COMMON="$_AUGUR_DIR/augur-uberspace/lib/common.sh"
 if [[ ! -f "$_COMMON" ]]; then
-    # Fallback: try relative to script location
-    _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)"
     _COMMON="$_SCRIPT_DIR/augur-uberspace/lib/common.sh"
 fi
 if [[ -f "$_COMMON" ]]; then
@@ -52,7 +51,13 @@ CMD="${1:-help}"
 case "$CMD" in
     install)
         # Delegate to standalone installer
-        bash "$STACK/augur-uberspace/install.sh" "${@:2}"
+        # Try script-relative path first (works before repo is cloned to $STACK)
+        _INSTALL_SH=""
+        for _try in "${_SCRIPT_DIR:-}/augur-uberspace/install.sh" "$STACK/augur-uberspace/install.sh"; do
+            [[ -f "$_try" ]] && { _INSTALL_SH="$_try"; break; }
+        done
+        [[ -z "$_INSTALL_SH" ]] && die "install.sh not found (not in script dir or $STACK)"
+        bash "$_INSTALL_SH" "${@:2}"
         ;;
     s|status)
         _svc_status librechat || echo "librechat: not registered"
