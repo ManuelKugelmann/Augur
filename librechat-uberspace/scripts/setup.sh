@@ -119,11 +119,11 @@ fi
 
 # Python MCPs installed into signals stack venv
 if [[ -d "$STACK/venv" ]]; then
-    VPIP="$STACK/venv/bin/pip"
+    VPIP=("$STACK/venv/bin/python" -m pip)
     # finance-mcp-server (provides python -m finance_mcp)
     if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
         log "Installing finance-mcp-server..."
-        timeout 60 "$VPIP" install finance-mcp-server || warn "finance-mcp-server install failed"
+        timeout 60 "${VPIP[@]}" install finance-mcp-server || warn "finance-mcp-server install failed"
     fi
 fi
 
@@ -169,12 +169,12 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Bootstrapping pip inside venv..."
         timeout 600 venv/bin/python -m ensurepip --upgrade
         log "Venv created. Upgrading pip..."
-        timeout 600 venv/bin/pip install --upgrade pip
+        timeout 600 venv/bin/python -m pip install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
         _pip_constraint=$(mktemp)
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
         if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
-        timeout 600 venv/bin/pip install --prefer-binary \
+        timeout 600 venv/bin/python -m pip install --prefer-binary \
             -c "$_pip_constraint" -r requirements.txt
         rm -f "$_pip_constraint"
         cd - >/dev/null
