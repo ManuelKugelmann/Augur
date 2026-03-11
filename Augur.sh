@@ -49,16 +49,6 @@ fi
 CMD="${1:-help}"
 
 case "$CMD" in
-    install)
-        # Delegate to standalone installer
-        # Try script-relative path first (works before repo is cloned to $STACK)
-        _INSTALL_SH=""
-        for _try in "${_SCRIPT_DIR:-}/augur-uberspace/install.sh" "$STACK/augur-uberspace/install.sh"; do
-            [[ -f "$_try" ]] && { _INSTALL_SH="$_try"; break; }
-        done
-        [[ -z "$_INSTALL_SH" ]] && die "install.sh not found (not in script dir or $STACK)"
-        bash "$_INSTALL_SH" "${@:2}"
-        ;;
     s|status)
         _svc_status librechat || echo "librechat: not registered"
         _svc_status trading || true
@@ -585,7 +575,6 @@ SVCEOF
         echo ""
         echo "  augur u|update     Update from latest GitHub release"
         echo "  augur pull         Quick update via git pull (dev)"
-        echo "  augur install      Re-run full installer (idempotent)"
         echo "  augur rb|rollback  Rollback to previous version"
         echo ""
         echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
@@ -601,7 +590,7 @@ SVCEOF
         echo "  augur yaml         Edit librechat.yaml"
         echo "  augur conf         Edit deploy.conf"
         echo ""
-        echo "  Fresh install:"
+        echo "  Install / reinstall (idempotent):"
         echo "    curl -sL \"https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/augur-uberspace/install.sh?\$(date +%s)\" | bash"
         ;;
 esac
