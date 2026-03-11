@@ -277,6 +277,12 @@ _do_install() {
 
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo -e "${CYAN} Augur + LibreChat → Uberspace ${NC}"
+    if [[ -d "$STACK/.git" ]]; then
+        local _hdr_sha _hdr_date
+        _hdr_sha=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+        _hdr_date=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
+        echo -e "${CYAN} ${_hdr_sha}  ${_hdr_date} ${NC}"
+    fi
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
 
