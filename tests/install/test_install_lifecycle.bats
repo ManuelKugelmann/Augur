@@ -42,6 +42,7 @@ setup() {
     cp "$REPO_ROOT/deploy.conf" "$STACK_DIR/"
     cp "$REPO_ROOT/requirements.txt" "$STACK_DIR/"
     cp "$REPO_ROOT/.env.example" "$STACK_DIR/"
+    cp "$REPO_ROOT/Augur.sh" "$STACK_DIR/"
     cp -r "$REPO_ROOT/librechat-uberspace" "$STACK_DIR/"
     cp -r "$REPO_ROOT/src" "$STACK_DIR/"
     mkdir -p "$STACK_DIR/profiles"
