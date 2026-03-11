@@ -327,7 +327,12 @@ _do_install() {
         log "Python venv exists, updating deps..."
     else
         log "Creating Python venv..."
-        "$PYTHON_BIN" -m venv "$STACK/venv"
+        # Use --without-pip: plain venv creation is instant.
+        # ensurepip (the default) can stall with no output on U8 / Ubuntu.
+        "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
+        log "Bootstrapping pip inside venv..."
+        timeout 60 "$STACK/venv/bin/python" -m ensurepip --upgrade \
+            || die "ensurepip failed or timed out"
     fi
     _pip_upgrade "$STACK/venv/bin/pip" \
         || die "pip upgrade failed or timed out"
