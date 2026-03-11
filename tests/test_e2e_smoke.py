@@ -147,7 +147,7 @@ def lc_env(lc_app_dir):
 @pytest.fixture(scope="module")
 def lc_yaml(lc_app_dir):
     """Copy and configure librechat.yaml."""
-    yaml_src = REPO_ROOT / "librechat-uberspace" / "config" / "librechat.yaml"
+    yaml_src = REPO_ROOT / "augur-uberspace" / "config" / "librechat.yaml"
     yaml_dst = lc_app_dir / "librechat.yaml"
 
     content = yaml_src.read_text()
@@ -449,7 +449,7 @@ class TestAgents:
     @pytest.fixture(autouse=True, scope="class")
     def _seed_agents(self, api_client):
         """Seed all 11 agents from agents.json."""
-        agents_file = REPO_ROOT / "librechat-uberspace" / "config" / "agents.json"
+        agents_file = REPO_ROOT / "augur-uberspace" / "config" / "agents.json"
         if not agents_file.exists():
             pytest.skip("agents.json not found")
 
@@ -469,11 +469,11 @@ class TestAgents:
                     id_map[adef["_name"]] = agent_id
 
         # Phase 2: Wire edges
-        sys.path.insert(0, str(REPO_ROOT / "librechat-uberspace" / "scripts"))
+        sys.path.insert(0, str(REPO_ROOT / "augur-uberspace" / "scripts"))
         import importlib.util
         spec = importlib.util.spec_from_file_location(
             "seed_agents",
-            REPO_ROOT / "librechat-uberspace" / "scripts" / "seed-agents.py")
+            REPO_ROOT / "augur-uberspace" / "scripts" / "seed-agents.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
 
@@ -685,7 +685,7 @@ class TestCronAPICall:
     @pytest.fixture(autouse=True, scope="class")
     def _setup_cron_agent(self, api_client):
         """Seed agents and store the cron-planner agent ID."""
-        agents_file = REPO_ROOT / "librechat-uberspace" / "config" / "agents.json"
+        agents_file = REPO_ROOT / "augur-uberspace" / "config" / "agents.json"
         if not agents_file.exists():
             pytest.skip("agents.json not found")
 

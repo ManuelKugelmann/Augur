@@ -239,7 +239,7 @@ augur agents --dry-run
 1. Create a **private** repo on GitHub: `YourUser/Augur_Data`
 2. Run:
    ```bash
-   bash ~/augur/librechat-uberspace/scripts/setup-data-repo.sh
+   bash ~/augur/augur-uberspace/scripts/setup-data-repo.sh
    ```
 3. Add the SSH public key it prints to your GitHub repo's deploy keys
 4. Verify cron is set up:

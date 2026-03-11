@@ -198,4 +198,4 @@ augur u                         # on Uberspace
 
 ## Full Guide
 
-See [docs/librechat-uberspace-setup.md](../docs/librechat-uberspace-setup.md) for the complete walkthrough with troubleshooting, security checklist, and architecture details.
+See [docs/augur-uberspace-setup.md](../docs/augur-uberspace-setup.md) for the complete walkthrough with troubleshooting, security checklist, and architecture details.

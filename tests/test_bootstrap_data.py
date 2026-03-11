@@ -15,7 +15,7 @@ httpx = pytest.importorskip("httpx", reason="httpx required for bootstrap-data t
 # Add the script directory to path so we can import bootstrap-data
 SCRIPT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "librechat-uberspace",
+    "augur-uberspace",
     "scripts",
 )
 sys.path.insert(0, SCRIPT_DIR)

@@ -81,7 +81,7 @@ Index creation now happens on-demand in `_snap_col()`, `_arch_col()`, `_events_c
 O(n) disk reads per query. Will degrade at scale. Mitigated by INDEX files for `find_profile()` and `list_profiles()`, but `search_profiles()` still does field-level scans.
 
 ### 18. Domain Server `.env` Not Loaded via LibreChat — NOT APPLICABLE
-**File:** `librechat-uberspace/config/librechat.yaml`
+**File:** `augur-uberspace/config/librechat.yaml`
 
 Domain servers run inside the combined trading server process (not as separate LibreChat-launched MCPs). The combined server is a supervisord service that sources `.env`. API keys are available via the process environment.
 

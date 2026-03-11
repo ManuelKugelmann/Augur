@@ -202,7 +202,7 @@ Create a **private** repo on GitHub: `YourUser/Augur_Data`
 Then on Uberspace:
 
 ```bash
-bash ~/augur/librechat-uberspace/scripts/setup-data-repo.sh
+bash ~/augur/augur-uberspace/scripts/setup-data-repo.sh
 ```
 
 This:

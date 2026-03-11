@@ -3,7 +3,7 @@
 
 load helpers/setup
 
-DAEMON="$REPO_ROOT/librechat-uberspace/scripts/claude-auth-daemon.sh"
+DAEMON="$REPO_ROOT/augur-uberspace/scripts/claude-auth-daemon.sh"
 
 setup() {
     setup_sandbox

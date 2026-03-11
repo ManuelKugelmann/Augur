@@ -47,7 +47,7 @@ def _check_upstream(result, *expected_keys):
         err = result["error"]
     elif isinstance(result, list) and result and isinstance(result[0], dict) and "error" in result[0]:
         err = result[0]["error"]
-    if err and any(code in str(err) for code in ("500", "502", "503", "521", "522", "SDMX endpoints unavailable")):
+    if err and any(code in str(err) for code in ("500", "502", "503", "521", "522", "ReadTimeout", "ConnectTimeout", "SDMX endpoints unavailable")):
         pytest.skip(f"Upstream API unavailable: {err}")
     # If no transient error, assert expected keys
     target = result[0] if isinstance(result, list) and result else result
@@ -219,11 +219,11 @@ class TestElectionsFree:
 
     def test_eu_parliament_meps_germany(self):
         result = run(self.m.eu_parliament_meps(country="DE", limit=10))
-        assert "count" in result
-        assert "meps" in result
+        _check_upstream(result, "count", "meps")
 
     def test_eu_parliament_votes(self):
         result = run(self.m.eu_parliament_votes(year="2024", limit=5))
+        _check_upstream(result)
         assert isinstance(result, dict)
 
 

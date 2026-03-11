@@ -20,9 +20,9 @@ setup() {
     mkdir -p "$STACK_DIR/.git"
 
     # Copy auth daemon so proxy setup can install it
-    mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
-    cp "$REPO_ROOT/librechat-uberspace/scripts/claude-auth-daemon.sh" \
-       "$STACK_DIR/librechat-uberspace/scripts/claude-auth-daemon.sh"
+    mkdir -p "$STACK_DIR/augur-uberspace/scripts"
+    cp "$REPO_ROOT/augur-uberspace/scripts/claude-auth-daemon.sh" \
+       "$STACK_DIR/augur-uberspace/scripts/claude-auth-daemon.sh"
 }
 
 teardown() {

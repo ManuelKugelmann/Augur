@@ -139,17 +139,17 @@ PYEOF
 
 @test "check validates shell scripts syntax" {
     # Copy real scripts so syntax check has something to validate
-    mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
-    for f in "$REPO_ROOT/librechat-uberspace/scripts/"*.sh; do
-        cp "$f" "$STACK_DIR/librechat-uberspace/scripts/"
+    mkdir -p "$STACK_DIR/augur-uberspace/scripts"
+    for f in "$REPO_ROOT/augur-uberspace/scripts/"*.sh; do
+        cp "$f" "$STACK_DIR/augur-uberspace/scripts/"
     done
     run bash "$TA" check
     [[ "$output" == *"PASS"*"Shell scripts: all pass syntax check"* ]]
 }
 
 @test "check detects shell syntax error" {
-    mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
-    echo "if then broken" > "$STACK_DIR/librechat-uberspace/scripts/broken.sh"
+    mkdir -p "$STACK_DIR/augur-uberspace/scripts"
+    echo "if then broken" > "$STACK_DIR/augur-uberspace/scripts/broken.sh"
     run bash "$TA" check
     [[ "$output" == *"FAIL"*"Syntax error: broken.sh"* ]]
 }
