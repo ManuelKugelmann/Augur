@@ -1,12 +1,12 @@
 ---
 layout: article
 brand: financial
-horizon: tomorrow
-categories: financial/tomorrow
+horizon: future
+categories: financial.augur/future
 date: 2026-03-11
-headline: "Hello World — Financial Augur Tomorrow"
-fictive_date: "2026-03-12"
-created_at: "2026-03-11T09:00:00Z"
+headline: "Hello World — Financial Augur Future"
+fictive_date: "2027-09-01"
+created_at: "2026-03-11T11:00:00Z"
 tags: [placeholder]
 sources: []
 model: placeholder
@@ -14,7 +14,7 @@ model: placeholder
 
 ## The Signal
 
-This is a placeholder article for **Financial Augur — Tomorrow**.
+This is a placeholder article for **Financial Augur — Future**.
 
 ## The Extrapolation
 

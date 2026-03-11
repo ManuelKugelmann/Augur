@@ -4,7 +4,7 @@ the:
   subtitle: "Foresight from the signal noise"
   locale: en
   module: general
-  slug: the
+  slug: the.augur
   palette:
     bg: "#f4f0e8"
     ink: "#1a1a1a"
@@ -28,7 +28,7 @@ der:
   subtitle: "Voraussicht aus dem Signalrauschen"
   locale: de
   module: general
-  slug: der
+  slug: der.augur
   palette:
     bg: "#f4f0e8"
     ink: "#1a1a1a"
@@ -52,7 +52,7 @@ financial:
   subtitle: "Market foresight from open signals"
   locale: en
   module: markets
-  slug: financial
+  slug: financial.augur
   palette:
     bg: "#f0f2f4"
     ink: "#1a1a1a"
@@ -76,7 +76,7 @@ finanz:
   subtitle: "Marktvoraussicht aus offenen Signalen"
   locale: de
   module: markets
-  slug: finanz
+  slug: finanz.augur
   palette:
     bg: "#f0f2f4"
     ink: "#1a1a1a"

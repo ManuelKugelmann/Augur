@@ -1,12 +1,12 @@
 ---
 layout: article
 brand: the
-horizon: tomorrow
-categories: the/tomorrow
+horizon: future
+categories: the.augur/future
 date: 2026-03-11
-headline: "Hello World — The Augur Tomorrow"
-fictive_date: "2026-03-12"
-created_at: "2026-03-11T09:00:00Z"
+headline: "Hello World — The Augur Future"
+fictive_date: "2027-09-01"
+created_at: "2026-03-11T11:00:00Z"
 tags: [placeholder]
 sources: []
 model: placeholder
@@ -14,7 +14,7 @@ model: placeholder
 
 ## The Signal
 
-This is a placeholder article for **The Augur — Tomorrow** horizon.
+This is a placeholder article for **The Augur — Future** horizon.
 
 ## The Extrapolation
 

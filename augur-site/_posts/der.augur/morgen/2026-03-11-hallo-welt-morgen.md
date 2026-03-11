@@ -1,12 +1,12 @@
 ---
 layout: article
-brand: finanz
-horizon: future
-categories: finanz/zukunft
+brand: der
+horizon: tomorrow
+categories: der.augur/morgen
 date: 2026-03-11
-headline: "Hallo Welt — Finanz Augur Zukunft"
-fictive_date: "2027-09-01"
-created_at: "2026-03-11T11:00:00Z"
+headline: "Hallo Welt — Der Augur Morgen"
+fictive_date: "2026-03-12"
+created_at: "2026-03-11T09:00:00Z"
 tags: [platzhalter]
 sources: []
 model: placeholder
@@ -14,7 +14,7 @@ model: placeholder
 
 ## Das Signal
 
-Dies ist ein Platzhalter-Artikel für **Finanz Augur — Zukunft**.
+Dies ist ein Platzhalter-Artikel für **Der Augur — Morgen**.
 
 ## Die Extrapolation
 

@@ -2,7 +2,7 @@
 layout: article
 brand: the
 horizon: tomorrow
-categories: the/tomorrow
+categories: the.augur/tomorrow
 date: 2026-03-09
 headline: "Grid failures accelerate across three European regions as cold snap meets renewable shortfall"
 fictive_date: "2026-03-10"
