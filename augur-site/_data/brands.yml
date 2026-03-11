@@ -11,15 +11,21 @@ the:
     accent: "#8b0000"
     meta: "#6b5b4f"
   horizons:
-    - key: tomorrow
-      slug: tomorrow
-      label: Tomorrow
-    - key: soon
-      slug: soon
-      label: Soon
-    - key: future
-      slug: future
-      label: Future
+    - key: days
+      slug: days
+      label: Days
+    - key: weeks
+      slug: weeks
+      label: Weeks
+    - key: months
+      slug: months
+      label: Months
+    - key: years
+      slug: years
+      label: Years
+    - key: decades
+      slug: decades
+      label: Decades
   disclaimer: "AI-generated speculation — not news. Not financial advice."
 
 der:
@@ -35,15 +41,21 @@ der:
     accent: "#1a3a5c"
     meta: "#6b5b4f"
   horizons:
-    - key: tomorrow
-      slug: morgen
-      label: Morgen
-    - key: soon
-      slug: bald
-      label: Bald
-    - key: future
-      slug: zukunft
-      label: Zukunft
+    - key: days
+      slug: tage
+      label: Tage
+    - key: weeks
+      slug: wochen
+      label: Wochen
+    - key: months
+      slug: monate
+      label: Monate
+    - key: years
+      slug: jahre
+      label: Jahre
+    - key: decades
+      slug: jahrzehnte
+      label: Jahrzehnte
   disclaimer: "KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung."
 
 financial:
@@ -59,15 +71,21 @@ financial:
     accent: "#0a6e3a"
     meta: "#5a6570"
   horizons:
-    - key: tomorrow
-      slug: tomorrow
-      label: Tomorrow
-    - key: soon
-      slug: soon
-      label: Soon
-    - key: future
-      slug: future
-      label: Future
+    - key: days
+      slug: days
+      label: Days
+    - key: weeks
+      slug: weeks
+      label: Weeks
+    - key: months
+      slug: months
+      label: Months
+    - key: years
+      slug: years
+      label: Years
+    - key: decades
+      slug: decades
+      label: Decades
   disclaimer: "AI-generated opinion — not financial advice. The Augur may hold positions in discussed sectors."
 
 finanz:
@@ -83,13 +101,19 @@ finanz:
     accent: "#0a6e3a"
     meta: "#5a6570"
   horizons:
-    - key: tomorrow
-      slug: morgen
-      label: Morgen
-    - key: soon
-      slug: bald
-      label: Bald
-    - key: future
-      slug: zukunft
-      label: Zukunft
+    - key: days
+      slug: tage
+      label: Tage
+    - key: weeks
+      slug: wochen
+      label: Wochen
+    - key: months
+      slug: monate
+      label: Monate
+    - key: years
+      slug: jahre
+      label: Jahre
+    - key: decades
+      slug: jahrzehnte
+      label: Jahrzehnte
   disclaimer: "KI-generierte Einschätzung — keine Finanzberatung. Der Augur kann Positionen in besprochenen Sektoren halten."
