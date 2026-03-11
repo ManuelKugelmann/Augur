@@ -90,6 +90,7 @@ _pip_upgrade() {
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
+    log "  → $python -m pip install --upgrade pip"
     timeout 600 "$python" -m pip install --upgrade pip
 }
 
@@ -100,6 +101,7 @@ _pip_install() {
     # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
     # U8: empty constraint file (no-op)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
+    log "  → $python -m pip install --prefer-binary -c <constraint> -r $req ${*:3}"
     timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
     rm -f "$constraint"
 }
@@ -331,12 +333,13 @@ _do_install() {
         # ensurepip (the default) can stall with no output on U8 / Ubuntu.
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
+        log "  → $STACK/venv/bin/python -m ensurepip --upgrade"
         timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade \
             || die "ensurepip failed or timed out"
     fi
     _pip_upgrade "$STACK/venv/bin/python" \
         || die "pip upgrade failed or timed out"
-    log "Installing requirements..."
+    log "Installing Python requirements..."
     _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
         || die "pip install requirements failed or timed out"
     log "Python venv ready"
@@ -752,7 +755,7 @@ case "$CMD" in
         if [[ -d "$STACK/venv" ]]; then
             _pip_upgrade "$STACK/venv/bin/python" \
                 || die "pip upgrade failed or timed out"
-            log "Installing requirements..."
+            log "Installing Python requirements..."
             _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
                 || die "pip install requirements failed or timed out"
         else
