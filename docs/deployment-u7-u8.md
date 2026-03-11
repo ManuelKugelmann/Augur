@@ -81,7 +81,7 @@ node -v                  # may not be set yet — installer handles this
 ## Step 3: Run the Installer (one-liner)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 ```
 
 This single command does the same thing on both U7 and U8:
@@ -382,7 +382,7 @@ If Uberspace migrates your account from U7 to U8 (or you create a new U8 account
 
 2. **On the new U8 host** — run the installer:
    ```bash
-   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
    ```
 
 3. **Restore config** — paste your saved `.env` contents:

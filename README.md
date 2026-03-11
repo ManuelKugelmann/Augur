@@ -37,12 +37,7 @@ Profile = what it **is**. Snapshot = what was measured **when**. MCP = current *
 ## Quick Start
 
 ```bash
-git clone https://github.com/ManuelKugelmann/Augur.git
-cd Augur
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # edit with MONGO_URI_SIGNALS + API keys
-python src/store/server.py
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 ```
 
 Full setup (MongoDB Atlas, API keys, Uberspace deploy): **[docs/setup.md](docs/setup.md)**

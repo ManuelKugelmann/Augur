@@ -111,7 +111,7 @@ fi
 if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
     log "Installing rss-mcp..."
     cd "$STACK"
-    timeout 60 npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
+    timeout 60 npm install rss-mcp || warn "rss-mcp install failed (RSS feed MCP won't be available)"
     cd - >/dev/null
 else
     log "rss-mcp already installed"
@@ -119,11 +119,11 @@ fi
 
 # Python MCPs installed into signals stack venv
 if [[ -d "$STACK/venv" ]]; then
-    VPIP="$STACK/venv/bin/pip"
+    VPIP=("$STACK/venv/bin/python" -m pip)
     # finance-mcp-server (provides python -m finance_mcp)
     if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
         log "Installing finance-mcp-server..."
-        timeout 60 "$VPIP" install finance-mcp-server || warn "finance-mcp-server install failed"
+        timeout 60 "${VPIP[@]}" install finance-mcp-server || warn "finance-mcp-server install failed"
     fi
 fi
 
@@ -133,7 +133,7 @@ CFG_DIR="$VENDOR_DIR/crypto-feargreed-mcp"
 if [[ ! -d "$CFG_DIR" ]]; then
     mkdir -p "$VENDOR_DIR"
     log "Cloning crypto-feargreed-mcp..."
-    timeout 30 git clone -q --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
+    timeout 30 git clone --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
 else
     log "crypto-feargreed-mcp already installed"
 fi
@@ -141,7 +141,7 @@ fi
 # uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
 if ! command -v uvx &>/dev/null; then
     log "Installing uv (Python package runner)..."
-    timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
+    timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' || warn "uv install failed (uvx-based MCPs won't be available)"
 fi
 
 # ── Install signals stack (Python MCP servers) ──
@@ -163,14 +163,18 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Setting up signals stack Python environment..."
         cd "$STACK"
         log "Creating Python venv with $_PYTHON_BIN..."
-        "$_PYTHON_BIN" -m venv venv
+        # Use --without-pip: plain venv creation is instant.
+        # ensurepip (the default) can stall with no output on U8 / Ubuntu.
+        "$_PYTHON_BIN" -m venv --without-pip venv
+        log "Bootstrapping pip inside venv..."
+        timeout 600 venv/bin/python -m ensurepip --upgrade
         log "Venv created. Upgrading pip..."
-        timeout 60 venv/bin/pip install --upgrade pip
+        timeout 600 venv/bin/python -m pip install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
         _pip_constraint=$(mktemp)
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
         if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
-        timeout 180 venv/bin/pip install --prefer-binary \
+        timeout 600 venv/bin/python -m pip install --prefer-binary \
             -c "$_pip_constraint" -r requirements.txt
         rm -f "$_pip_constraint"
         cd - >/dev/null
@@ -280,7 +284,7 @@ EOF
 
     # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 

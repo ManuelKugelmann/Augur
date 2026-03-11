@@ -13,7 +13,7 @@ teardown() {
 
 @test "all shell scripts pass syntax check" {
     local scripts=(
-        "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
+        "$REPO_ROOT/Augur.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/setup.sh"
         "$REPO_ROOT/librechat-uberspace/scripts/claude-auth-daemon.sh"
     )
