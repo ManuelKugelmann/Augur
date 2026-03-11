@@ -111,7 +111,7 @@ fi
 if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
     log "Installing rss-mcp..."
     cd "$STACK"
-    timeout 60 npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
+    timeout 60 npm install rss-mcp || warn "rss-mcp install failed (RSS feed MCP won't be available)"
     cd - >/dev/null
 else
     log "rss-mcp already installed"
@@ -133,7 +133,7 @@ CFG_DIR="$VENDOR_DIR/crypto-feargreed-mcp"
 if [[ ! -d "$CFG_DIR" ]]; then
     mkdir -p "$VENDOR_DIR"
     log "Cloning crypto-feargreed-mcp..."
-    timeout 30 git clone -q --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
+    timeout 30 git clone --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
 else
     log "crypto-feargreed-mcp already installed"
 fi
@@ -141,7 +141,7 @@ fi
 # uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
 if ! command -v uvx &>/dev/null; then
     log "Installing uv (Python package runner)..."
-    timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
+    timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' || warn "uv install failed (uvx-based MCPs won't be available)"
 fi
 
 # ── Install signals stack (Python MCP servers) ──
