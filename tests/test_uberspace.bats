@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Uberspace-only tests — run on the deployed host via: ta check --test
+# Uberspace-only tests — run on the deployed host via: augur check --test
 #
 # These tests require a live Uberspace environment:
 #   - supervisord running
@@ -11,7 +11,7 @@
 
 load helpers/setup
 
-TA="$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh"
+TA="$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
 
 # ── Skip guard: only run on *.uber.space ──
 setup() {
@@ -54,12 +54,12 @@ setup() {
     [[ "$NODE_MAJOR" -ge 20 ]]
 }
 
-@test "uberspace: ta shortcut installed" {
-    [[ -x "$HOME/bin/ta" ]]
+@test "uberspace: augur shortcut installed" {
+    [[ -x "$HOME/bin/augur" ]]
 }
 
-@test "uberspace: ta version returns something" {
-    run "$HOME/bin/ta" version
+@test "uberspace: augur version returns something" {
+    run "$HOME/bin/augur" version
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
 }
@@ -150,8 +150,8 @@ setup() {
 #  Cron
 # ══════════════════════════════════════════
 
-@test "uberspace: ta cron is scheduled" {
-    crontab -l 2>/dev/null | grep -q "ta cron"
+@test "uberspace: augur cron is scheduled" {
+    crontab -l 2>/dev/null | grep -q "augur cron"
 }
 
 # ══════════════════════════════════════════
@@ -195,9 +195,9 @@ setup() {
     fi
     run "$STACK_DIR/venv/bin/python" -c "
 import os, sys
-sys.path.insert(0, os.environ.get('STACK_DIR', os.path.expanduser('~/assist')))
+sys.path.insert(0, os.environ.get('STACK_DIR', os.path.expanduser('~/augur')))
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.environ.get('STACK_DIR', os.path.expanduser('~/assist')), '.env'))
+load_dotenv(os.path.join(os.environ.get('STACK_DIR', os.path.expanduser('~/augur')), '.env'))
 uri = os.environ.get('MONGO_URI_SIGNALS', '')
 if not uri:
     print('SKIP: no MONGO_URI_SIGNALS'); sys.exit(0)
@@ -274,15 +274,15 @@ print('OK: signals store')
     grep -q "port:" "$HOME/.cli-proxy-api/config.yaml"
 }
 
-@test "uberspace: ta check runs successfully" {
-    run "$HOME/bin/ta" check
+@test "uberspace: augur check runs successfully" {
+    run "$HOME/bin/augur" check
     # May have warnings but should produce output
     [[ "$output" == *"Health Check"* ]]
     [[ "$output" == *"Summary"* ]]
 }
 
-@test "uberspace: ta status runs" {
-    run "$HOME/bin/ta" status
+@test "uberspace: augur status runs" {
+    run "$HOME/bin/augur" status
     [[ "$status" -eq 0 ]]
 }
 

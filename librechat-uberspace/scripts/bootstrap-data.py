@@ -19,7 +19,7 @@ Usage:
     python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --kind countries --batch-size 5
 
     # Custom LibreChat URL
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --base-url http://assist.uber.space:3080
+    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --base-url http://augur.uber.space:3080
 """
 
 import argparse

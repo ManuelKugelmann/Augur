@@ -1,11 +1,11 @@
 #!/bin/bash
 # LibreChat Lite — install or update on Uberspace
-# Called by TradeAssistant.sh (_lc_download_and_setup) or directly: bash setup.sh <app-dir> <version>
+# Called by Augur.sh (_lc_download_and_setup) or directly: bash setup.sh <app-dir> <version>
 set -euo pipefail
 
 # ── Load central config ──
 for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
-            "$HOME/assist/deploy.conf"; do
+            "$HOME/augur/deploy.conf"; do
     [[ -f "$conf" ]] && { source "$conf"; break; }
 done
 
@@ -13,7 +13,7 @@ SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
 BAK="${APP}.prev"
-STACK="${STACK_DIR:-$HOME/assist}"
+STACK="${STACK_DIR:-$HOME/augur}"
 PORT="${LC_PORT:-3080}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -180,7 +180,7 @@ elif [[ -d "$STACK/venv" ]]; then
     log "Signals stack already set up"
 else
     warn "Signals stack not found at $STACK — trading MCPs won't be available"
-    warn "Clone with: git clone https://github.com/${GH_USER:-ManuelKugelmann}/${GH_REPO:-TradingAssistant}.git $STACK"
+    warn "Clone with: git clone https://github.com/${GH_USER:-ManuelKugelmann}/${GH_REPO:-Augur}.git $STACK"
 fi
 
 # ── First install ───────────────────────────
@@ -280,9 +280,9 @@ EOF
 
     # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-    chmod +x "$HOME/bin/ta" 2>/dev/null || true
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
+    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
     echo ""
     log "Installed ${VER}"

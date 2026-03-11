@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # Integration test: full install → pull → update lifecycle
-# Exercises TradeAssistant.sh _do_install, pull, and setup.sh in a sandboxed env.
+# Exercises Augur.sh _do_install, pull, and setup.sh in a sandboxed env.
 #
 # A shared venv is built once in setup_file and copied per test to avoid
 # repeated slow venv creation.
@@ -108,14 +108,14 @@ SVCEOF
     grep -q "combined_server.py" "$HOME/etc/services.d/trading.ini"
 }
 
-@test "install: installs ta shortcut" {
+@test "install: installs augur shortcut" {
     mkdir -p "$HOME/bin"
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
-    chmod +x "$HOME/bin/ta"
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant"
+    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    chmod +x "$HOME/bin/augur"
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur"
 
-    [ -x "$HOME/bin/ta" ]
-    [ -L "$HOME/bin/TradeAssistant" ]
+    [ -x "$HOME/bin/augur" ]
+    [ -L "$HOME/bin/Augur" ]
 }
 
 @test "install: _do_install pre-LibreChat steps complete correctly" {
@@ -146,12 +146,12 @@ command=bash -c 'set -a; [ -f ${STACK_DIR}/.env ] && . ${STACK_DIR}/.env; set +a
 SVCEOF
     [ -f "$HOME/etc/services.d/trading.ini" ]
 
-    # Step 8: ta shortcut
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
-    chmod +x "$HOME/bin/ta"
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant"
-    [ -x "$HOME/bin/ta" ]
-    [ -L "$HOME/bin/TradeAssistant" ]
+    # Step 8: augur shortcut
+    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    chmod +x "$HOME/bin/augur"
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur"
+    [ -x "$HOME/bin/augur" ]
+    [ -L "$HOME/bin/Augur" ]
 
 }
 
@@ -182,8 +182,8 @@ SVCEOF
     VER="dev-$("$REAL_GIT" -C "$STACK_DIR" rev-parse --short HEAD)"
 
     # Copy scripts as pull does
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-    chmod +x "$HOME/bin/ta" 2>/dev/null || true
+    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
 
     # Update deps
     "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt" 2>/dev/null || true
@@ -193,7 +193,7 @@ SVCEOF
     # Verify
     grep -q "# updated" "$STACK_DIR/deploy.conf"
     grep -q "dev-" "$APP_DIR/.version"
-    [ -x "$HOME/bin/ta" ]
+    [ -x "$HOME/bin/augur" ]
 }
 
 @test "pull: warns when venv is missing" {
@@ -335,8 +335,8 @@ ENVEOF
 
 @test "cron: compact import uses correct sys.path (not src.store.server)" {
     # Verify the fix: should use server import, not src.store.server
-    grep -q "from server import compact" "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
-    ! grep -q "from src.store.server import" "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
+    grep -q "from server import compact" "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
+    ! grep -q "from src.store.server import" "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
 }
 
 # ── Full lifecycle test ──────────────────────
@@ -364,9 +364,9 @@ directory=${STACK_DIR}
 command=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
 SVCEOF
 
-    # Install ta shortcut
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
-    chmod +x "$HOME/bin/ta"
+    # Install augur shortcut
+    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    chmod +x "$HOME/bin/augur"
 
     # Create APP_DIR with mock LibreChat
     mkdir -p "$APP_DIR/api/server" "$APP_DIR/scripts" "$APP_DIR/config"
@@ -377,7 +377,7 @@ SVCEOF
     [ -x "$STACK_DIR/venv/bin/python" ]
     [ -f "$STACK_DIR/.env" ]
     [ -f "$HOME/etc/services.d/trading.ini" ]
-    [ -x "$HOME/bin/ta" ]
+    [ -x "$HOME/bin/augur" ]
 
     # === PULL ===
     # Make a change on remote
@@ -391,8 +391,8 @@ SVCEOF
     # Pull
     "$REAL_GIT" -C "$STACK_DIR" pull --ff-only origin main
     VER="dev-$("$REAL_GIT" -C "$STACK_DIR" rev-parse --short HEAD)"
-    cp "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta"
-    chmod +x "$HOME/bin/ta"
+    cp "$STACK_DIR/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur"
+    chmod +x "$HOME/bin/augur"
     "$STACK_DIR/venv/bin/pip" install -q -r "$STACK_DIR/requirements.txt" 2>/dev/null || true
     echo "$VER" > "$APP_DIR/.version"
 

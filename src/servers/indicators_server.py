@@ -51,7 +51,7 @@ async def _fetch_yahoo_ohlcv(
     """
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
     params = {"range": period, "interval": interval, "includePrePost": "false"}
-    headers = {"User-Agent": "TradingAssistant/1.0"}
+    headers = {"User-Agent": "Augur/1.0"}
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             r = await client.get(url, params=params, headers=headers)

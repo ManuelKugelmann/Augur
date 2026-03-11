@@ -48,9 +48,9 @@ brew install router-for-me/tap/cliproxyapi
 npm install -g cliproxyapi
 ```
 
-**On Uberspace (via ta):**
+**On Uberspace (via augur):**
 ```bash
-ta proxy setup
+augur proxy setup
 # Installs cliproxyapi, creates config, registers service
 ```
 
@@ -109,7 +109,7 @@ systemctl --user enable --now cliproxyapi
 
 **On Uberspace (supervisord):**
 ```bash
-ta proxy start
+augur proxy start
 # Uses ~/etc/services.d/cliproxyapi.ini
 ```
 
@@ -122,8 +122,8 @@ Already preconfigured in `librechat.yaml` (commented out by default).
 Uncomment the "Claude Max" endpoint section and restart:
 
 ```bash
-ta yaml    # edit librechat.yaml
-ta restart
+augur yaml    # edit librechat.yaml
+augur restart
 ```
 
 Or manually add to `librechat.yaml`:
@@ -166,20 +166,20 @@ Use `claude-auth-daemon.sh --once` in cron to check token health:
 0 9 1 */11 * curl -sd "Claude setup-token renewal due -- $(hostname)" https://ntfy.sh/your-topic
 ```
 
-On Uberspace, the `ta cron` hook runs the check automatically every 30 minutes
+On Uberspace, the `augur cron` hook runs the check automatically every 30 minutes
 when `~/.claude-auth.env` exists.
 
 ---
 
-## ta proxy Commands
+## augur proxy Commands
 
 ```
-ta proxy setup     Install CLIProxyAPI, create config, register service
-ta proxy start     Start CLIProxyAPI service
-ta proxy stop      Stop CLIProxyAPI service
-ta proxy status    Show CLIProxyAPI service status
-ta proxy test      Test proxy endpoint (curl /v1/models)
-ta proxy token     Show token expiry info
+augur proxy setup     Install CLIProxyAPI, create config, register service
+augur proxy start     Start CLIProxyAPI service
+augur proxy stop      Stop CLIProxyAPI service
+augur proxy status    Show CLIProxyAPI service status
+augur proxy test      Test proxy endpoint (curl /v1/models)
+augur proxy token     Show token expiry info
 ```
 
 ---

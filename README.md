@@ -1,4 +1,4 @@
-### TradingAssistant
+### Augur
 
 - 4 MCP servers: 3 utility + 1 combined trading server (50+ tools)
 - Signals store (profiles, snapshots, charting, notes, risk gate) + 12 domain servers (75+ free data sources) + 3 utility servers
@@ -37,8 +37,8 @@ Profile = what it **is**. Snapshot = what was measured **when**. MCP = current *
 ## Quick Start
 
 ```bash
-git clone https://github.com/ManuelKugelmann/TradingAssistant.git
-cd TradingAssistant
+git clone https://github.com/ManuelKugelmann/Augur.git
+cd Augur
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # edit with MONGO_URI_SIGNALS + API keys

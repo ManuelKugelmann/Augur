@@ -1,6 +1,6 @@
 # Setup Guide
 
-Single-source setup for TradingAssistant — local dev or Uberspace production.
+Single-source setup for Augur — local dev or Uberspace production.
 
 ---
 
@@ -62,8 +62,8 @@ USDA_NASS_API_KEY=      # https://quickstats.nass.usda.gov/api/
 ## Local Development
 
 ```bash
-git clone https://github.com/ManuelKugelmann/TradingAssistant.git
-cd TradingAssistant
+git clone https://github.com/ManuelKugelmann/Augur.git
+cd Augur
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env    # edit: set MONGO_URI_SIGNALS + optional API keys
@@ -84,8 +84,8 @@ python src/servers/macro_server.py     # needs FRED_API_KEY for FRED tools
 
 | Mode | Command | LibreChat source | Update command | Use when |
 |------|---------|-----------------|----------------|----------|
-| **Release** | `ta install` | Tagged release bundle from CI | `ta u` | Production — stable, pre-tested |
-| **Dev** | `ta install dev` | CI prebuilt artifact or git clone + build | `ta pull` | Development — fast iteration, no tags needed |
+| **Release** | `augur install` | Tagged release bundle from CI | `augur u` | Production — stable, pre-tested |
+| **Dev** | `augur install dev` | CI prebuilt artifact or git clone + build | `augur pull` | Development — fast iteration, no tags needed |
 
 Both modes use the same one-liner entry point. The only difference is where LibreChat comes from.
 
@@ -93,7 +93,7 @@ Both modes use the same one-liner entry point. The only difference is where Libr
 
 ### Dev Mode Walkthrough (prebuilt LibreChat + git)
 
-Dev mode skips tagged releases and instead uses a **CI-prebuilt LibreChat** artifact (or falls back to cloning + building from source). After initial setup, iterate with `ta pull` (git pull + restart) — no tagging required.
+Dev mode skips tagged releases and instead uses a **CI-prebuilt LibreChat** artifact (or falls back to cloning + building from source). After initial setup, iterate with `augur pull` (git pull + restart) — no tagging required.
 
 #### Step 1: Trigger the CI prebuilt artifact
 
@@ -107,37 +107,37 @@ This saves your Uberspace ~10 min build time and ~2 GB RAM. The artifact stays c
 #### Step 2: SSH into Uberspace
 
 ```bash
-ssh assist@assist.uber.space
+ssh augur@augur.uber.space
 ```
 
 #### Step 3: Run the installer in dev mode
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash -s install dev
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash -s install dev
 ```
 
 What happens:
 1. Sets Node.js 22
-2. Clones `TradingAssistant` repo to `~/assist/`
+2. Clones `Augur` repo to `~/augur/`
 3. Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`, `python-dotenv`
-4. Generates `~/assist/.env` from template
+4. Generates `~/augur/.env` from template
 5. Registers supervisord services (`trading`, `charts`)
 6. **Skips** tagged releases (dev mode)
 7. Downloads `librechat-build.tar.gz` from the CI prebuilt release
 8. If no CI build exists: clones `danny-avila/LibreChat` and builds locally (~10 min, needs ~2 GB RAM)
 9. Runs `setup.sh` — atomic swap into `~/LibreChat/`, generates `.env` with crypto keys
 10. Registers LibreChat supervisord service, sets up web backend on port 3080
-11. Installs `ta` CLI to `~/bin/ta`
+11. Installs `augur` CLI to `~/bin/augur`
 
 #### Step 4: Configure environment
 
 ```bash
 # Signals stack — one shared MongoDB Atlas cluster, database: signals
-ta conf
+augur conf
 # Set: MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
 
 # LibreChat — same cluster, database: LibreChat
-ta env
+augur env
 # Set: MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/LibreChat
 # Set at least one LLM key:
 #   OPENROUTER_API_KEY=sk-or-...
@@ -150,49 +150,49 @@ Crypto secrets (`CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`) are
 #### Step 5: Verify MCP paths
 
 ```bash
-ta yaml
-# All __HOME__ placeholders should be replaced with /home/assist
-# Verify paths like /home/assist/mcps/src/store/server.py exist
+augur yaml
+# All __HOME__ placeholders should be replaced with /home/augur
+# Verify paths like /home/augur/augur/src/store/server.py exist
 ```
 
 #### Step 6: Start
 
 ```bash
 supervisorctl start librechat
-ta s    # should show RUNNING + version like "dev-a1b2c3d"
+augur s    # should show RUNNING + version like "dev-a1b2c3d"
 ```
 
 #### Step 7: Access
 
 ```
-https://assist.uber.space
+https://augur.uber.space
 ```
 
 Register first account (becomes admin). Then lock registration:
 ```bash
-ta env   # add: ALLOW_REGISTRATION=false
-ta r     # restart
+augur env   # add: ALLOW_REGISTRATION=false
+augur r     # restart
 ```
 
 #### Step 8: Iterate with git pull
 
 After pushing changes to `main` on your dev machine:
 ```bash
-ta pull    # git pull ~/assist + restart LibreChat
+augur pull    # git pull ~/augur + restart LibreChat
 ```
 
 This pulls the latest signals stack code (servers, profiles, config) and restarts. No tagging, no CI, no release — just push and pull.
 
 To update LibreChat itself (new upstream version), re-run:
 ```bash
-ta install dev    # re-downloads CI build or rebuilds from source
+augur install dev    # re-downloads CI build or rebuilds from source
 ```
 
 #### Step 9: Git-versioned data (optional)
 
 ```bash
-# Create PRIVATE repo on GitHub: ManuelKugelmann/TradeAssistant_Data
-bash ~/assist/librechat-uberspace/scripts/setup-data-repo.sh
+# Create PRIVATE repo on GitHub: ManuelKugelmann/Augur_Data
+bash ~/augur/librechat-uberspace/scripts/setup-data-repo.sh
 ```
 
 Auto-syncs every 15 min via cron. Stores filesystem files.
@@ -206,8 +206,8 @@ For stable deployments using tagged releases.
 #### One-liner install
 
 ```bash
-ssh assist@assist.uber.space
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+ssh augur@augur.uber.space
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
 ```
 
 Requires a tagged release to exist first. On your dev machine:
@@ -219,15 +219,15 @@ git tag v0.1.0 && git push --tags
 #### Configure
 
 ```bash
-ta conf   # signals stack: set MONGO_URI_SIGNALS
-ta env    # LibreChat: set MONGO_URI + LLM key
+augur conf   # signals stack: set MONGO_URI_SIGNALS
+augur env    # LibreChat: set MONGO_URI + LLM key
 ```
 
 #### Start
 
 ```bash
 supervisorctl start librechat
-ta s
+augur s
 ```
 
 #### Update
@@ -237,13 +237,13 @@ ta s
 git tag v0.2.0 && git push --tags
 
 # Uberspace: download and install
-ta u
+augur u
 ```
 
 #### Rollback
 
 ```bash
-ta rb    # restores ~/LibreChat.prev from last update
+augur rb    # restores ~/LibreChat.prev from last update
 ```
 
 ---
@@ -254,37 +254,37 @@ All deployment settings live in `deploy.conf` (sourced by all scripts):
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `UBER_USER` | `assist` | Uberspace username |
-| `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
+| `UBER_USER` | `augur` | Uberspace username |
+| `UBER_HOST` | `augur.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
-| `GH_REPO` | `TradingAssistant` | Signals stack repo |
-| `GH_REPO_DATA` | `TradeAssistant_Data` | Data repo (private) |
-| `STACK_DIR` | `$HOME/assist` | Signals stack path |
+| `GH_REPO` | `Augur` | Signals stack repo |
+| `GH_REPO_DATA` | `Augur_Data` | Data repo (private) |
+| `STACK_DIR` | `$HOME/augur` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
-| `DATA_DIR` | `$HOME/TradeAssistant_Data` | MCP data path |
+| `DATA_DIR` | `$HOME/Augur_Data` | MCP data path |
 | `LC_PORT` | `3080` | LibreChat port |
 | `NODE_VERSION` | `22` | Node.js version |
 
-Override any value via environment: `UBER_USER=other ta install`
+Override any value via environment: `UBER_USER=other augur install`
 
 ---
 
 ## Day-to-Day Operations
 
 ```bash
-ta help       # all commands
-ta s|status   # service status + version
-ta l|logs     # tail logs
-ta r|restart  # restart LibreChat
-ta v|version  # show version
-ta u|update   # update from latest GitHub release
-ta pull       # quick update via git pull (dev)
-ta install    # re-run full installer (idempotent)
-ta rb|rollback # rollback to previous version
-ta sync       # force git sync of data
-ta env        # edit .env
-ta yaml       # edit librechat.yaml
-ta conf       # edit deploy.conf
+augur help       # all commands
+augur s|status   # service status + version
+augur l|logs     # tail logs
+augur r|restart  # restart LibreChat
+augur v|version  # show version
+augur u|update   # update from latest GitHub release
+augur pull       # quick update via git pull (dev)
+augur install    # re-run full installer (idempotent)
+augur rb|rollback # rollback to previous version
+augur sync       # force git sync of data
+augur env        # edit .env
+augur yaml       # edit librechat.yaml
+augur conf       # edit deploy.conf
 ```
 
 ### Updates
@@ -292,17 +292,17 @@ ta conf       # edit deploy.conf
 ```bash
 # Production: tag > CI builds bundle > deploy
 git tag v0.2.0 && git push --tags   # from dev
-ta u                                  # on Uberspace
+augur u                                  # on Uberspace
 
 # Dev: push to main > quick pull
 git push                              # from dev
-ta pull                               # on Uberspace
+augur pull                               # on Uberspace
 ```
 
 ### Rollback
 
 ```bash
-ta rb    # restores ~/LibreChat.prev
+augur rb    # restores ~/LibreChat.prev
 ```
 
 ---
@@ -332,7 +332,7 @@ python3 -c "from pymongo import MongoClient; MongoClient('YOUR_URI').server_info
 ### MCP server not finding API keys
 When launched by LibreChat, servers inherit env from `librechat.yaml` `env:` blocks, not from `.env`. Verify the key is in both places:
 ```bash
-grep FRED_API_KEY ~/assist/.env
+grep FRED_API_KEY ~/augur/.env
 grep FRED_API_KEY ~/LibreChat/librechat.yaml
 ```
 

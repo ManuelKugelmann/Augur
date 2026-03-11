@@ -1,6 +1,6 @@
 # Build vanilla LibreChat for Uberspace deployment.
-# Pure pre-built LibreChat — no TradingAssistant-specific config inside.
-# The installer (ta install) overlays config/scripts from the mcps repo.
+# Pure pre-built LibreChat — no Augur-specific config inside.
+# The installer (augur install) overlays config/scripts from the mcps repo.
 #
 # Trigger: Actions → Build LibreChat → Run workflow
 #
@@ -83,7 +83,7 @@ jobs:
             **LibreChat**: ${{ env.LC_PKG_VER }} ([`${{ env.LC_COMMIT }}`](https://github.com/danny-avila/LibreChat/commit/${{ env.LC_COMMIT }}))
             **Built from ref**: `${{ inputs.librechat_ref || 'main' }}`
 
-            Install: `RELEASE_TAG=${{ env.LC_TAG }} ta install`
+            Install: `RELEASE_TAG=${{ env.LC_TAG }} augur install`
           files: librechat-build.tar.gz
           prerelease: true
           make_latest: false
@@ -103,7 +103,7 @@ jobs:
           **LibreChat**: ${{ env.LC_PKG_VER }} ([\`${{ env.LC_COMMIT }}\`](https://github.com/danny-avila/LibreChat/commit/${{ env.LC_COMMIT }}))
           **Versioned tag**: [\`${{ env.LC_TAG }}\`](https://github.com/${{ github.repository }}/releases/tag/${{ env.LC_TAG }})
 
-          Install: \`RELEASE_TAG=librechat-build ta install\`" \
+          Install: \`RELEASE_TAG=librechat-build augur install\`" \
             --prerelease \
             librechat-build.tar.gz
         env:

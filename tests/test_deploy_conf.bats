@@ -43,11 +43,11 @@ teardown() {
     [[ "$NODE_VERSION" == "20" ]]
 }
 
-@test "deploy.conf GH_REPO defaults to TradingAssistant" {
+@test "deploy.conf GH_REPO defaults to Augur" {
     unset GH_REPO
     source "$REPO_ROOT/deploy.conf"
 
-    [[ "$GH_REPO" == "TradingAssistant" ]]
+    [[ "$GH_REPO" == "Augur" ]]
 }
 
 @test "deploy.conf passes bash syntax check" {

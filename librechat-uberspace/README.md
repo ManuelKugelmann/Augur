@@ -6,7 +6,7 @@ All scripts read from `deploy.conf` — edit once, applies everywhere.
 
 ```
 ┌──────────────┐     ┌────────┐     ┌───────────┐     ┌──────────────────────────────┐
-│ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ assist.uber.space           │
+│ Codespace/WSL│────▶│ GitHub │────▶│ CI Release │────▶│ augur.uber.space           │
 │ dev + test   │push │  repo  │tag  │ build+tar  │pull │                             │
 └──────────────┘     └────────┘     └───────────┘     │ LibreChat (:3080)           │
                                                        │ └─ MCP: trading ──http──▶   │
@@ -35,16 +35,16 @@ cat deploy.conf
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `UBER_USER` | `assist` | Uberspace username |
-| `UBER_HOST` | `assist.uber.space` | Uberspace hostname |
+| `UBER_USER` | `augur` | Uberspace username |
+| `UBER_HOST` | `augur.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
-| `GH_REPO` | `TradingAssistant` | Signals stack repo |
-| `STACK_DIR` | `$HOME/assist` | Signals stack path |
+| `GH_REPO` | `Augur` | Signals stack repo |
+| `STACK_DIR` | `$HOME/augur` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
 | `LC_PORT` | `3080` | LibreChat port |
 | `NODE_VERSION` | `22` | Node.js version |
 
-Override any value via environment: `UBER_USER=other ta install`
+Override any value via environment: `UBER_USER=other augur install`
 
 ## QuickStart
 
@@ -72,22 +72,22 @@ Override any value via environment: `UBER_USER=other ta install`
 SSH into your Uberspace host:
 
 ```bash
-ssh assist@assist.uber.space
+ssh augur@augur.uber.space
 ```
 
 Then run the installer:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
 ```
 
-This clones the repo, creates Python venv, installs LibreChat (release bundle or git fallback), registers supervisord services (`librechat`, `trading`, `charts`), and sets up the `ta` command. Re-run safe.
+This clones the repo, creates Python venv, installs LibreChat (release bundle or git fallback), registers supervisord services (`librechat`, `trading`, `charts`), and sets up the `augur` command. Re-run safe.
 
 ### Step 3: Configure (2 min)
 
 ```bash
 # Signals stack — set MONGO_URI_SIGNALS
-nano ~/assist/.env
+nano ~/augur/.env
 
 # LibreChat — set MONGO_URI + at least one LLM key
 nano ~/LibreChat/.env
@@ -98,13 +98,13 @@ nano ~/LibreChat/.env
 ```bash
 supervisorctl start librechat
 supervisorctl start trading
-ta status
+augur status
 ```
 
 ### Step 5: Access
 
 ```
-https://assist.uber.space
+https://augur.uber.space
 ```
 
 Register your first user → that becomes the admin account.
@@ -142,39 +142,39 @@ One combined Python server exposing 50+ tools via FastMCP 3.1+ `mount()`:
 ## Day-to-Day Operations
 
 ```bash
-ta help       # show all commands
-ta s|status   # status + version + host
-ta l|logs     # tail logs
-ta r|restart  # restart LibreChat
-ta v|version  # show version
-ta u|update   # update from latest GitHub release
-ta pull       # quick update via git pull (dev)
-ta install    # re-run full installer (idempotent)
-ta rb|rollback # rollback to previous version
-ta sync       # force git sync of data
-ta check      # health check
-ta check -t   # health check + test suite
-ta env        # edit .env
-ta yaml       # edit librechat.yaml
-ta conf       # edit deploy.conf
+augur help       # show all commands
+augur s|status   # status + version + host
+augur l|logs     # tail logs
+augur r|restart  # restart LibreChat
+augur v|version  # show version
+augur u|update   # update from latest GitHub release
+augur pull       # quick update via git pull (dev)
+augur install    # re-run full installer (idempotent)
+augur rb|rollback # rollback to previous version
+augur sync       # force git sync of data
+augur check      # health check
+augur check -t   # health check + test suite
+augur env        # edit .env
+augur yaml       # edit librechat.yaml
+augur conf       # edit deploy.conf
 ```
 
 ## Updates
 
 | Method | Command | Use when |
 |--------|---------|----------|
-| Git pull | `ta pull` | Dev/staging — fast, no release needed |
-| Release | `ta u` | Production — downloads tagged release bundle |
-| Re-install | `ta install` | Full re-setup (idempotent, preserves config) |
+| Git pull | `augur pull` | Dev/staging — fast, no release needed |
+| Release | `augur u` | Production — downloads tagged release bundle |
+| Re-install | `augur install` | Full re-setup (idempotent, preserves config) |
 
 ```bash
 # Dev: push → pull
 git push                     # from dev machine
-ta pull                      # on Uberspace
+augur pull                      # on Uberspace
 
 # Production: tag → release → deploy
 git tag v0.3.0 && git push --tags
-ta u                         # on Uberspace
+augur u                         # on Uberspace
 ```
 
 ## Resource Limits (Uberspace)

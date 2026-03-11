@@ -19,7 +19,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Load environment
 # ---------------------------------------------------------------------------
-stack = os.environ.get("STACK", os.path.expanduser("~/assist"))
+stack = os.environ.get("STACK", os.path.expanduser("~/augur"))
 try:
     from dotenv import load_dotenv
 

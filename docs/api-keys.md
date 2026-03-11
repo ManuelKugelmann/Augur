@@ -1,6 +1,6 @@
 # API Keys & Access Tokens
 
-Complete reference for all credentials used by the TradingAssistant stack.
+Complete reference for all credentials used by the Augur stack.
 
 ---
 
