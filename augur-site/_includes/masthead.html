@@ -11,4 +11,37 @@
     </a>
     {% endfor %}
   </nav>
+  <div class="theme-switcher">
+    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
+    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
+    <button class="theme-switcher__btn" data-set-theme="sepia">Sepia</button>
+    <button class="theme-switcher__btn" data-set-theme="modern">Modern</button>
+    <button class="theme-switcher__btn" data-set-theme="terminal">Terminal</button>
+  </div>
 </header>
+<script>
+(function() {
+  var t = localStorage.getItem('augur-theme') || '';
+  if (t) document.body.setAttribute('data-theme', t);
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-set-theme]');
+    if (!btn) return;
+    var theme = btn.getAttribute('data-set-theme');
+    if (theme) {
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('augur-theme', theme);
+    } else {
+      document.body.removeAttribute('data-theme');
+      localStorage.removeItem('augur-theme');
+    }
+    document.querySelectorAll('.theme-switcher__btn').forEach(function(b) {
+      b.classList.toggle('theme-switcher__btn--active',
+        b.getAttribute('data-set-theme') === theme);
+    });
+  });
+  document.querySelectorAll('.theme-switcher__btn').forEach(function(b) {
+    b.classList.toggle('theme-switcher__btn--active',
+      b.getAttribute('data-set-theme') === t);
+  });
+})();
+</script>

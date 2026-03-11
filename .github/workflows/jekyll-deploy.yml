@@ -10,8 +10,6 @@ on:
     paths:
       - 'augur-site/**'
       - '.github/workflows/jekyll-deploy.yml'
-  pull_request_target:
-    types: [closed]
   workflow_dispatch:
 
 permissions:
@@ -20,11 +18,10 @@ permissions:
 
 concurrency:
   group: "pages-deploy"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
-    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -39,39 +36,15 @@ jobs:
           bundler-cache: true
           working-directory: augur-site
 
-      - name: Set baseurl
-        id: config
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "baseurl=/preview" >> "$GITHUB_OUTPUT"
-            echo "preview=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "baseurl=" >> "$GITHUB_OUTPUT"
-            echo "preview=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Build with Jekyll
-        run: bundle exec jekyll build --baseurl "${{ steps.config.outputs.baseurl }}"
+        run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
 
-      # --- Production deploy: update root, preserve preview/ ---
-      - name: Deploy production (preserve preview)
-        if: steps.config.outputs.preview == 'false'
+      - name: Deploy to gh-pages
+        if: github.event_name != 'pull_request'
         run: |
-          cd "$GITHUB_WORKSPACE"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Fetch existing preview/ from gh-pages if it exists
-          if git fetch origin gh-pages --depth=1 2>/dev/null; then
-            git checkout gh-pages -- preview/ 2>/dev/null || true
-            if [ -d preview ]; then
-              cp -r preview augur-site/_site/preview
-            fi
-          fi
-
-          cd augur-site/_site
+          cd "$GITHUB_WORKSPACE/augur-site/_site"
           touch .nojekyll
           echo "augur.news" > CNAME
 
@@ -80,52 +53,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Deploy production site"
+          git commit -m "Deploy site ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
           git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
-      # --- Preview deploy: single shared preview/, latest PR wins ---
-      - name: Deploy preview (preserve root)
-        if: steps.config.outputs.preview == 'true'
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Clone gh-pages branch
-          git clone --branch gh-pages --single-branch --depth=1 \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            _gh-pages 2>/dev/null || {
-              mkdir _gh-pages && cd _gh-pages && git init && git checkout -b gh-pages
-              touch .nojekyll
-              echo "augur.news" > CNAME
-              cd ..
-            }
-
-          # Replace preview/ subfolder entirely
-          rm -rf _gh-pages/preview
-          mkdir -p _gh-pages/preview
-          cp -r augur-site/_site/* _gh-pages/preview/
-
-          cd _gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && echo "No changes to deploy" && exit 0
-          git commit -m "Deploy preview (PR #${{ github.event.pull_request.number }})"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
-
-      - name: Comment preview URL on PR
-        if: steps.config.outputs.preview == 'true'
+      - name: Comment build status on PR
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            const body = `**Jekyll preview deployed**\n\nhttps://augur.news/preview/`;
+            const body = `**Jekyll build succeeded** — merge to deploy.`;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            const existing = comments.find(c => c.body.includes('Jekyll preview deployed'));
+            const existing = comments.find(c => c.body.includes('Jekyll build'));
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -141,27 +83,3 @@ jobs:
                 body,
               });
             }
-
-  # --- Cleanup: remove preview/ when any site-related PR closes ---
-  cleanup-preview:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Remove preview from gh-pages
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          git clone --branch gh-pages --single-branch --depth=1 \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            _gh-pages 2>/dev/null || exit 0
-
-          cd _gh-pages
-          if [ -d preview ]; then
-            git rm -rf preview
-            git commit -m "Remove preview (PR #${{ github.event.pull_request.number }} closed)"
-            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
-            echo "Cleaned up preview"
-          else
-            echo "No preview found, nothing to clean"
-          fi
