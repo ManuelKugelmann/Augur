@@ -84,14 +84,15 @@ _web_backend() {
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
 _pip_upgrade() {
     local python="$1" min_ver=22
-    local ver; ver=$("$python" -m pip --version | awk '{print $2}' | cut -d. -f1)
+    # </dev/null: prevent pip from consuming stdin when running via curl|bash
+    local ver; ver=$("$python" -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
     if (( ver >= min_ver )); then
         log "pip $ver is recent enough (>=$min_ver), skipping upgrade"
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
     log "  → $python -m pip install --upgrade pip"
-    timeout 600 "$python" -m pip install --upgrade pip
+    timeout 600 "$python" -m pip install --upgrade pip </dev/null
 }
 
 _pip_install() {
@@ -102,7 +103,8 @@ _pip_install() {
     # U8: empty constraint file (no-op)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
     log "  → $python -m pip install --prefer-binary -c <constraint> -r $req ${*:3}"
-    timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    # </dev/null: prevent pip from consuming stdin when running via curl|bash
+    timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
     rm -f "$constraint"
 }
 
@@ -334,7 +336,7 @@ _do_install() {
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
         log "  → $STACK/venv/bin/python -m ensurepip --upgrade"
-        timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade \
+        timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade </dev/null \
             || die "ensurepip failed or timed out"
     fi
     _pip_upgrade "$STACK/venv/bin/python" \
