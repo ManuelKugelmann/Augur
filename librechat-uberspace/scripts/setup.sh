@@ -167,13 +167,16 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         # ensurepip (the default) can stall with no output on U8 / Ubuntu.
         "$_PYTHON_BIN" -m venv --without-pip venv
         log "Bootstrapping pip inside venv..."
+        log "  → venv/bin/python -m ensurepip --upgrade"
         timeout 600 venv/bin/python -m ensurepip --upgrade
         log "Venv created. Upgrading pip..."
+        log "  → venv/bin/python -m pip install --upgrade pip"
         timeout 600 venv/bin/python -m pip install --upgrade pip
-        log "Installing requirements (this may take a few minutes)..."
+        log "Installing Python requirements (this may take a few minutes)..."
         _pip_constraint=$(mktemp)
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
         if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
+        log "  → venv/bin/python -m pip install --prefer-binary -c <constraint> -r requirements.txt"
         timeout 600 venv/bin/python -m pip install --prefer-binary \
             -c "$_pip_constraint" -r requirements.txt
         rm -f "$_pip_constraint"
