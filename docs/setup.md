@@ -113,7 +113,7 @@ ssh augur@augur.uber.space
 #### Step 3: Run the installer in dev mode
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash -s install dev
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash -s install dev
 ```
 
 What happens:
@@ -207,7 +207,7 @@ For stable deployments using tagged releases.
 
 ```bash
 ssh augur@augur.uber.space
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 ```
 
 Requires a tagged release to exist first. On your dev machine:

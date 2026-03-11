@@ -3,7 +3,7 @@
 
 load helpers/setup
 
-TA="$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
+TA="$REPO_ROOT/Augur.sh"
 
 setup() {
     setup_sandbox

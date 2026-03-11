@@ -2,7 +2,7 @@
 # Augur ops — single entry point for install + daily ops
 #
 # Fresh install (one-liner, downloads prebuilt LibreChat from GitHub Release):
-#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
 #
 # After install:
 #   augur help              # show all commands
@@ -83,24 +83,24 @@ _web_backend() {
 
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
 _pip_upgrade() {
-    local pip="$1" min_ver=22
-    local ver; ver=$("$pip" --version | awk '{print $2}' | cut -d. -f1)
+    local python="$1" min_ver=22
+    local ver; ver=$("$python" -m pip --version | awk '{print $2}' | cut -d. -f1)
     if (( ver >= min_ver )); then
         log "pip $ver is recent enough (>=$min_ver), skipping upgrade"
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
-    timeout 60 "$pip" install --upgrade pip
+    timeout 600 "$python" -m pip install --upgrade pip
 }
 
 _pip_install() {
-    local pip="$1" req="$2"
+    local python="$1" req="$2"
     local constraint
     constraint=$(mktemp)
     # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
     # U8: empty constraint file (no-op)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    timeout 180 "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
     rm -f "$constraint"
 }
 
@@ -331,13 +331,13 @@ _do_install() {
         # ensurepip (the default) can stall with no output on U8 / Ubuntu.
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
-        timeout 60 "$STACK/venv/bin/python" -m ensurepip --upgrade \
+        timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade \
             || die "ensurepip failed or timed out"
     fi
-    _pip_upgrade "$STACK/venv/bin/pip" \
+    _pip_upgrade "$STACK/venv/bin/python" \
         || die "pip upgrade failed or timed out"
     log "Installing requirements..."
-    _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
+    _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
         || die "pip install requirements failed or timed out"
     log "Python venv ready"
 
@@ -480,7 +480,7 @@ SVCEOF
 
     # ── 8. Install augur shortcut ─────────────────
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
@@ -744,16 +744,16 @@ case "$CMD" in
         fi
 
         # Update augur/Augur shortcuts
-        cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+        cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
         chmod +x "$HOME/bin/augur" 2>/dev/null || true
         ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
-            _pip_upgrade "$STACK/venv/bin/pip" \
+            _pip_upgrade "$STACK/venv/bin/python" \
                 || die "pip upgrade failed or timed out"
             log "Installing requirements..."
-            _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
+            _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
                 || die "pip install requirements failed or timed out"
         else
             warn "Python venv not found at $STACK/venv — run 'augur install' first"
@@ -1112,7 +1112,7 @@ SVCEOF
             if "$STACK/venv/bin/python" -c "import fastmcp, httpx, pymongo, dotenv" 2>/dev/null; then
                 _ok "Python deps: fastmcp, httpx, pymongo, dotenv"
             else
-                _fail "Python deps: missing (run: $STACK/venv/bin/pip install -r $STACK/requirements.txt)"
+                _fail "Python deps: missing (run: $STACK/venv/bin/python -m pip install -r $STACK/requirements.txt)"
             fi
         fi
 
@@ -1336,7 +1336,7 @@ SVCEOF
                     _fail "Pytest tests: some failures"
                 fi
             else
-                _skip "Pytest tests: pytest not installed ($STACK/venv/bin/pip install pytest)"
+                _skip "Pytest tests: pytest not installed ($STACK/venv/bin/python -m pip install pytest)"
             fi
 
             # Uberspace-only tests
@@ -1488,6 +1488,6 @@ SVCEOF
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Fresh install:"
-        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/librechat-uberspace/scripts/Augur.sh | bash"
+        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/Augur.sh | bash"
         ;;
 esac

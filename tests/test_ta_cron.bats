@@ -21,7 +21,7 @@ teardown() {
 }
 
 @test "cron: outputs done message with hour and dow" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" cron
+    run bash "$REPO_ROOT/Augur.sh" cron
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"done (hour="* ]]
 }
