@@ -2,7 +2,7 @@
 # Augur ops — single entry point for install + daily ops
 #
 # Fresh install (one-liner, downloads prebuilt LibreChat from GitHub Release):
-#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+#   curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh?$(date +%s)" | bash
 #
 # After install:
 #   augur help              # show all commands
@@ -1516,6 +1516,6 @@ SVCEOF
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Fresh install:"
-        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/Augur.sh | bash"
+        echo "    curl -sL \"https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/Augur.sh?\$(date +%s)\" | bash"
         ;;
 esac
