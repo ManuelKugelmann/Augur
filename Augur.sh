@@ -2,13 +2,17 @@
 # Augur ops — single entry point for install + daily ops
 #
 # Fresh install (one-liner, downloads prebuilt LibreChat from GitHub Release):
-#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+#   curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh?$(date +%s)" | bash
 #
 # After install:
 #   augur help              # show all commands
 #   augur install           # re-run full installer (idempotent)
 #
 # Installed as ~/bin/augur and ~/bin/Augur
+
+# Wrap in _main() so `curl | bash` must receive the full script before
+# executing anything (prevents partial-execution on slow/interrupted downloads).
+_main() {
 set -euo pipefail
 
 # ── Abort trap: Ctrl+C or SIGTERM → immediate full exit ──
@@ -1516,6 +1520,8 @@ SVCEOF
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Fresh install:"
-        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/Augur.sh | bash"
+        echo "    curl -sL \"https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/Augur.sh?\$(date +%s)\" | bash"
         ;;
 esac
+}
+_main "$@"

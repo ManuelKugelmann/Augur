@@ -70,7 +70,7 @@ ssh augur@augur.uber.space
 Run the installer:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh | bash
+curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh?$(date +%s)" | bash
 ```
 
 This single command does everything:
