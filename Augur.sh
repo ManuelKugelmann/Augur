@@ -275,14 +275,25 @@ _do_install() {
     local NEED_STACK_ENV=false
     local NEED_APP_ENV=false
 
+    # ── Resolve version for header (local git or GitHub API) ─
+    local _hdr_sha="" _hdr_date=""
+    if [[ -d "$STACK/.git" ]]; then
+        _hdr_sha=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || true)
+        _hdr_date=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || true)
+    fi
+    if [[ -z "$_hdr_sha" ]]; then
+        local _api_json
+        _api_json=$(curl -sf "https://api.github.com/repos/${GH_USER}/${GH_REPO}/commits/${BRANCH}" 2>/dev/null || true)
+        if [[ -n "$_api_json" ]]; then
+            _hdr_sha=$(echo "$_api_json" | grep -o '"sha":"[^"]*"' | head -1 | cut -d'"' -f4)
+            _hdr_sha="${_hdr_sha:0:7}"
+            _hdr_date=$(echo "$_api_json" | grep -o '"date":"[^"]*"' | tail -1 | cut -d'"' -f4)
+        fi
+    fi
+
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo -e "${CYAN} Augur + LibreChat → Uberspace ${NC}"
-    if [[ -d "$STACK/.git" ]]; then
-        local _hdr_sha _hdr_date
-        _hdr_sha=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
-        _hdr_date=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
-        echo -e "${CYAN} ${_hdr_sha}  ${_hdr_date} ${NC}"
-    fi
+    [[ -n "$_hdr_sha" ]] && echo -e "${CYAN} ${_hdr_sha}  ${_hdr_date} ${NC}"
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
 
