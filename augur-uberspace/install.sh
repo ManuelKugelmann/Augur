@@ -293,8 +293,8 @@ _do_install() {
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
-        log "  → $STACK/venv/bin/python -m ensurepip --upgrade"
-        timeout 600 "$STACK/venv/bin/python" -m ensurepip --upgrade </dev/null \
+        log "  → $STACK/venv/bin/python -m ensurepip"
+        timeout 600 "$STACK/venv/bin/python" -m ensurepip </dev/null \
             || die "ensurepip failed or timed out"
     fi
     log "Installing Python requirements..."
