@@ -173,7 +173,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         # and pip can consume bytes meant for bash or block on the pipe.
         timeout 600 venv/bin/python -m ensurepip </dev/null
         log "Venv created. Checking pip version..."
-        _pip_ver=$(venv/bin/python -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
+        _pip_ver=$(timeout 30 venv/bin/python -m pip --version </dev/null 2>&1 | awk '{print $2}' | cut -d. -f1)
         if (( _pip_ver >= 22 )); then
             log "pip $_pip_ver is recent enough (>=22), skipping upgrade"
         else

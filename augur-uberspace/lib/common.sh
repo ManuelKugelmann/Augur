@@ -64,7 +64,12 @@ _web_backend() {
 _pip_upgrade() {
     local python="$1" min_ver=22
     log "  → $python -m pip --version"
-    local ver; ver=$("$python" -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
+    local ver
+    ver=$(timeout 30 "$python" -m pip --version </dev/null 2>&1 | awk '{print $2}' | cut -d. -f1) \
+        || { warn "pip --version timed out or failed"; return 1; }
+    if [[ -z "$ver" ]]; then
+        warn "pip --version returned empty output"; return 1
+    fi
     if (( ver >= min_ver )); then
         log "pip $ver is recent enough (>=$min_ver), skipping upgrade"
         return 0
