@@ -36,6 +36,14 @@ Profile = what it **is**. Snapshot = what was measured **when**. MCP = current *
 
 ## Quick Start
 
+**One-liner install** (Uberspace):
+
+```bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
+```
+
+**Manual / local dev**:
+
 ```bash
 git clone https://github.com/ManuelKugelmann/Augur.git
 cd Augur
