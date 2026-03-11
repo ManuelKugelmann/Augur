@@ -23,6 +23,9 @@ except ImportError:
         def __str__(self):
             return self._id
 
+pytest.importorskip("dotenv", reason="python-dotenv required")
+pytest.importorskip("pymongo", reason="pymongo required")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "store"))
 os.environ.setdefault("MONGO_URI_SIGNALS", "mongodb://localhost:27017/test_unused")
 

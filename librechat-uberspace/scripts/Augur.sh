@@ -1,23 +1,35 @@
 #!/bin/bash
-# TradeAssistant ops — single entry point for install + daily ops
+# Augur ops — single entry point for install + daily ops
 #
 # Fresh install (one-liner, downloads prebuilt LibreChat from GitHub Release):
-#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
 #
 # After install:
-#   ta help              # show all commands
-#   ta install           # re-run full installer (idempotent)
+#   augur help              # show all commands
+#   augur install           # re-run full installer (idempotent)
 #
-# Installed as ~/bin/ta (shorthand) and ~/bin/TradeAssistant
+# Installed as ~/bin/augur and ~/bin/Augur
 set -euo pipefail
+
+# ── Abort trap: Ctrl+C or SIGTERM → immediate full exit ──
+_abort() {
+    # Disable trap first to prevent recursive invocation
+    # (kill 0 sends SIGTERM to our process group, which includes us)
+    trap - INT TERM
+    echo -e "\n\033[0;31m✗\033[0m Aborted." >&2
+    # Kill child processes but not ourselves (avoid recursion + curl segfault)
+    kill 0 2>/dev/null || true
+    exit 130
+}
+trap '_abort' INT TERM
 
 # ── Defaults (work before repo/config exist) ──
 # These defaults are needed for the curl|bash one-liner where deploy.conf
 # doesn't exist yet.  Once the repo is cloned, deploy.conf is sourced below
 # and its values take effect for all subsequent variable expansions.
 GH_USER="${GH_USER:-ManuelKugelmann}"
-GH_REPO="${GH_REPO:-TradingAssistant}"
-STACK_DIR="${STACK_DIR:-$HOME/mcps}"
+GH_REPO="${GH_REPO:-Augur}"
+STACK_DIR="${STACK_DIR:-$HOME/augur}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
 NODE_VERSION="${NODE_VERSION:-22}"
@@ -34,7 +46,7 @@ done
 unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
-STACK="${STACK_DIR:-$HOME/mcps}"
+STACK="${STACK_DIR:-$HOME/augur}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -58,13 +70,6 @@ _svc_reload()  {
         supervisorctl update 2>/dev/null || true
     fi
 }
-_svc_is_running() {
-    if _is_u8; then
-        systemctl --user is-active "$1" &>/dev/null
-    else
-        supervisorctl status "$1" 2>/dev/null | grep -q "RUNNING"
-    fi
-}
 
 # ── Web backend (abstracts U7 set vs U8 add) ──
 _web_backend() {
@@ -76,6 +81,181 @@ _web_backend() {
     fi
 }
 
+# ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
+_pip_upgrade() {
+    local pip="$1" min_ver=22
+    local ver; ver=$("$pip" --version | awk '{print $2}' | cut -d. -f1)
+    if (( ver >= min_ver )); then
+        log "pip $ver is recent enough (>=$min_ver), skipping upgrade"
+        return 0
+    fi
+    log "pip $ver < $min_ver, upgrading..."
+    timeout 60 "$pip" install --upgrade pip
+}
+
+_pip_install() {
+    local pip="$1" req="$2"
+    local constraint
+    constraint=$(mktemp)
+    # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
+    # U8: empty constraint file (no-op)
+    if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
+    timeout 180 "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    rm -f "$constraint"
+}
+
+# ── HTTP helpers ──
+gh_curl() {
+    curl -sf "$@"
+}
+
+# Robust file download with progress and retries
+# Usage: _download <url> <output-file> [description]
+_download() {
+    local url="$1" out="$2" desc="${3:-file}"
+    local retries=4 attempt=0 delay=2 rc=0
+
+    # Fetch file size for progress display (best-effort)
+    local size_bytes=""
+    size_bytes=$(curl -sfI -L "$url" 2>/dev/null | grep -i '^content-length:' | tail -1 | tr -d '[:space:]' | cut -d: -f2 || true)
+    if [[ -n "$size_bytes" && "$size_bytes" -gt 0 ]] 2>/dev/null; then
+        local size_mb
+        size_mb=$(awk "BEGIN {printf \"%.1f\", $size_bytes / 1048576}")
+        echo -e "  ${CYAN}↓${NC} ${desc} (${size_mb} MB)"
+    else
+        echo -e "  ${CYAN}↓${NC} ${desc}"
+    fi
+    echo -e "  ${CYAN}  URL:${NC} ${url}"
+
+    while (( attempt < retries )); do
+        attempt=$((attempt + 1))
+        rc=0
+        if command -v wget &>/dev/null && [[ "$url" == http://* || "$url" == https://* ]]; then
+            # Use -q (quiet) — piping progress through grep caused pipe
+            # backpressure stalls (same class of bug as the pv/tar fix)
+            wget -q --timeout=30 --tries=1 \
+                 -O "$out" "$url" \
+                || rc=$?
+        else
+            curl -fL --progress-bar --connect-timeout 15 --max-time 600 \
+                 -o "$out" "$url" \
+                || rc=$?
+        fi
+
+        if [[ $rc -eq 0 && -s "$out" ]]; then
+            local got_mb
+            got_mb=$(awk "BEGIN {printf \"%.1f\", $(stat -c%s "$out" 2>/dev/null || stat -f%z "$out" 2>/dev/null || echo 0) / 1048576}")
+            echo -e "  ${GREEN}✓${NC} Downloaded ${got_mb} MB"
+            return 0
+        fi
+
+        if (( attempt < retries )); then
+            warn "Download attempt ${attempt}/${retries} failed, retrying in ${delay}s..."
+            sleep "$delay"
+            delay=$((delay * 2))
+        fi
+    done
+    die "Download failed after ${retries} attempts: ${desc}"
+}
+
+# ── Resolve LibreChat bundle URL from GitHub Releases ──
+# Sets global: _BUNDLE_URL, _BUNDLE_TAG
+_resolve_bundle_url() {
+    _BUNDLE_URL="" _BUNDLE_TAG=""
+    local json="" api_url=""
+
+    if [[ -z "${RELEASE_TAG:-}" ]]; then
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
+        log "Checking latest release: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
+    elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1"
+        log "Checking prereleases: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
+        json=$(echo "$json" | sed -n 's/^\[//;s/\]$//;p' | head -1)
+    else
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}"
+        log "Checking release tag: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
+    fi
+
+    if [[ -n "$json" ]]; then
+        _BUNDLE_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
+        _BUNDLE_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
+    fi
+
+    # Fallback: rolling "librechat-build" prerelease tag
+    if [[ -z "$_BUNDLE_URL" && -z "${RELEASE_TAG:-}" ]]; then
+        api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/librechat-build"
+        log "No bundle in latest release, trying: ${api_url}"
+        json=$(gh_curl "$api_url" 2>/dev/null) || json=""
+        if [[ -n "$json" ]]; then
+            _BUNDLE_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
+            _BUNDLE_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
+        fi
+    fi
+
+    [[ -n "$_BUNDLE_URL" ]] && log "Found bundle: ${_BUNDLE_URL} (tag: ${_BUNDLE_TAG})"
+}
+
+# ── Download, extract, and install/update LibreChat bundle ──
+# Usage: _lc_download_and_setup [--skip-if-current]
+#   --skip-if-current: skip if installed version matches bundle version
+# Returns 0 on success/skip, dies on failure
+_lc_download_and_setup() {
+    local skip_current=false
+    [[ "${1:-}" == "--skip-if-current" ]] && skip_current=true
+
+    _resolve_bundle_url
+    [[ -z "$_BUNDLE_URL" ]] && return 1
+
+    # Check installed version against release tag before downloading
+    if [[ "$skip_current" == true ]]; then
+        local installed_ver=""
+        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
+        if [[ -n "$installed_ver" && -n "$_BUNDLE_TAG" ]]; then
+            # Strip leading 'v' from tag for comparison
+            local tag_ver="${_BUNDLE_TAG#v}"
+            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ]]; then
+                log "LibreChat already up-to-date (${installed_ver})"
+                return 0
+            fi
+            log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
+        fi
+    fi
+
+    local lc_tmp
+    # Use $HOME for temp dir — /tmp is tmpfs on U8 (Arch/systemd) with a size
+    # cap; large bundles fill it and tar stalls. Home dir is on real disk.
+    lc_tmp=$(mktemp -d -p "$HOME" .lc-install.XXXXXX)
+    # shellcheck disable=SC2064
+    trap "rm -rf '$lc_tmp'" EXIT
+
+    log "Downloading LibreChat release..."
+    _download "$_BUNDLE_URL" "$lc_tmp/bundle.tar.gz" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
+    local bundle_size
+    bundle_size=$(stat -c%s "$lc_tmp/bundle.tar.gz" 2>/dev/null || stat -f%z "$lc_tmp/bundle.tar.gz" 2>/dev/null || echo "")
+    local size_info=""
+    if [[ -n "$bundle_size" && "$bundle_size" -gt 0 ]] 2>/dev/null; then
+        size_info=" ($(awk "BEGIN {printf \"%.1f\", $bundle_size / 1048576}") MB)"
+    fi
+    mkdir -p "$lc_tmp/app"
+    log "Extracting bundle${size_info}..."
+    # Extract directly (no pv pipe — piping through pv throttles tar to KiB/s
+    # on large archives with many small files due to 64KB pipe buffer backpressure)
+    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+    log "Extraction complete"
+
+    local bundle_ver=""
+    [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
+    [[ -z "$bundle_ver" ]] && bundle_ver="${_BUNDLE_TAG:-unknown}"
+
+    log "LibreChat version: ${bundle_ver}"
+    log "Running setup..."
+    bash "$STACK/librechat-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
+    return 0
+}
+
 # ── Auto-detect: piped with no args → install ──
 CMD="${1:-help}"
 if [[ "$CMD" == "help" ]] && ! [[ -d "$STACK/.git" ]]; then
@@ -84,7 +264,7 @@ fi
 
 # ═══════════════════════════════════════════════
 #  install — full install/update (idempotent)
-#    ta install           → prebuilt release bundle from GitHub Releases
+#    augur install        → prebuilt release bundle from GitHub Releases
 # ═══════════════════════════════════════════════
 _do_install() {
     # Track whether .env files are new (need editing)
@@ -92,13 +272,9 @@ _do_install() {
     local NEED_APP_ENV=false
 
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
-    echo -e "${CYAN} TradingAssistant + LibreChat → Uberspace ${NC}"
+    echo -e "${CYAN} Augur + LibreChat → Uberspace ${NC}"
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
-
-    gh_curl() {
-        curl -sf "$@"
-    }
 
     # ── 1. Node.js ──────────────────────────────
     if _is_u8; then
@@ -106,8 +282,12 @@ _do_install() {
         command -v node &>/dev/null || die "Node.js not available"
         log "Node.js $(node -v) (U8 system-provided)"
     else
-        log "Setting Node.js ${NODE_VERSION}..."
-        uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        local current_node
+        current_node="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)" || true
+        if [[ "$current_node" != "$NODE_VERSION" ]]; then
+            log "Setting Node.js ${NODE_VERSION} (current: ${current_node:-none})..."
+            uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
+        fi
         command -v node &>/dev/null || die "Node.js not available"
         log "Node.js $(node -v)"
     fi
@@ -145,14 +325,15 @@ _do_install() {
 
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
-        "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv "$STACK/venv"
-        "$STACK/venv/bin/pip" install -q --upgrade pip
-        "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt"
     fi
+    _pip_upgrade "$STACK/venv/bin/pip" \
+        || die "pip upgrade failed or timed out"
+    log "Installing requirements..."
+    _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
+        || die "pip install requirements failed or timed out"
     log "Python venv ready"
 
     # ── 4. Signals stack .env ───────────────────
@@ -180,7 +361,6 @@ WorkingDirectory=${STACK}
 EnvironmentFile=${STACK}/.env
 Environment=MCP_TRANSPORT=http
 Environment=MCP_PORT=8071
-Environment=PROFILES_DIR=${STACK}/profiles
 ExecStart=${STACK}/venv/bin/python src/servers/combined_server.py
 Restart=always
 RestartSec=10
@@ -210,7 +390,7 @@ SVCEOF
         cat > ~/etc/services.d/trading.ini << SVCEOF
 [program:trading]
 directory=${STACK}
-command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK}/profiles; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
+command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
 autostart=true
 autorestart=true
 startsecs=10
@@ -234,80 +414,19 @@ SVCEOF
     # ── 6. LibreChat — download prebuilt release bundle ──
     #       Bundle is a vanilla LibreChat build, versioned by LC's package.json + commit.
     local NEED_LC_SETUP=false
-    local LC_TMP=""
+    local _pre_ver=""
+    [[ -f "$APP/.version" ]] && _pre_ver=$(cat "$APP/.version")
+    [[ ! -f "$APP/.env" ]] && NEED_APP_ENV=true
 
-    # Fetch release info from GitHub
-    # RELEASE_TAG="" → /releases/latest (production)
-    # RELEASE_TAG="prerelease" → newest prerelease
-    # RELEASE_TAG="v0.1.0" or "dev-abc1234" → specific tag
-    local RELEASE_URL="" RELEASE_JSON="" BUNDLE_URL=""
-    if [[ -z "${RELEASE_TAG:-}" ]]; then
-        RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/latest"
-        RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
-    elif [[ "${RELEASE_TAG}" == "prerelease" ]]; then
-        # Pick the first (newest) release, which includes prereleases
-        RELEASE_JSON=$(gh_curl "https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases?per_page=1" 2>/dev/null) || RELEASE_JSON=""
-        # API returns an array for /releases, extract first element
-        RELEASE_JSON=$(echo "$RELEASE_JSON" | sed -n 's/^\[//;s/\]$//;p' | head -1)
-    else
-        RELEASE_URL="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${RELEASE_TAG}"
-        RELEASE_JSON=$(gh_curl "$RELEASE_URL" 2>/dev/null) || RELEASE_JSON=""
-    fi
-    if [[ -n "$RELEASE_JSON" ]]; then
-        # Match both librechat-bundle.tar.gz (CI workflow) and librechat-build.tar.gz (manual)
-        BUNDLE_URL=$(echo "$RELEASE_JSON" | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
-    fi
-
-    # Current installed version (LibreChat version, e.g. "1.6.1+abc1234")
-    local INSTALLED_VER=""
-    [[ -f "$APP/.version" ]] && INSTALLED_VER=$(cat "$APP/.version")
-
-    if [[ -d "$APP" ]] && [[ -n "$INSTALLED_VER" ]]; then
-        if [[ -z "$BUNDLE_URL" ]]; then
-            log "LibreChat installed (${INSTALLED_VER}), no release info available"
-        else
-            # Download bundle to temp, check .version inside before deciding
-            LC_TMP=$(mktemp -d)
-            trap 'rm -rf "${LC_TMP:-}"' EXIT
-
-            gh_curl -L -o "$LC_TMP/bundle.tar.gz" "$BUNDLE_URL"
-            mkdir -p "$LC_TMP/app"
-            tar xzf "$LC_TMP/bundle.tar.gz" -C "$LC_TMP/app"
-
-            local BUNDLE_VER=""
-            [[ -f "$LC_TMP/app/.version" ]] && BUNDLE_VER=$(cat "$LC_TMP/app/.version")
-
-            if [[ "$INSTALLED_VER" == "$BUNDLE_VER" ]]; then
-                log "LibreChat already up-to-date (${INSTALLED_VER})"
-                rm -rf "$LC_TMP"; LC_TMP=""
-            else
-                NEED_LC_SETUP=true
-                [[ ! -f "$APP/.env" ]] && NEED_APP_ENV=true
-                log "Updating LibreChat ${INSTALLED_VER} → ${BUNDLE_VER}..."
-                bash "$STACK/librechat-uberspace/scripts/setup.sh" "$LC_TMP/app" "$BUNDLE_VER"
-            fi
-        fi
-    elif [[ -n "$BUNDLE_URL" ]]; then
-        # Fresh install — download bundle
-        NEED_LC_SETUP=true
-        NEED_APP_ENV=true
-
-        LC_TMP=$(mktemp -d)
-        trap 'rm -rf "${LC_TMP:-}"' EXIT
-
-        log "Downloading LibreChat release..."
-        gh_curl -L -o "$LC_TMP/bundle.tar.gz" "$BUNDLE_URL"
-        mkdir -p "$LC_TMP/app"
-        tar xzf "$LC_TMP/bundle.tar.gz" -C "$LC_TMP/app"
-
-        local VER=""
-        [[ -f "$LC_TMP/app/.version" ]] && VER=$(cat "$LC_TMP/app/.version")
-        [[ -z "$VER" ]] && VER="unknown"
-        log "LibreChat version: ${VER}"
-
-        bash "$STACK/librechat-uberspace/scripts/setup.sh" "$LC_TMP/app" "$VER"
-    else
+    if ! _lc_download_and_setup --skip-if-current; then
         die "No prebuilt LibreChat release found. Create one via: Actions → Release LibreChat Bundle → Run workflow (or: git tag v0.x.0 && git push --tags)"
+    fi
+
+    # Detect whether setup.sh actually ran (version changed or fresh install)
+    local _post_ver=""
+    [[ -f "$APP/.version" ]] && _post_ver=$(cat "$APP/.version")
+    if [[ "$_pre_ver" != "$_post_ver" ]] || [[ -z "$_pre_ver" ]]; then
+        NEED_LC_SETUP=true
     fi
 
     if [[ "$NEED_LC_SETUP" == false ]]; then
@@ -354,17 +473,29 @@ SVCEOF
         _web_backend / "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
     fi
 
-    # ── 8. Install ta shortcut ──────────────────
+    # ── 8. Install augur shortcut ─────────────────
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-    chmod +x "$HOME/bin/ta" 2>/dev/null || true
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
+    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+
+    # ── 8b. Ensure ~/bin is in PATH via .bashrc (idempotent) ──
+    if [[ -f "$HOME/.bashrc" ]] && ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc" 2>/dev/null; then
+        echo '' >> "$HOME/.bashrc"
+        echo '# Added by Augur installer' >> "$HOME/.bashrc"
+        echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+        log "Added ~/bin to PATH in .bashrc"
+    elif [[ ! -f "$HOME/.bashrc" ]]; then
+        echo '# Added by Augur installer' > "$HOME/.bashrc"
+        echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+        log "Created .bashrc with ~/bin in PATH"
+    fi
 
     # ── 9. Reload service manager ──────────────
     _svc_reload
 
     # ── 11. Auto-seed agents (if credentials available) ──
-    if [[ -n "${TA_SETUP_EMAIL:-}" ]] && [[ -n "${TA_SETUP_PASSWORD:-}" ]]; then
+    if [[ -n "${AUGUR_SETUP_EMAIL:-}" ]] && [[ -n "${AUGUR_SETUP_PASSWORD:-}" ]]; then
         # Wait for LibreChat to become ready
         local LC_URL="http://localhost:${LC_PORT:-3080}"
         local LC_READY=false
@@ -379,40 +510,41 @@ SVCEOF
         if [[ "$LC_READY" == true ]]; then
             log "LibreChat is ready, seeding agents..."
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
-                --email "$TA_SETUP_EMAIL" --password "$TA_SETUP_PASSWORD" \
-                --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: ta agents)"
+                --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
+                --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
         else
-            warn "LibreChat not ready after 60s — seed agents manually: ta agents <email> <password>"
+            warn "LibreChat not ready after 60s — seed agents manually: augur agents <email> <password>"
         fi
     fi
 
     # ── 12. Seed profile data into MongoDB (no overwrites) ──
-    if [[ -x "$STACK/venv/bin/python" ]]; then
+    if [[ -x "$STACK/venv/bin/python" ]] && [[ -d "$STACK/profiles" ]]; then
         log "Seeding profiles from disk into MongoDB..."
-        PROFILES_DIR="$STACK/profiles" MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
+        MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
         "$STACK/venv/bin/python" -c "
 import sys, os
 sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-from dotenv import load_dotenv
-load_dotenv(os.path.join('$STACK', '.env'))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join('$STACK', '.env'))
+except ImportError:
+    pass
 try:
     from server import seed_profiles
-    result = seed_profiles()
+    result = seed_profiles('$STACK/profiles')
     if 'error' in result:
         print(f'Seed skipped: {result[\"error\"]}')
     else:
         total_seeded = sum(v.get('seeded', 0) for v in result.values())
         total_skipped = sum(v.get('skipped', 0) for v in result.values())
         print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
-        for kind, counts in sorted(result.items()):
-            print(f'  {kind}: {counts[\"seeded\"]} seeded, {counts[\"skipped\"]} skipped')
 except Exception as e:
     print(f'Seed skipped: {e}')
 " 2>&1 | while read -r line; do log "$line"; done
     fi
 
     # ── 13. Bootstrap profile data via agent (if credentials available) ──
-    if [[ -n "${TA_AGENTS_API_KEY:-}" ]] && [[ -n "${TA_BOOTSTRAP_AGENT_ID:-}" ]]; then
+    if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -n "${AUGUR_BOOTSTRAP_AGENT_ID:-}" ]]; then
         local LC_URL="http://localhost:${LC_PORT:-3080}"
         local LC_READY=false
         for i in $(seq 1 15); do
@@ -425,14 +557,45 @@ except Exception as e:
         if [[ "$LC_READY" == true ]]; then
             log "Bootstrapping profile data via agent..."
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
-                --api-key "$TA_AGENTS_API_KEY" \
-                --agent-id "$TA_BOOTSTRAP_AGENT_ID" \
+                --api-key "$AUGUR_AGENTS_API_KEY" \
+                --agent-id "$AUGUR_BOOTSTRAP_AGENT_ID" \
                 --base-url "$LC_URL" \
                 --timeseries 2>&1 | while read -r line; do log "bootstrap: $line"; done \
-                || warn "Bootstrap failed (run manually: ta bootstrap)"
+                || warn "Bootstrap failed (run manually: augur bootstrap)"
         else
-            warn "LibreChat not ready — run bootstrap manually: ta bootstrap"
+            warn "LibreChat not ready — run bootstrap manually: augur bootstrap"
         fi
+    fi
+
+    # ── 14. Verify services and cron ──────────────
+    echo ""
+    echo -e "${CYAN}── Post-install checks ──${NC}"
+    echo ""
+
+    # Check service registrations
+    for svc in librechat trading charts; do
+        if _is_u8; then
+            if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        else
+            if [[ -f "$HOME/etc/services.d/${svc}.ini" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        fi
+    done
+
+    # Check cron
+    if crontab -l 2>/dev/null | grep -q "augur cron"; then
+        log "Cron: augur cron scheduled"
+    else
+        warn "Cron: augur cron not scheduled"
+        echo -e "      Add with: ${CYAN}crontab -e${NC}"
+        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron${NC}"
     fi
 
     # ── Done ────────────────────────────────────
@@ -479,7 +642,7 @@ except Exception as e:
             echo -e "  ${CYAN}Step 2:${NC} Configure LibreChat"
             echo "    nano $APP/.env"
             echo "    # Set MONGO_URI=mongodb+srv://..."
-            echo "    # Set ANTHROPIC_API_KEY=sk-ant-...  and/or  OPENAI_API_KEY=sk-..."
+            echo "    # Set at least one LLM key (many free tiers — see docs/llm-keys.md)"
             echo ""
         fi
     fi
@@ -496,13 +659,13 @@ except Exception as e:
     echo "    (first user to register becomes admin)"
     echo ""
     echo -e "  ${CYAN}Seed agents:${NC} (after first login)"
-    echo "    ta agents you@example.com yourpassword"
-    echo "    ta agents --dry-run        # preview only"
+    echo "    augur agents you@example.com yourpassword"
+    echo "    augur agents --dry-run        # preview only"
     echo ""
     echo -e "  ${CYAN}Ops:${NC}"
-    echo "    ta help                    # all commands"
-    echo "    ta pull                    # quick git-pull update (dev)"
-    echo "    ta u                       # release update (prod)"
+    echo "    augur help                    # all commands"
+    echo "    augur pull                    # quick git-pull update (dev)"
+    echo "    augur u                    # release update (prod)"
     echo ""
 }
 
@@ -526,12 +689,40 @@ case "$CMD" in
     l|logs)
         _svc_logs librechat
         ;;
+    testrun)
+        # Run LibreChat (or trading server) in the foreground to see errors directly.
+        # Usage: augur testrun [trading]
+        _TARGET="${2:-librechat}"
+        case "$_TARGET" in
+            librechat)
+                echo -e "${CYAN}Stopping librechat service...${NC}"
+                _svc_stop librechat 2>/dev/null || true
+                echo -e "${CYAN}Starting LibreChat in foreground (Ctrl+C to stop)...${NC}"
+                cd "$APP"
+                NODE_ENV=production exec node --max-old-space-size=1024 api/server/index.js
+                ;;
+            trading)
+                echo -e "${CYAN}Stopping trading service...${NC}"
+                _svc_stop trading 2>/dev/null || true
+                echo -e "${CYAN}Starting trading server in foreground (Ctrl+C to stop)...${NC}"
+                cd "$STACK"
+                set -a; [[ -f "$STACK/.env" ]] && . "$STACK/.env"; set +a
+                export MCP_TRANSPORT=http MCP_PORT=8071
+                exec "$STACK/venv/bin/python" src/servers/combined_server.py
+                ;;
+            *)
+                echo "Usage: augur testrun [librechat|trading]"
+                echo "  augur testrun             Run LibreChat in foreground"
+                echo "  augur testrun trading     Run trading server in foreground"
+                ;;
+        esac
+        ;;
     v|version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
     u|update)
         echo -e "${CYAN}Pulling latest release...${NC}"
-        bash "$STACK/librechat-uberspace/scripts/bootstrap.sh"
+        _lc_download_and_setup || die "No prebuilt LibreChat release found."
         ;;
     pull)
         # Quick dev update — git pull the stack repo, re-copy configs, restart
@@ -547,17 +738,20 @@ case "$CMD" in
             sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
         fi
 
-        # Update ta/TradeAssistant shortcuts
-        cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-        chmod +x "$HOME/bin/ta" 2>/dev/null || true
-        ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
+        # Update augur/Augur shortcuts
+        cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+        chmod +x "$HOME/bin/augur" 2>/dev/null || true
+        ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
-            "$STACK/venv/bin/pip" install -q --upgrade pip 2>/dev/null || true
-            "$STACK/venv/bin/pip" install -q -r "$STACK/requirements.txt" 2>/dev/null || true
+            _pip_upgrade "$STACK/venv/bin/pip" \
+                || die "pip upgrade failed or timed out"
+            log "Installing requirements..."
+            _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
+                || die "pip install requirements failed or timed out"
         else
-            warn "Python venv not found at $STACK/venv — run 'ta install' first"
+            warn "Python venv not found at $STACK/venv — run 'augur install' first"
         fi
 
         echo "$VER" > "$APP/.version"
@@ -583,7 +777,7 @@ case "$CMD" in
         if [[ -f "$STACK/venv/bin/python" ]]; then
             STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" backup
         else
-            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            echo -e "${RED}✗${NC} Python venv not found. Run: augur install"
             exit 1
         fi
         ;;
@@ -591,7 +785,7 @@ case "$CMD" in
         if [[ -f "$STACK/venv/bin/python" ]]; then
             STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" restore "${2:-}"
         else
-            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            echo -e "${RED}✗${NC} Python venv not found. Run: augur install"
             exit 1
         fi
         ;;
@@ -599,19 +793,19 @@ case "$CMD" in
         if [[ -f "$STACK/venv/bin/python" ]]; then
             STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" list
         else
-            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            echo -e "${RED}✗${NC} Python venv not found. Run: augur install"
             exit 1
         fi
         ;;
     cron)
         # ── Unified cron hook (every 15 min) ─────────────────────
-        # Install: crontab -e → */15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
+        # Install: crontab -e → */15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron
         # Internally gates tasks by interval so only one cron entry is needed.
         HOUR=$(date +%H)
         MIN=$(date +%M)
         DOW=$(date +%u)   # 1=Mon .. 7=Sun
 
-        _cron_log() { echo "[ta-cron] $1"; }
+        _cron_log() { echo "[augur-cron] $1"; }
 
         # ── Daily at 02:00 UTC: compact old snapshots to archive ──
         if [[ "$HOUR" == "02" ]]; then
@@ -620,18 +814,21 @@ case "$CMD" in
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
 import os, sys
-stack = os.environ.get("STACK", os.path.expanduser("~/mcps"))
+stack = os.environ.get("STACK", os.path.expanduser("~/augur"))
 sys.path.insert(0, os.path.join(stack, "src", "store"))
 sys.path.insert(0, os.path.join(stack, "src", "servers"))
-from dotenv import load_dotenv
-load_dotenv(os.path.join(stack, ".env"))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(stack, ".env"))
+except ImportError:
+    pass
 from server import compact, _snap_col, VALID_KINDS
 
 for kind in VALID_KINDS:
     try:
         col = _snap_col(kind)
     except Exception as e:
-        print(f"[ta-cron] compact skip {kind}: {e}")
+        print(f"[augur-cron] compact skip {kind}: {e}")
         continue
     pipeline = [
         {"$group": {"_id": {"entity": "$meta.entity", "type": "$meta.type"}}},
@@ -639,7 +836,7 @@ for kind in VALID_KINDS:
     try:
         combos = list(col.aggregate(pipeline))
     except Exception as e:
-        print(f"[ta-cron] compact skip {kind}: {e}")
+        print(f"[augur-cron] compact skip {kind}: {e}")
         continue
     for c in combos:
         eid = c["_id"]["entity"]
@@ -647,9 +844,9 @@ for kind in VALID_KINDS:
         result = compact(kind, eid, etype, older_than_days=90, bucket="month")
         status = result.get("status", "error")
         if status == "ok":
-            print(f"[ta-cron] compacted {kind}/{eid}/{etype}: {result['buckets_created']} buckets, {result['snapshots_deleted']} removed")
+            print(f"[augur-cron] compacted {kind}/{eid}/{etype}: {result['buckets_created']} buckets, {result['snapshots_deleted']} removed")
         elif status != "nothing_to_compact":
-            print(f"[ta-cron] compact {kind}/{eid}/{etype}: {status}")
+            print(f"[augur-cron] compact {kind}/{eid}/{etype}: {status}")
 PYEOF
             else
                 _cron_log "python venv not found, skipping compact"
@@ -671,10 +868,10 @@ PYEOF
         fi
 
         # ── Agent dispatcher: fetch agent list once, invoke all due agents ──
-        if [[ -n "${TA_AGENTS_API_KEY:-}" ]] && [[ -f "$STACK/venv/bin/python" ]]; then
+        if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -f "$STACK/venv/bin/python" ]]; then
             sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
             LC_URL="http://localhost:${LC_PORT:-3080}"
-            "$STACK/venv/bin/python" - "$LC_URL" "$TA_AGENTS_API_KEY" "$HOUR" "$MIN" <<'PYEOF' 2>&1 \
+            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$HOUR" "$MIN" <<'PYEOF' 2>&1 \
                 | while read -r line; do _cron_log "agents: $line"; done
 import httpx, json, sys
 
@@ -749,11 +946,6 @@ for name_match, due_check, message, timeout in DISPATCH:
 print(f"done: {invoked} agents invoked")
 PYEOF
         fi
-
-        # ── Weekly on Sunday at 03:00 UTC: placeholder for future tasks ──
-        # if [[ "$HOUR" == "03" ]] && [[ "$DOW" == "7" ]]; then
-        #     _cron_log "weekly maintenance"
-        # fi
 
         _cron_log "done (hour=$HOUR dow=$DOW)"
         ;;
@@ -852,10 +1044,10 @@ SVCEOF
                 echo ""
                 echo "  Next steps:"
                 echo "    1. Add your token to $PROXY_AUTH (if not done)"
-                echo "    2. ta proxy start"
-                echo "    3. ta proxy test"
-                echo "    4. Uncomment 'Claude Max' endpoint in librechat.yaml: ta yaml"
-                echo "    5. ta restart"
+                echo "    2. augur proxy start"
+                echo "    3. augur proxy test"
+                echo "    4. Uncomment 'Claude Max' endpoint in librechat.yaml: augur yaml"
+                echo "    5. augur restart"
                 ;;
             start)
                 _svc_start cliproxyapi
@@ -875,7 +1067,7 @@ SVCEOF
                     log "Proxy OK (HTTP 200)"
                     curl -s "http://localhost:${PROXY_PORT}/v1/models" | head -20
                 elif [[ "$HTTP_CODE" == "000" ]]; then
-                    die "Proxy not reachable. Run: ta proxy start"
+                    die "Proxy not reachable. Run: augur proxy start"
                 else
                     die "Proxy returned HTTP ${HTTP_CODE}"
                 fi
@@ -894,12 +1086,12 @@ SVCEOF
                 fi
                 ;;
             *)
-                echo "  ta proxy setup    Install CLIProxyAPI + register service"
-                echo "  ta proxy start    Start CLIProxyAPI"
-                echo "  ta proxy stop     Stop CLIProxyAPI"
-                echo "  ta proxy status   Show CLIProxyAPI status"
-                echo "  ta proxy test     Test proxy endpoint"
-                echo "  ta proxy token    Show token info"
+                echo "  augur proxy setup    Install CLIProxyAPI + register service"
+                echo "  augur proxy start    Start CLIProxyAPI"
+                echo "  augur proxy stop     Stop CLIProxyAPI"
+                echo "  augur proxy status   Show CLIProxyAPI status"
+                echo "  augur proxy test     Test proxy endpoint"
+                echo "  augur proxy token    Show token info"
                 ;;
         esac
         ;;
@@ -1105,10 +1297,10 @@ SVCEOF
         fi
 
         # 16. Cron
-        if crontab -l 2>/dev/null | grep -q "ta cron"; then
-            _ok "Cron: ta cron scheduled"
+        if crontab -l 2>/dev/null | grep -q "augur cron"; then
+            _ok "Cron: augur cron scheduled"
         else
-            _warn "Cron: ta cron not scheduled (run: crontab -e)"
+            _warn "Cron: augur cron not scheduled (run: crontab -e)"
         fi
 
         # 17. Shell script syntax (quick)
@@ -1123,7 +1315,7 @@ SVCEOF
             _ok "Shell scripts: all pass syntax check"
         fi
 
-        # 18. Run test suite if available and requested (ta check --test)
+        # 18. Run test suite if available and requested (augur check --test)
         if [[ "${2:-}" == "--test" ]] || [[ "${2:-}" == "-t" ]]; then
             echo ""
             echo -e "${CYAN}── Test Suite ──${NC}"
@@ -1192,7 +1384,7 @@ SVCEOF
         echo ""
         if [[ "${2:-}" != "--test" ]] && [[ "${2:-}" != "-t" ]]; then
             echo -e "  ${CYAN}Tip:${NC} Run with --test to also execute the test suite:"
-            echo "    ta check --test"
+            echo "    augur check --test"
             echo ""
         fi
         if [[ "$FAIL" -gt 0 ]]; then
@@ -1219,31 +1411,31 @@ SVCEOF
         # profiles using MCP tools and web search. Additive: extends existing data.
         #
         # Usage:
-        #   ta bootstrap                              # bootstrap all kinds
-        #   ta bootstrap --kind countries             # bootstrap one kind
-        #   ta bootstrap --batch-size 5               # smaller batches
-        #   ta bootstrap --dry-run                    # preview prompts only
+        #   augur bootstrap                              # bootstrap all kinds
+        #   augur bootstrap --kind countries             # bootstrap one kind
+        #   augur bootstrap --batch-size 5               # smaller batches
+        #   augur bootstrap --dry-run                    # preview prompts only
         #
-        # Env vars: TA_AGENTS_API_KEY, TA_BOOTSTRAP_AGENT_ID
-        BOOTSTRAP_API_KEY="${TA_AGENTS_API_KEY:-}"
-        BOOTSTRAP_AGENT_ID="${TA_BOOTSTRAP_AGENT_ID:-}"
+        # Env vars: AUGUR_AGENTS_API_KEY, AUGUR_BOOTSTRAP_AGENT_ID
+        BOOTSTRAP_API_KEY="${AUGUR_AGENTS_API_KEY:-}"
+        BOOTSTRAP_AGENT_ID="${AUGUR_BOOTSTRAP_AGENT_ID:-}"
 
         if [[ "${2:-}" == "--dry-run" ]]; then
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
                 --dry-run "${@:3}"
         elif [[ -z "$BOOTSTRAP_API_KEY" ]]; then
-            echo -e "${YELLOW}Usage: ta bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
+            echo -e "${YELLOW}Usage: augur bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
             echo ""
             echo "  Bootstraps profile data via LibreChat Agents API."
             echo "  Enriches existing profiles and creates new ones using MCP tools."
             echo ""
             echo "  Required env vars:"
-            echo "    TA_AGENTS_API_KEY        LibreChat Agents API key"
-            echo "    TA_BOOTSTRAP_AGENT_ID    Agent ID (e.g. from 'ta agents' output)"
+            echo "    AUGUR_AGENTS_API_KEY        LibreChat Agents API key"
+            echo "    AUGUR_BOOTSTRAP_AGENT_ID    Agent ID (e.g. from 'augur agents' output)"
             echo ""
-            echo "  ta bootstrap                        # all kinds"
-            echo "  ta bootstrap --kind countries        # one kind"
-            echo "  ta bootstrap --dry-run               # preview only"
+            echo "  augur bootstrap                        # all kinds"
+            echo "  augur bootstrap --kind countries        # one kind"
+            echo "  augur bootstrap --dry-run               # preview only"
         else
             LC_URL="http://localhost:${LC_PORT:-3080}"
             echo -e "${CYAN}Bootstrapping profiles via ${LC_URL}...${NC}"
@@ -1261,23 +1453,23 @@ SVCEOF
         # Requires LibreChat running + user credentials.
         #
         # Usage:
-        #   ta agents                         # seed for default setup user
-        #   ta agents user@example.com pass   # seed for specific user
-        #   ta agents --dry-run               # preview without creating
-        AGENTS_EMAIL="${2:-${TA_SETUP_EMAIL:-}}"
-        AGENTS_PASS="${3:-${TA_SETUP_PASSWORD:-}}"
+        #   augur agents                         # seed for default setup user
+        #   augur agents user@example.com pass   # seed for specific user
+        #   augur agents --dry-run               # preview without creating
+        AGENTS_EMAIL="${2:-${AUGUR_SETUP_EMAIL:-}}"
+        AGENTS_PASS="${3:-${AUGUR_SETUP_PASSWORD:-}}"
 
         if [[ "${2:-}" == "--dry-run" ]]; then
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
                 --email "dummy@example.com" --password "dummy" --dry-run
         elif [[ -z "$AGENTS_EMAIL" || -z "$AGENTS_PASS" ]]; then
-            echo -e "${YELLOW}Usage: ta agents <email> <password>${NC}"
+            echo -e "${YELLOW}Usage: augur agents <email> <password>${NC}"
             echo ""
             echo "  Seeds all 11 multi-agent architecture agents for the given user."
-            echo "  Or set TA_SETUP_EMAIL and TA_SETUP_PASSWORD env vars."
+            echo "  Or set AUGUR_SETUP_EMAIL and AUGUR_SETUP_PASSWORD env vars."
             echo ""
-            echo "  ta agents admin@example.com mypassword"
-            echo "  ta agents --dry-run                      # preview only"
+            echo "  augur agents admin@example.com mypassword"
+            echo "  augur agents --dry-run                      # preview only"
         else
             LC_URL="http://localhost:${LC_PORT:-3080}"
             echo -e "${CYAN}Seeding agents at ${LC_URL} for ${AGENTS_EMAIL}...${NC}"
@@ -1288,33 +1480,34 @@ SVCEOF
         fi
         ;;
     *)
-        echo -e "${CYAN}TradeAssistant — ops shortcuts${NC}"
+        echo -e "${CYAN}Augur — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
         echo ""
-        echo "  ta s|status     Show service status + version"
-        echo "  ta r|restart    Restart LibreChat"
-        echo "  ta l|logs       Tail service logs"
-        echo "  ta v|version    Show installed version"
+        echo "  augur s|status     Show service status + version"
+        echo "  augur r|restart    Restart LibreChat"
+        echo "  augur l|logs       Tail service logs"
+        echo "  augur testrun      Run LibreChat in foreground (see errors directly)"
+        echo "  augur v|version    Show installed version"
         echo ""
-        echo "  ta u|update     Update from latest GitHub release"
-        echo "  ta pull         Quick update via git pull (dev)"
-        echo "  ta install      Re-run full installer (idempotent, uses prebuilt release)"
-        echo "  ta rb|rollback  Rollback to previous version"
+        echo "  augur u|update     Update from latest GitHub release"
+        echo "  augur pull         Quick update via git pull (dev)"
+        echo "  augur install      Re-run full installer (idempotent, uses prebuilt release)"
+        echo "  augur rb|rollback  Rollback to previous version"
         echo ""
-        echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
-        echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
-        echo "  ta backups      List available backups"
-        echo "  ta cron         Run cron hook (compact + agent invocation)"
-        echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
-        echo "  ta agents       Seed multi-agent architecture (11 agents)"
-        echo "  ta check        Health check (services, config, connectivity)"
-        echo "  ta check -t     Health check + run test suite (bats + pytest)"
-        echo "  ta proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
-        echo "  ta env          Edit .env"
-        echo "  ta yaml         Edit librechat.yaml"
-        echo "  ta conf         Edit deploy.conf"
+        echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
+        echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"
+        echo "  augur backups      List available backups"
+        echo "  augur cron         Run cron hook (compact + agent invocation)"
+        echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
+        echo "  augur agents       Seed multi-agent architecture (11 agents)"
+        echo "  augur check        Health check (services, config, connectivity)"
+        echo "  augur check -t     Health check + run test suite (bats + pytest)"
+        echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
+        echo "  augur env          Edit .env"
+        echo "  augur yaml         Edit librechat.yaml"
+        echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Fresh install:"
-        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/librechat-uberspace/scripts/TradeAssistant.sh | bash"
+        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/librechat-uberspace/scripts/Augur.sh | bash"
         ;;
 esac

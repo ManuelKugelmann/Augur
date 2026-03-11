@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Tests for TradeAssistant.sh cron command
+# Tests for Augur.sh cron command
 
 load helpers/setup
 
@@ -21,7 +21,7 @@ teardown() {
 }
 
 @test "cron: outputs done message with hour and dow" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" cron
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"done (hour="* ]]
 }

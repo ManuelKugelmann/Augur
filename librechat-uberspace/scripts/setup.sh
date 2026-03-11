@@ -1,11 +1,11 @@
 #!/bin/bash
 # LibreChat Lite — install or update on Uberspace
-# Called by bootstrap.sh or directly: bash setup.sh <app-dir> <version>
+# Called by Augur.sh (_lc_download_and_setup) or directly: bash setup.sh <app-dir> <version>
 set -euo pipefail
 
 # ── Load central config ──
 for conf in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy.conf" \
-            "$HOME/mcps/deploy.conf"; do
+            "$HOME/augur/deploy.conf"; do
     [[ -f "$conf" ]] && { source "$conf"; break; }
 done
 
@@ -13,7 +13,7 @@ SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
 BAK="${APP}.prev"
-STACK="${STACK_DIR:-$HOME/mcps}"
+STACK="${STACK_DIR:-$HOME/augur}"
 PORT="${LC_PORT:-3080}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -111,7 +111,7 @@ fi
 if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
     log "Installing rss-mcp..."
     cd "$STACK"
-    npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
+    timeout 60 npm install rss-mcp 2>/dev/null || warn "rss-mcp install failed (RSS feed MCP won't be available)"
     cd - >/dev/null
 else
     log "rss-mcp already installed"
@@ -120,22 +120,28 @@ fi
 # Python MCPs installed into signals stack venv
 if [[ -d "$STACK/venv" ]]; then
     VPIP="$STACK/venv/bin/pip"
-    # yahoo-finance-mcp
-    if ! "$STACK/venv/bin/python" -c "import yahoo_finance_mcp" 2>/dev/null; then
-        log "Installing yahoo-finance-mcp..."
-        "$VPIP" install -q yahoo-finance-mcp || warn "yahoo-finance-mcp install failed"
+    # finance-mcp-server (provides python -m finance_mcp)
+    if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
+        log "Installing finance-mcp-server..."
+        timeout 60 "$VPIP" install finance-mcp-server || warn "finance-mcp-server install failed"
     fi
-    # crypto-feargreed-mcp
-    if ! "$STACK/venv/bin/python" -c "import crypto_feargreed_mcp" 2>/dev/null; then
-        log "Installing crypto-feargreed-mcp..."
-        "$VPIP" install -q crypto-feargreed-mcp || warn "crypto-feargreed-mcp install failed"
-    fi
+fi
+
+# crypto-feargreed-mcp (not on PyPI — clone + uv run)
+VENDOR_DIR="$STACK/vendor"
+CFG_DIR="$VENDOR_DIR/crypto-feargreed-mcp"
+if [[ ! -d "$CFG_DIR" ]]; then
+    mkdir -p "$VENDOR_DIR"
+    log "Cloning crypto-feargreed-mcp..."
+    timeout 30 git clone -q --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
+else
+    log "crypto-feargreed-mcp already installed"
 fi
 
 # uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
 if ! command -v uvx &>/dev/null; then
     log "Installing uv (Python package runner)..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
+    timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' 2>/dev/null || warn "uv install failed (uvx-based MCPs won't be available)"
 fi
 
 # ── Install signals stack (Python MCP servers) ──
@@ -156,9 +162,17 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
     else
         log "Setting up signals stack Python environment..."
         cd "$STACK"
+        log "Creating Python venv with $_PYTHON_BIN..."
         "$_PYTHON_BIN" -m venv venv
-        venv/bin/pip install -q --upgrade pip
-        venv/bin/pip install -q -r requirements.txt
+        log "Venv created. Upgrading pip..."
+        timeout 60 venv/bin/pip install --upgrade pip
+        log "Installing requirements (this may take a few minutes)..."
+        _pip_constraint=$(mktemp)
+        # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
+        if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
+        timeout 180 venv/bin/pip install --prefer-binary \
+            -c "$_pip_constraint" -r requirements.txt
+        rm -f "$_pip_constraint"
         cd - >/dev/null
         log "Signals stack ready"
     fi
@@ -166,7 +180,7 @@ elif [[ -d "$STACK/venv" ]]; then
     log "Signals stack already set up"
 else
     warn "Signals stack not found at $STACK — trading MCPs won't be available"
-    warn "Clone with: git clone https://github.com/${GH_USER:-ManuelKugelmann}/${GH_REPO:-TradingAssistant}.git $STACK"
+    warn "Clone with: git clone https://github.com/${GH_USER:-ManuelKugelmann}/${GH_REPO:-Augur}.git $STACK"
 fi
 
 # ── First install ───────────────────────────
@@ -222,12 +236,6 @@ if [[ "$MODE" == "install" ]]; then
                 fi
             fi
             sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$STACK/.env"
-            # Also set in LibreChat .env for the trading service
-            if ! grep -q "^MONGO_URI_SIGNALS=" "$APP/.env"; then
-                echo "MONGO_URI_SIGNALS=$DERIVED" >> "$APP/.env"
-            else
-                sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$APP/.env"
-            fi
             log "Auto-derived MONGO_URI_SIGNALS from MONGO_URI (database: signals)"
         fi
     fi
@@ -272,9 +280,9 @@ EOF
 
     # Install ops shortcut (from mcps repo, not the bundle)
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-    chmod +x "$HOME/bin/ta" 2>/dev/null || true
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
+    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
     echo ""
     log "Installed ${VER}"
@@ -287,12 +295,12 @@ EOF
     echo "     Required:"
     echo "       MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/LibreChat"
     echo "       MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster.mongodb.net/signals"
-    echo "       OPENAI_API_KEY=sk-...  and/or  ANTHROPIC_API_KEY=sk-ant-..."
+    echo "       At least one LLM key (many free tiers — see docs/llm-keys.md)"
     echo ""
     echo -e "  ${YELLOW}2.${NC} Configure MCP servers (optional, defaults are fine):"
     echo "     nano $APP/librechat.yaml"
     echo ""
-    echo -e "  ${YELLOW}3.${NC} Start:"
+    echo -e "  ${YELLOW}3.${NC} Start (auto-restarts on reboot):"
     if _is_u8; then
         echo "     systemctl --user start librechat"
     else

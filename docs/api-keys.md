@@ -1,6 +1,6 @@
 # API Keys & Access Tokens
 
-Complete reference for all credentials used by the TradingAssistant stack.
+Complete reference for all credentials used by the Augur stack.
 
 ---
 
@@ -19,9 +19,8 @@ All domain servers work partially without keys — tools that need a key return 
 | `FRED_API_KEY` | FRED (Federal Reserve) | macro_server | unlimited | https://fred.stlouisfed.org/docs/api/api_key.html |
 | `ACLED_EMAIL` | ACLED (OAuth login) | conflict_server | research access | https://acleddata.com/register/ |
 | `ACLED_PASSWORD` | ACLED (OAuth password) | conflict_server | — | same as above |
-| `OPENSANCTIONS_API_KEY` | OpenSanctions (entity search) | conflict_server | free tier | https://www.opensanctions.org/api/ |
+| `OPENSANCTIONS_API_KEY` | OpenSanctions (entity + sanctions search) | conflict_server | free tier | https://www.opensanctions.org/api/ |
 | `UCDP_ACCESS_TOKEN` | UCDP (armed conflict) | conflict_server | free (request token) | https://ucdp.uu.se/apidocs/ |
-| `OPENSANCTIONS_API_KEY` | OpenSanctions (sanctions search) | conflict_server | free (self-service) | https://www.opensanctions.org/api/ |
 | `EIA_API_KEY` | EIA (US energy data) | commodities_server | unlimited | https://www.eia.gov/opendata/register.php |
 | `COMTRADE_API_KEY` | UN Comtrade (trade flows) | commodities_server | 100 req/day | https://comtradeplus.un.org/TradeFlow |
 | `GOOGLE_API_KEY` | Google Civic Info | elections_server | generous | https://console.cloud.google.com/apis/credentials |
@@ -68,7 +67,7 @@ These APIs require no authentication and work out of the box:
 | disasters | USGS Earthquakes, GDACS, NASA EONET |
 | macro | World Bank, IMF WEO (FRED needs key) |
 | agri | FAOSTAT (USDA NASS needs key) |
-| conflict | UCDP (ACLED needs OAuth, UCDP token optional, OpenSanctions needs key) |
+| conflict | (ACLED needs OAuth, UCDP needs token, OpenSanctions needs key) |
 | health | WHO GHO, WHO Outbreaks, disease.sh, FDA |
 | humanitarian | UNHCR, OCHA HDX (IDMC needs key, ReliefWeb needs appname) |
 | elections | Wikidata, EU Parliament (Google Civic needs key) |

@@ -2,7 +2,6 @@
 
 Profiles: MongoDB collections ``profiles_{kind}`` (one per kind).
   Shared across all users. Text + geo indexes for fast search.
-  Seed data loaded from repo JSON on install (no overwrite on update).
 
 Snapshots: Per-kind timeseries collections with geo support:
   snap_{kind}  — recent data, 1-year TTL, hours granularity
@@ -24,12 +23,16 @@ import json
 import os
 import re
 
+try:
+    from bson import ObjectId
+except ImportError:
+    ObjectId = None  # type: ignore[misc,assignment]
+
 from dotenv import load_dotenv
 load_dotenv()
 
 mcp = FastMCP("signals-store", instructions="MongoDB-backed profile/snapshot store")
 
-PROFILES_DIR = Path(os.environ.get("PROFILES_DIR", "./profiles"))
 _client = None
 _cols_ready = set()
 
@@ -39,7 +42,6 @@ VALID_KINDS = frozenset({
     "regions",
 })
 
-_RESERVED_DIRS = frozenset({"SCHEMAS"})
 VALID_REGIONS = frozenset({
     "north_america", "latin_america", "europe", "mena",
     "sub_saharan_africa", "south_asia", "east_asia",
@@ -204,27 +206,28 @@ def _validate_profile_args(kind: str, id: str, region: str = "") -> dict | None:
     return None
 
 
-# ── Seed / init helpers ──────────────────────────
+# ── Seed helper (install-time only) ──────────────
 
 
-def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
-    """Load profile JSON files from disk into MongoDB.
+def seed_profiles(profiles_dir: str, clear: bool = False) -> dict:
+    """Bulk-load profile JSON files from a directory into MongoDB.
 
-    Called during install to populate profiles_{kind} collections from the
-    repo's profiles/ directory. Uses upsert with $setOnInsert so existing
-    user data is never overwritten on update — only new profiles are added.
+    Used during install to populate profiles_{kind} collections.
+    Uses upsert so existing data is never overwritten (only new profiles added).
+    The source directory can be cleaned up after seeding.
 
     Args:
-        profiles_dir: Path to profiles directory (default: PROFILES_DIR).
-        clear: If True, drop all profiles_{kind} collections first (reinit).
+        profiles_dir: Path to directory with {region}/{kind}/{id}.json layout.
+        clear: If True, drop collections first (reinit).
 
     Returns: {kind: {seeded: N, skipped: N}} summary.
     """
-    pdir = Path(profiles_dir) if profiles_dir else PROFILES_DIR
+    pdir = Path(profiles_dir)
     if not pdir.exists():
         return {"error": f"profiles directory not found: {pdir}"}
 
     results: dict = {}
+    errors: list[str] = []
     for kind in sorted(VALID_KINDS):
         seeded = 0
         skipped = 0
@@ -235,11 +238,8 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
             _cols_ready.discard(f"profiles_{kind}")
             col = _profiles_col(kind)
 
-        # Scan all region dirs
         for region_dir in sorted(pdir.iterdir()):
-            if not region_dir.is_dir() or region_dir.name in _RESERVED_DIRS:
-                continue
-            if region_dir.name.startswith("."):
+            if not region_dir.is_dir() or region_dir.name not in VALID_REGIONS:
                 continue
             kind_dir = region_dir / kind
             if not kind_dir.is_dir():
@@ -256,13 +256,10 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
                         "region": region_dir.name,
                         **data,
                     }
-                    doc["_seeded"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
                     if clear:
-                        # Reinit mode: insert everything
                         col.insert_one(doc)
                         seeded += 1
                     else:
-                        # Normal mode: only insert if not exists
                         r = col.update_one(
                             {"_id_str": profile_id},
                             {"$setOnInsert": doc},
@@ -272,46 +269,25 @@ def seed_profiles(profiles_dir: str | None = None, clear: bool = False) -> dict:
                             seeded += 1
                         else:
                             skipped += 1
-                except Exception:
-                    pass
+                except Exception as exc:
+                    errors.append(f"{fpath.name}: {exc}")
         if seeded or skipped:
             results[kind] = {"seeded": seeded, "skipped": skipped}
+    if errors:
+        results["_errors"] = errors
     return results
 
 
 # ── Schema + lint helpers ─────────────────────────
 
-
-def _load_schema(kind: str) -> dict | None:
-    """Load the schema for a kind from SCHEMAS/{kind}.schema.json."""
-    p = PROFILES_DIR / "SCHEMAS" / f"{kind}.schema.json"
-    if not p.exists():
-        return None
-    try:
-        return json.loads(p.read_text())
-    except Exception:
-        return None
+# Minimal required fields: just identifiers. Extra fields (including freeform 'notes') always allowed.
+_REQUIRED_FIELDS: dict[str, list[str]] = {k: ["id", "name"] for k in VALID_KINDS}
 
 
-def _lint_one(kind: str, id: str, data: dict, schema: dict | None) -> list[str]:
-    """Lint a single profile. Returns list of issue strings."""
-    issues = []
-    if not schema:
-        return issues
-    required = schema.get("required", [])
-    props = schema.get("properties", {})
-    for field in required:
-        if field not in data:
-            issues.append(f"missing required field: {field}")
-    for field, desc in props.items():
-        if field not in data:
-            continue
-        val = data[field]
-        if isinstance(desc, dict) and not isinstance(val, dict):
-            issues.append(f"{field}: expected object, got {type(val).__name__}")
-        if isinstance(desc, str) and "array" in desc.lower() and not isinstance(val, list):
-            issues.append(f"{field}: expected array, got {type(val).__name__}")
-    return issues
+def _lint_one(kind: str, id: str, data: dict) -> list[str]:
+    """Lint a single profile against required fields. Returns list of issue strings."""
+    required = _REQUIRED_FIELDS.get(kind, [])
+    return [f"missing required field: {f}" for f in required if f not in data]
 
 
 # ── Profile tools ─────────────────────────────────
@@ -348,14 +324,50 @@ def put_profile(kind: str, id: str, data: dict,
                 region: str = "global",
                 lon: float | None = None,
                 lat: float | None = None) -> dict:
-    """Create or merge a profile. Shallow-merges with existing data."""
+    """Create or merge a profile. Shallow-merges with existing data.
+
+    Required: id, name. All other fields optional. Recommended structure per kind:
+
+    countries: iso2, region, currency, capital, population,
+        trade{top_exports, top_partners, major_ports, chokepoint_exposure},
+        exposure{commodities_import, energy_mix, risk_factors},
+        ratings{credit, democracy_index}, tags
+    stocks: type="stock", exchange, sector, industry, country,
+        fundamentals{founded, employees},
+        exposure{countries, commodities, supply_chain, risk_factors}, tags
+    etfs: type="etf", exchange, issuer, strategy,
+        exposure{countries, sectors, commodities, risk_factors}, tags
+    crypto: type="crypto", network, consensus, max_supply,
+        exposure{countries, risk_factors}, tags
+    indices: type="index", country, exchange, components, methodology,
+        exposure{sectors, countries, risk_factors}, tags
+    commodities: category (energy|metals|agriculture|livestock), unit, benchmark,
+        producers[], consumers[], chokepoints[], seasonality,
+        exposure{countries, risk_factors}, tags
+    crops: category (grains|oilseeds|fibers|sugar|fruits|vegetables),
+        growing_season, producers[], exporters[], water_intensity,
+        exposure{countries, commodities, risk_factors}, tags
+    materials: category (metals|minerals|chemicals|forestry|textiles),
+        producers[], reserves[], processing[], end_uses[], substitutes[],
+        exposure{countries, risk_factors}, tags
+    products: category (electronics|energy|pharma|automotive|industrial|consumer),
+        hs_codes[], manufacturers[], inputs[], trade_volume,
+        exposure{countries, materials, commodities, risk_factors}, tags
+    companies: country, sector, industry, revenue, employees,
+        publicly_traded, ticker, subsidiaries[],
+        exposure{countries, products, materials, risk_factors}, tags
+    sources: mcp, tool, api_base, auth (none|api_key|token),
+        refresh{frequency, snapshot_type, default_params}, ttl_days
+
+    Use 'notes' field for freeform data. Use 'tags' for categorization.
+    """
     err = _validate_profile_args(kind, id, region)
     if err:
         return err
     col = _profiles_col(kind)
     existing = col.find_one({"_id_str": id})
     if existing:
-        # Merge: update in-place, keep existing region
+        # Merge: update in-place, keep existing region (skip lint — partial update)
         actual_region = existing.get("region", region)
         update_data = {**data}
         update_data["_updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -364,7 +376,12 @@ def put_profile(kind: str, id: str, data: dict,
         col.update_one({"_id_str": id}, {"$set": update_data})
         return {"id": id, "region": actual_region, "status": "ok"}
     else:
-        # New profile
+        # New profile — lint required fields
+        full = {"id": id, "kind": kind, "region": region, **data}
+        issues = _lint_one(kind, id, full)
+        if issues:
+            return {"error": f"validation failed for {kind}/{id}",
+                    "issues": issues}
         doc = {
             "_id_str": id,
             "kind": kind,
@@ -411,12 +428,17 @@ def find_profile(query: str, region: str = "",
             docs = list(col.find(q, projection).limit(limit))
         except Exception:
             docs = []
-        # Regex fallback for ID partial match
+        # Regex fallback for ID and name partial match
         regex = re.compile(re.escape(query), re.IGNORECASE)
         id_q: dict = {"_id_str": regex}
         if region:
             id_q["region"] = region
         id_docs = list(col.find(id_q, projection).limit(limit))
+        name_q: dict = {"name": regex}
+        if region:
+            name_q["region"] = region
+        name_docs = list(col.find(name_q, projection).limit(limit))
+        id_docs.extend(name_docs)
         # Merge deduplicated
         seen = {d["_id_str"] for d in docs}
         for d in id_docs:
@@ -463,10 +485,11 @@ def region_links(id: str = "", link_type: str = "") -> dict:
     - no args → return the global graph (clusters, corridors, rivalry axes, dependency chains)
     """
     if not id:
-        graph = PROFILES / "global" / "regions" / "graph.json"
-        if graph.exists():
-            return json.loads(graph.read_text())
-        return {"error": "graph.json not found — run rebuild or create it"}
+        # Return graph from MongoDB (stored as a special profile)
+        doc = _profiles_col("regions").find_one({"_id_str": "_graph"})
+        if doc:
+            return _strip_mongo_id(doc)
+        return {"error": "region graph not found — create it with put_profile('regions', '_graph', data)"}
     prof = get_profile("regions", id)
     if "error" in prof:
         return prof
@@ -488,17 +511,16 @@ def country_links(id: str = "", link_type: str = "") -> dict:
     - no args → return all country link data across regions
     """
     if not id:
-        # Aggregate links from all country profiles
+        # Aggregate links from all country profiles via MongoDB
         all_links: list[dict] = []
-        for region in _regions():
-            cdir = PROFILES / region / "countries"
-            if not cdir.is_dir():
-                continue
-            for fp in sorted(cdir.glob("*.json")):
-                prof = json.loads(fp.read_text())
-                links = prof.get("links", [])
-                if links:
-                    all_links.append({"id": prof.get("id", fp.stem), "name": prof.get("name", ""), "links": links})
+        col = _profiles_col("countries")
+        for doc in col.find({"links": {"$exists": True, "$ne": []}},
+                            {"_id": 0, "_id_str": 1, "name": 1, "links": 1}):
+            all_links.append({
+                "id": doc.get("_id_str", ""),
+                "name": doc.get("name", ""),
+                "links": doc.get("links", []),
+            })
         return {"countries_with_links": all_links}
     prof = get_profile("countries", id)
     if "error" in prof:
@@ -546,12 +568,6 @@ def nearby_profiles(kind: str, lon: float, lat: float,
 
 
 @mcp.tool()
-def seed_profiles_tool(clear: bool = False) -> dict:
-    """Seed profiles from repo JSON into MongoDB. clear=True drops and reinits."""
-    return seed_profiles(clear=clear)
-
-
-@mcp.tool()
 def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
     """Validate profiles against schema. Scope: kind+id, kind only, or all."""
     results: dict = {"ok": [], "issues": {}}
@@ -566,12 +582,11 @@ def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
             for entry in list_profiles(k):
                 targets.append((k, entry["id"]))
     for k, pid in targets:
-        schema = _load_schema(k)
         prof = get_profile(k, pid)
         if "error" in prof:
             results["issues"][f"{k}/{pid}"] = [prof["error"]]
             continue
-        issues = _lint_one(k, pid, prof, schema)
+        issues = _lint_one(k, pid, prof)
         key = f"{k}/{pid}"
         if issues:
             results["issues"][key] = issues
@@ -585,11 +600,11 @@ def lint_profiles(kind: str | None = None, id: str | None = None) -> dict:
 # Each kind has its own MongoDB timeseries collection (snap_{kind} / arch_{kind}).
 
 
-@mcp.tool()
-def snapshot(kind: str, entity: str, type: str, data: dict,
-             region: str = "", source: str = "", ts: str = "",
-             lon: float | None = None, lat: float | None = None) -> dict:
-    """Store a timestamped data point. type: indicators, price, fundamentals, etc."""
+def _insert_snapshot(kind: str, entity: str, type: str, data: dict,
+                     region: str, source: str, ts: str,
+                     lon: float | None, lat: float | None,
+                     archive: bool = False) -> dict:
+    """Shared insert logic for snapshot() and archive_snapshot()."""
     if kind not in VALID_KINDS:
         return {"error": f"unknown kind: {kind}"}
     now = datetime.now(timezone.utc)
@@ -601,15 +616,49 @@ def snapshot(kind: str, entity: str, type: str, data: dict,
     parsed_ts = _parse_ts(ts) if ts else now
     if ts and parsed_ts is None:
         return {"error": f"invalid ISO date: {ts}"}
-    doc = {
-        "ts": parsed_ts,
-        "meta": meta,
-        "data": data,
-    }
+    doc = {"ts": parsed_ts, "meta": meta, "data": data}
     if lon is not None and lat is not None:
         doc["location"] = {"type": "Point", "coordinates": [lon, lat]}
-    r = _snap_col(kind).insert_one(doc)
-    return {"id": str(r.inserted_id), "collection": f"snap_{kind}", "status": "ok"}
+    col = _arch_col(kind) if archive else _snap_col(kind)
+    prefix = "arch" if archive else "snap"
+    r = col.insert_one(doc)
+    return {"id": str(r.inserted_id), "collection": f"{prefix}_{kind}", "status": "ok"}
+
+
+def _query_history(kind: str, entity: str, type: str, region: str,
+                   after: str, before: str, limit: int,
+                   archive: bool = False) -> list[dict]:
+    """Shared query logic for history() and archive_history()."""
+    if kind not in VALID_KINDS:
+        return [{"error": f"unknown kind: {kind}"}]
+    q: dict = {"meta.entity": entity}
+    if type:
+        q["meta.type"] = type
+    if region:
+        q["meta.region"] = region
+    if after or before:
+        q["ts"] = {}
+        if after:
+            parsed = _parse_ts(after)
+            if not parsed:
+                return [{"error": f"invalid after date: {after}"}]
+            q["ts"]["$gte"] = parsed
+        if before:
+            parsed = _parse_ts(before)
+            if not parsed:
+                return [{"error": f"invalid before date: {before}"}]
+            q["ts"]["$lt"] = parsed
+    col = _arch_col(kind) if archive else _snap_col(kind)
+    rows = col.find(q).sort("ts", -1).limit(limit)
+    return [_ser(r) for r in rows]
+
+
+@mcp.tool()
+def snapshot(kind: str, entity: str, type: str, data: dict,
+             region: str = "", source: str = "", ts: str = "",
+             lon: float | None = None, lat: float | None = None) -> dict:
+    """Store a timestamped data point. type: indicators, price, fundamentals, etc."""
+    return _insert_snapshot(kind, entity, type, data, region, source, ts, lon, lat)
 
 
 @mcp.tool()
@@ -652,27 +701,7 @@ def history(kind: str, entity: str, type: str = "",
             region: str = "", after: str = "", before: str = "",
             limit: int = 100) -> list[dict]:
     """Snapshot history for an entity. Newest first. after/before: ISO dates."""
-    if kind not in VALID_KINDS:
-        return [{"error": f"unknown kind: {kind}"}]
-    q: dict = {"meta.entity": entity}
-    if type:
-        q["meta.type"] = type
-    if region:
-        q["meta.region"] = region
-    if after or before:
-        q["ts"] = {}
-        if after:
-            parsed = _parse_ts(after)
-            if not parsed:
-                return [{"error": f"invalid after date: {after}"}]
-            q["ts"]["$gte"] = parsed
-        if before:
-            parsed = _parse_ts(before)
-            if not parsed:
-                return [{"error": f"invalid before date: {before}"}]
-            q["ts"]["$lt"] = parsed
-    rows = _snap_col(kind).find(q).sort("ts", -1).limit(limit)
-    return [_ser(r) for r in rows]
+    return _query_history(kind, entity, type, region, after, before, limit)
 
 
 @mcp.tool()
@@ -844,24 +873,8 @@ def chart(kind: str, entity: str, type: str, fields: list[str],
 def archive_snapshot(kind: str, entity: str, type: str, data: dict,
                      region: str = "", source: str = "", ts: str = "") -> dict:
     """Long-term archive snapshot (no TTL). For historical/yearly data."""
-    if kind not in VALID_KINDS:
-        return {"error": f"unknown kind: {kind}"}
-    now = datetime.now(timezone.utc)
-    meta = {"entity": entity, "kind": kind, "region": region,
-            "type": type, "source": source}
-    uid = _get_user_id()
-    if uid:
-        meta["user_id"] = uid
-    parsed_ts = _parse_ts(ts) if ts else now
-    if ts and parsed_ts is None:
-        return {"error": f"invalid ISO date: {ts}"}
-    doc = {
-        "ts": parsed_ts,
-        "meta": meta,
-        "data": data,
-    }
-    r = _arch_col(kind).insert_one(doc)
-    return {"id": str(r.inserted_id), "collection": f"arch_{kind}", "status": "ok"}
+    return _insert_snapshot(kind, entity, type, data, region, source, ts,
+                            None, None, archive=True)
 
 
 @mcp.tool()
@@ -869,27 +882,8 @@ def archive_history(kind: str, entity: str, type: str = "",
                     region: str = "", after: str = "", before: str = "",
                     limit: int = 200) -> list[dict]:
     """Query long-term archive for an entity."""
-    if kind not in VALID_KINDS:
-        return [{"error": f"unknown kind: {kind}"}]
-    q: dict = {"meta.entity": entity}
-    if type:
-        q["meta.type"] = type
-    if region:
-        q["meta.region"] = region
-    if after or before:
-        q["ts"] = {}
-        if after:
-            parsed = _parse_ts(after)
-            if not parsed:
-                return [{"error": f"invalid after date: {after}"}]
-            q["ts"]["$gte"] = parsed
-        if before:
-            parsed = _parse_ts(before)
-            if not parsed:
-                return [{"error": f"invalid before date: {before}"}]
-            q["ts"]["$lt"] = parsed
-    rows = _arch_col(kind).find(q).sort("ts", -1).limit(limit)
-    return [_ser(r) for r in rows]
+    return _query_history(kind, entity, type, region, after, before, limit,
+                          archive=True)
 
 
 @mcp.tool()
@@ -991,6 +985,9 @@ def compact(kind: str, entity: str, type: str, older_than_days: int = 90,
 # Stored in MongoDB "user_notes" collection, keyed by user_id.
 # user_id comes from X-User-ID header (streamable-http) or env var.
 
+_VALID_NOTE_KINDS = frozenset({"note", "plan", "watchlist", "journal"})
+_VALID_RESEARCH_KINDS = frozenset({"research", "report", "briefing", "alert"})
+
 
 def _notes_col():
     """Return the user_notes collection."""
@@ -1001,6 +998,8 @@ def _notes_col():
 def save_note(title: str, content: str, tags: list[str] | None = None,
               kind: str = "note") -> dict:
     """Save a personal note/plan/watchlist/journal (per-user)."""
+    if kind not in _VALID_NOTE_KINDS:
+        return {"error": f"invalid note kind: {kind} (use: {', '.join(sorted(_VALID_NOTE_KINDS))})"}
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified (X-User-ID header missing)"}
@@ -1047,7 +1046,6 @@ def update_note(note_id: str, content: str = "", title: str = "",
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified"}
-    from bson import ObjectId
     try:
         oid = ObjectId(note_id)
     except Exception:
@@ -1074,7 +1072,6 @@ def delete_note(note_id: str) -> dict:
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified"}
-    from bson import ObjectId
     try:
         oid = ObjectId(note_id)
     except Exception:
@@ -1105,6 +1102,8 @@ def save_research(title: str, content: str,
 
     kind: research | report | briefing | alert (default: research)
     """
+    if kind not in _VALID_RESEARCH_KINDS:
+        return {"error": f"invalid research kind: {kind} (use: {', '.join(sorted(_VALID_RESEARCH_KINDS))})"}
     now = datetime.now(timezone.utc)
     col = _shared_notes_col()
     r = col.update_one(

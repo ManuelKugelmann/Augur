@@ -10,8 +10,9 @@ import asyncio
 import sys
 from pathlib import Path
 
-import httpx
 import pytest
+
+httpx = pytest.importorskip("httpx", reason="httpx required")
 
 # Allow importing server modules
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "servers"))
@@ -101,7 +102,7 @@ class TestDisasters:
 
     def test_natural_events(self):
         result = run(self.m.get_natural_events(days=60, limit=5))
-        assert "events" in result or "title" in result
+        _check_upstream(result, "events")
 
 
 # ── health_server (WHO GHO, OpenFDA) ────────────────────
@@ -161,9 +162,10 @@ class TestAgriFree:
 
     def test_fao_datasets(self):
         result = run(self.m.fao_datasets())
-        assert isinstance(result, list)
-        assert len(result) > 0
-        _check_upstream(result, "code")
+        _check_upstream(result, "datasets")
+        assert isinstance(result, dict)
+        assert len(result["datasets"]) > 0
+        assert "code" in result["datasets"][0]
 
     def test_fao_data(self):
         result = run(self.m.fao_data(
@@ -199,20 +201,21 @@ class TestElectionsFree:
 
     def test_global_elections_germany(self):
         result = run(self.m.global_elections(country="Germany", limit=5))
-        assert isinstance(result, list)
-        _check_upstream(result)
-        assert len(result) > 0
-        assert "election" in result[0]
+        _check_upstream(result, "elections")
+        assert isinstance(result, dict)
+        assert len(result["elections"]) > 0
+        assert "election" in result["elections"][0]
 
     def test_global_elections_recent(self):
         result = run(self.m.global_elections(limit=10))
-        assert isinstance(result, list)
+        _check_upstream(result)
+        assert isinstance(result, dict)
 
     def test_heads_of_state_germany(self):
         result = run(self.m.heads_of_state(country="Germany", limit=5))
-        assert isinstance(result, list)
-        _check_upstream(result)
-        assert len(result) > 0
+        _check_upstream(result, "leaders")
+        assert isinstance(result, dict)
+        assert len(result["leaders"]) > 0
 
     def test_eu_parliament_meps_germany(self):
         result = run(self.m.eu_parliament_meps(country="DE", limit=10))

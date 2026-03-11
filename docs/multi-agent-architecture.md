@@ -1,4 +1,4 @@
-# Multi-Agent Architecture — TradingAssistant on LibreChat
+# Multi-Agent Architecture — Augur on LibreChat
 
 ## Goal
 
@@ -525,7 +525,7 @@ mcpServers:
   # All MCPs hidden from general chat — agent-only access
   filesystem:
     command: npx
-    args: ["-y", "@modelcontextprotocol/server-filesystem", "__HOME__/TradeAssistant_Data/files/"]
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "__HOME__/Augur_Data/files/"]
     chatMenu: false
 
   trading:
@@ -576,7 +576,7 @@ mcpServers:
 
   rss:
     command: node
-    args: ["__HOME__/mcps/node_modules/rss-mcp/index.js"]
+    args: ["__HOME__/augur/node_modules/rss-mcp/index.js"]
     chatMenu: false
 
   reddit:

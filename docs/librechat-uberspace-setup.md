@@ -1,4 +1,4 @@
-# Deployment Guide: TradingAssistant on Uberspace
+# Deployment Guide: Augur on Uberspace
 
 Step-by-step walkthrough. Uberspace serves as the dev/staging/production host.
 One-liner install, then configure and go.
@@ -8,9 +8,9 @@ One-liner install, then configure and go.
 ## What You Get
 
 ```
-Uberspace (assist.uber.space)
+Uberspace (augur.uber.space)
 ├─ LibreChat (:3080, Node.js)         — chat UI, multi-user
-│   ├─ MCP: filesystem (stdio)        → ~/TradeAssistant_Data/files/
+│   ├─ MCP: filesystem (stdio)        → ~/Augur_Data/files/
 │   └─ MCP: trading (streamable-http) → localhost:8071/mcp
 │         X-User-ID / X-User-Email per request
 │         customUserVars: BROKER_API_KEY, BROKER_API_SECRET, etc.
@@ -22,7 +22,7 @@ Uberspace (assist.uber.space)
 │
 ├─ charts server (:8066)               — Plotly chart endpoint
 │
-└─ cron (15 min) → git push            → GitHub (TradeAssistant_Data, private)
+└─ cron (15 min) → git push            → GitHub (Augur_Data, private)
 ```
 
 **Cost:** ~5 EUR/mo (Uberspace) + free MongoDB Atlas M0 + your LLM API keys.
@@ -64,23 +64,23 @@ mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/signals
 SSH into your Uberspace host:
 
 ```bash
-ssh assist@assist.uber.space
+ssh augur@augur.uber.space
 ```
 
 Run the installer:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
 ```
 
 This single command does everything:
 - Sets Node.js 22
-- Clones the TradingAssistant repo → `~/mcps/`
+- Clones the Augur repo → `~/augur/`
 - Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`
 - Downloads LibreChat release bundle (or builds from source as fallback)
 - Registers supervisord services: `librechat`, `trading`, `charts`
-- Creates `~/TradeAssistant_Data/` for MCP file storage
-- Installs `ta` shortcut → `~/bin/ta`
+- Creates `~/Augur_Data/` for MCP file storage
+- Installs `augur` shortcut → `~/bin/augur`
 
 **If it detects an existing installation, it updates instead.** Safe to re-run.
 
@@ -92,7 +92,7 @@ After install, it prints the .env files you need to edit.
 ### Alternative: force git-based build (no release needed)
 
 ```bash
-curl -sL .../TradeAssistant.sh | bash -s install dev
+curl -sL .../Augur.sh | bash -s install dev
 ```
 
 ---
@@ -104,7 +104,7 @@ The installer creates two .env files that need your secrets.
 ### 3a. Signals stack
 
 ```bash
-nano ~/mcps/.env
+nano ~/augur/.env
 ```
 
 Set the MongoDB URI for the signals database:
@@ -151,7 +151,7 @@ supervisorctl start librechat
 supervisorctl start trading
 
 # Verify
-ta status
+augur status
 ```
 
 Expected output:
@@ -161,7 +161,7 @@ librechat                        RUNNING   pid 12345, uptime 0:00:05
 trading                          RUNNING   pid 12346, uptime 0:00:03
 charts                           RUNNING   pid 12347, uptime 0:00:02
 Version: v0.2.0
-Host: assist.uber.space
+Host: augur.uber.space
 ```
 
 ---
@@ -171,7 +171,7 @@ Host: assist.uber.space
 Open in browser:
 
 ```
-https://assist.uber.space
+https://augur.uber.space
 ```
 
 Register your first account — **this becomes the admin**.
@@ -197,24 +197,24 @@ trading server. Keys are never stored server-side.
 
 ## Step 6: Git-versioned data backup (optional, 5 min)
 
-Create a **private** repo on GitHub: `YourUser/TradeAssistant_Data`
+Create a **private** repo on GitHub: `YourUser/Augur_Data`
 
 Then on Uberspace:
 
 ```bash
-bash ~/mcps/librechat-uberspace/scripts/setup-data-repo.sh
+bash ~/augur/librechat-uberspace/scripts/setup-data-repo.sh
 ```
 
 This:
-- Initializes `~/TradeAssistant_Data/` as a git repo
+- Initializes `~/Augur_Data/` as a git repo
 - Creates SSH key if needed (prints pubkey for you to add to GitHub)
 - Sets up cron: auto-sync every 15 minutes
 
 Verify:
 
 ```bash
-crontab -l | grep ta
-# Should show: */15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
+crontab -l | grep augur
+# Should show: */15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron
 ```
 
 ---
@@ -222,7 +222,7 @@ crontab -l | grep ta
 ## Step 7: Health check
 
 ```bash
-ta check
+augur check
 ```
 
 Checks: stack repo, Python venv, Node.js, LibreChat install, .env files,
@@ -231,34 +231,34 @@ supervisord services, HTTP connectivity, profiles, cron, script syntax.
 For full test suite:
 
 ```bash
-ta check --test
+augur check --test
 ```
 
 ---
 
 ## Day-to-Day Operations
 
-### The `ta` command
+### The `augur` command
 
 ```bash
-ta help           # all commands
-ta status         # services + version + host
-ta logs           # tail LibreChat logs
-ta restart        # restart LibreChat + trading
-ta version        # installed version
+augur help           # all commands
+augur status         # services + version + host
+augur logs           # tail LibreChat logs
+augur restart        # restart LibreChat + trading
+augur version        # installed version
 
-ta pull           # dev: git pull + restart (no release needed)
-ta update         # prod: download latest release bundle
-ta install        # re-run full installer (idempotent)
-ta rollback       # restore previous version
+augur pull           # dev: git pull + restart (no release needed)
+augur update         # prod: download latest release bundle
+augur install        # re-run full installer (idempotent)
+augur rollback       # restore previous version
 
-ta sync           # force git sync of data
-ta check          # health check
-ta check -t       # health check + test suite
+augur sync           # force git sync of data
+augur check          # health check
+augur check -t       # health check + test suite
 
-ta env            # edit LibreChat .env
-ta yaml           # edit librechat.yaml
-ta conf           # edit deploy.conf
+augur env            # edit LibreChat .env
+augur yaml           # edit librechat.yaml
+augur conf           # edit deploy.conf
 ```
 
 ### Dev workflow (quick iteration)
@@ -273,7 +273,7 @@ git push
 On Uberspace:
 
 ```bash
-ta pull
+augur pull
 # → git pull + pip install + restart LibreChat + restart trading
 ```
 
@@ -290,14 +290,14 @@ git push --tags
 On Uberspace:
 
 ```bash
-ta update
+augur update
 # → downloads release, atomic swap, restart
 ```
 
 ### Rollback
 
 ```bash
-ta rollback
+augur rollback
 # Restores ~/LibreChat.prev (kept from last update)
 ```
 
@@ -359,9 +359,9 @@ All providers below have **free tiers**:
 After editing, add the key to `.env` and restart:
 
 ```bash
-ta env    # add the key
-ta yaml   # uncomment the provider block
-ta restart
+augur env    # add the key
+augur yaml   # uncomment the provider block
+augur restart
 ```
 
 ---
@@ -396,13 +396,13 @@ dmesg | tail -20
 1. Verify trading server is running: `supervisorctl status trading`
 2. Test locally: `curl -s http://localhost:8071/mcp`
 3. Check librechat.yaml has the `trading:` block with `type: streamable-http`
-4. Restart LibreChat: `ta restart`
+4. Restart LibreChat: `augur restart`
 
 ### MongoDB connection fails
 
 ```bash
 # Test from signals stack Python
-~/mcps/venv/bin/python -c "
+~/augur/venv/bin/python -c "
 from pymongo import MongoClient
 c = MongoClient('your-uri-here')
 print(c.signals.list_collection_names())
@@ -412,7 +412,7 @@ print(c.signals.list_collection_names())
 ### Git data sync not pushing
 
 ```bash
-cd ~/TradeAssistant_Data
+cd ~/Augur_Data
 git push    # check SSH key issues
 ssh -T git@github.com   # should say "Hi youruser!"
 ```
@@ -435,7 +435,7 @@ ssh -T git@github.com   # should say "Hi youruser!"
 
 ```
 ~/
-├── mcps/                          ← TradingAssistant repo clone
+├── mcps/                          ← Augur repo clone
 │   ├── src/servers/               ← 12 domain servers + combined_server.py
 │   ├── src/store/                 ← signals store (server.py)
 │   ├── profiles/                  ← seed profile data (JSON, for initial import)
@@ -448,12 +448,12 @@ ssh -T git@github.com   # should say "Hi youruser!"
 │   ├── librechat.yaml             ← MCP server definitions
 │   └── api/                       ← LibreChat backend
 │
-├── TradeAssistant_Data/           ← git-versioned MCP data
+├── Augur_Data/           ← git-versioned MCP data
 │   └── files/                     ← filesystem MCP storage
 │
 ├── bin/
-│   ├── ta                         ← ops CLI (primary)
-│   └── TradeAssistant             ← symlink to ta
+│   ├── augur                      ← ops CLI (primary)
+│   └── Augur             ← symlink to augur
 │
 ├── etc/services.d/
 │   ├── librechat.ini              ← supervisord: LibreChat

@@ -1,9 +1,9 @@
 #!/usr/bin/env bats
-# Tests for TradeAssistant.sh — proxy subcommands (CLIProxyAPI / Claude token wrapper)
+# Tests for Augur.sh — proxy subcommands (CLIProxyAPI / Claude token wrapper)
 
 load helpers/setup
 
-TA="$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh"
+TA="$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
 
 setup() {
     setup_sandbox
@@ -34,12 +34,12 @@ teardown() {
 @test "proxy without subcommand shows help" {
     run bash "$TA" proxy
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"ta proxy setup"* ]]
-    [[ "$output" == *"ta proxy start"* ]]
-    [[ "$output" == *"ta proxy stop"* ]]
-    [[ "$output" == *"ta proxy status"* ]]
-    [[ "$output" == *"ta proxy test"* ]]
-    [[ "$output" == *"ta proxy token"* ]]
+    [[ "$output" == *"augur proxy setup"* ]]
+    [[ "$output" == *"augur proxy start"* ]]
+    [[ "$output" == *"augur proxy stop"* ]]
+    [[ "$output" == *"augur proxy status"* ]]
+    [[ "$output" == *"augur proxy test"* ]]
+    [[ "$output" == *"augur proxy token"* ]]
 }
 
 @test "help command lists proxy in command overview" {
@@ -116,8 +116,8 @@ teardown() {
     run bash "$TA" proxy setup
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Next steps"* ]]
-    [[ "$output" == *"ta proxy start"* ]]
-    [[ "$output" == *"ta proxy test"* ]]
+    [[ "$output" == *"augur proxy start"* ]]
+    [[ "$output" == *"augur proxy test"* ]]
 }
 
 # ── proxy start/stop/status ──

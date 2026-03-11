@@ -20,8 +20,10 @@ import time
 try:
     import httpx
 except ImportError:
-    print("ERROR: httpx required. Install: pip install httpx", file=sys.stderr)
-    sys.exit(1)
+    httpx = None  # type: ignore[assignment]
+    if __name__ == "__main__":
+        print("ERROR: httpx required. Install: pip install httpx", file=sys.stderr)
+        sys.exit(1)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "config")
