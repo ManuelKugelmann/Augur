@@ -163,7 +163,11 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Setting up signals stack Python environment..."
         cd "$STACK"
         log "Creating Python venv with $_PYTHON_BIN..."
-        "$_PYTHON_BIN" -m venv venv
+        # Use --without-pip: plain venv creation is instant.
+        # ensurepip (the default) can stall with no output on U8 / Ubuntu.
+        "$_PYTHON_BIN" -m venv --without-pip venv
+        log "Bootstrapping pip inside venv..."
+        timeout 60 venv/bin/python -m ensurepip --upgrade
         log "Venv created. Upgrading pip..."
         timeout 60 venv/bin/pip install --upgrade pip
         log "Installing requirements (this may take a few minutes)..."
