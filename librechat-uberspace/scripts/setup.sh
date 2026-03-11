@@ -168,17 +168,26 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         "$_PYTHON_BIN" -m venv --without-pip venv
         log "Bootstrapping pip inside venv..."
         log "  → venv/bin/python -m ensurepip --upgrade"
-        timeout 600 venv/bin/python -m ensurepip --upgrade
-        log "Venv created. Upgrading pip..."
-        log "  → venv/bin/python -m pip install --upgrade pip"
-        timeout 600 venv/bin/python -m pip install --upgrade pip
+        # Redirect stdin to /dev/null for all pip/ensurepip commands —
+        # when running via `curl | bash`, inherited stdin is the curl pipe
+        # and pip can consume bytes meant for bash or block on the pipe.
+        timeout 600 venv/bin/python -m ensurepip --upgrade </dev/null
+        log "Venv created. Checking pip version..."
+        _pip_ver=$(venv/bin/python -m pip --version </dev/null | awk '{print $2}' | cut -d. -f1)
+        if (( _pip_ver >= 22 )); then
+            log "pip $_pip_ver is recent enough (>=22), skipping upgrade"
+        else
+            log "pip $_pip_ver < 22, upgrading..."
+            log "  → venv/bin/python -m pip install --upgrade pip"
+            timeout 600 venv/bin/python -m pip install --upgrade pip </dev/null
+        fi
         log "Installing Python requirements (this may take a few minutes)..."
         _pip_constraint=$(mktemp)
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
         if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
         log "  → venv/bin/python -m pip install --prefer-binary -c <constraint> -r requirements.txt"
         timeout 600 venv/bin/python -m pip install --prefer-binary \
-            -c "$_pip_constraint" -r requirements.txt
+            -c "$_pip_constraint" -r requirements.txt </dev/null
         rm -f "$_pip_constraint"
         cd - >/dev/null
         log "Signals stack ready"
