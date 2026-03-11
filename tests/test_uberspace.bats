@@ -11,7 +11,7 @@
 
 load helpers/setup
 
-TA="$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
+TA="$REPO_ROOT/Augur.sh"
 
 # ── Skip guard: only run on *.uber.space ──
 setup() {
@@ -137,7 +137,7 @@ setup() {
 # ══════════════════════════════════════════
 
 @test "uberspace: all scripts pass syntax check" {
-    for script in "$STACK_DIR/librechat-uberspace/scripts/"*.sh; do
+    for script in "$STACK_DIR/augur-uberspace/scripts/"*.sh; do
         run bash -n "$script"
         [[ "$status" -eq 0 ]] || {
             echo "Syntax error in: $(basename "$script")"

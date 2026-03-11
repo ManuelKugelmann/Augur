@@ -65,8 +65,8 @@ jobs:
       - name: Run ShellCheck
         run: |
           shellcheck --severity=error \
-            librechat-uberspace/scripts/Augur.sh \
-            librechat-uberspace/scripts/setup.sh \
+            Augur.sh \
+            augur-uberspace/scripts/setup.sh \
             deploy.conf \
           || true
 

@@ -12,6 +12,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+def _can_import(name: str) -> bool:
+    """Return True if *name* is importable."""
+    try:
+        __import__(name)
+        return True
+    except ImportError:
+        return False
+
+
 @pytest.fixture
 def site_dir(tmp_path, monkeypatch):
     """Provide a temp augur site directory with _posts structure."""
@@ -454,6 +463,9 @@ class TestGenerateScorecard:
 # post_social
 # ---------------------------------------------------------------------------
 
+_httpx_reason = "httpx required — install with: pip install httpx"
+
+
 def _mock_httpx_response(status_code=200, json_data=None):
     """Create a mock httpx response."""
     resp = MagicMock()
@@ -463,6 +475,7 @@ def _mock_httpx_response(status_code=200, json_data=None):
     return resp
 
 
+@pytest.mark.skipif(not _can_import("httpx"), reason=_httpx_reason)
 class TestPostSocial:
     def test_unknown_platform(self, augur):
         result = _run(augur.post_social("the", "tiktok", "caption", "https://example.com"))
@@ -956,6 +969,7 @@ class TestGenerateSocialCards:
 # post_social with image_path
 # ---------------------------------------------------------------------------
 
+@pytest.mark.skipif(not _can_import("httpx"), reason=_httpx_reason)
 class TestPostSocialImage:
     def test_post_social_accepts_image_path(self, augur, monkeypatch):
         monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
@@ -1025,6 +1039,7 @@ class TestPublishDedup:
 # ntfy env var reads at call time (not import time)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.skipif(not _can_import("httpx"), reason=_httpx_reason)
 class TestNtfyCallTime:
     def test_ntfy_topic_read_at_call_time(self, augur, monkeypatch):
         """NTFY_TOPIC should be read at call time, not module import time."""

@@ -25,10 +25,10 @@ setup() {
     stub_command "uvx" 'echo "stubbed uvx $*"'
 
     # Create mcps repo structure that setup.sh expects
-    mkdir -p "$STACK_DIR/librechat-uberspace/config"
-    mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
+    mkdir -p "$STACK_DIR/augur-uberspace/config"
+    mkdir -p "$STACK_DIR/augur-uberspace/scripts"
     # Provide a minimal Augur.sh for the ops shortcut install
-    echo '#!/bin/bash' > "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
+    echo '#!/bin/bash' > "$STACK_DIR/Augur.sh"
 }
 
 # Helper: create a minimal source directory that passes setup.sh validation
@@ -43,12 +43,12 @@ teardown() {
 }
 
 @test "setup.sh passes syntax check" {
-    run bash -n "$REPO_ROOT/librechat-uberspace/scripts/setup.sh"
+    run bash -n "$REPO_ROOT/augur-uberspace/scripts/setup.sh"
     [[ "$status" -eq 0 ]]
 }
 
 @test "setup.sh fails without arguments" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh"
     [[ "$status" -ne 0 ]]
 }
 
@@ -58,7 +58,7 @@ teardown() {
     create_src_app "$src"
 
     # Create .env.example where setup.sh looks for it (mcps repo config)
-    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
+    cat > "$STACK_DIR/augur-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -72,7 +72,7 @@ EOF
     # Stub openssl for key generation
     stub_command "openssl" 'echo "deadbeef1234567890abcdef12345678"'
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
     [[ -f "$APP_DIR/.version" ]]
     [[ "$(cat "$APP_DIR/.version")" == "v1.0.0" ]]
@@ -81,7 +81,7 @@ EOF
 @test "setup.sh install mode generates .env with crypto keys" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
-    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
+    cat > "$STACK_DIR/augur-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -91,7 +91,7 @@ EOF
     rm -rf "$APP_DIR"
     stub_command "openssl" 'echo "abcdef0123456789abcdef0123456789"'
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
     [[ -f "$APP_DIR/.env" ]]
 
@@ -114,7 +114,7 @@ EOF
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.1.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.1.0"
     [[ "$status" -eq 0 ]]
 
     # .env should be preserved
@@ -132,7 +132,7 @@ EOF
 @test "setup.sh creates supervisord service file on install" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
-    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
+    cat > "$STACK_DIR/augur-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -141,7 +141,7 @@ EOF
     rm -rf "$APP_DIR"
     stub_command "openssl" 'echo "deadbeef1234567890abcdef12345678"'
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
     [[ -f "$HOME/etc/services.d/librechat.ini" ]]
 
@@ -153,8 +153,8 @@ EOF
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
     # Place librechat.yaml where setup.sh looks for it (mcps repo config)
-    echo "path: __HOME__/data" > "$STACK_DIR/librechat-uberspace/config/librechat.yaml"
-    cat > "$STACK_DIR/librechat-uberspace/config/.env.example" <<'EOF'
+    echo "path: __HOME__/data" > "$STACK_DIR/augur-uberspace/config/librechat.yaml"
+    cat > "$STACK_DIR/augur-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder
 JWT_SECRET=placeholder
@@ -163,7 +163,7 @@ EOF
     rm -rf "$APP_DIR"
     stub_command "openssl" 'echo "deadbeef1234567890abcdef12345678"'
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
     [[ -f "$APP_DIR/librechat.yaml" ]]
 
@@ -182,7 +182,7 @@ EOF
     mkdir -p "$src"
     rm -rf "$APP_DIR"
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -ne 0 ]]
     [[ "$output" == *"Node.js"* ]]
 }
@@ -199,7 +199,7 @@ EOF
     local src="$TEST_SANDBOX/src_preserve"
     create_src_app "$src"
 
-    bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v0.3.0" 2>&1
+    bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v0.3.0" 2>&1
 
     # Uploads should be preserved in new install
     [ -d "$APP_DIR/uploads" ]
@@ -226,7 +226,7 @@ echo "PIP_INSTALL: $*" >> "$STACK_DIR/pip.log"' > "$STACK_DIR/venv/bin/pip"
     local src="$TEST_SANDBOX/src_mcp"
     create_src_app "$src"
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
 
     # Should install finance-mcp-server, NOT yahoo-finance-mcp
@@ -257,7 +257,7 @@ fi'
     local src="$TEST_SANDBOX/src_mcp2"
     create_src_app "$src"
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
 
     # Should attempt to clone crypto-feargreed-mcp into vendor/
@@ -280,7 +280,7 @@ fi'
     local src="$TEST_SANDBOX/src_mcp3"
     create_src_app "$src"
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v1.0.0"
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"crypto-feargreed-mcp already installed"* ]]
 }
@@ -297,7 +297,7 @@ fi'
     mkdir -p "$src"
     echo "incomplete" > "$src/README.md"
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/setup.sh" "$src" "v0.4.0-bad" 2>&1
+    run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v0.4.0-bad" 2>&1
     [ "$status" -ne 0 ]
 
     # Should have rolled back to previous version
