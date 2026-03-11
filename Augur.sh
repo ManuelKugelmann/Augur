@@ -481,7 +481,7 @@ SVCEOF
         echo ""; echo -e "${CYAN}── Data ──${NC}"; echo ""
         if [[ -d "$STACK/profiles" ]]; then
             PROFILE_COUNT="$(find "$STACK/profiles" -name '*.json' -not -name 'INDEX_*' -not -path '*/SCHEMAS/*' 2>/dev/null | wc -l)"
-            [[ "$PROFILE_COUNT" -gt 0 ]] && _ok "Profiles: ${PROFILE_COUNT} JSON files" || _warn "Profiles: directory exists but empty"
+            [[ "$PROFILE_COUNT" -gt 0 ]] && _ok "Profiles: ${PROFILE_COUNT} JSON files" || _warn "Profiles: directory exists but no profiles found"
         else _fail "Profiles directory missing"; fi
         crontab -l 2>/dev/null | grep -q "augur cron" && _ok "Cron: augur cron scheduled" || _warn "Cron: augur cron not scheduled (run: crontab -e)"
         SYNTAX_OK=true
