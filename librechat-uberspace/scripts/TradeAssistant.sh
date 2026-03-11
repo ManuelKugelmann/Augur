@@ -82,6 +82,17 @@ _web_backend() {
 }
 
 # ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
+_pip_upgrade() {
+    local pip="$1" min_ver=22
+    local ver; ver=$("$pip" --version | awk '{print $2}' | cut -d. -f1)
+    if (( ver >= min_ver )); then
+        log "pip $ver is recent enough (>=$min_ver), skipping upgrade"
+        return 0
+    fi
+    log "pip $ver < $min_ver, upgrading..."
+    timeout 60 "$pip" install --upgrade pip
+}
+
 _pip_install() {
     local pip="$1" req="$2"
     local constraint
@@ -89,7 +100,7 @@ _pip_install() {
     # U7 (CentOS 7, glibc 2.17): pandas 3.x has no pre-built wheel, cap to 2.x
     # U8: empty constraint file (no-op)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
+    timeout 180 "$pip" install --prefer-binary -c "$constraint" -r "$req" "${@:3}"
     rm -f "$constraint"
 }
 
@@ -314,18 +325,15 @@ _do_install() {
 
     if [[ -d "$STACK/venv" ]]; then
         log "Python venv exists, updating deps..."
-        log "Upgrading pip..."
-        "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
-        log "Installing requirements..."
-        _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" 2>/dev/null || true
     else
         log "Creating Python venv..."
         "$PYTHON_BIN" -m venv "$STACK/venv"
-        log "Venv created. Upgrading pip..."
-        "$STACK/venv/bin/pip" install --upgrade pip
-        log "Installing requirements (this may take a few minutes)..."
-        _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt"
     fi
+    _pip_upgrade "$STACK/venv/bin/pip" \
+        || die "pip upgrade failed or timed out"
+    log "Installing requirements..."
+    _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
+        || die "pip install requirements failed or timed out"
     log "Python venv ready"
 
     # ── 4. Signals stack .env ───────────────────
@@ -737,10 +745,11 @@ case "$CMD" in
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
-            log "Upgrading pip..."
-            "$STACK/venv/bin/pip" install --upgrade pip 2>/dev/null || true
+            _pip_upgrade "$STACK/venv/bin/pip" \
+                || die "pip upgrade failed or timed out"
             log "Installing requirements..."
-            _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" 2>/dev/null || true
+            _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
+                || die "pip install requirements failed or timed out"
         else
             warn "Python venv not found at $STACK/venv — run 'ta install' first"
         fi
