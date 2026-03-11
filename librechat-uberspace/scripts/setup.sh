@@ -169,9 +169,15 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Bootstrapping pip inside venv..."
         log "  → venv/bin/python -m ensurepip --upgrade"
         timeout 600 venv/bin/python -m ensurepip --upgrade
-        log "Venv created. Upgrading pip..."
-        log "  → venv/bin/python -m pip install --upgrade pip"
-        timeout 600 venv/bin/python -m pip install --upgrade pip
+        log "Venv created. Checking pip version..."
+        _pip_ver=$(venv/bin/python -m pip --version | awk '{print $2}' | cut -d. -f1)
+        if (( _pip_ver >= 22 )); then
+            log "pip $_pip_ver is recent enough (>=22), skipping upgrade"
+        else
+            log "pip $_pip_ver < 22, upgrading..."
+            log "  → venv/bin/python -m pip install --upgrade pip"
+            timeout 600 venv/bin/python -m pip install --upgrade pip
+        fi
         log "Installing Python requirements (this may take a few minutes)..."
         _pip_constraint=$(mktemp)
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
