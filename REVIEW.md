@@ -1,4 +1,4 @@
-# Code Review — TradingAssistant
+# Code Review — Augur
 
 Full security and quality audit of the entire codebase. Date: 2026-03-06.
 Updated: 2026-03-09 (14 of 19 fixed, all critical security issues resolved).
@@ -23,12 +23,12 @@ Updated: 2026-03-09 (14 of 19 fixed, all critical security issues resolved).
 All `[]` defaults replaced with `None` + `or []` inside functions.
 
 ### 4. ~~Shell Injection in `trap`~~ ✅ FIXED
-**Files:** `TradeAssistant.sh`, `bootstrap.sh`
+**Files:** `Augur.sh`, `bootstrap.sh`
 
 All traps use single-quoted bodies: `trap 'rm -rf "${LC_TMP:-}"' EXIT`.
 
 ### 5. ~~Operator Precedence Bug in Git Update~~ ✅ FIXED
-**File:** `TradeAssistant.sh`
+**File:** `Augur.sh`
 
 Fallback commands grouped with braces: `... || { git ... fetch ... && git ... reset --hard ...; }`.
 
@@ -86,7 +86,7 @@ O(n) disk reads per query. Will degrade at scale. Mitigated by INDEX files for `
 Domain servers run inside the combined trading server process (not as separate LibreChat-launched MCPs). The combined server is a supervisord service that sources `.env`. API keys are available via the process environment.
 
 ### 19. ~~`deploy.conf` Variable Not Used by Ops Script~~ ✅ CLARIFIED
-`TradeAssistant.sh` sets `GH_REPO` default before sourcing config — intentional for `curl|bash` one-liner where config doesn't exist yet. Comment added to explain.
+`Augur.sh` sets `GH_REPO` default before sourcing config — intentional for `curl|bash` one-liner where config doesn't exist yet. Comment added to explain.
 
 ---
 

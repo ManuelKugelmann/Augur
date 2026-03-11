@@ -1,7 +1,7 @@
-# TradingAssistant release — config, scripts, and deployment bundle.
+# Augur release — config, scripts, and deployment bundle.
 # Does NOT include LibreChat (that's built separately via librechat-build.yml).
 # Usage: git tag v0.1.0 && git push --tags
-name: Release TradingAssistant
+name: Release Augur
 
 on:
   push:

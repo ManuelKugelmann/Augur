@@ -10,7 +10,7 @@ load_dotenv()
 mcp = FastMCP("elections", instructions="Global elections and democracy data")
 GOOGLE_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
-_WD_HEADERS = {"User-Agent": "TradingAssistant/1.0 (https://github.com/ManuelKugelmann/TradingAssistant)"}
+_WD_HEADERS = {"User-Agent": "Augur/1.0 (https://github.com/ManuelKugelmann/Augur)"}
 
 # Sanitize inputs for SPARQL queries to prevent injection
 _SAFE_SPARQL_TEXT = re.compile(r'^[A-Za-z0-9 .\'()-]+$')

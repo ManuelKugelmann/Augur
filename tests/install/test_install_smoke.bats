@@ -60,8 +60,8 @@ setup() {
 #!/bin/bash
 REAL_GIT="$real_git"
 REAL_REPO="$real_repo"
-# Only intercept clone of TradingAssistant repo
-if [[ "\${1:-}" == "clone" ]] && echo "\$*" | grep -q "TradingAssistant\|TestRepo"; then
+# Only intercept clone of Augur repo
+if [[ "\${1:-}" == "clone" ]] && echo "\$*" | grep -q "Augur\|TestRepo"; then
     TARGET="\${@: -1}"
     mkdir -p "\$TARGET"
     cp -r "\$REAL_REPO"/. "\$TARGET/"
@@ -87,33 +87,33 @@ teardown() {
 
 # ── Tests ──────────────────────────────────────
 
-@test "TradeAssistant.sh auto-detects fresh install when repo missing" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" 2>&1
-    [[ "$output" == *"TradingAssistant"* ]] || [[ "$output" == *"Cloning"* ]] || [[ "$output" == *"Repo"* ]]
+@test "Augur.sh auto-detects fresh install when repo missing" {
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" 2>&1
+    [[ "$output" == *"Augur"* ]] || [[ "$output" == *"Cloning"* ]] || [[ "$output" == *"Repo"* ]]
 }
 
 @test "install clones repo to STACK_DIR" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
     [[ -d "$STACK_DIR" ]]
     [[ -f "$STACK_DIR/deploy.conf" ]]
 }
 
 @test "install creates python venv" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
     [[ -d "$STACK_DIR/venv" ]]
     [[ -x "$STACK_DIR/venv/bin/python" ]]
 }
 
 @test "install creates signals .env from template" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
     [[ -f "$STACK_DIR/.env" ]]
 }
 
 @test "install registers supervisord services" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
     [[ -f "$HOME/etc/services.d/trading.ini" ]]
     run grep "program:trading" "$HOME/etc/services.d/trading.ini"
@@ -122,23 +122,23 @@ teardown() {
     [[ "$status" -eq 0 ]]
 }
 
-@test "install creates ta shortcut in ~/bin" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+@test "install creates augur shortcut in ~/bin" {
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
-    [[ -x "$HOME/bin/ta" ]]
-    [[ -L "$HOME/bin/TradeAssistant" ]]
+    [[ -x "$HOME/bin/augur" ]]
+    [[ -L "$HOME/bin/Augur" ]]
 }
 
 @test "install is idempotent (re-run succeeds)" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
     # Second run (repo already exists → pull path)
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
 }
 
 @test "install prints completion banner" {
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Installation complete"* ]]
 }
@@ -147,11 +147,11 @@ teardown() {
 
 @test "cron: runs without error after install" {
     # First install to set up STACK_DIR with .git
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     [[ "$status" -eq 0 ]]
 
     # Now run cron — should succeed (no data changes, skips compact without venv python)
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" cron 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" cron 2>&1
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"done (hour="* ]]
 }
@@ -206,7 +206,7 @@ CURLEOF
 
     # Run full install (no APP_DIR/.version → will download bundle)
     # Timeout prevents stall if an external dep hangs (npm, pip, git clone, curl)
-    run timeout 120 bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run timeout 120 bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     echo "$output"
     if [[ "$status" -eq 124 ]]; then
         echo "FAIL: install timed out after 120s" >&2
@@ -246,14 +246,14 @@ CURLEOF
     stub_command "curl" '
         for arg in "$@"; do
             if [[ "$arg" == *"api.github.com/repos"*"releases"* ]]; then
-                echo "{\"tag_name\":\"librechat-build\",\"assets\":[{\"browser_download_url\":\"https://github.com/ManuelKugelmann/TradingAssistant/releases/download/librechat-build/librechat-build.tar.gz\",\"name\":\"librechat-build.tar.gz\"}]}"
+                echo "{\"tag_name\":\"librechat-build\",\"assets\":[{\"browser_download_url\":\"https://github.com/ManuelKugelmann/Augur/releases/download/librechat-build/librechat-build.tar.gz\",\"name\":\"librechat-build.tar.gz\"}]}"
                 exit 0
             fi
         done
         exit 1
     '
 
-    run bash "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh" install 2>&1
+    run bash "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh" install 2>&1
     echo "$output"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"already up-to-date"* ]]
@@ -266,7 +266,7 @@ CURLEOF
     # Stub curl to return empty JSON (no release assets)
     stub_command "curl" 'echo "{}"'
 
-    run bash -c 'bash "$1" install 2>&1' _ "$REPO_ROOT/librechat-uberspace/scripts/TradeAssistant.sh"
+    run bash -c 'bash "$1" install 2>&1' _ "$REPO_ROOT/librechat-uberspace/scripts/Augur.sh"
     echo "$output"
     [[ "$status" -ne 0 ]]
     [[ "$output" == *"No prebuilt LibreChat release found"* ]]

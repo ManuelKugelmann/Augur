@@ -230,7 +230,7 @@ class TestCombinedSmoke:
     # ── Cron entrypoint simulation ────────────────
 
     def test_cron_compact_python_block_runs(self):
-        """The inline Python block from 'ta cron' compact logic runs without errors."""
+        """The inline Python block from 'augur cron' compact logic runs without errors."""
         import server
         server.snapshot(
             kind="countries", entity="TST", type="cron_block_test",

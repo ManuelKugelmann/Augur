@@ -8,31 +8,31 @@
 
 ## Project
 
-**TradingAssistant** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**Augur** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 12 MCP servers: 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + 5 Tier 1 external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit) + 6 Tier 2 external MCPs (alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process for trading server, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Naming Conventions
 
-- **Repo**: `ManuelKugelmann/TradingAssistant`
-- **Ops tool**: `TradeAssistant.sh` — single entry point for install + daily ops
-  - `~/bin/ta` — primary shorthand (`ta help`, `ta status`, `ta install`, etc.)
-  - `~/bin/TradeAssistant` — symlink to `ta`
-  - Also works as one-liner: `curl ... TradeAssistant.sh | bash` (auto-detects fresh install)
-- **Uberspace host**: `assist.uber.space`
+- **Repo**: `ManuelKugelmann/Augur`
+- **Ops tool**: `Augur.sh` — single entry point for install + daily ops
+  - `~/bin/augur` — primary shorthand (`augur help`, `augur status`, `augur install`, etc.)
+  - `~/bin/Augur` — symlink to `augur`
+  - Also works as one-liner: `curl ... Augur.sh | bash` (auto-detects fresh install)
+- **Uberspace host**: `augur.uber.space`
 - **Platform**: U8 (Arch Linux / systemd). U7 (CentOS 7 / supervisord) support is dormant — code paths remain but are not actively maintained. U7 has glibc 2.17 which blocks modern native modules (e.g. `sharp`).
 
 ## Directory Layout (Uberspace)
 
 | Path | Purpose |
 |------|---------|
-| `~/assist/` | Clone of this repo (signals stack) |
+| `~/augur/` | Clone of this repo (signals stack) |
 | `~/LibreChat/` | LibreChat installation (from CI release bundle) |
 | `~/backups/mongo/` | Rolling MongoDB backups (daily/weekly/monthly gzipped JSON) |
-| `~/bin/ta` | Ops CLI tool |
+| `~/bin/augur` | Ops CLI tool |
 
 ## Directory Layout (Repo)
 
 ```
-TradingAssistant/
+Augur/
 ├── CLAUDE.md                          ← you are here
 ├── README.md                          ← project overview
 ├── TODO.md                            ← roadmap (P0–P5)
@@ -69,7 +69,7 @@ TradingAssistant/
 │   │   ├── librechat.yaml             ← MCP server definitions (__HOME__ placeholders)
 │   │   └── .env.example               ← LibreChat env template
 │   └── scripts/
-│       ├── TradeAssistant.sh          ← ops CLI (installed as ~/bin/ta)
+│       ├── Augur.sh                   ← ops CLI (installed as ~/bin/augur)
 │       ├── bootstrap.sh               ← release download entry point
 │       ├── setup.sh                   ← install/update with atomic swap
 │       └── claude-auth-daemon.sh       ← Claude Max auth daemon
@@ -108,11 +108,11 @@ TradingAssistant/
 Dev (Claude Code / Codespace)
   │ push / tag
   ▼
-GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub Release
+GitHub (Augur) ──tag──▶ CI builds bundle ──▶ GitHub Release
                                                              │
                                   ┌──────────────────────────┘
                                   ▼
-                           Uberspace (assist.uber.space)
+                           Uberspace (augur.uber.space)
                            ├─ LibreChat (:3080, Node.js)
                            │   ├─ MCP: trading ──streamable-http──▶ :8071/mcp
                            │   ├─ MCP: Tier 1 external (finance, gdelt-cloud,
@@ -170,9 +170,9 @@ GitHub (TradingAssistant) ──tag──▶ CI builds bundle ──▶ GitHub R
 
 ### deploy.conf (Central Config)
 All scripts source this file. Key variables:
-- `UBER_USER=assist`, `UBER_HOST=assist.uber.space`
-- `GH_USER=ManuelKugelmann`, `GH_REPO=TradingAssistant`
-- `STACK_DIR=$HOME/assist`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
+- `UBER_USER=augur`, `UBER_HOST=augur.uber.space`
+- `GH_USER=ManuelKugelmann`, `GH_REPO=Augur`
+- `STACK_DIR=$HOME/augur`, `APP_DIR=$HOME/LibreChat`, `BACKUP_DIR=$HOME/backups/mongo`
 - `LC_PORT=3080`, `NODE_VERSION=22`
 
 ### Python Dependencies
@@ -190,42 +190,42 @@ ta>=0.10
 ### Development
 1. Edit code locally or in Claude Code
 2. Push to `main` branch
-3. On Uberspace: `ta pull` (git pull + restart)
+3. On Uberspace: `augur pull` (git pull + restart)
 
 ### Production Release
 1. Tag: `git tag v0.2.0 && git push --tags`
 2. CI builds `librechat-bundle.tar.gz` → GitHub Release
-3. On Uberspace: `ta u` (downloads release, atomic swap, restarts)
-4. Rollback if needed: `ta rb`
+3. On Uberspace: `augur u` (downloads release, atomic swap, restarts)
+4. Rollback if needed: `augur rb`
 
 ### First Deploy (one-liner)
 ```bash
-curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
 ```
-Auto-detects fresh install (no repo cloned → runs `install`). Clones repo, creates venv, registers services, installs LibreChat (release bundle or repo fallback), sets up `ta` shortcut. Re-run safe via `ta install`.
+Auto-detects fresh install (no repo cloned → runs `install`). Clones repo, creates venv, registers services, installs LibreChat (release bundle or repo fallback), sets up `augur` shortcut. Re-run safe via `augur install`.
 
 ### Tagging from GitHub Web UI
 Releases → Draft a new release → Choose a tag → type `v0.1.0` → Create new tag on publish → Publish release
 
-## `ta` Command Reference
+## `augur` Command Reference
 
 ```
-ta help        show all commands
-ta s|status    service status + version + host
-ta r|restart   restart LibreChat
-ta l|logs      tail service logs
-ta testrun     run LibreChat in foreground (see errors directly)
-ta v|version   show installed version
-ta u|update    update from latest GitHub release
-ta pull        quick dev update via git pull
-ta install     re-run full installer (idempotent)
-ta rb|rollback rollback to previous version
-ta backup      backup MongoDB to ~/backups/mongo/ (rolling)
-ta restore [f] restore MongoDB from backup (latest if no file)
-ta backups     list available backups
-ta env         edit LibreChat .env
-ta yaml        edit librechat.yaml
-ta conf        edit deploy.conf
+augur help        show all commands
+augur s|status    service status + version + host
+augur r|restart   restart LibreChat
+augur l|logs      tail service logs
+augur testrun     run LibreChat in foreground (see errors directly)
+augur v|version   show installed version
+augur u|update    update from latest GitHub release
+augur pull        quick dev update via git pull
+augur install     re-run full installer (idempotent)
+augur rb|rollback rollback to previous version
+augur backup      backup MongoDB to ~/backups/mongo/ (rolling)
+augur restore [f] restore MongoDB from backup (latest if no file)
+augur backups     list available backups
+augur env         edit LibreChat .env
+augur yaml        edit librechat.yaml
+augur conf        edit deploy.conf
 ```
 
 ## Profiles
@@ -340,7 +340,7 @@ Internal: `_risk_check(action, params, dry_run=True)` — called before any exte
 
 ## Current Status (see TODO.md)
 
-**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `ta` ops tool, data repo automation, code review fixes (security + correctness), chart tool + HTTP endpoint, profile INDEX.json, API keys doc, setup doc, test suite (550+ tests: ~140 bats + ~420 pytest) + CI
+**Completed**: Repo init, cleanup, LibreChat full integration, CI release workflow, `augur` ops tool, data repo automation, code review fixes (security + correctness), chart tool + HTTP endpoint, profile INDEX.json, API keys doc, setup doc, test suite (550+ tests: ~140 bats + ~420 pytest) + CI
 
 **Next priorities (P0)**:
 - Validate combined trading server runs without errors (store + 12 domains)
@@ -379,7 +379,7 @@ bats tests/*.bats && python -m pytest tests/ -v
 bats tests/test_ta_cron.bats
 
 # Syntax check only (fast)
-bash -n librechat-uberspace/scripts/TradeAssistant.sh
+bash -n librechat-uberspace/scripts/Augur.sh
 ```
 
 ### Sandbox (Claude Code) Workarounds
@@ -421,7 +421,7 @@ ln -sf /proc/self/fd /dev/fd
 |------|-------|-----------|--------|
 | `test_store.py` | 66 | pytest | Profile CRUD, region discovery, path safety, index build/update, find/search, lint, schema validation, notes, shared research |
 | `test_indicators.py` | 7 | pytest | Composite signal logic (analyze_full), Yahoo OHLCV fetch, SMA(50) fallback, error handling |
-| `test_ta_dispatch.bats` | 10 | bats | `ta help`, `status`, `version`, `restart`, `rollback`, aliases |
+| `test_ta_dispatch.bats` | 10 | bats | `augur help`, `status`, `version`, `restart`, `rollback`, aliases |
 | `test_setup.bats` | 11 | bats | Install/update modes, `.env` generation, `librechat.yaml` templating, Node.js version check, uploads preservation, rollback |
 | `test_ta_cron.bats` | 1 | bats | Cron hook done message |
 | `test_install_smoke.bats` | 6 | bats | Full install artifacts, idempotency, cron-after-install, LC bundle download (slow, path-filtered CI) |
@@ -461,7 +461,7 @@ ln -sf /proc/self/fd /dev/fd
 - Color output: green=success, yellow=warning, red=error, cyan=info
 - Profile files: uppercase ISO codes for countries (DEU, USA), uppercase tickers for entities (AAPL, NVDA)
 - Git tags: `vMAJOR.MINOR.PATCH` (triggers CI release)
-- Cron logger tag: `ta-cron`
+- Cron logger tag: `augur-cron`
 - `__HOME__` placeholder in `librechat.yaml` is replaced by `setup.sh` with actual `$HOME`
-- After editing any `.sh` file, always run `bash -n <file>` to verify syntax — especially for `TradeAssistant.sh` which must work when piped via `curl | bash` (avoid complex nested quoting in that context)
+- After editing any `.sh` file, always run `bash -n <file>` to verify syntax — especially for `Augur.sh` which must work when piped via `curl | bash` (avoid complex nested quoting in that context)
 - Use approximate tool counts (e.g. "50+ tools") instead of exact numbers — exact counts go stale as tools are added/removed

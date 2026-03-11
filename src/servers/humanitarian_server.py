@@ -10,7 +10,7 @@ IDMC_KEY = os.environ.get("IDMC_API_KEY", "")
 RELIEFWEB_APPNAME = os.environ.get("RELIEFWEB_APPNAME", "")
 
 _RW_HEADERS = {
-    "User-Agent": "TradingAssistant/1.0 (https://github.com/ManuelKugelmann/TradingAssistant)",
+    "User-Agent": "Augur/1.0 (https://github.com/ManuelKugelmann/Augur)",
 }
 
 

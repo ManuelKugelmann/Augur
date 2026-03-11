@@ -27,8 +27,8 @@ setup() {
     # Create mcps repo structure that setup.sh expects
     mkdir -p "$STACK_DIR/librechat-uberspace/config"
     mkdir -p "$STACK_DIR/librechat-uberspace/scripts"
-    # Provide a minimal TradeAssistant.sh for the ops shortcut install
-    echo '#!/bin/bash' > "$STACK_DIR/librechat-uberspace/scripts/TradeAssistant.sh"
+    # Provide a minimal Augur.sh for the ops shortcut install
+    echo '#!/bin/bash' > "$STACK_DIR/librechat-uberspace/scripts/Augur.sh"
 }
 
 # Helper: create a minimal source directory that passes setup.sh validation

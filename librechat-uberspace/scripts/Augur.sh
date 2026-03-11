@@ -1,14 +1,14 @@
 #!/bin/bash
-# TradeAssistant ops — single entry point for install + daily ops
+# Augur ops — single entry point for install + daily ops
 #
 # Fresh install (one-liner, downloads prebuilt LibreChat from GitHub Release):
-#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/TradingAssistant/main/librechat-uberspace/scripts/TradeAssistant.sh | bash
+#   curl -sL https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/librechat-uberspace/scripts/Augur.sh | bash
 #
 # After install:
-#   ta help              # show all commands
-#   ta install           # re-run full installer (idempotent)
+#   augur help              # show all commands
+#   augur install           # re-run full installer (idempotent)
 #
-# Installed as ~/bin/ta (shorthand) and ~/bin/TradeAssistant
+# Installed as ~/bin/augur and ~/bin/Augur
 set -euo pipefail
 
 # ── Abort trap: Ctrl+C or SIGTERM → immediate full exit ──
@@ -28,8 +28,8 @@ trap '_abort' INT TERM
 # doesn't exist yet.  Once the repo is cloned, deploy.conf is sourced below
 # and its values take effect for all subsequent variable expansions.
 GH_USER="${GH_USER:-ManuelKugelmann}"
-GH_REPO="${GH_REPO:-TradingAssistant}"
-STACK_DIR="${STACK_DIR:-$HOME/assist}"
+GH_REPO="${GH_REPO:-Augur}"
+STACK_DIR="${STACK_DIR:-$HOME/augur}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
 NODE_VERSION="${NODE_VERSION:-22}"
@@ -46,7 +46,7 @@ done
 unset _conf _script_conf
 
 APP="${APP_DIR:-$HOME/LibreChat}"
-STACK="${STACK_DIR:-$HOME/assist}"
+STACK="${STACK_DIR:-$HOME/augur}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -264,7 +264,7 @@ fi
 
 # ═══════════════════════════════════════════════
 #  install — full install/update (idempotent)
-#    ta install           → prebuilt release bundle from GitHub Releases
+#    augur install        → prebuilt release bundle from GitHub Releases
 # ═══════════════════════════════════════════════
 _do_install() {
     # Track whether .env files are new (need editing)
@@ -272,7 +272,7 @@ _do_install() {
     local NEED_APP_ENV=false
 
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
-    echo -e "${CYAN} TradingAssistant + LibreChat → Uberspace ${NC}"
+    echo -e "${CYAN} Augur + LibreChat → Uberspace ${NC}"
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
 
@@ -473,20 +473,20 @@ SVCEOF
         _web_backend / "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
     fi
 
-    # ── 8. Install ta shortcut ──────────────────
+    # ── 8. Install augur shortcut ─────────────────
     mkdir -p "$HOME/bin"
-    cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-    chmod +x "$HOME/bin/ta" 2>/dev/null || true
-    ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
+    cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
     # ── 8b. Ensure ~/bin is in PATH via .bashrc (idempotent) ──
     if [[ -f "$HOME/.bashrc" ]] && ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc" 2>/dev/null; then
         echo '' >> "$HOME/.bashrc"
-        echo '# Added by TradingAssistant installer' >> "$HOME/.bashrc"
+        echo '# Added by Augur installer' >> "$HOME/.bashrc"
         echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
         log "Added ~/bin to PATH in .bashrc"
     elif [[ ! -f "$HOME/.bashrc" ]]; then
-        echo '# Added by TradingAssistant installer' > "$HOME/.bashrc"
+        echo '# Added by Augur installer' > "$HOME/.bashrc"
         echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
         log "Created .bashrc with ~/bin in PATH"
     fi
@@ -495,7 +495,7 @@ SVCEOF
     _svc_reload
 
     # ── 11. Auto-seed agents (if credentials available) ──
-    if [[ -n "${TA_SETUP_EMAIL:-}" ]] && [[ -n "${TA_SETUP_PASSWORD:-}" ]]; then
+    if [[ -n "${AUGUR_SETUP_EMAIL:-}" ]] && [[ -n "${AUGUR_SETUP_PASSWORD:-}" ]]; then
         # Wait for LibreChat to become ready
         local LC_URL="http://localhost:${LC_PORT:-3080}"
         local LC_READY=false
@@ -510,10 +510,10 @@ SVCEOF
         if [[ "$LC_READY" == true ]]; then
             log "LibreChat is ready, seeding agents..."
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
-                --email "$TA_SETUP_EMAIL" --password "$TA_SETUP_PASSWORD" \
-                --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: ta agents)"
+                --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
+                --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
         else
-            warn "LibreChat not ready after 60s — seed agents manually: ta agents <email> <password>"
+            warn "LibreChat not ready after 60s — seed agents manually: augur agents <email> <password>"
         fi
     fi
 
@@ -544,7 +544,7 @@ except Exception as e:
     fi
 
     # ── 13. Bootstrap profile data via agent (if credentials available) ──
-    if [[ -n "${TA_AGENTS_API_KEY:-}" ]] && [[ -n "${TA_BOOTSTRAP_AGENT_ID:-}" ]]; then
+    if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -n "${AUGUR_BOOTSTRAP_AGENT_ID:-}" ]]; then
         local LC_URL="http://localhost:${LC_PORT:-3080}"
         local LC_READY=false
         for i in $(seq 1 15); do
@@ -557,13 +557,13 @@ except Exception as e:
         if [[ "$LC_READY" == true ]]; then
             log "Bootstrapping profile data via agent..."
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
-                --api-key "$TA_AGENTS_API_KEY" \
-                --agent-id "$TA_BOOTSTRAP_AGENT_ID" \
+                --api-key "$AUGUR_AGENTS_API_KEY" \
+                --agent-id "$AUGUR_BOOTSTRAP_AGENT_ID" \
                 --base-url "$LC_URL" \
                 --timeseries 2>&1 | while read -r line; do log "bootstrap: $line"; done \
-                || warn "Bootstrap failed (run manually: ta bootstrap)"
+                || warn "Bootstrap failed (run manually: augur bootstrap)"
         else
-            warn "LibreChat not ready — run bootstrap manually: ta bootstrap"
+            warn "LibreChat not ready — run bootstrap manually: augur bootstrap"
         fi
     fi
 
@@ -590,12 +590,12 @@ except Exception as e:
     done
 
     # Check cron
-    if crontab -l 2>/dev/null | grep -q "ta cron"; then
-        log "Cron: ta cron scheduled"
+    if crontab -l 2>/dev/null | grep -q "augur cron"; then
+        log "Cron: augur cron scheduled"
     else
-        warn "Cron: ta cron not scheduled"
+        warn "Cron: augur cron not scheduled"
         echo -e "      Add with: ${CYAN}crontab -e${NC}"
-        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron${NC}"
+        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron${NC}"
     fi
 
     # ── Done ────────────────────────────────────
@@ -659,13 +659,13 @@ except Exception as e:
     echo "    (first user to register becomes admin)"
     echo ""
     echo -e "  ${CYAN}Seed agents:${NC} (after first login)"
-    echo "    ta agents you@example.com yourpassword"
-    echo "    ta agents --dry-run        # preview only"
+    echo "    augur agents you@example.com yourpassword"
+    echo "    augur agents --dry-run        # preview only"
     echo ""
     echo -e "  ${CYAN}Ops:${NC}"
-    echo "    ta help                    # all commands"
-    echo "    ta pull                    # quick git-pull update (dev)"
-    echo "    ta u                       # release update (prod)"
+    echo "    augur help                    # all commands"
+    echo "    augur pull                    # quick git-pull update (dev)"
+    echo "    augur u                    # release update (prod)"
     echo ""
 }
 
@@ -691,7 +691,7 @@ case "$CMD" in
         ;;
     testrun)
         # Run LibreChat (or trading server) in the foreground to see errors directly.
-        # Usage: ta testrun [trading]
+        # Usage: augur testrun [trading]
         _TARGET="${2:-librechat}"
         case "$_TARGET" in
             librechat)
@@ -711,9 +711,9 @@ case "$CMD" in
                 exec "$STACK/venv/bin/python" src/servers/combined_server.py
                 ;;
             *)
-                echo "Usage: ta testrun [librechat|trading]"
-                echo "  ta testrun             Run LibreChat in foreground"
-                echo "  ta testrun trading     Run trading server in foreground"
+                echo "Usage: augur testrun [librechat|trading]"
+                echo "  augur testrun             Run LibreChat in foreground"
+                echo "  augur testrun trading     Run trading server in foreground"
                 ;;
         esac
         ;;
@@ -738,10 +738,10 @@ case "$CMD" in
             sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
         fi
 
-        # Update ta/TradeAssistant shortcuts
-        cp "$STACK/librechat-uberspace/scripts/TradeAssistant.sh" "$HOME/bin/ta" 2>/dev/null || true
-        chmod +x "$HOME/bin/ta" 2>/dev/null || true
-        ln -sf "$HOME/bin/ta" "$HOME/bin/TradeAssistant" 2>/dev/null || true
+        # Update augur/Augur shortcuts
+        cp "$STACK/librechat-uberspace/scripts/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+        chmod +x "$HOME/bin/augur" 2>/dev/null || true
+        ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
         # Update Python deps if changed
         if [[ -d "$STACK/venv" ]]; then
@@ -751,7 +751,7 @@ case "$CMD" in
             _pip_install "$STACK/venv/bin/pip" "$STACK/requirements.txt" \
                 || die "pip install requirements failed or timed out"
         else
-            warn "Python venv not found at $STACK/venv — run 'ta install' first"
+            warn "Python venv not found at $STACK/venv — run 'augur install' first"
         fi
 
         echo "$VER" > "$APP/.version"
@@ -777,7 +777,7 @@ case "$CMD" in
         if [[ -f "$STACK/venv/bin/python" ]]; then
             STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" backup
         else
-            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            echo -e "${RED}✗${NC} Python venv not found. Run: augur install"
             exit 1
         fi
         ;;
@@ -785,7 +785,7 @@ case "$CMD" in
         if [[ -f "$STACK/venv/bin/python" ]]; then
             STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" restore "${2:-}"
         else
-            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            echo -e "${RED}✗${NC} Python venv not found. Run: augur install"
             exit 1
         fi
         ;;
@@ -793,19 +793,19 @@ case "$CMD" in
         if [[ -f "$STACK/venv/bin/python" ]]; then
             STACK="$STACK" "$STACK/venv/bin/python" "$STACK/scripts/mongo-backup.py" list
         else
-            echo -e "${RED}✗${NC} Python venv not found. Run: ta install"
+            echo -e "${RED}✗${NC} Python venv not found. Run: augur install"
             exit 1
         fi
         ;;
     cron)
         # ── Unified cron hook (every 15 min) ─────────────────────
-        # Install: crontab -e → */15 * * * * ~/bin/ta cron 2>&1 | logger -t ta-cron
+        # Install: crontab -e → */15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron
         # Internally gates tasks by interval so only one cron entry is needed.
         HOUR=$(date +%H)
         MIN=$(date +%M)
         DOW=$(date +%u)   # 1=Mon .. 7=Sun
 
-        _cron_log() { echo "[ta-cron] $1"; }
+        _cron_log() { echo "[augur-cron] $1"; }
 
         # ── Daily at 02:00 UTC: compact old snapshots to archive ──
         if [[ "$HOUR" == "02" ]]; then
@@ -814,7 +814,7 @@ case "$CMD" in
             if [[ -f "$STACK/venv/bin/python" ]]; then
                 STACK="$STACK" "$STACK/venv/bin/python" - <<'PYEOF'
 import os, sys
-stack = os.environ.get("STACK", os.path.expanduser("~/assist"))
+stack = os.environ.get("STACK", os.path.expanduser("~/augur"))
 sys.path.insert(0, os.path.join(stack, "src", "store"))
 sys.path.insert(0, os.path.join(stack, "src", "servers"))
 try:
@@ -828,7 +828,7 @@ for kind in VALID_KINDS:
     try:
         col = _snap_col(kind)
     except Exception as e:
-        print(f"[ta-cron] compact skip {kind}: {e}")
+        print(f"[augur-cron] compact skip {kind}: {e}")
         continue
     pipeline = [
         {"$group": {"_id": {"entity": "$meta.entity", "type": "$meta.type"}}},
@@ -836,7 +836,7 @@ for kind in VALID_KINDS:
     try:
         combos = list(col.aggregate(pipeline))
     except Exception as e:
-        print(f"[ta-cron] compact skip {kind}: {e}")
+        print(f"[augur-cron] compact skip {kind}: {e}")
         continue
     for c in combos:
         eid = c["_id"]["entity"]
@@ -844,9 +844,9 @@ for kind in VALID_KINDS:
         result = compact(kind, eid, etype, older_than_days=90, bucket="month")
         status = result.get("status", "error")
         if status == "ok":
-            print(f"[ta-cron] compacted {kind}/{eid}/{etype}: {result['buckets_created']} buckets, {result['snapshots_deleted']} removed")
+            print(f"[augur-cron] compacted {kind}/{eid}/{etype}: {result['buckets_created']} buckets, {result['snapshots_deleted']} removed")
         elif status != "nothing_to_compact":
-            print(f"[ta-cron] compact {kind}/{eid}/{etype}: {status}")
+            print(f"[augur-cron] compact {kind}/{eid}/{etype}: {status}")
 PYEOF
             else
                 _cron_log "python venv not found, skipping compact"
@@ -870,14 +870,14 @@ PYEOF
         # ── Every 6 hours (00, 06, 12, 18): invoke cron-planner agent ──
         if [[ "$((10#$HOUR % 6))" -eq 0 ]] && [[ "$((10#$MIN))" -lt 15 ]]; then
             sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
-            if [[ -n "${TA_AGENTS_API_KEY:-}" ]]; then
+            if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]]; then
                 LC_URL="http://localhost:${LC_PORT:-3080}"
                 # Find cron-planner agent ID from agents list
                 CRON_AGENT_ID=$("$STACK/venv/bin/python" -c "
 import httpx, sys
 try:
     r = httpx.get('${LC_URL}/api/agents/v1/models',
-                   headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}'},
+                   headers={'Authorization': 'Bearer ${AUGUR_AGENTS_API_KEY}'},
                    timeout=10)
     if r.status_code == 200:
         for m in r.json().get('data', []):
@@ -894,14 +894,14 @@ except Exception:
 import httpx, json, sys
 try:
     r = httpx.post('${LC_URL}/api/agents/v1/chat/completions',
-                    headers={'Authorization': 'Bearer ${TA_AGENTS_API_KEY}',
+                    headers={'Authorization': 'Bearer ${AUGUR_AGENTS_API_KEY}',
                              'Content-Type': 'application/json'},
                     json={'model': '${CRON_AGENT_ID}',
                           'messages': [{'role': 'user',
                                         'content': 'Execute your periodic routine: '
                                                    '1) Read plans (store_get_notes kind=plan). '
                                                    '2) Check risk status. '
-                                                   '3) For watched entities, refresh data via data agents. '
+                                                   '3) For watched entities, refresh data via daaugur agents. '
                                                    '4) Run analysis if data is stale. '
                                                    '5) Update plans with results. '
                                                    '6) Log summary as event.'}],
@@ -917,7 +917,7 @@ except Exception as e:
     print(f'ERROR: {e}', file=sys.stderr)
 " 2>&1 | while read -r line; do _cron_log "cron-planner: $line"; done
                 else
-                    _cron_log "cron-planner agent not found (seed agents: ta agents)"
+                    _cron_log "cron-planner agent not found (seed agents: augur agents)"
                 fi
             fi
         fi
@@ -1019,10 +1019,10 @@ SVCEOF
                 echo ""
                 echo "  Next steps:"
                 echo "    1. Add your token to $PROXY_AUTH (if not done)"
-                echo "    2. ta proxy start"
-                echo "    3. ta proxy test"
-                echo "    4. Uncomment 'Claude Max' endpoint in librechat.yaml: ta yaml"
-                echo "    5. ta restart"
+                echo "    2. augur proxy start"
+                echo "    3. augur proxy test"
+                echo "    4. Uncomment 'Claude Max' endpoint in librechat.yaml: augur yaml"
+                echo "    5. augur restart"
                 ;;
             start)
                 _svc_start cliproxyapi
@@ -1042,7 +1042,7 @@ SVCEOF
                     log "Proxy OK (HTTP 200)"
                     curl -s "http://localhost:${PROXY_PORT}/v1/models" | head -20
                 elif [[ "$HTTP_CODE" == "000" ]]; then
-                    die "Proxy not reachable. Run: ta proxy start"
+                    die "Proxy not reachable. Run: augur proxy start"
                 else
                     die "Proxy returned HTTP ${HTTP_CODE}"
                 fi
@@ -1061,12 +1061,12 @@ SVCEOF
                 fi
                 ;;
             *)
-                echo "  ta proxy setup    Install CLIProxyAPI + register service"
-                echo "  ta proxy start    Start CLIProxyAPI"
-                echo "  ta proxy stop     Stop CLIProxyAPI"
-                echo "  ta proxy status   Show CLIProxyAPI status"
-                echo "  ta proxy test     Test proxy endpoint"
-                echo "  ta proxy token    Show token info"
+                echo "  augur proxy setup    Install CLIProxyAPI + register service"
+                echo "  augur proxy start    Start CLIProxyAPI"
+                echo "  augur proxy stop     Stop CLIProxyAPI"
+                echo "  augur proxy status   Show CLIProxyAPI status"
+                echo "  augur proxy test     Test proxy endpoint"
+                echo "  augur proxy token    Show token info"
                 ;;
         esac
         ;;
@@ -1272,10 +1272,10 @@ SVCEOF
         fi
 
         # 16. Cron
-        if crontab -l 2>/dev/null | grep -q "ta cron"; then
-            _ok "Cron: ta cron scheduled"
+        if crontab -l 2>/dev/null | grep -q "augur cron"; then
+            _ok "Cron: augur cron scheduled"
         else
-            _warn "Cron: ta cron not scheduled (run: crontab -e)"
+            _warn "Cron: augur cron not scheduled (run: crontab -e)"
         fi
 
         # 17. Shell script syntax (quick)
@@ -1290,7 +1290,7 @@ SVCEOF
             _ok "Shell scripts: all pass syntax check"
         fi
 
-        # 18. Run test suite if available and requested (ta check --test)
+        # 18. Run test suite if available and requested (augur check --test)
         if [[ "${2:-}" == "--test" ]] || [[ "${2:-}" == "-t" ]]; then
             echo ""
             echo -e "${CYAN}── Test Suite ──${NC}"
@@ -1359,7 +1359,7 @@ SVCEOF
         echo ""
         if [[ "${2:-}" != "--test" ]] && [[ "${2:-}" != "-t" ]]; then
             echo -e "  ${CYAN}Tip:${NC} Run with --test to also execute the test suite:"
-            echo "    ta check --test"
+            echo "    augur check --test"
             echo ""
         fi
         if [[ "$FAIL" -gt 0 ]]; then
@@ -1386,31 +1386,31 @@ SVCEOF
         # profiles using MCP tools and web search. Additive: extends existing data.
         #
         # Usage:
-        #   ta bootstrap                              # bootstrap all kinds
-        #   ta bootstrap --kind countries             # bootstrap one kind
-        #   ta bootstrap --batch-size 5               # smaller batches
-        #   ta bootstrap --dry-run                    # preview prompts only
+        #   augur bootstrap                              # bootstrap all kinds
+        #   augur bootstrap --kind countries             # bootstrap one kind
+        #   augur bootstrap --batch-size 5               # smaller batches
+        #   augur bootstrap --dry-run                    # preview prompts only
         #
-        # Env vars: TA_AGENTS_API_KEY, TA_BOOTSTRAP_AGENT_ID
-        BOOTSTRAP_API_KEY="${TA_AGENTS_API_KEY:-}"
-        BOOTSTRAP_AGENT_ID="${TA_BOOTSTRAP_AGENT_ID:-}"
+        # Env vars: AUGUR_AGENTS_API_KEY, AUGUR_BOOTSTRAP_AGENT_ID
+        BOOTSTRAP_API_KEY="${AUGUR_AGENTS_API_KEY:-}"
+        BOOTSTRAP_AGENT_ID="${AUGUR_BOOTSTRAP_AGENT_ID:-}"
 
         if [[ "${2:-}" == "--dry-run" ]]; then
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/bootstrap-data.py" \
                 --dry-run "${@:3}"
         elif [[ -z "$BOOTSTRAP_API_KEY" ]]; then
-            echo -e "${YELLOW}Usage: ta bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
+            echo -e "${YELLOW}Usage: augur bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
             echo ""
             echo "  Bootstraps profile data via LibreChat Agents API."
             echo "  Enriches existing profiles and creates new ones using MCP tools."
             echo ""
             echo "  Required env vars:"
-            echo "    TA_AGENTS_API_KEY        LibreChat Agents API key"
-            echo "    TA_BOOTSTRAP_AGENT_ID    Agent ID (e.g. from 'ta agents' output)"
+            echo "    AUGUR_AGENTS_API_KEY        LibreChat Agents API key"
+            echo "    AUGUR_BOOTSTRAP_AGENT_ID    Agent ID (e.g. from 'augur agents' output)"
             echo ""
-            echo "  ta bootstrap                        # all kinds"
-            echo "  ta bootstrap --kind countries        # one kind"
-            echo "  ta bootstrap --dry-run               # preview only"
+            echo "  augur bootstrap                        # all kinds"
+            echo "  augur bootstrap --kind countries        # one kind"
+            echo "  augur bootstrap --dry-run               # preview only"
         else
             LC_URL="http://localhost:${LC_PORT:-3080}"
             echo -e "${CYAN}Bootstrapping profiles via ${LC_URL}...${NC}"
@@ -1428,23 +1428,23 @@ SVCEOF
         # Requires LibreChat running + user credentials.
         #
         # Usage:
-        #   ta agents                         # seed for default setup user
-        #   ta agents user@example.com pass   # seed for specific user
-        #   ta agents --dry-run               # preview without creating
-        AGENTS_EMAIL="${2:-${TA_SETUP_EMAIL:-}}"
-        AGENTS_PASS="${3:-${TA_SETUP_PASSWORD:-}}"
+        #   augur agents                         # seed for default setup user
+        #   augur agents user@example.com pass   # seed for specific user
+        #   augur agents --dry-run               # preview without creating
+        AGENTS_EMAIL="${2:-${AUGUR_SETUP_EMAIL:-}}"
+        AGENTS_PASS="${3:-${AUGUR_SETUP_PASSWORD:-}}"
 
         if [[ "${2:-}" == "--dry-run" ]]; then
             "$STACK/venv/bin/python" "$STACK/librechat-uberspace/scripts/seed-agents.py" \
                 --email "dummy@example.com" --password "dummy" --dry-run
         elif [[ -z "$AGENTS_EMAIL" || -z "$AGENTS_PASS" ]]; then
-            echo -e "${YELLOW}Usage: ta agents <email> <password>${NC}"
+            echo -e "${YELLOW}Usage: augur agents <email> <password>${NC}"
             echo ""
             echo "  Seeds all 11 multi-agent architecture agents for the given user."
-            echo "  Or set TA_SETUP_EMAIL and TA_SETUP_PASSWORD env vars."
+            echo "  Or set AUGUR_SETUP_EMAIL and AUGUR_SETUP_PASSWORD env vars."
             echo ""
-            echo "  ta agents admin@example.com mypassword"
-            echo "  ta agents --dry-run                      # preview only"
+            echo "  augur agents admin@example.com mypassword"
+            echo "  augur agents --dry-run                      # preview only"
         else
             LC_URL="http://localhost:${LC_PORT:-3080}"
             echo -e "${CYAN}Seeding agents at ${LC_URL} for ${AGENTS_EMAIL}...${NC}"
@@ -1455,34 +1455,34 @@ SVCEOF
         fi
         ;;
     *)
-        echo -e "${CYAN}TradeAssistant — ops shortcuts${NC}"
+        echo -e "${CYAN}Augur — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
         echo ""
-        echo "  ta s|status     Show service status + version"
-        echo "  ta r|restart    Restart LibreChat"
-        echo "  ta l|logs       Tail service logs"
-        echo "  ta testrun      Run LibreChat in foreground (see errors directly)"
-        echo "  ta v|version    Show installed version"
+        echo "  augur s|status     Show service status + version"
+        echo "  augur r|restart    Restart LibreChat"
+        echo "  augur l|logs       Tail service logs"
+        echo "  augur testrun      Run LibreChat in foreground (see errors directly)"
+        echo "  augur v|version    Show installed version"
         echo ""
-        echo "  ta u|update     Update from latest GitHub release"
-        echo "  ta pull         Quick update via git pull (dev)"
-        echo "  ta install      Re-run full installer (idempotent, uses prebuilt release)"
-        echo "  ta rb|rollback  Rollback to previous version"
+        echo "  augur u|update     Update from latest GitHub release"
+        echo "  augur pull         Quick update via git pull (dev)"
+        echo "  augur install      Re-run full installer (idempotent, uses prebuilt release)"
+        echo "  augur rb|rollback  Rollback to previous version"
         echo ""
-        echo "  ta backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
-        echo "  ta restore [f]  Restore MongoDB from backup (latest if no file)"
-        echo "  ta backups      List available backups"
-        echo "  ta cron         Run cron hook (compact + agent invocation)"
-        echo "  ta bootstrap    Bootstrap profile data via agent (MCP + search)"
-        echo "  ta agents       Seed multi-agent architecture (11 agents)"
-        echo "  ta check        Health check (services, config, connectivity)"
-        echo "  ta check -t     Health check + run test suite (bats + pytest)"
-        echo "  ta proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
-        echo "  ta env          Edit .env"
-        echo "  ta yaml         Edit librechat.yaml"
-        echo "  ta conf         Edit deploy.conf"
+        echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
+        echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"
+        echo "  augur backups      List available backups"
+        echo "  augur cron         Run cron hook (compact + agent invocation)"
+        echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
+        echo "  augur agents       Seed multi-agent architecture (11 agents)"
+        echo "  augur check        Health check (services, config, connectivity)"
+        echo "  augur check -t     Health check + run test suite (bats + pytest)"
+        echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
+        echo "  augur env          Edit .env"
+        echo "  augur yaml         Edit librechat.yaml"
+        echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Fresh install:"
-        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/librechat-uberspace/scripts/TradeAssistant.sh | bash"
+        echo "    curl -sL https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/librechat-uberspace/scripts/Augur.sh | bash"
         ;;
 esac
