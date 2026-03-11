@@ -135,7 +135,7 @@ async def eu_parliament_meps(country: str = "", limit: int = 50) -> dict:
     result = await api_get("https://data.europarl.europa.eu/api/v2/meps",
                            params=params,
                            headers={"Accept": "application/ld+json"},
-                           label="EU Parliament")
+                           timeout=60, label="EU Parliament")
     if "error" not in result:
         meps = result.get("data", [])
         return {"count": len(meps), "meps": meps}
@@ -149,7 +149,7 @@ async def eu_parliament_votes(year: str = "2025", limit: int = 20) -> dict:
         "https://data.europarl.europa.eu/api/v2/plenary-documents",
         params={"year": year, "limit": limit},
         headers={"Accept": "application/ld+json"},
-        label="EU Parliament")
+        timeout=60, label="EU Parliament")
 
 
 # ── Google Civic Info (US, needs key) ────────────────────
