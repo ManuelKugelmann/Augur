@@ -1,0 +1,142 @@
+// Newspaper broadsheet layout
+
+.page-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+// Masthead
+.masthead {
+  text-align: center;
+  padding: 1.5rem 0 1rem;
+  border-bottom: 4px double var(--ink);
+  margin-bottom: 1.5rem;
+
+  &__title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    font-size: 2.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 0.1em;
+  }
+
+  &__subtitle {
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--meta);
+  }
+
+  &__nav {
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--meta);
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  &__link {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+
+    &:hover {
+      color: var(--accent);
+    }
+
+    &--active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 2px;
+    }
+  }
+}
+
+// Rule lines (horizontal rules in broadsheet style)
+hr,
+.rule {
+  border: none;
+  border-top: 1px solid var(--ink);
+  margin: 1.5rem 0;
+}
+
+.rule--double {
+  border-top: 4px double var(--ink);
+}
+
+.rule--ornament {
+  text-align: center;
+  border: none;
+  margin: 2rem 0;
+
+  &::after {
+    content: "◆";
+    color: var(--meta);
+    font-size: 0.7rem;
+  }
+}
+
+// Drop caps
+.article__body > p:first-of-type::first-letter {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 900;
+  font-size: 3.6em;
+  float: left;
+  line-height: 0.8;
+  margin: 0.05em 0.12em 0 0;
+  color: var(--accent);
+}
+
+// Justified text
+.article__body p {
+  text-align: justify;
+  hyphens: auto;
+  margin-bottom: 1em;
+}
+
+// Section labels (The Signal, The Extrapolation, In The Works)
+.section-label {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--meta);
+}
+
+// Dateline
+.dateline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--meta);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+// Footer
+.page-footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 4px double var(--ink);
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--meta);
+
+  a {
+    color: var(--meta);
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+}

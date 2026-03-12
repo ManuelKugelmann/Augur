@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="{{ page.brand | default: 'en' | replace: 'der', 'de' | replace: 'finanz', 'de' | replace: 'the', 'en' | replace: 'financial', 'en' }}">
+<head>
+  {% include head.html %}
+</head>
+<body data-brand="{{ page.brand | default: 'the' }}">
+  {% include disclaimer.html %}
+  <div class="page-wrapper">
+    {% include masthead.html %}
+    <main>
+      {{ content }}
+    </main>
+    {% include footer.html %}
+  </div>
+</body>
+</html>

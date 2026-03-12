@@ -1,0 +1,25 @@
+---
+---
+
+@import "brands";
+@import "themes";
+@import "base";
+@import "broadsheet";
+@import "article";
+@import "sentiment";
+@import "listings";
+@import "responsive";
+
+// Disclaimer banner (persistent on every page)
+.disclaimer-banner {
+  background: #f5e6a3;
+  color: #5c4a00;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 0.4rem 1rem;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}

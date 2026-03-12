@@ -1,0 +1,14 @@
+{% if page.sources.size > 0 %}
+<div class="article__sources">
+  <div class="article__sources-title">
+    {% if page.brand == "der" or page.brand == "finanz" %}Quellen{% else %}Sources{% endif %}
+  </div>
+  <ul class="article__sources-list">
+    {% for source in page.sources %}
+    <li>
+      {% if source.url %}<a href="{{ source.url }}">{{ source.title }}</a>{% else %}{{ source.title }}{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}

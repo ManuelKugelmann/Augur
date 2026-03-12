@@ -1,0 +1,26 @@
+{% if page.sentiment_sector %}
+{% assign brand_key = page.brand | default: "financial" %}
+{% assign brand = site.data.brands[brand_key] %}
+{% assign conf_pct = page.sentiment_confidence | times: 100 | round %}
+<div class="sentiment">
+  <div class="sentiment__title">
+    {% if brand.locale == "de" %}Die Einschätzung des Augur{% else %}The Augur's Sentiment{% endif %}
+  </div>
+  <div class="sentiment__sector">
+    {{ page.sentiment_sector | capitalize }} &middot; {{ page.sentiment_direction | capitalize }}
+  </div>
+  <div class="sentiment__bar">
+    <div class="sentiment__bar-track">
+      <div class="sentiment__bar-fill" style="width: {{ conf_pct }}%"></div>
+    </div>
+    <span class="sentiment__bar-label">{{ conf_pct }}%</span>
+  </div>
+  <div class="sentiment__disclaimer">
+    {% if brand.locale == "de" %}
+    KI-generierte Einschätzung, keine Finanzberatung.
+    {% else %}
+    AI-generated opinion, not financial advice.
+    {% endif %}
+  </div>
+</div>
+{% endif %}

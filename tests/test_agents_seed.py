@@ -39,7 +39,7 @@ class TestAgentsFile:
         assert isinstance(agents, list)
 
     def test_expected_count(self, agents):
-        assert len(agents) == 11, f"Expected 11 agents, got {len(agents)}"
+        assert len(agents) == 15, f"Expected 15 agents, got {len(agents)}"
 
 
 # ── Required fields ──────────────────────────
@@ -87,10 +87,15 @@ class TestLayers:
         assert len(l3) == 1
         assert l3[0]["_name"] == "synthesizer"
 
-    def test_l4_agent(self, agents):
+    def test_l4_agents(self, agents):
         l4 = [a for a in agents if a["_layer"] == "L4"]
-        assert len(l4) == 1
-        assert l4[0]["_name"] == "cron-planner"
+        assert len(l4) == 5
+        names = {a["_name"] for a in l4}
+        assert "cron-planner" in names
+        assert "news-the-augur" in names
+        assert "news-der-augur" in names
+        assert "news-financial-augur" in names
+        assert "news-finanz-augur" in names
 
     def test_l5_agent(self, agents):
         l5 = [a for a in agents if a["_layer"] == "L5"]
@@ -235,6 +240,74 @@ class TestCronPlanner:
         """L5 live-chat must be able to hand off to T4 cron-planner."""
         lc = next(a for a in agents if a["_name"] == "live-chat")
         assert "cron-planner" in lc["edges"]
+
+
+# ── L4 news agents validation ──────────────
+
+class TestNewsAgents:
+    """4 news agents (one per brand) must have trading MCP for augur_* tools
+    and edge to appropriate data/analyst/synthesizer agents."""
+
+    NEWS_AGENTS = [
+        ("news-the-augur", "the", "en"),
+        ("news-der-augur", "der", "de"),
+        ("news-financial-augur", "financial", "en"),
+        ("news-finanz-augur", "finanz", "de"),
+    ]
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_exists(self, agents, name, brand, locale):
+        names = [a["_name"] for a in agents]
+        assert name in names, f"{name} agent must be defined"
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_is_l4(self, agents, name, brand, locale):
+        agent = next(a for a in agents if a["_name"] == name)
+        assert agent["_layer"] == "L4"
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_has_trading_mcp(self, agents, name, brand, locale):
+        agent = next(a for a in agents if a["_name"] == name)
+        assert any("trading" in t for t in agent["tools"]), \
+            f"{name} needs trading MCP for augur_* tools"
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_references_augur(self, agents, name, brand, locale):
+        agent = next(a for a in agents if a["_name"] == name)
+        assert "augur" in agent["instructions"].lower()
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_references_its_brand(self, agents, name, brand, locale):
+        agent = next(a for a in agents if a["_name"] == name)
+        assert brand in agent["instructions"].lower()
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_edges_to_synthesizer(self, agents, name, brand, locale):
+        agent = next(a for a in agents if a["_name"] == name)
+        assert "synthesizer" in agent["edges"]
+
+    @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
+    def test_news_agent_does_not_edge_to_trader(self, agents, name, brand, locale):
+        agent = next(a for a in agents if a["_name"] == name)
+        assert "trader" not in agent["edges"]
+
+    def test_general_agents_edge_to_osint(self, agents):
+        for name in ("news-the-augur", "news-der-augur"):
+            agent = next(a for a in agents if a["_name"] == name)
+            assert "osint-data" in agent["edges"]
+            assert "osint-analyst" in agent["edges"]
+
+    def test_financial_agents_edge_to_market(self, agents):
+        for name in ("news-financial-augur", "news-finanz-augur"):
+            agent = next(a for a in agents if a["_name"] == name)
+            assert "market-data" in agent["edges"]
+            assert "market-analyst" in agent["edges"]
+
+    def test_l5_edges_include_news_agents(self, agents):
+        lc = next(a for a in agents if a["_name"] == "live-chat")
+        for name in ("news-the-augur", "news-der-augur",
+                      "news-financial-augur", "news-finanz-augur"):
+            assert name in lc["edges"], f"live-chat should edge to {name}"
 
 
 # ── Seed script edge resolution ─────────────

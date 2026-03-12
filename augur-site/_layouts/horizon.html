@@ -1,0 +1,31 @@
+---
+layout: default
+---
+{% assign brand = site.data.brands[page.brand] %}
+{% assign horizon_label = "" %}
+{% for h in brand.horizons %}
+  {% if h.key == page.horizon %}
+    {% assign horizon_label = h.label %}
+  {% endif %}
+{% endfor %}
+
+<div class="listing">
+  <div class="listing__header">
+    <h1>{{ horizon_label }}</h1>
+    <div class="dateline">{{ brand.name }}</div>
+    <hr class="rule">
+  </div>
+
+  <ul class="listing__items">
+    {% assign filtered = site.posts | where: "brand", page.brand | where: "horizon", page.horizon %}
+    {% for post in filtered %}
+    <li class="listing__item">
+      {% include article-card.html post=post %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if filtered.size == 0 %}
+  <p style="color: var(--meta); font-style: italic;">No predictions yet for this horizon.</p>
+  {% endif %}
+</div>

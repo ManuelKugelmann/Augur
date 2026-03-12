@@ -1,0 +1,168 @@
+title: The Augur
+description: "AI-generated speculative predictions — not news."
+url: "https://augur.news"
+baseurl: ""
+
+markdown: kramdown
+highlighter: rouge
+permalink: /:categories/:title/
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - LICENSE
+
+defaults:
+  # the.augur (EN general)
+  - scope:
+      path: "_posts/the.augur/days"
+    values:
+      layout: article
+      brand: the
+      horizon: days
+      categories: the.augur/days
+  - scope:
+      path: "_posts/the.augur/weeks"
+    values:
+      layout: article
+      brand: the
+      horizon: weeks
+      categories: the.augur/weeks
+  - scope:
+      path: "_posts/the.augur/months"
+    values:
+      layout: article
+      brand: the
+      horizon: months
+      categories: the.augur/months
+  - scope:
+      path: "_posts/the.augur/years"
+    values:
+      layout: article
+      brand: the
+      horizon: years
+      categories: the.augur/years
+  - scope:
+      path: "_posts/the.augur/decades"
+    values:
+      layout: article
+      brand: the
+      horizon: decades
+      categories: the.augur/decades
+  # der.augur (DE general)
+  - scope:
+      path: "_posts/der.augur/tage"
+    values:
+      layout: article
+      brand: der
+      horizon: days
+      categories: der.augur/tage
+  - scope:
+      path: "_posts/der.augur/wochen"
+    values:
+      layout: article
+      brand: der
+      horizon: weeks
+      categories: der.augur/wochen
+  - scope:
+      path: "_posts/der.augur/monate"
+    values:
+      layout: article
+      brand: der
+      horizon: months
+      categories: der.augur/monate
+  - scope:
+      path: "_posts/der.augur/jahre"
+    values:
+      layout: article
+      brand: der
+      horizon: years
+      categories: der.augur/jahre
+  - scope:
+      path: "_posts/der.augur/jahrzehnte"
+    values:
+      layout: article
+      brand: der
+      horizon: decades
+      categories: der.augur/jahrzehnte
+  # financial.augur (EN markets)
+  - scope:
+      path: "_posts/financial.augur/days"
+    values:
+      layout: article
+      brand: financial
+      horizon: days
+      categories: financial.augur/days
+  - scope:
+      path: "_posts/financial.augur/weeks"
+    values:
+      layout: article
+      brand: financial
+      horizon: weeks
+      categories: financial.augur/weeks
+  - scope:
+      path: "_posts/financial.augur/months"
+    values:
+      layout: article
+      brand: financial
+      horizon: months
+      categories: financial.augur/months
+  - scope:
+      path: "_posts/financial.augur/years"
+    values:
+      layout: article
+      brand: financial
+      horizon: years
+      categories: financial.augur/years
+  - scope:
+      path: "_posts/financial.augur/decades"
+    values:
+      layout: article
+      brand: financial
+      horizon: decades
+      categories: financial.augur/decades
+  # finanz.augur (DE markets)
+  - scope:
+      path: "_posts/finanz.augur/tage"
+    values:
+      layout: article
+      brand: finanz
+      horizon: days
+      categories: finanz.augur/tage
+  - scope:
+      path: "_posts/finanz.augur/wochen"
+    values:
+      layout: article
+      brand: finanz
+      horizon: weeks
+      categories: finanz.augur/wochen
+  - scope:
+      path: "_posts/finanz.augur/monate"
+    values:
+      layout: article
+      brand: finanz
+      horizon: months
+      categories: finanz.augur/monate
+  - scope:
+      path: "_posts/finanz.augur/jahre"
+    values:
+      layout: article
+      brand: finanz
+      horizon: years
+      categories: finanz.augur/jahre
+  - scope:
+      path: "_posts/finanz.augur/jahrzehnte"
+    values:
+      layout: article
+      brand: finanz
+      horizon: decades
+      categories: finanz.augur/jahrzehnte
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+sass:
+  sass_dir: _sass
+  style: compressed

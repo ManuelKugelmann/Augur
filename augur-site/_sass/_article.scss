@@ -1,0 +1,116 @@
+// Article page styles
+
+.article {
+  &__horizon {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+
+    &::before {
+      content: "◆ ";
+    }
+  }
+
+  &__headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    font-size: 2.2rem;
+    line-height: 1.15;
+    margin-bottom: 0.6rem;
+    color: var(--ink);
+  }
+
+  &__image {
+    margin: 1.5rem 0;
+    position: relative;
+
+    img {
+      width: 100%;
+      display: block;
+    }
+
+    &-disclaimer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.3rem 0.5rem;
+      text-align: center;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  }
+
+  &__section {
+    margin-bottom: 1.5rem;
+  }
+
+  &__sources {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--meta);
+
+    &-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--meta);
+      margin-bottom: 0.5rem;
+    }
+
+    &-list {
+      list-style: none;
+      padding: 0;
+
+      li {
+        font-size: 0.85rem;
+        color: var(--meta);
+        margin-bottom: 0.3rem;
+
+        &::before {
+          content: "· ";
+        }
+      }
+    }
+  }
+
+  &__tags {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--meta);
+    background: rgba(0, 0, 0, 0.04);
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+
+    &::before {
+      content: "#";
+    }
+  }
+
+  &__meta {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--meta);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--meta);
+    line-height: 1.8;
+  }
+}

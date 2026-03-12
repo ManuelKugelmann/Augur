@@ -1,0 +1,89 @@
+// Theme variants — applied via data-theme attribute on <body>
+// Brand palettes (data-brand) override accent only; themes override the full palette.
+
+[data-theme="dark"] {
+  --bg: #1a1a1a;
+  --ink: #e8e4dc;
+  --accent: #c4473a;
+  --meta: #8a8078;
+}
+
+[data-theme="dark"][data-brand="der"] {
+  --accent: #5b9bd5;
+}
+
+[data-theme="dark"][data-brand="financial"],
+[data-theme="dark"][data-brand="finanz"] {
+  --bg: #1a1e22;
+  --accent: #2ecc71;
+  --meta: #7a8590;
+}
+
+[data-theme="sepia"] {
+  --bg: #f5e6c8;
+  --ink: #2c1810;
+  --accent: #6b2c0f;
+  --meta: #7a6552;
+}
+
+[data-theme="modern"] {
+  --bg: #ffffff;
+  --ink: #111111;
+  --accent: #0066cc;
+  --meta: #666666;
+}
+
+[data-theme="modern"][data-brand="der"] {
+  --accent: #1a3a5c;
+}
+
+[data-theme="modern"][data-brand="financial"],
+[data-theme="modern"][data-brand="finanz"] {
+  --accent: #0a6e3a;
+}
+
+[data-theme="terminal"] {
+  --bg: #0a0a0a;
+  --ink: #00ff41;
+  --accent: #ff6600;
+  --meta: #00aa2a;
+
+  body, h1, h2, h3, h4, h5, h6,
+  .masthead__title, .masthead__subtitle,
+  .dateline, code, .meta {
+    font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  }
+}
+
+// Theme switcher UI
+.theme-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+
+  &__btn {
+    appearance: none;
+    border: 1px solid var(--meta);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    &--active {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+  }
+}
