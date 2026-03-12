@@ -106,18 +106,14 @@ elif [[ ! -f "$APP/librechat.yaml" ]]; then
     warn "librechat.yaml not found in mcps repo — configure manually"
 fi
 
-# No additional MCP npm packages needed — trading server is Python-only.
-
-# ── Install external MCP dependencies ─────────────
-# RSS MCP (Node, runs via node_modules)
-if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
-    log "Installing rss-mcp..."
-    log "  → cd $STACK && npm install rss-mcp"
-    cd "$STACK"
-    timeout 60 npm install rss-mcp || warn "rss-mcp install failed (RSS feed MCP won't be available)"
-    cd - >/dev/null
+# ── Check prebuilt MCP Node servers ─────────────
+# Node MCPs (rss, prediction-markets, hackernews, mcp-remote) are prebuilt
+# via CI and downloaded by install.sh. No npm install needed here.
+if [[ -d "$STACK/mcp-nodes/node_modules" ]]; then
+    log "MCP Node servers bundle present"
 else
-    log "rss-mcp already installed"
+    warn "MCP Node servers not found at $STACK/mcp-nodes — some MCPs won't be available"
+    warn "Run: augur install (downloads mcp-nodes bundle)"
 fi
 
 # Python MCPs installed into signals stack venv
