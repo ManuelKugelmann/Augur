@@ -81,7 +81,35 @@ Then run the installer:
 curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/Augur.sh?$(date +%s)" | bash
 ```
 
-This clones the repo, creates Python venv, installs LibreChat (release bundle or git fallback), registers supervisord services (`librechat`, `trading`, `charts`), and sets up the `augur` command. Re-run safe.
+This clones the repo, creates Python venv, installs LibreChat (release bundle or git fallback), registers services, and sets up the `augur` command. Re-run safe.
+
+<details>
+<summary>Manual install (if the one-liner fails or you prefer step-by-step)</summary>
+
+```bash
+git clone https://github.com/ManuelKugelmann/Augur.git ~/augur
+cd ~/augur
+python3 -m venv --without-pip venv
+venv/bin/python -m ensurepip
+venv/bin/python -m pip install --prefer-binary -r requirements.txt
+cp .env.example .env
+nano .env                        # set MONGO_URI_SIGNALS
+TAG=$(curl -sf https://api.github.com/repos/ManuelKugelmann/Augur/releases/latest | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4)
+URL=$(curl -sf https://api.github.com/repos/ManuelKugelmann/Augur/releases/latest | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+')
+curl -fL --create-dirs -o /tmp/lc-install/bundle.tar.gz "$URL"
+mkdir -p ~/LibreChat && tar xzf /tmp/lc-install/bundle.tar.gz -C ~/LibreChat && rm -rf /tmp/lc-install
+bash ~/augur/augur-uberspace/scripts/setup.sh ~/LibreChat "$TAG"
+nano ~/LibreChat/.env            # set MONGO_URI + LLM API key(s)
+systemctl --user daemon-reload
+systemctl --user enable trading charts librechat
+uberspace web backend add /charts port 8066 --force
+mkdir -p ~/bin && cp ~/augur/Augur.sh ~/bin/augur && chmod +x ~/bin/augur
+ln -sf ~/bin/augur ~/bin/Augur
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+systemctl --user start librechat trading charts
+```
+
+</details>
 
 ### Step 3: Configure (2 min)
 
