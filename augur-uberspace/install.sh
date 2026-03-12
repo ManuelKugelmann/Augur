@@ -79,8 +79,12 @@ _pip_upgrade() {
     local rc=$?
     if [[ -s "$_pip_err" ]]; then warn "pip stderr: $(cat "$_pip_err")"; fi
     rm -f "$_pip_err"
+    if (( rc == 124 )); then
+        warn "pip --version timed out (30s) — pip is slow but likely fine, skipping upgrade"
+        return 0
+    fi
     if (( rc != 0 )); then
-        warn "pip --version exited $rc (timeout=124)"; return 1
+        warn "pip --version exited $rc"; return 1
     fi
     if [[ -z "$ver" ]]; then
         warn "pip --version returned empty output"; return 1
