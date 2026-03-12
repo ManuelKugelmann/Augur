@@ -100,8 +100,8 @@ _pip_upgrade() {
 
 _pip_install() {
     local python="$1" req="$2"
-    log "  → $python -m pip install -v --prefer-binary -r $req ${*:3}"
-    "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
+    log "  → $python -m pip install -v --only-binary numpy,pandas --prefer-binary -r $req ${*:3}"
+    "$python" -m pip install -v --only-binary numpy,pandas --prefer-binary -r "$req" "${@:3}" </dev/null
 }
 
 # ── HTTP helpers ──
