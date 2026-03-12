@@ -79,8 +79,12 @@ _pip_upgrade() {
     local rc=$?
     if [[ -s "$_pip_err" ]]; then warn "pip stderr: $(cat "$_pip_err")"; fi
     rm -f "$_pip_err"
+    if (( rc == 124 )); then
+        warn "pip --version timed out (30s) — pip is slow but likely fine, skipping upgrade"
+        return 0
+    fi
     if (( rc != 0 )); then
-        warn "pip --version exited $rc (timeout=124)"; return 1
+        warn "pip --version exited $rc"; return 1
     fi
     if [[ -z "$ver" ]]; then
         warn "pip --version returned empty output"; return 1
@@ -91,13 +95,13 @@ _pip_upgrade() {
     fi
     log "pip $ver < $min_ver, upgrading..."
     log "  → $python -m pip install -v --upgrade pip"
-    timeout 600 "$python" -m pip install -v --upgrade pip </dev/null
+    "$python" -m pip install -v --upgrade pip </dev/null
 }
 
 _pip_install() {
     local python="$1" req="$2"
     log "  → $python -m pip install -v --prefer-binary -r $req ${*:3}"
-    timeout 600 "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
+    "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
 }
 
 # ── HTTP helpers ──
@@ -362,8 +366,8 @@ _do_install() {
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
         log "  → $STACK/venv/bin/python -m ensurepip"
-        timeout 600 "$STACK/venv/bin/python" -m ensurepip </dev/null \
-            || die "ensurepip failed or timed out"
+        "$STACK/venv/bin/python" -m ensurepip </dev/null \
+            || die "ensurepip failed"
     fi
     local _req_hash _cached_hash=""
     _req_hash=$(sha256sum "$STACK/requirements.txt" 2>/dev/null | cut -d' ' -f1 || true)
@@ -373,7 +377,7 @@ _do_install() {
     else
         log "Installing Python requirements..."
         _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
-            || die "pip install requirements failed or timed out"
+            || die "pip install requirements failed"
         echo "$_req_hash" > "$STACK/venv/.req_hash"
     fi
     log "Python venv ready"
