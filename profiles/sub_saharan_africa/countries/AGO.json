@@ -1,0 +1,45 @@
+{
+  "id": "AGO",
+  "name": "Angola",
+  "iso2": "AO",
+  "region": "Sub-Saharan Africa",
+  "currency": "AOA",
+  "capital": "Luanda",
+  "population": 35600000,
+  "trade": {
+    "top_exports": ["crude_oil", "diamonds", "natural_gas", "petroleum_products"],
+    "top_partners": ["CHN", "IND", "USA", "ZAF", "FRA"],
+    "major_ports": ["Luanda", "Lobito", "Namibe"],
+    "chokepoint_exposure": ["cape_of_good_hope"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "food", "vehicles", "electrical_equipment"],
+    "energy_mix": {
+      "renewables": 0.01, "gas": 0.10, "coal": 0.0, "nuclear": 0.0, "oil": 0.30, "hydro": 0.55, "other": 0.04
+    },
+    "risk_factors": ["oil_dependence", "dutch_disease", "inequality", "governance_deficit"]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 3.36,
+    "press_freedom_rank": 103,
+    "corruption_perception": 29
+  },
+  "neighbors": [
+    {"id": "COD", "name": "DR Congo", "relevance": "Northern/eastern border; Cabinda exclave; refugees; oil"},
+    {"id": "COG", "name": "Republic of the Congo", "relevance": "Northern border (Cabinda); OPEC peers; oil"},
+    {"id": "ZMB", "name": "Zambia", "relevance": "Eastern border; Lobito corridor; trade"},
+    {"id": "NAM", "name": "Namibia", "relevance": "Southern border; Kunene River; border security"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Largest oil buyer; oil-backed loans; infrastructure; major creditor"},
+    {"target": "USA", "type": "trade", "description": "Oil exports; Chevron operations; strategic partnership"},
+    {"target": "EU", "type": "trade", "description": "Oil/gas exports (Portugal, Spain); Lobito corridor investment"},
+    {"target": "OPEC", "type": "alliance", "description": "OPEC member; production quota management; oil policy coordination"}
+  ],
+  "tags": ["AU", "SADC", "OPEC"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,45 @@
+{
+  "id": "ZWE",
+  "name": "Zimbabwe",
+  "iso2": "ZW",
+  "region": "Sub-Saharan Africa",
+  "currency": "ZWL",
+  "capital": "Harare",
+  "population": 16300000,
+  "trade": {
+    "top_exports": ["gold", "tobacco", "nickel", "diamonds", "ferrochrome"],
+    "top_partners": ["ZAF", "ARE", "CHN", "MOZ", "GBR"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "electricity"],
+    "energy_mix": {
+      "renewables": 0.02, "gas": 0.0, "coal": 0.30, "nuclear": 0.0, "oil": 0.10, "hydro": 0.55, "other": 0.03
+    },
+    "risk_factors": ["currency_instability", "hyperinflation_history", "sanctions", "governance_deficit", "drought"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.67,
+    "press_freedom_rank": 130,
+    "corruption_perception": 23
+  },
+  "neighbors": [
+    {"id": "ZAF", "name": "South Africa", "relevance": "Southern border; migration; trade lifeline; Eskom power"},
+    {"id": "MOZ", "name": "Mozambique", "relevance": "Eastern border; Beira corridor; fuel imports"},
+    {"id": "ZMB", "name": "Zambia", "relevance": "Northern border; Kariba Dam; shared hydropower"},
+    {"id": "BWA", "name": "Botswana", "relevance": "Western border; Kazungula; migration"}
+  ],
+  "links": [
+    {"target": "ZAF", "type": "dependency", "description": "Dominant trade partner; migration; electricity imports; remittances"},
+    {"target": "CHN", "type": "trade", "description": "Mining investment; platinum; political support; infrastructure"},
+    {"target": "USA", "type": "sanctions", "description": "Targeted sanctions (ZIDERA); governance concerns; diamond trade"},
+    {"target": "EU", "type": "sanctions", "description": "Arms embargo; governance concerns; partial sanctions relief"}
+  ],
+  "tags": ["AU", "SADC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

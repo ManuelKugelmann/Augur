@@ -1,0 +1,44 @@
+{
+  "id": "HND",
+  "name": "Honduras",
+  "iso2": "HN",
+  "region": "Latin America",
+  "currency": "HNL",
+  "capital": "Tegucigalpa",
+  "population": 10400000,
+  "trade": {
+    "top_exports": ["coffee", "bananas", "palm_oil", "shrimp", "textiles"],
+    "top_partners": ["USA", "SLV", "GTM", "NIC", "DEU"],
+    "major_ports": ["Puerto Cortes", "La Ceiba"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "food"],
+    "energy_mix": {
+      "hydro": 0.30, "oil": 0.30, "renewables": 0.25, "gas": 0.02, "coal": 0.10, "nuclear": 0.0, "other": 0.03
+    },
+    "risk_factors": ["gang_violence", "hurricane_exposure", "remittance_dependence", "poverty", "corruption"]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 4.82,
+    "press_freedom_rank": 156,
+    "corruption_perception": 22
+  },
+  "neighbors": [
+    {"id": "GTM", "name": "Guatemala", "relevance": "Western border; Northern Triangle partner; trade"},
+    {"id": "SLV", "name": "El Salvador", "relevance": "Southern border; Northern Triangle; trade partner"},
+    {"id": "NIC", "name": "Nicaragua", "relevance": "Eastern border; trade; historic tensions"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Dominant trade partner; CAFTA-DR; remittances; migration"},
+    {"target": "GTM", "type": "trade", "description": "Northern Triangle; trade integration; security cooperation"},
+    {"target": "SLV", "type": "trade", "description": "Northern Triangle; trade corridor; shared challenges"},
+    {"target": "CAFTA-DR", "type": "alliance", "description": "CAFTA-DR member; US market access"}
+  ],
+  "tags": ["OAS", "CAFTA-DR", "SICA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

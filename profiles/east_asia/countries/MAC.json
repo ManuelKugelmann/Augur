@@ -1,0 +1,48 @@
+{
+  "id": "MAC",
+  "name": "Macao SAR",
+  "iso2": "MO",
+  "region": "East Asia",
+  "currency": "MOP",
+  "capital": "Macao",
+  "population": 700000,
+  "trade": {
+    "top_exports": ["textiles", "tobacco", "machinery", "jewelry", "watches"],
+    "top_partners": ["HKG", "CHN", "USA", "VNM", "DEU"],
+    "major_ports": ["Macao"],
+    "chokepoint_exposure": ["taiwan_strait", "malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["food", "electronics", "luxury_goods", "petroleum", "vehicles"],
+    "energy_mix": {
+      "gas": 0.55, "oil": 0.15, "renewables": 0.02, "coal": 0.0, "hydro": 0.0, "nuclear": 0.0, "other": 0.28
+    },
+    "risk_factors": [
+      "gaming_revenue_dependence",
+      "china_policy_risk",
+      "tiny_economy",
+      "tourism_concentration",
+      "aging_population"
+    ]
+  },
+  "ratings": {
+    "credit": "Aa3",
+    "democracy_index": 3.42,
+    "press_freedom_rank": 140,
+    "corruption_perception": 55
+  },
+  "neighbors": [
+    {"id": "CHN", "name": "China", "relevance": "Sovereign power; Zhuhai border; Greater Bay Area; gaming regulation"},
+    {"id": "HKG", "name": "Hong Kong", "relevance": "Sister SAR; Greater Bay Area; HZMB bridge; currency peg via HKD"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "dependency", "description": "Sovereign; electricity/water imports; Greater Bay Area; gaming license authority"},
+    {"target": "HKG", "type": "trade", "description": "Largest export partner; currency pegged to HKD; HZMB bridge; complementary tourism"},
+    {"target": "PRT", "type": "trade", "description": "Former colonial power; CPLP forum host; cultural heritage; Portuguese-speaking world gateway"}
+  ],
+  "tags": ["SAR", "gaming_hub", "CPLP_observer"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "Moody's", "Fitch"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,48 @@
+{
+  "id": "ZMB",
+  "name": "Zambia",
+  "iso2": "ZM",
+  "region": "Sub-Saharan Africa",
+  "currency": "ZMW",
+  "capital": "Lusaka",
+  "population": 20600000,
+  "trade": {
+    "top_exports": ["copper", "cobalt", "gold", "gemstones", "tobacco"],
+    "top_partners": ["CHN", "CHE", "ZAF", "COD", "SGP"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "fertilizers"],
+    "energy_mix": {
+      "renewables": 0.03, "gas": 0.0, "coal": 0.05, "nuclear": 0.0, "oil": 0.07, "hydro": 0.82, "other": 0.03
+    },
+    "risk_factors": ["copper_price_dependence", "debt_restructuring", "drought_hydropower", "poverty"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 4.86,
+    "press_freedom_rank": 62,
+    "corruption_perception": 33
+  },
+  "neighbors": [
+    {"id": "COD", "name": "DR Congo", "relevance": "Northern border; Copperbelt connection; cross-border mining"},
+    {"id": "ZWE", "name": "Zimbabwe", "relevance": "Southern border; Kariba Dam; shared hydropower"},
+    {"id": "MOZ", "name": "Mozambique", "relevance": "Eastern border; Nacala corridor; transit trade"},
+    {"id": "TZA", "name": "Tanzania", "relevance": "Northeastern border; TAZARA railway; trade"},
+    {"id": "MWI", "name": "Malawi", "relevance": "Eastern border; trade; Lake Malawi"},
+    {"id": "AGO", "name": "Angola", "relevance": "Western border; Lobito corridor; trade"},
+    {"id": "BWA", "name": "Botswana", "relevance": "Southern border; Kazungula bridge; trade"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Largest copper buyer; mining investment; debt restructuring"},
+    {"target": "IMF", "type": "dependency", "description": "Debt restructuring program; first Common Framework case; fiscal reform"},
+    {"target": "EU", "type": "trade", "description": "Copper exports; development aid; Lobito corridor investment"},
+    {"target": "USA", "type": "trade", "description": "Lobito corridor; copper for EV transition; AGOA; democracy partner"}
+  ],
+  "tags": ["AU", "SADC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,48 @@
+{
+  "id": "MDV",
+  "name": "Maldives",
+  "iso2": "MV",
+  "region": "South Asia",
+  "currency": "MVR",
+  "capital": "Male",
+  "population": 530000,
+  "trade": {
+    "top_exports": ["fish", "tuna", "seafood"],
+    "top_partners": ["THA", "DEU", "GBR", "MUS", "IND"],
+    "major_ports": ["Male"],
+    "chokepoint_exposure": ["hormuz", "bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "food", "construction_materials", "electronics", "machinery"],
+    "energy_mix": {
+      "oil": 0.85, "renewables": 0.08, "gas": 0.0, "coal": 0.0, "hydro": 0.0, "nuclear": 0.0, "other": 0.07
+    },
+    "risk_factors": [
+      "sea_level_rise",
+      "tourism_dependence",
+      "debt_distress",
+      "oil_import_dependence",
+      "small_economy"
+    ]
+  },
+  "ratings": {
+    "credit": "Caa2",
+    "democracy_index": 3.42,
+    "press_freedom_rank": 106,
+    "corruption_perception": 29
+  },
+  "neighbors": [
+    {"id": "IND", "name": "India", "relevance": "Nearest major neighbor; security guarantor; infrastructure aid; currency swap; geopolitical competition with China"},
+    {"id": "LKA", "name": "Sri Lanka", "relevance": "Nearest neighbor; shipping routes; cultural ties"}
+  ],
+  "links": [
+    {"target": "IND", "type": "dependency", "description": "Security and development partner; currency swap support; infrastructure investment; counterweight to China"},
+    {"target": "CHN", "type": "trade", "description": "Major infrastructure investor; tourism source; debt concerns; strategic Indian Ocean interest"},
+    {"target": "SAARC", "type": "alliance", "description": "SAARC member; climate vulnerability advocate; small island developing state"}
+  ],
+  "tags": ["SAARC", "SIDS", "climate_vulnerable"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "Moody's", "Fitch"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

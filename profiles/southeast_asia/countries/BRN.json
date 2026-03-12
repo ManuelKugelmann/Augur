@@ -1,0 +1,47 @@
+{
+  "id": "BRN",
+  "name": "Brunei",
+  "iso2": "BN",
+  "region": "Southeast Asia",
+  "currency": "BND",
+  "capital": "Bandar Seri Begawan",
+  "population": 466000,
+  "trade": {
+    "top_exports": ["petroleum", "natural_gas", "petrochemicals"],
+    "top_partners": ["AUS", "JPN", "CHN", "SGP", "MYS"],
+    "major_ports": ["Muara"],
+    "chokepoint_exposure": ["malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "food", "iron_steel", "electronics"],
+    "energy_mix": {
+      "gas": 0.65, "oil": 0.25, "renewables": 0.03, "hydro": 0.0, "coal": 0.0, "nuclear": 0.0, "other": 0.07
+    },
+    "risk_factors": [
+      "oil_gas_dependence",
+      "economic_diversification_challenge",
+      "small_domestic_market",
+      "south_china_sea_claims"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.62,
+    "press_freedom_rank": 158,
+    "corruption_perception": 54
+  },
+  "neighbors": [
+    {"id": "MYS", "name": "Malaysia", "relevance": "Surrounded by Sarawak; shared Borneo island; maritime boundary; close economic ties"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Growing energy export partner; South China Sea overlapping claims; diplomatic balance"},
+    {"target": "JPN", "type": "trade", "description": "Major LNG buyer; long-standing energy partnership"},
+    {"target": "AUS", "type": "trade", "description": "Largest export partner; LNG and crude oil trade"},
+    {"target": "ASEAN", "type": "alliance", "description": "ASEAN founding member; South China Sea claimant; RCEP participant"}
+  ],
+  "tags": ["ASEAN", "APEC", "oil_exporter"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "OEC"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

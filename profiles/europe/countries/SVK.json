@@ -1,0 +1,118 @@
+{
+  "id": "SVK",
+  "name": "Slovakia",
+  "iso2": "SK",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Bratislava",
+  "population": 5430000,
+  "trade": {
+    "top_exports": [
+      "vehicles",
+      "electrical_machinery",
+      "iron_steel",
+      "machinery"
+    ],
+    "top_partners": [
+      "DEU",
+      "CZE",
+      "HUN",
+      "POL",
+      "FRA"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "natural_gas",
+      "crude_oil",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.08,
+      "gas": 0.18,
+      "coal": 0.08,
+      "nuclear": 0.53,
+      "oil": 0.02,
+      "hydro": 0.09,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "automotive_concentration",
+      "russian_energy_dependence",
+      "political_instability",
+      "demographic_decline"
+    ]
+  },
+  "ratings": {
+    "credit": "A+",
+    "democracy_index": 6.5,
+    "press_freedom_rank": 29,
+    "corruption_perception": 53
+  },
+  "neighbors": [
+    {
+      "id": "CZE",
+      "name": "Czech Republic",
+      "relevance": "Former Czechoslovakia; deepest bilateral ties; integrated supply chains"
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "relevance": "Northern neighbor; Visegrad partner; Tatra Mountains border"
+    },
+    {
+      "id": "UKR",
+      "name": "Ukraine",
+      "relevance": "Eastern neighbor; gas transit; refugee flows; Ukrainian minority"
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "relevance": "Southern neighbor; Hungarian minority; Visegrad partner"
+    },
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "relevance": "Western neighbor; Bratislava-Vienna corridor; major investor"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; eurozone since 2009"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2004"
+    },
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; VW, Stellantis, Kia factories"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Russian gas transit via Druzhba pipeline; government seeking balanced approach to sanctions"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "visegrad",
+    "landlocked"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

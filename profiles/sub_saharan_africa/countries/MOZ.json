@@ -1,0 +1,46 @@
+{
+  "id": "MOZ",
+  "name": "Mozambique",
+  "iso2": "MZ",
+  "region": "Sub-Saharan Africa",
+  "currency": "MZN",
+  "capital": "Maputo",
+  "population": 33900000,
+  "trade": {
+    "top_exports": ["aluminum", "coal", "natural_gas", "tobacco", "sugar"],
+    "top_partners": ["IND", "NLD", "ZAF", "CHN", "ITA"],
+    "major_ports": ["Maputo", "Beira", "Nacala"],
+    "chokepoint_exposure": ["cape_of_good_hope", "bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "rice"],
+    "energy_mix": {
+      "renewables": 0.02, "gas": 0.30, "coal": 0.05, "nuclear": 0.0, "oil": 0.08, "hydro": 0.50, "other": 0.05
+    },
+    "risk_factors": ["insurgency_cabo_delgado", "LNG_project_delays", "cyclone_vulnerability", "debt_crisis"]
+  },
+  "ratings": {
+    "credit": "CCC+",
+    "democracy_index": 3.65,
+    "press_freedom_rank": 104,
+    "corruption_perception": 26
+  },
+  "neighbors": [
+    {"id": "ZAF", "name": "South Africa", "relevance": "Southwestern border; Maputo corridor; Eskom power; migration"},
+    {"id": "TZA", "name": "Tanzania", "relevance": "Northern border; Rovuma Basin gas; Mtwara corridor"},
+    {"id": "MWI", "name": "Malawi", "relevance": "Western border; transit trade via Nacala; hydropower"},
+    {"id": "ZMB", "name": "Zambia", "relevance": "Northwestern border; Nacala corridor; trade"},
+    {"id": "ZWE", "name": "Zimbabwe", "relevance": "Western border; Beira corridor; fuel transit; migration"}
+  ],
+  "links": [
+    {"target": "EU", "type": "trade", "description": "LNG development (TotalEnergies, Eni); aluminum; development aid"},
+    {"target": "IND", "type": "trade", "description": "Largest export partner; coal; aluminum; diaspora"},
+    {"target": "CHN", "type": "trade", "description": "Infrastructure; fishing; growing investment"},
+    {"target": "USA", "type": "alliance", "description": "Counterterrorism in Cabo Delgado; AGOA; LNG investment"}
+  ],
+  "tags": ["AU", "SADC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

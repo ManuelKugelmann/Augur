@@ -1,0 +1,113 @@
+{
+  "id": "MKD",
+  "name": "North Macedonia",
+  "iso2": "MK",
+  "region": "Europe",
+  "currency": "MKD",
+  "capital": "Skopje",
+  "population": 1830000,
+  "trade": {
+    "top_exports": [
+      "automotive_parts",
+      "iron_steel",
+      "textiles",
+      "tobacco"
+    ],
+    "top_partners": [
+      "DEU",
+      "GBR",
+      "SRB",
+      "GRC",
+      "BGR"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.06,
+      "gas": 0.10,
+      "coal": 0.52,
+      "nuclear": 0.0,
+      "oil": 0.08,
+      "hydro": 0.18,
+      "other": 0.06
+    },
+    "risk_factors": [
+      "eu_accession_veto_risk",
+      "ethnic_tensions",
+      "coal_dependence",
+      "brain_drain",
+      "corruption"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 5.8,
+    "press_freedom_rank": 38,
+    "corruption_perception": 37
+  },
+  "neighbors": [
+    {
+      "id": "SRB",
+      "name": "Serbia",
+      "relevance": "Northern neighbor; trade partner; transit route"
+    },
+    {
+      "id": "BGR",
+      "name": "Bulgaria",
+      "relevance": "Eastern neighbor; EU accession veto over identity/language disputes"
+    },
+    {
+      "id": "GRC",
+      "name": "Greece",
+      "relevance": "Southern neighbor; Prespa Agreement resolved name dispute; port access via Thessaloniki"
+    },
+    {
+      "id": "ALB",
+      "name": "Albania",
+      "relevance": "Western neighbor; large Albanian minority; economic ties"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate since 2005; accession blocked by Bulgaria over identity disputes"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2020"
+    },
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; automotive parts manufacturing"
+    },
+    {
+      "target": "GRC",
+      "type": "trade",
+      "description": "Key trade partner; Prespa Agreement improved relations; Thessaloniki port access"
+    }
+  ],
+  "tags": [
+    "NATO",
+    "eu_candidate",
+    "western_balkans",
+    "landlocked"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

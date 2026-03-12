@@ -1,0 +1,44 @@
+{
+  "id": "DJI",
+  "name": "Djibouti",
+  "iso2": "DJ",
+  "region": "Sub-Saharan Africa",
+  "currency": "DJF",
+  "capital": "Djibouti",
+  "population": 1100000,
+  "trade": {
+    "top_exports": ["re_exports", "livestock", "hides", "coffee_transit"],
+    "top_partners": ["ETH", "SAU", "IND", "CHN", "FRA"],
+    "major_ports": ["Djibouti (Doraleh)"],
+    "chokepoint_exposure": ["bab_el_mandeb", "suez"]
+  },
+  "exposure": {
+    "commodities_import": ["food", "petroleum", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.02, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "oil": 0.65, "hydro": 0.0, "other": 0.33
+    },
+    "risk_factors": ["military_base_saturation", "water_scarcity", "authoritarian_governance", "debt_to_china"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.74,
+    "press_freedom_rank": 159,
+    "corruption_perception": 27
+  },
+  "neighbors": [
+    {"id": "ETH", "name": "Ethiopia", "relevance": "Western border; Ethiopia's primary port access; Djibouti-Addis railway"},
+    {"id": "ERI", "name": "Eritrea", "relevance": "Northern border; 2008 border conflict; rival ports"},
+    {"id": "SOM", "name": "Somalia", "relevance": "Southern border; Somaliland; clan ties"}
+  ],
+  "links": [
+    {"target": "USA", "type": "alliance", "description": "Camp Lemonnier; only permanent US base in Africa; AFRICOM; counterterrorism"},
+    {"target": "FRA", "type": "alliance", "description": "Former colonial power; largest French base in Africa; military cooperation"},
+    {"target": "CHN", "type": "dependency", "description": "First overseas Chinese military base; Doraleh port; railway; major creditor"},
+    {"target": "ETH", "type": "trade", "description": "95% of port traffic is Ethiopian trade; Djibouti-Addis railway; vital corridor"}
+  ],
+  "tags": ["AU", "IGAD"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

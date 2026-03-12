@@ -205,7 +205,6 @@ The signals store is a **single FastMCP server** (`src/store/server.py`) that ex
 | `find_profile(query, region?)` | Cross-kind search by name/ID/tag |
 | `search_profiles(kind, field, value, region?)` | Field-level search by dot-path |
 | `list_regions()` | List regions and their kinds |
-| `rebuild_index(kind?)` | Rebuild indexes from profiles |
 | `lint_profiles(kind?, id?)` | Validate profiles against schema |
 
 ### Snapshot Tools (9 tools, Atlas-backed)

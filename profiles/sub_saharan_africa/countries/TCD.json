@@ -1,0 +1,48 @@
+{
+  "id": "TCD",
+  "name": "Chad",
+  "iso2": "TD",
+  "region": "Sub-Saharan Africa",
+  "currency": "XAF",
+  "capital": "N'Djamena",
+  "population": 17900000,
+  "trade": {
+    "top_exports": ["crude_oil", "livestock", "cotton", "gum_arabic"],
+    "top_partners": ["CHN", "USA", "IND", "ARE", "FRA"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "food", "textiles"],
+    "energy_mix": {
+      "renewables": 0.01, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "oil": 0.15, "hydro": 0.02, "other": 0.82
+    },
+    "risk_factors": ["oil_dependence", "military_governance", "Lake_Chad_shrinkage", "refugees", "poverty"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.67,
+    "press_freedom_rank": 141,
+    "corruption_perception": 20
+  },
+  "neighbors": [
+    {"id": "CMR", "name": "Cameroon", "relevance": "Southwestern border; Chad-Cameroon pipeline; transit trade"},
+    {"id": "NGA", "name": "Nigeria", "relevance": "Southwestern border; Lake Chad Basin; Boko Haram"},
+    {"id": "NER", "name": "Niger", "relevance": "Western border; Lake Chad; Sahel security"},
+    {"id": "LBY", "name": "Libya", "relevance": "Northern border; instability; Aouzou Strip history; migration"},
+    {"id": "SDN", "name": "Sudan", "relevance": "Eastern border; Darfur refugees; proxy conflicts"},
+    {"id": "CAF", "name": "Central African Republic", "relevance": "Southern border; refugees; armed groups"},
+    {"id": "COD", "name": "DR Congo", "relevance": "Ubangi River border (short)"}
+  ],
+  "links": [
+    {"target": "FRA", "type": "alliance", "description": "Military base (Faya-Largeau); CFA franc zone; security partnership"},
+    {"target": "CHN", "type": "trade", "description": "Oil development (CNPC); largest buyer; infrastructure"},
+    {"target": "USA", "type": "alliance", "description": "Counterterrorism partner; security cooperation; AFRICOM"},
+    {"target": "CEMAC", "type": "alliance", "description": "CEMAC member; oil-dependent economy; regional security role"}
+  ],
+  "tags": ["AU", "CEMAC"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

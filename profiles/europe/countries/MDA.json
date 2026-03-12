@@ -1,0 +1,104 @@
+{
+  "id": "MDA",
+  "name": "Moldova",
+  "iso2": "MD",
+  "region": "Europe",
+  "currency": "MDL",
+  "capital": "Chisinau",
+  "population": 2540000,
+  "trade": {
+    "top_exports": [
+      "wine",
+      "sunflower_oil",
+      "textiles",
+      "wheat"
+    ],
+    "top_partners": [
+      "ROU",
+      "DEU",
+      "ITA",
+      "TUR",
+      "RUS"
+    ],
+    "major_ports": [
+      "Giurgiulesti"
+    ],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "natural_gas",
+      "crude_oil",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.04,
+      "gas": 0.72,
+      "coal": 0.02,
+      "nuclear": 0.0,
+      "oil": 0.08,
+      "hydro": 0.03,
+      "other": 0.11
+    },
+    "risk_factors": [
+      "transnistria_conflict",
+      "russian_energy_dependence",
+      "remittance_dependence",
+      "brain_drain",
+      "poverty"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 5.8,
+    "press_freedom_rank": 32,
+    "corruption_perception": 36
+  },
+  "neighbors": [
+    {
+      "id": "ROU",
+      "name": "Romania",
+      "relevance": "Western neighbor; shared language; largest trade partner; EU gateway; energy interconnector"
+    },
+    {
+      "id": "UKR",
+      "name": "Ukraine",
+      "relevance": "Northern/eastern neighbor; Transnistria conflict; Ukrainian minority; war spillover risk"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate since 2022; Association Agreement; Deep and Comprehensive Free Trade Area"
+    },
+    {
+      "target": "ROU",
+      "type": "alliance",
+      "description": "Closest ally; shared language and culture; energy interconnection; EU accession support"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Transnistria occupation; historical gas dependency via Gazprom; hybrid warfare target"
+    },
+    {
+      "target": "UKR",
+      "type": "trade",
+      "description": "Key neighbor; war impacts energy transit and security"
+    }
+  ],
+  "tags": [
+    "eu_candidate",
+    "landlocked",
+    "eastern_partnership"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

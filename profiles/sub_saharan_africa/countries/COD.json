@@ -1,0 +1,49 @@
+{
+  "id": "COD",
+  "name": "Democratic Republic of the Congo",
+  "iso2": "CD",
+  "region": "Sub-Saharan Africa",
+  "currency": "CDF",
+  "capital": "Kinshasa",
+  "population": 102300000,
+  "trade": {
+    "top_exports": ["cobalt", "copper", "diamonds", "gold", "crude_oil"],
+    "top_partners": ["CHN", "ZAF", "ARE", "IND", "ZMB"],
+    "major_ports": ["Matadi", "Boma"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "food", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.01, "gas": 0.01, "coal": 0.0, "nuclear": 0.0, "oil": 0.03, "hydro": 0.93, "other": 0.02
+    },
+    "risk_factors": ["armed_conflict", "governance_failure", "cobalt_demand_volatility", "infrastructure_collapse", "disease_outbreaks"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.81,
+    "press_freedom_rank": 149,
+    "corruption_perception": 20
+  },
+  "neighbors": [
+    {"id": "COG", "name": "Republic of the Congo", "relevance": "Western border; Congo River; Kinshasa-Brazzaville twin cities"},
+    {"id": "AGO", "name": "Angola", "relevance": "Southwestern border; Cabinda; refugees; oil"},
+    {"id": "ZMB", "name": "Zambia", "relevance": "Southeastern border; copper belt; trade corridor"},
+    {"id": "TZA", "name": "Tanzania", "relevance": "Eastern border; Lake Tanganyika; minerals transit"},
+    {"id": "UGA", "name": "Uganda", "relevance": "Northeastern border; conflict zone; M23; minerals"},
+    {"id": "RWA", "name": "Rwanda", "relevance": "Eastern border; M23 proxy conflict; mineral smuggling"},
+    {"id": "SSD", "name": "South Sudan", "relevance": "Northern border; conflict corridor"},
+    {"id": "CAF", "name": "Central African Republic", "relevance": "Northern border; armed groups; refugees"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Dominant cobalt/copper buyer; minerals-for-infrastructure deals; Sicomines"},
+    {"target": "USA", "type": "trade", "description": "Conflict minerals legislation; cobalt for EV batteries; sanctions"},
+    {"target": "EU", "type": "trade", "description": "Minerals imports; humanitarian aid; governance pressure"},
+    {"target": "RWA", "type": "rivalry", "description": "Proxy war via M23; mineral smuggling accusations; UN sanctions"}
+  ],
+  "tags": ["AU", "COMESA", "SADC"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

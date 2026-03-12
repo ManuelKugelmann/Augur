@@ -1,0 +1,44 @@
+{
+  "id": "CUB",
+  "name": "Cuba",
+  "iso2": "CU",
+  "region": "Latin America",
+  "currency": "CUP",
+  "capital": "Havana",
+  "population": 11000000,
+  "trade": {
+    "top_exports": ["nickel", "sugar", "tobacco", "pharmaceuticals", "rum"],
+    "top_partners": ["CHN", "ESP", "NLD", "CAN", "VEN"],
+    "major_ports": ["Havana", "Santiago de Cuba", "Cienfuegos", "Mariel"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "food", "machinery", "chemicals"],
+    "energy_mix": {
+      "oil": 0.80, "renewables": 0.05, "gas": 0.05, "hydro": 0.01, "coal": 0.0, "nuclear": 0.0, "other": 0.09
+    },
+    "risk_factors": ["us_embargo", "energy_crisis", "food_insecurity", "emigration", "infrastructure_decay"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.01,
+    "press_freedom_rank": 168,
+    "corruption_perception": 41
+  },
+  "neighbors": [
+    {"id": "USA", "name": "United States", "relevance": "90 miles; embargo; migration; Guantanamo Bay"},
+    {"id": "JAM", "name": "Jamaica", "relevance": "Caribbean neighbor; maritime border; diaspora"},
+    {"id": "HTI", "name": "Haiti", "relevance": "Windward Passage; migration; shared island of Hispaniola proximity"}
+  ],
+  "links": [
+    {"target": "VEN", "type": "alliance", "description": "ALBA partner; subsidized oil supply; political alignment"},
+    {"target": "RUS", "type": "alliance", "description": "Historic ally; military cooperation; debt relief"},
+    {"target": "CHN", "type": "trade", "description": "Growing trade partner; infrastructure investment; political support"},
+    {"target": "USA", "type": "sanctions", "description": "US embargo since 1962; trade and travel restrictions"}
+  ],
+  "tags": ["ALBA", "OAS_suspended"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

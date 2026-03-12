@@ -1,0 +1,42 @@
+{
+  "id": "HTI",
+  "name": "Haiti",
+  "iso2": "HT",
+  "region": "Latin America",
+  "currency": "HTG",
+  "capital": "Port-au-Prince",
+  "population": 11900000,
+  "trade": {
+    "top_exports": ["textiles", "cocoa", "mangoes", "essential_oils", "scrap_metal"],
+    "top_partners": ["USA", "DOM", "CAN", "MEX", "IND"],
+    "major_ports": ["Port-au-Prince", "Cap-Haitien"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["food", "petroleum", "machinery", "vehicles"],
+    "energy_mix": {
+      "oil": 0.25, "other": 0.65, "hydro": 0.05, "renewables": 0.03, "gas": 0.02, "coal": 0.0, "nuclear": 0.0
+    },
+    "risk_factors": ["state_collapse", "gang_control", "food_insecurity", "natural_disaster_exposure", "deforestation"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.78,
+    "press_freedom_rank": 93,
+    "corruption_perception": 16
+  },
+  "neighbors": [
+    {"id": "DOM", "name": "Dominican Republic", "relevance": "Shared Hispaniola island; border wall; migration; trade"}
+  ],
+  "links": [
+    {"target": "USA", "type": "dependency", "description": "Top trade partner; remittances; diaspora; humanitarian aid"},
+    {"target": "DOM", "type": "trade", "description": "Hispaniola neighbor; migration tensions; cross-border trade"},
+    {"target": "CAN", "type": "trade", "description": "Diaspora; trade partner; humanitarian assistance"},
+    {"target": "UN", "type": "alliance", "description": "UN multinational security support mission; peacekeeping history"}
+  ],
+  "tags": ["OAS", "CARICOM"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

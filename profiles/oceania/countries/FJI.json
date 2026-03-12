@@ -1,0 +1,50 @@
+{
+  "id": "FJI",
+  "name": "Fiji",
+  "iso2": "FJ",
+  "region": "Oceania",
+  "currency": "FJD",
+  "capital": "Suva",
+  "population": 950000,
+  "trade": {
+    "top_exports": ["petroleum_products", "mineral_water", "sugar", "gold", "fish"],
+    "top_partners": ["USA", "AUS", "TON", "NZL", "JPN"],
+    "major_ports": ["Suva", "Lautoka"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "food", "vehicles", "electronics"],
+    "energy_mix": {
+      "hydro": 0.35, "oil": 0.4, "renewables": 0.15, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "other": 0.1
+    },
+    "risk_factors": [
+      "cyclone_risk",
+      "tourism_dependence",
+      "sea_level_rise",
+      "sugar_industry_decline",
+      "oil_import_dependence"
+    ]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 5.61,
+    "press_freedom_rank": 55,
+    "corruption_perception": 53
+  },
+  "neighbors": [
+    {"id": "TON", "name": "Tonga", "relevance": "Pacific neighbor; trade partner; regional cooperation; cultural ties"},
+    {"id": "WSM", "name": "Samoa", "relevance": "Pacific neighbor; trade; Pacific Islands Forum; Polynesian ties"},
+    {"id": "AUS", "name": "Australia", "relevance": "Major aid donor; trade partner; security partner; Pacific step-up"}
+  ],
+  "links": [
+    {"target": "AUS", "type": "trade", "description": "Major trade partner and aid donor; security cooperation; Pacific step-up strategy"},
+    {"target": "NZL", "type": "trade", "description": "Trade partner; development aid; Pacific regional leadership; labor mobility"},
+    {"target": "CHN", "type": "trade", "description": "Growing infrastructure investment; BRI; geopolitical competition in Pacific"},
+    {"target": "IND", "type": "trade", "description": "Large Indo-Fijian population; cultural ties; development cooperation"}
+  ],
+  "tags": ["PIF", "SIDS", "climate_vulnerable"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "S&P", "Moody's"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

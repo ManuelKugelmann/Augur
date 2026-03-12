@@ -1,0 +1,123 @@
+{
+  "id": "GEO",
+  "name": "Georgia",
+  "iso2": "GE",
+  "region": "Europe",
+  "currency": "GEL",
+  "capital": "Tbilisi",
+  "population": 3700000,
+  "trade": {
+    "top_exports": [
+      "copper",
+      "vehicles",
+      "wine",
+      "ferroalloys"
+    ],
+    "top_partners": [
+      "CHN",
+      "AZE",
+      "TUR",
+      "RUS",
+      "ARM"
+    ],
+    "major_ports": [
+      "Batumi",
+      "Poti"
+    ],
+    "chokepoint_exposure": [
+      "bosphorus"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "natural_gas",
+      "crude_oil",
+      "vehicles"
+    ],
+    "energy_mix": {
+      "renewables": 0.03,
+      "gas": 0.38,
+      "coal": 0.02,
+      "nuclear": 0.0,
+      "oil": 0.04,
+      "hydro": 0.50,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "russian_occupied_territories",
+      "democratic_backsliding",
+      "eu_accession_frozen",
+      "foreign_agent_law",
+      "brain_drain"
+    ]
+  },
+  "ratings": {
+    "credit": "BB",
+    "democracy_index": 5.2,
+    "press_freedom_rank": 103,
+    "corruption_perception": 53
+  },
+  "neighbors": [
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Northern neighbor; occupies South Ossetia and Abkhazia; 2008 war; trade resumed"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Southwestern neighbor; trade partner; BTC pipeline transit; NATO member neighbor"
+    },
+    {
+      "id": "ARM",
+      "name": "Armenia",
+      "relevance": "Southern neighbor; landlocked transit route; economic ties"
+    },
+    {
+      "id": "AZE",
+      "name": "Azerbaijan",
+      "relevance": "Eastern neighbor; BTC pipeline; major trade partner; energy transit"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate status granted 2023 then frozen 2024 over democratic concerns"
+    },
+    {
+      "target": "RUS",
+      "type": "rivalry",
+      "description": "Occupies 20% of territory; no diplomatic relations; trade resumed informally"
+    },
+    {
+      "target": "TUR",
+      "type": "trade",
+      "description": "Key trade partner; Baku-Tbilisi-Ceyhan pipeline; strategic corridor"
+    },
+    {
+      "target": "AZE",
+      "type": "trade",
+      "description": "Energy transit corridor; BTC and South Caucasus Pipeline; trade partner"
+    },
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Strategic partner; military aid; democracy support; strained post-foreign agent law"
+    }
+  ],
+  "tags": [
+    "eastern_partnership",
+    "caucasus",
+    "transit_corridor",
+    "black_sea"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

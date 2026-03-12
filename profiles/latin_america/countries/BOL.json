@@ -1,0 +1,46 @@
+{
+  "id": "BOL",
+  "name": "Bolivia",
+  "iso2": "BO",
+  "region": "Latin America",
+  "currency": "BOB",
+  "capital": "Sucre",
+  "population": 12400000,
+  "trade": {
+    "top_exports": ["natural_gas", "zinc", "gold", "soybeans", "tin"],
+    "top_partners": ["BRA", "ARG", "CHN", "IND", "USA"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "fuel", "chemicals"],
+    "energy_mix": {
+      "gas": 0.60, "hydro": 0.25, "oil": 0.08, "renewables": 0.03, "coal": 0.0, "nuclear": 0.0, "other": 0.04
+    },
+    "risk_factors": ["gas_reserve_depletion", "forex_crisis", "political_instability", "landlocked"]
+  },
+  "ratings": {
+    "credit": "CCC-",
+    "democracy_index": 4.26,
+    "press_freedom_rank": 124,
+    "corruption_perception": 28
+  },
+  "neighbors": [
+    {"id": "BRA", "name": "Brazil", "relevance": "Gas exports; soy trade; largest trade partner"},
+    {"id": "ARG", "name": "Argentina", "relevance": "Gas exports; lithium triangle; Andean ties"},
+    {"id": "PER", "name": "Peru", "relevance": "Andean corridor; trade; Lake Titicaca shared"},
+    {"id": "CHL", "name": "Chile", "relevance": "Historic sea access dispute; lithium triangle"},
+    {"id": "PRY", "name": "Paraguay", "relevance": "Chaco border; trade corridor"}
+  ],
+  "links": [
+    {"target": "BRA", "type": "trade", "description": "Top gas export market; soy corridor; infrastructure"},
+    {"target": "ARG", "type": "trade", "description": "Gas exports; lithium cooperation; Andean ties"},
+    {"target": "CHN", "type": "trade", "description": "Growing mining investment; lithium interest; infrastructure loans"},
+    {"target": "ALBA", "type": "alliance", "description": "ALBA member; political alignment with Venezuela and Cuba"}
+  ],
+  "tags": ["ALBA", "Andean_Community", "OAS", "MERCOSUR_associate"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,109 @@
+{
+  "id": "LUX",
+  "name": "Luxembourg",
+  "iso2": "LU",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Luxembourg City",
+  "population": 670000,
+  "trade": {
+    "top_exports": [
+      "iron_steel",
+      "machinery",
+      "chemicals",
+      "financial_services"
+    ],
+    "top_partners": [
+      "DEU",
+      "FRA",
+      "BEL",
+      "NLD",
+      "ITA"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "food"
+    ],
+    "energy_mix": {
+      "renewables": 0.14,
+      "gas": 0.45,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "oil": 0.30,
+      "hydro": 0.03,
+      "other": 0.08
+    },
+    "risk_factors": [
+      "financial_sector_concentration",
+      "cross_border_worker_dependence",
+      "eu_tax_regulation_risk",
+      "small_size_vulnerability"
+    ]
+  },
+  "ratings": {
+    "credit": "AAA",
+    "democracy_index": 8.7,
+    "press_freedom_rank": 7,
+    "corruption_perception": 78
+  },
+  "neighbors": [
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "relevance": "Eastern neighbor; largest trade partner; cross-border workers"
+    },
+    {
+      "id": "FRA",
+      "name": "France",
+      "relevance": "Southern neighbor; largest source of cross-border workers"
+    },
+    {
+      "id": "BEL",
+      "name": "Belgium",
+      "relevance": "Northern/western neighbor; Benelux partner; cross-border workers"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "Founding EU member; hosts European Court of Justice, EIB, Eurostat"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "Founding NATO member"
+    },
+    {
+      "target": "BENELUX",
+      "type": "alliance",
+      "description": "Benelux economic union"
+    },
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; financial services hub for German companies"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "schengen",
+    "financial_center",
+    "landlocked"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

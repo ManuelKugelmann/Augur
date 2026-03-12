@@ -1,0 +1,45 @@
+{
+  "id": "BEN",
+  "name": "Benin",
+  "iso2": "BJ",
+  "region": "Sub-Saharan Africa",
+  "currency": "XOF",
+  "capital": "Porto-Novo",
+  "population": 13400000,
+  "trade": {
+    "top_exports": ["cotton", "cashew_nuts", "gold", "palm_oil", "textiles"],
+    "top_partners": ["NGA", "IND", "BGD", "CHN", "VNM"],
+    "major_ports": ["Cotonou"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "rice", "vehicles", "machinery"],
+    "energy_mix": {
+      "renewables": 0.02, "gas": 0.20, "coal": 0.0, "nuclear": 0.0, "oil": 0.15, "hydro": 0.05, "other": 0.58
+    },
+    "risk_factors": ["nigeria_dependence", "jihadist_spillover", "democratic_backsliding", "cotton_price_volatility"]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 4.58,
+    "press_freedom_rank": 96,
+    "corruption_perception": 43
+  },
+  "neighbors": [
+    {"id": "NGA", "name": "Nigeria", "relevance": "Eastern border; dominant trade partner; smuggling; Cotonou as transit port"},
+    {"id": "TGO", "name": "Togo", "relevance": "Western border; ECOWAS; shared cultural ties"},
+    {"id": "BFA", "name": "Burkina Faso", "relevance": "Northern border; jihadist spillover from Sahel; cotton corridor"},
+    {"id": "NER", "name": "Niger", "relevance": "Northern border; transit trade; Cotonou corridor"}
+  ],
+  "links": [
+    {"target": "FRA", "type": "trade", "description": "Former colonial power; CFA franc; investment; development aid"},
+    {"target": "NGA", "type": "dependency", "description": "Dominant trade partner; Cotonou port serves Nigerian importers; re-exports"},
+    {"target": "CHN", "type": "trade", "description": "Cotton buyer; infrastructure; Belt and Road"},
+    {"target": "EU", "type": "trade", "description": "EPA; cotton exports; development cooperation"}
+  ],
+  "tags": ["AU", "ECOWAS"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

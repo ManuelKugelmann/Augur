@@ -1,0 +1,44 @@
+{
+  "id": "ERI",
+  "name": "Eritrea",
+  "iso2": "ER",
+  "region": "Sub-Saharan Africa",
+  "currency": "ERN",
+  "capital": "Asmara",
+  "population": 3700000,
+  "trade": {
+    "top_exports": ["gold", "zinc", "copper", "livestock", "fish"],
+    "top_partners": ["CHN", "IND", "KOR", "ARE", "JPN"],
+    "major_ports": ["Massawa", "Assab"],
+    "chokepoint_exposure": ["bab_el_mandeb", "suez"]
+  },
+  "exposure": {
+    "commodities_import": ["food", "petroleum", "machinery", "manufactured_goods"],
+    "energy_mix": {
+      "renewables": 0.02, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "oil": 0.85, "hydro": 0.0, "other": 0.13
+    },
+    "risk_factors": ["authoritarian_regime", "international_isolation", "indefinite_conscription", "migration_exodus"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.03,
+    "press_freedom_rank": 174,
+    "corruption_perception": 22
+  },
+  "neighbors": [
+    {"id": "ETH", "name": "Ethiopia", "relevance": "Southern border; Tigray war alliance; 1998-2000 war; Assab port denied to Ethiopia"},
+    {"id": "SDN", "name": "Sudan", "relevance": "Western border; RSF/SAF dynamics; Red Sea security"},
+    {"id": "DJI", "name": "Djibouti", "relevance": "Southeastern border; 2008 border conflict; rival ports"}
+  ],
+  "links": [
+    {"target": "ETH", "type": "alliance", "description": "Alliance during Tigray war; Assab port issue; 2018 peace deal"},
+    {"target": "CHN", "type": "trade", "description": "Mining investment (Bisha, Asmara); infrastructure; political support"},
+    {"target": "ARE", "type": "alliance", "description": "Assab naval base lease; Yemen war support; economic ties"},
+    {"target": "RUS", "type": "alliance", "description": "Political support; UN voting alignment; potential Red Sea base"}
+  ],
+  "tags": ["AU"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

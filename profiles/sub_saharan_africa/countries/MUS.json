@@ -1,0 +1,43 @@
+{
+  "id": "MUS",
+  "name": "Mauritius",
+  "iso2": "MU",
+  "region": "Sub-Saharan Africa",
+  "currency": "MUR",
+  "capital": "Port Louis",
+  "population": 1300000,
+  "trade": {
+    "top_exports": ["textiles", "sugar", "fish", "financial_services", "diamonds"],
+    "top_partners": ["GBR", "FRA", "USA", "ZAF", "MDG"],
+    "major_ports": ["Port Louis"],
+    "chokepoint_exposure": ["cape_of_good_hope"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "food", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.20, "gas": 0.0, "coal": 0.30, "nuclear": 0.0, "oil": 0.35, "hydro": 0.05, "other": 0.10
+    },
+    "risk_factors": ["import_dependence", "climate_vulnerability", "aging_population", "small_economy"]
+  },
+  "ratings": {
+    "credit": "Baa3",
+    "democracy_index": 8.14,
+    "press_freedom_rank": 64,
+    "corruption_perception": 50
+  },
+  "neighbors": [
+    {"id": "MDG", "name": "Madagascar", "relevance": "Nearest large neighbor; Indian Ocean ties; trade"},
+    {"id": "FRA", "name": "France (Reunion)", "relevance": "Nearby French overseas territory; regional cooperation"}
+  ],
+  "links": [
+    {"target": "IND", "type": "trade", "description": "CECPA trade agreement; FDI conduit; diaspora; special economic zone"},
+    {"target": "GBR", "type": "trade", "description": "Largest export market; textiles; financial services; Commonwealth"},
+    {"target": "FRA", "type": "trade", "description": "Sugar exports; tourism; Reunion proximity; EU gateway"},
+    {"target": "ZAF", "type": "trade", "description": "SADC/COMESA member; financial services; investment hub for Africa"}
+  ],
+  "tags": ["AU", "SADC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

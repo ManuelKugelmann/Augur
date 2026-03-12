@@ -1,0 +1,127 @@
+{
+  "id": "HRV",
+  "name": "Croatia",
+  "iso2": "HR",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Zagreb",
+  "population": 3850000,
+  "trade": {
+    "top_exports": [
+      "refined_petroleum",
+      "machinery",
+      "pharmaceuticals",
+      "wood"
+    ],
+    "top_partners": [
+      "ITA",
+      "DEU",
+      "SVN",
+      "HUN",
+      "BIH"
+    ],
+    "major_ports": [
+      "Rijeka",
+      "Split",
+      "Ploce"
+    ],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.15,
+      "gas": 0.25,
+      "coal": 0.04,
+      "nuclear": 0.18,
+      "oil": 0.02,
+      "hydro": 0.30,
+      "other": 0.06
+    },
+    "risk_factors": [
+      "demographic_decline",
+      "brain_drain",
+      "tourism_dependence",
+      "regional_instability"
+    ]
+  },
+  "ratings": {
+    "credit": "BBB+",
+    "democracy_index": 6.5,
+    "press_freedom_rank": 52,
+    "corruption_perception": 47
+  },
+  "neighbors": [
+    {
+      "id": "SVN",
+      "name": "Slovenia",
+      "relevance": "Northern neighbor; former Yugoslav republic; border disputes resolved; trade partner"
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "relevance": "Northeastern neighbor; transit route; INA oil company shared ownership"
+    },
+    {
+      "id": "SRB",
+      "name": "Serbia",
+      "relevance": "Eastern neighbor; post-conflict normalization; Serbian minority"
+    },
+    {
+      "id": "BIH",
+      "name": "Bosnia and Herzegovina",
+      "relevance": "Long southern border; Neum corridor; Croatian minority; post-war ties"
+    },
+    {
+      "id": "MNE",
+      "name": "Montenegro",
+      "relevance": "Southeastern neighbor; Adriatic coast; tourism"
+    },
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "relevance": "Adriatic neighbor; largest trade partner; tourism source"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2013; eurozone and Schengen since 2023"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2009"
+    },
+    {
+      "target": "ITA",
+      "type": "trade",
+      "description": "Largest trade partner; Adriatic economic corridor"
+    },
+    {
+      "target": "SVN",
+      "type": "trade",
+      "description": "Krsko nuclear plant co-ownership; tight supply chains"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "schengen",
+    "adriatic"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

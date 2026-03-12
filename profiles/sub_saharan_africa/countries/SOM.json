@@ -1,0 +1,44 @@
+{
+  "id": "SOM",
+  "name": "Somalia",
+  "iso2": "SO",
+  "region": "Sub-Saharan Africa",
+  "currency": "SOS",
+  "capital": "Mogadishu",
+  "population": 17600000,
+  "trade": {
+    "top_exports": ["livestock", "charcoal", "fish", "bananas", "hides"],
+    "top_partners": ["ARE", "SAU", "OMN", "IND", "CHN"],
+    "major_ports": ["Mogadishu", "Berbera", "Kismayo", "Bosaso"],
+    "chokepoint_exposure": ["bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["food", "petroleum", "khat", "sugar", "machinery"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "oil": 0.85, "hydro": 0.0, "other": 0.10
+    },
+    "risk_factors": ["al_shabaab", "state_fragility", "piracy", "clan_conflicts", "drought", "famine_risk"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.48,
+    "press_freedom_rank": 145,
+    "corruption_perception": 12
+  },
+  "neighbors": [
+    {"id": "KEN", "name": "Kenya", "relevance": "Southern border; Al-Shabaab spillover; refugees (Dadaab); maritime border (ICJ)"},
+    {"id": "ETH", "name": "Ethiopia", "relevance": "Western border; Ogaden; Somali Region; ATMIS; Berbera port dispute"},
+    {"id": "DJI", "name": "Djibouti", "relevance": "Northwestern border; Somali Issa clan; port competition"}
+  ],
+  "links": [
+    {"target": "ARE", "type": "trade", "description": "Largest trade partner; livestock exports; DP World (Berbera); Somaliland"},
+    {"target": "TUR", "type": "alliance", "description": "Military base; TURKSOM training; port/airport management; aid"},
+    {"target": "USA", "type": "alliance", "description": "Counterterrorism; AFRICOM operations; drone strikes; ATMIS support"},
+    {"target": "ETH", "type": "rivalry", "description": "Historical conflicts; Somaliland MoU dispute; ATMIS; Ogaden"}
+  ],
+  "tags": ["AU"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

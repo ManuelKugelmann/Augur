@@ -1,0 +1,45 @@
+{
+  "id": "RWA",
+  "name": "Rwanda",
+  "iso2": "RW",
+  "region": "Sub-Saharan Africa",
+  "currency": "RWF",
+  "capital": "Kigali",
+  "population": 13800000,
+  "trade": {
+    "top_exports": ["gold", "tin_ore", "coffee", "tea", "minerals"],
+    "top_partners": ["ARE", "COD", "UGA", "CHN", "DEU"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "pharmaceuticals"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.15, "coal": 0.0, "nuclear": 0.0, "oil": 0.15, "hydro": 0.45, "other": 0.20
+    },
+    "risk_factors": ["landlocked", "congo_conflict_spillover", "authoritarian_governance", "aid_dependence"]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 3.10,
+    "press_freedom_rank": 131,
+    "corruption_perception": 53
+  },
+  "neighbors": [
+    {"id": "COD", "name": "DR Congo", "relevance": "Western border; M23 conflict; mineral trade; refugees"},
+    {"id": "UGA", "name": "Uganda", "relevance": "Northern border; strained relations; EAC partner"},
+    {"id": "TZA", "name": "Tanzania", "relevance": "Eastern border; transit corridor via Dar es Salaam"},
+    {"id": "BDI", "name": "Burundi", "relevance": "Southern border; ethnic ties; refugees; tensions"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "AGOA; security cooperation; Congo conflict tensions"},
+    {"target": "CHN", "type": "trade", "description": "Infrastructure; mining investment; growing trade"},
+    {"target": "GBR", "type": "trade", "description": "Commonwealth member; Rwanda asylum deal; development aid"},
+    {"target": "EU", "type": "trade", "description": "Development partner; coffee/tea exports; governance concerns"}
+  ],
+  "tags": ["AU", "EAC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

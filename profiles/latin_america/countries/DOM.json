@@ -1,0 +1,42 @@
+{
+  "id": "DOM",
+  "name": "Dominican Republic",
+  "iso2": "DO",
+  "region": "Latin America",
+  "currency": "DOP",
+  "capital": "Santo Domingo",
+  "population": 11400000,
+  "trade": {
+    "top_exports": ["gold", "tobacco", "medical_devices", "textiles", "cocoa"],
+    "top_partners": ["USA", "HTI", "CHN", "CAN", "IND"],
+    "major_ports": ["Santo Domingo", "Puerto Plata", "Caucedo"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "food"],
+    "energy_mix": {
+      "oil": 0.35, "gas": 0.35, "renewables": 0.10, "hydro": 0.05, "coal": 0.12, "nuclear": 0.0, "other": 0.03
+    },
+    "risk_factors": ["hurricane_exposure", "remittance_dependence", "haiti_border_tensions", "energy_import_dependency"]
+  },
+  "ratings": {
+    "credit": "BB",
+    "democracy_index": 6.30,
+    "press_freedom_rank": 35,
+    "corruption_perception": 36
+  },
+  "neighbors": [
+    {"id": "HTI", "name": "Haiti", "relevance": "Shared Hispaniola island; border tensions; migration; trade"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Dominant trade partner; CAFTA-DR; remittances; tourism"},
+    {"target": "HTI", "type": "trade", "description": "Hispaniola neighbor; cross-border trade; migration tensions"},
+    {"target": "CHN", "type": "trade", "description": "Growing import partner; no diplomatic relations (recognizes TWN)"},
+    {"target": "CAFTA-DR", "type": "alliance", "description": "CAFTA-DR member; preferential US market access"}
+  ],
+  "tags": ["OAS", "CAFTA-DR", "CARICOM_observer"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

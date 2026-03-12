@@ -1,0 +1,45 @@
+{
+  "id": "GTM",
+  "name": "Guatemala",
+  "iso2": "GT",
+  "region": "Latin America",
+  "currency": "GTQ",
+  "capital": "Guatemala City",
+  "population": 17900000,
+  "trade": {
+    "top_exports": ["bananas", "coffee", "sugar", "textiles", "palm_oil"],
+    "top_partners": ["USA", "SLV", "HND", "NIC", "MEX"],
+    "major_ports": ["Puerto Quetzal", "Santo Tomas de Castilla"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "chemicals"],
+    "energy_mix": {
+      "oil": 0.30, "hydro": 0.25, "renewables": 0.20, "gas": 0.05, "coal": 0.15, "nuclear": 0.0, "other": 0.05
+    },
+    "risk_factors": ["gang_violence", "remittance_dependence", "deforestation", "corruption", "migration_outflows"]
+  },
+  "ratings": {
+    "credit": "BB+",
+    "democracy_index": 4.55,
+    "press_freedom_rank": 138,
+    "corruption_perception": 25
+  },
+  "neighbors": [
+    {"id": "MEX", "name": "Mexico", "relevance": "Northern border; trade; migration corridor; security"},
+    {"id": "BLZ", "name": "Belize", "relevance": "Eastern border; territorial dispute; trade"},
+    {"id": "HND", "name": "Honduras", "relevance": "Eastern border; trade partner; Central American integration"},
+    {"id": "SLV", "name": "El Salvador", "relevance": "Southern border; customs union; deep trade ties"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Top trade partner; CAFTA-DR; remittances; migration destination"},
+    {"target": "SLV", "type": "trade", "description": "Customs union; largest regional trade partner; integration"},
+    {"target": "HND", "type": "trade", "description": "Northern Triangle partner; trade corridor; security cooperation"},
+    {"target": "CAFTA-DR", "type": "alliance", "description": "CAFTA-DR member; US market access; trade integration"}
+  ],
+  "tags": ["OAS", "CAFTA-DR", "SICA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

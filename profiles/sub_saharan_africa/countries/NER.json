@@ -1,0 +1,47 @@
+{
+  "id": "NER",
+  "name": "Niger",
+  "iso2": "NE",
+  "region": "Sub-Saharan Africa",
+  "currency": "XOF",
+  "capital": "Niamey",
+  "population": 26200000,
+  "trade": {
+    "top_exports": ["uranium", "gold", "oil", "onions", "livestock"],
+    "top_partners": ["FRA", "CHN", "NGA", "THA", "MLI"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "food", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.10, "nuclear": 0.0, "oil": 0.20, "hydro": 0.05, "other": 0.60
+    },
+    "risk_factors": ["jihadist_insurgency", "military_junta", "desertification", "population_growth", "uranium_dependence"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 3.29,
+    "press_freedom_rank": 61,
+    "corruption_perception": 32
+  },
+  "neighbors": [
+    {"id": "NGA", "name": "Nigeria", "relevance": "Southern border; trade lifeline; Boko Haram; migration"},
+    {"id": "MLI", "name": "Mali", "relevance": "Western border; Sahel Alliance partner; jihadist corridor"},
+    {"id": "BFA", "name": "Burkina Faso", "relevance": "Southwestern border; Sahel Alliance partner"},
+    {"id": "TCD", "name": "Chad", "relevance": "Eastern border; Lake Chad Basin; security cooperation"},
+    {"id": "LBY", "name": "Libya", "relevance": "Northern border; migration route; arms trafficking; instability"},
+    {"id": "DZA", "name": "Algeria", "relevance": "Northwestern border; gas pipeline; migration"}
+  ],
+  "links": [
+    {"target": "RUS", "type": "alliance", "description": "Wagner/Africa Corps; military cooperation; expelled US/French forces"},
+    {"target": "FRA", "type": "rivalry", "description": "Former colonial power; expelled French troops; uranium (Orano/Areva)"},
+    {"target": "USA", "type": "rivalry", "description": "Expelled US military from Agadez drone base; ended security cooperation"},
+    {"target": "ECOWAS", "type": "rivalry", "description": "Suspended; announced withdrawal with MLI/BFA; Sahel Alliance"}
+  ],
+  "tags": ["AU", "SAHEL_ALLIANCE"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

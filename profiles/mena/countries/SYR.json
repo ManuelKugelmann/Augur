@@ -1,0 +1,106 @@
+{
+  "id": "SYR",
+  "name": "Syria",
+  "iso2": "SY",
+  "region": "Middle East & North Africa",
+  "currency": "SYP",
+  "capital": "Damascus",
+  "population": 24700000,
+  "trade": {
+    "top_exports": ["olive_oil", "petroleum", "phosphates", "cotton", "vegetables"],
+    "top_partners": ["SAU", "IRQ", "TUR", "EGY", "JOR"],
+    "major_ports": ["Latakia", "Tartus"],
+    "chokepoint_exposure": ["suez"]
+  },
+  "exposure": {
+    "commodities_import": ["food_products", "machinery", "petroleum_products", "vehicles", "pharmaceuticals"],
+    "energy_mix": {
+      "oil": 0.45,
+      "gas": 0.45,
+      "renewables": 0.02,
+      "hydro": 0.06,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "post_conflict_transition",
+      "infrastructure_destruction",
+      "refugee_return",
+      "sanctions_legacy",
+      "economic_collapse",
+      "militia_fragmentation",
+      "food_insecurity",
+      "currency_instability"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.00,
+    "press_freedom_rank": 179,
+    "corruption_perception": 12
+  },
+  "neighbors": [
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Northern border; military presence; refugee return; trade surge; HTS relations"
+    },
+    {
+      "id": "IRQ",
+      "name": "Iraq",
+      "relevance": "Eastern border; ISIS legacy; trade corridor; oil transit"
+    },
+    {
+      "id": "JOR",
+      "name": "Jordan",
+      "relevance": "Southern border; trade recovery 355% jump in 2025; refugee return"
+    },
+    {
+      "id": "LBN",
+      "name": "Lebanon",
+      "relevance": "Western border; Hezbollah withdrawal; refugee return; economic ties"
+    },
+    {
+      "id": "ISR",
+      "name": "Israel",
+      "relevance": "Southwestern border; Golan Heights occupation; security buffer zone"
+    }
+  ],
+  "links": [
+    {
+      "target": "TUR",
+      "type": "dependency",
+      "description": "Dominant trade partner post-transition; imports surged 60%; HTS relationship"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "All EU sanctions lifted May 2025; reconstruction engagement"
+    },
+    {
+      "target": "USA",
+      "type": "trade",
+      "description": "Sanctions lifted June 2025; IMF engagement resumed November 2025"
+    },
+    {
+      "target": "RUS",
+      "type": "alliance",
+      "description": "Tartus naval base; Assad-era ally; uncertain post-transition status"
+    }
+  ],
+  "tags": [
+    "Arab_League",
+    "conflict_zone",
+    "post_conflict_transition"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "IMF",
+    "Transparency International"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

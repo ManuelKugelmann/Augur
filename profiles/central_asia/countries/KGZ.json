@@ -1,0 +1,51 @@
+{
+  "id": "KGZ",
+  "name": "Kyrgyzstan",
+  "iso2": "KG",
+  "region": "Central Asia",
+  "currency": "KGS",
+  "capital": "Bishkek",
+  "population": 7300000,
+  "trade": {
+    "top_exports": ["gold", "precious_metals", "coal", "cotton", "textiles"],
+    "top_partners": ["CHN", "RUS", "KAZ", "UZB", "TUR"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "food", "electronics"],
+    "energy_mix": {
+      "hydro": 0.75, "coal": 0.1, "gas": 0.08, "oil": 0.05, "renewables": 0.01, "nuclear": 0.0, "other": 0.01
+    },
+    "risk_factors": [
+      "remittance_dependence",
+      "russia_economic_dependence",
+      "landlocked",
+      "gold_mine_dependence",
+      "political_instability"
+    ]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 3.82,
+    "press_freedom_rank": 120,
+    "corruption_perception": 27
+  },
+  "neighbors": [
+    {"id": "KAZ", "name": "Kazakhstan", "relevance": "Northern border; EAEU partner; trade corridor; labor migration"},
+    {"id": "UZB", "name": "Uzbekistan", "relevance": "Western border; Fergana Valley; water-energy nexus; border resolved"},
+    {"id": "TJK", "name": "Tajikistan", "relevance": "Southern border; Fergana Valley border disputes (resolved 2025); water sharing"},
+    {"id": "CHN", "name": "China", "relevance": "Eastern border; top trade partner (35% of trade); re-export corridor; BRI"}
+  ],
+  "links": [
+    {"target": "RUS", "type": "dependency", "description": "Military base (Kant); EAEU member; remittance destination; security umbrella"},
+    {"target": "CHN", "type": "trade", "description": "Largest trade partner; re-export hub; BRI corridor; Kyrgyz-China railway plans"},
+    {"target": "KAZ", "type": "trade", "description": "Key transit country; EAEU partner; labor migration destination"},
+    {"target": "EAEU", "type": "alliance", "description": "EAEU member since 2015; SCO member; CSTO member"}
+  ],
+  "tags": ["EAEU", "SCO", "CSTO", "landlocked"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "S&P", "Moody's"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

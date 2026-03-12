@@ -1,0 +1,47 @@
+{
+  "id": "TZA",
+  "name": "Tanzania",
+  "iso2": "TZ",
+  "region": "Sub-Saharan Africa",
+  "currency": "TZS",
+  "capital": "Dodoma",
+  "population": 65500000,
+  "trade": {
+    "top_exports": ["gold", "tobacco", "cashew_nuts", "coffee", "gemstones"],
+    "top_partners": ["IND", "CHN", "ZAF", "KEN", "ARE"],
+    "major_ports": ["Dar es Salaam", "Tanga", "Mtwara"],
+    "chokepoint_exposure": ["bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "iron_steel"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.50, "coal": 0.02, "nuclear": 0.0, "oil": 0.03, "hydro": 0.35, "other": 0.05
+    },
+    "risk_factors": ["climate_vulnerability", "infrastructure_deficit", "governance_concerns"]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 4.21,
+    "press_freedom_rank": 123,
+    "corruption_perception": 39
+  },
+  "neighbors": [
+    {"id": "KEN", "name": "Kenya", "relevance": "EAC partner; Mombasa vs Dar port competition; trade"},
+    {"id": "UGA", "name": "Uganda", "relevance": "EAC partner; Lake Victoria; trade corridor"},
+    {"id": "RWA", "name": "Rwanda", "relevance": "EAC partner; transit trade via Dar es Salaam"},
+    {"id": "MOZ", "name": "Mozambique", "relevance": "Southern border; Mtwara corridor; gas exploration"},
+    {"id": "MWI", "name": "Malawi", "relevance": "Lake Malawi border; transit trade"},
+    {"id": "COD", "name": "DR Congo", "relevance": "Western border; Lake Tanganyika; minerals transit"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Infrastructure investment; SGR; minerals exports; port development"},
+    {"target": "IND", "type": "trade", "description": "Top export partner; gold; cashews; diaspora"},
+    {"target": "EU", "type": "trade", "description": "Coffee/tea exports; EPA; development cooperation"},
+    {"target": "EAC", "type": "alliance", "description": "Founding EAC member; regional integration; customs union"}
+  ],
+  "tags": ["AU", "EAC", "SADC"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,43 @@
+{
+  "id": "URY",
+  "name": "Uruguay",
+  "iso2": "UY",
+  "region": "Latin America",
+  "currency": "UYU",
+  "capital": "Montevideo",
+  "population": 3400000,
+  "trade": {
+    "top_exports": ["beef", "soybeans", "cellulose", "rice", "dairy"],
+    "top_partners": ["CHN", "BRA", "ARG", "USA", "NLD"],
+    "major_ports": ["Montevideo", "Nueva Palmira"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "electronics"],
+    "energy_mix": {
+      "renewables": 0.40, "hydro": 0.35, "gas": 0.05, "oil": 0.10, "coal": 0.0, "nuclear": 0.0, "other": 0.10
+    },
+    "risk_factors": ["small_market", "regional_dependency", "aging_population", "drought_impact"]
+  },
+  "ratings": {
+    "credit": "BBB+",
+    "democracy_index": 8.67,
+    "press_freedom_rank": 51,
+    "corruption_perception": 76
+  },
+  "neighbors": [
+    {"id": "BRA", "name": "Brazil", "relevance": "Northern border; trade partner; energy cooperation"},
+    {"id": "ARG", "name": "Argentina", "relevance": "Rio de la Plata; Mercosur; deep cultural ties"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Top export destination; beef and soy exports; growing ties"},
+    {"target": "BRA", "type": "trade", "description": "Mercosur partner; rice and agricultural trade"},
+    {"target": "ARG", "type": "trade", "description": "Mercosur; shared river basin; tourism; cultural exchange"},
+    {"target": "EU", "type": "trade", "description": "Mercosur-EU FTA; agricultural exports; investment"}
+  ],
+  "tags": ["MERCOSUR", "OAS"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

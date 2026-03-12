@@ -1,0 +1,52 @@
+{
+  "id": "TJK",
+  "name": "Tajikistan",
+  "iso2": "TJ",
+  "region": "Central Asia",
+  "currency": "TJS",
+  "capital": "Dushanbe",
+  "population": 10600000,
+  "trade": {
+    "top_exports": ["gold", "aluminum", "cotton", "antimony", "zinc_ore"],
+    "top_partners": ["KAZ", "CHN", "TUR", "UZB", "IRN"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "food", "textiles"],
+    "energy_mix": {
+      "hydro": 0.9, "coal": 0.03, "oil": 0.03, "gas": 0.02, "renewables": 0.01, "nuclear": 0.0, "other": 0.01
+    },
+    "risk_factors": [
+      "remittance_dependence",
+      "russia_dependence",
+      "landlocked",
+      "water_disputes",
+      "border_tensions",
+      "authoritarian_governance"
+    ]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 1.94,
+    "press_freedom_rank": 153,
+    "corruption_perception": 20
+  },
+  "neighbors": [
+    {"id": "AFG", "name": "Afghanistan", "relevance": "Southern border; ethnic Tajik ties; drug trafficking; security risk"},
+    {"id": "UZB", "name": "Uzbekistan", "relevance": "Western border; Fergana Valley tensions; water-energy disputes; trade partner"},
+    {"id": "KGZ", "name": "Kyrgyzstan", "relevance": "Northern border; Fergana Valley border disputes (resolved 2025); water sharing"},
+    {"id": "CHN", "name": "China", "relevance": "Eastern border; BRI investment; growing economic influence; Pamir region"}
+  ],
+  "links": [
+    {"target": "RUS", "type": "dependency", "description": "Military base (201st Division); 30% of imports; remittance destination; CSTO member"},
+    {"target": "CHN", "type": "trade", "description": "Growing trade partner; BRI infrastructure; mining investment; SCO member"},
+    {"target": "KAZ", "type": "trade", "description": "Largest export destination (29%); transit corridor; EAEU trade"},
+    {"target": "CSTO", "type": "alliance", "description": "CSTO member; Russian military presence; collective security framework"}
+  ],
+  "tags": ["SCO", "CSTO", "landlocked"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "S&P", "Moody's"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

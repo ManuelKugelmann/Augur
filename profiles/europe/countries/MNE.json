@@ -1,0 +1,115 @@
+{
+  "id": "MNE",
+  "name": "Montenegro",
+  "iso2": "ME",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Podgorica",
+  "population": 620000,
+  "trade": {
+    "top_exports": [
+      "aluminum",
+      "electricity",
+      "bauxite",
+      "tourism_services"
+    ],
+    "top_partners": [
+      "SRB",
+      "HRV",
+      "BIH",
+      "ITA",
+      "DEU"
+    ],
+    "major_ports": [
+      "Bar"
+    ],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "food",
+      "machinery",
+      "petroleum_products"
+    ],
+    "energy_mix": {
+      "renewables": 0.08,
+      "gas": 0.0,
+      "coal": 0.36,
+      "nuclear": 0.0,
+      "oil": 0.04,
+      "hydro": 0.48,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "tourism_dependence",
+      "small_economy_vulnerability",
+      "corruption",
+      "chinese_debt",
+      "political_instability"
+    ]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 5.7,
+    "press_freedom_rank": 76,
+    "corruption_perception": 45
+  },
+  "neighbors": [
+    {
+      "id": "HRV",
+      "name": "Croatia",
+      "relevance": "Northwestern neighbor; Adriatic coast; EU member; tourism"
+    },
+    {
+      "id": "BIH",
+      "name": "Bosnia and Herzegovina",
+      "relevance": "Northern neighbor; trade partner; post-Yugoslav ties"
+    },
+    {
+      "id": "SRB",
+      "name": "Serbia",
+      "relevance": "Eastern neighbor; largest trade partner; Serbian minority; political tensions"
+    },
+    {
+      "id": "ALB",
+      "name": "Albania",
+      "relevance": "Southeastern neighbor; Albanian minority; shared coast"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate; most advanced accession negotiations in Western Balkans"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2017"
+    },
+    {
+      "target": "CHN",
+      "type": "dependency",
+      "description": "Bar-Boljare highway debt to China; debt sustainability concerns"
+    },
+    {
+      "target": "SRB",
+      "type": "trade",
+      "description": "Largest trade partner; deep cultural and economic ties"
+    }
+  ],
+  "tags": [
+    "NATO",
+    "eu_candidate",
+    "western_balkans",
+    "adriatic"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

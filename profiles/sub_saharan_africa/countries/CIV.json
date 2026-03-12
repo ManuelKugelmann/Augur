@@ -1,0 +1,46 @@
+{
+  "id": "CIV",
+  "name": "Cote d'Ivoire",
+  "iso2": "CI",
+  "region": "Sub-Saharan Africa",
+  "currency": "XOF",
+  "capital": "Yamoussoukro",
+  "population": 28200000,
+  "trade": {
+    "top_exports": ["cocoa", "cashew_nuts", "rubber", "petroleum", "gold"],
+    "top_partners": ["NLD", "USA", "FRA", "DEU", "IND"],
+    "major_ports": ["Abidjan", "San Pedro"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum_products", "rice", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.02, "gas": 0.45, "coal": 0.0, "nuclear": 0.0, "oil": 0.10, "hydro": 0.40, "other": 0.03
+    },
+    "risk_factors": ["cocoa_price_dependence", "post_conflict_fragility", "sahel_spillover", "inequality"]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 4.41,
+    "press_freedom_rank": 54,
+    "corruption_perception": 37
+  },
+  "neighbors": [
+    {"id": "GHA", "name": "Ghana", "relevance": "Eastern border; cocoa competition; regional trade"},
+    {"id": "BFA", "name": "Burkina Faso", "relevance": "Northern border; Sahel jihadist spillover; migrant labor"},
+    {"id": "MLI", "name": "Mali", "relevance": "Northwestern border; Sahel crisis; refugees; Ivorian diaspora"},
+    {"id": "GIN", "name": "Guinea", "relevance": "Western border; mining corridor; refugees"},
+    {"id": "LBR", "name": "Liberia", "relevance": "Southwestern border; post-conflict ties; refugees"}
+  ],
+  "links": [
+    {"target": "FRA", "type": "trade", "description": "Former colonial power; CFA franc; military base; Bolloré ports"},
+    {"target": "NLD", "type": "trade", "description": "Top cocoa buyer (Amsterdam commodity hub); major export partner"},
+    {"target": "EU", "type": "trade", "description": "EPA; cocoa/rubber exports; development cooperation"},
+    {"target": "ECOWAS", "type": "alliance", "description": "ECOWAS economic anchor; Abidjan as regional financial hub"}
+  ],
+  "tags": ["AU", "ECOWAS"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

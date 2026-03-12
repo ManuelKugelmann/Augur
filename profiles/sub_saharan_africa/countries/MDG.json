@@ -1,0 +1,44 @@
+{
+  "id": "MDG",
+  "name": "Madagascar",
+  "iso2": "MG",
+  "region": "Sub-Saharan Africa",
+  "currency": "MGA",
+  "capital": "Antananarivo",
+  "population": 30300000,
+  "trade": {
+    "top_exports": ["vanilla", "nickel", "cobalt", "textiles", "cloves"],
+    "top_partners": ["FRA", "USA", "CHN", "DEU", "JPN"],
+    "major_ports": ["Toamasina", "Mahajanga"],
+    "chokepoint_exposure": ["cape_of_good_hope"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "rice", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.05, "nuclear": 0.0, "oil": 0.35, "hydro": 0.50, "other": 0.05
+    },
+    "risk_factors": ["cyclone_vulnerability", "deforestation", "political_instability", "extreme_poverty"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 3.93,
+    "press_freedom_rank": 95,
+    "corruption_perception": 26
+  },
+  "neighbors": [
+    {"id": "MOZ", "name": "Mozambique", "relevance": "Across Mozambique Channel; maritime trade; fisheries"},
+    {"id": "MUS", "name": "Mauritius", "relevance": "Indian Ocean neighbor; trade; island cooperation"},
+    {"id": "COM", "name": "Comoros", "relevance": "Nearby island state; Mozambique Channel; migration"}
+  ],
+  "links": [
+    {"target": "FRA", "type": "trade", "description": "Former colonial power; largest trade partner; vanilla buyer; development aid"},
+    {"target": "CHN", "type": "trade", "description": "Mining investment; infrastructure; growing trade"},
+    {"target": "USA", "type": "trade", "description": "Vanilla exports; AGOA; conservation (USAID)"},
+    {"target": "EU", "type": "trade", "description": "EPA; textiles; vanilla; tuna fisheries; development aid"}
+  ],
+  "tags": ["AU", "SADC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

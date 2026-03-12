@@ -1,0 +1,47 @@
+{
+  "id": "NPL",
+  "name": "Nepal",
+  "iso2": "NP",
+  "region": "South Asia",
+  "currency": "NPR",
+  "capital": "Kathmandu",
+  "population": 29600000,
+  "trade": {
+    "top_exports": ["soybean_oil", "palm_oil", "textiles", "carpets", "iron_steel"],
+    "top_partners": ["IND", "USA", "CHN", "GBR", "DEU"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "electronics", "gold"],
+    "energy_mix": {
+      "hydro": 0.55, "renewables": 0.05, "oil": 0.2, "coal": 0.1, "gas": 0.0, "nuclear": 0.0, "other": 0.1
+    },
+    "risk_factors": [
+      "india_trade_dependence",
+      "earthquake_risk",
+      "landlocked",
+      "remittance_dependence"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 4.41,
+    "press_freedom_rank": 76,
+    "corruption_perception": 34
+  },
+  "neighbors": [
+    {"id": "IND", "name": "India", "relevance": "Open border; dominant trade partner (60%+ exports); energy supply; political influence"},
+    {"id": "CHN", "name": "China", "relevance": "Northern border; BRI investments; growing trade; strategic balancing"}
+  ],
+  "links": [
+    {"target": "IND", "type": "dependency", "description": "India supplies 60%+ of imports; only transit route for trade; currency peg; energy dependence"},
+    {"target": "CHN", "type": "trade", "description": "Growing infrastructure investment; BRI rail projects; strategic hedge against India dependence"},
+    {"target": "SAARC", "type": "alliance", "description": "SAARC founding member; SAFTA participant; BIMSTEC member"}
+  ],
+  "tags": ["SAARC", "LDC_graduating"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "Fitch Ratings"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,101 @@
+{
+  "id": "JOR",
+  "name": "Jordan",
+  "iso2": "JO",
+  "region": "Middle East & North Africa",
+  "currency": "JOD",
+  "capital": "Amman",
+  "population": 11500000,
+  "trade": {
+    "top_exports": ["phosphates", "potash", "fertilizers", "pharmaceuticals", "textiles"],
+    "top_partners": ["USA", "SAU", "IND", "IRQ", "ARE"],
+    "major_ports": ["Aqaba"],
+    "chokepoint_exposure": ["suez", "bab_el_mandeb"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "natural_gas", "vehicles", "machinery", "cereals"],
+    "energy_mix": {
+      "gas": 0.60,
+      "oil": 0.15,
+      "renewables": 0.20,
+      "nuclear": 0.0,
+      "hydro": 0.01,
+      "coal": 0.0,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "energy_import_dependence",
+      "water_scarcity",
+      "refugee_burden",
+      "trade_deficit",
+      "regional_instability"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 3.40,
+    "press_freedom_rank": 143,
+    "corruption_perception": 49
+  },
+  "neighbors": [
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "Southern border; economic aid; energy supply; GCC alignment"
+    },
+    {
+      "id": "IRQ",
+      "name": "Iraq",
+      "relevance": "Eastern border; trade corridor; oil imports; refugee flows"
+    },
+    {
+      "id": "SYR",
+      "name": "Syria",
+      "relevance": "Northern border; 1.4M Syrian refugees; trade recovery post-Assad"
+    },
+    {
+      "id": "ISR",
+      "name": "Israel",
+      "relevance": "Peace treaty since 1994; water sharing; security cooperation; Gaza tensions"
+    },
+    {
+      "id": "PSE",
+      "name": "Palestine",
+      "relevance": "2.1M Palestinian refugees; West Bank border; political sensitivity"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Major non-NATO ally; $1.6B annual aid; military cooperation; FTA"
+    },
+    {
+      "target": "SAU",
+      "type": "alliance",
+      "description": "GCC financial support; investment; energy supply"
+    },
+    {
+      "target": "ISR",
+      "type": "trade",
+      "description": "Wadi Araba peace treaty; gas imports; QIZ trade zones; water sharing"
+    },
+    {
+      "target": "IMF",
+      "type": "dependency",
+      "description": "IMF-backed reform program; debt reduction to 80% GDP by 2028"
+    }
+  ],
+  "tags": [
+    "Arab_League"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "S&P Global",
+    "Transparency International"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

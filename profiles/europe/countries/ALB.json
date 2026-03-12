@@ -1,0 +1,116 @@
+{
+  "id": "ALB",
+  "name": "Albania",
+  "iso2": "AL",
+  "region": "Europe",
+  "currency": "ALL",
+  "capital": "Tirana",
+  "population": 2750000,
+  "trade": {
+    "top_exports": [
+      "footwear",
+      "textiles",
+      "iron_steel",
+      "crude_oil"
+    ],
+    "top_partners": [
+      "ITA",
+      "GRC",
+      "DEU",
+      "TUR",
+      "ESP"
+    ],
+    "major_ports": [
+      "Durres",
+      "Vlore"
+    ],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "food",
+      "vehicles"
+    ],
+    "energy_mix": {
+      "renewables": 0.05,
+      "gas": 0.01,
+      "coal": 0.01,
+      "nuclear": 0.0,
+      "oil": 0.10,
+      "hydro": 0.80,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "hydro_dependence_drought_risk",
+      "informal_economy",
+      "corruption",
+      "brain_drain",
+      "remittance_dependence"
+    ]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 5.5,
+    "press_freedom_rank": 99,
+    "corruption_perception": 36
+  },
+  "neighbors": [
+    {
+      "id": "MNE",
+      "name": "Montenegro",
+      "relevance": "Northern neighbor; Albanian minority; Adriatic coast"
+    },
+    {
+      "id": "MKD",
+      "name": "North Macedonia",
+      "relevance": "Eastern neighbor; Albanian minority; economic ties"
+    },
+    {
+      "id": "GRC",
+      "name": "Greece",
+      "relevance": "Southern neighbor; Greek minority in Albania; major trade partner; diaspora"
+    },
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "relevance": "Across Adriatic; largest trade partner; migration destination; diaspora"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate; accession negotiations opened 2022"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2009"
+    },
+    {
+      "target": "ITA",
+      "type": "trade",
+      "description": "Largest trade partner and investor; migration corridor"
+    },
+    {
+      "target": "XKX",
+      "type": "alliance",
+      "description": "Shared Albanian ethnicity; strong bilateral ties; supports Kosovo independence"
+    }
+  ],
+  "tags": [
+    "NATO",
+    "eu_candidate",
+    "western_balkans",
+    "adriatic"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

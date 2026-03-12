@@ -1,0 +1,137 @@
+{
+  "id": "SRB",
+  "name": "Serbia",
+  "iso2": "RS",
+  "region": "Europe",
+  "currency": "RSD",
+  "capital": "Belgrade",
+  "population": 6650000,
+  "trade": {
+    "top_exports": [
+      "vehicles",
+      "electrical_machinery",
+      "iron_steel",
+      "fruit"
+    ],
+    "top_partners": [
+      "DEU",
+      "ITA",
+      "BIH",
+      "ROU",
+      "HUN"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.05,
+      "gas": 0.12,
+      "coal": 0.63,
+      "nuclear": 0.0,
+      "oil": 0.02,
+      "hydro": 0.16,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "kosovo_dispute",
+      "coal_dependence",
+      "russian_influence",
+      "eu_accession_stall",
+      "brain_drain"
+    ]
+  },
+  "ratings": {
+    "credit": "BB+",
+    "democracy_index": 5.7,
+    "press_freedom_rank": 91,
+    "corruption_perception": 36
+  },
+  "neighbors": [
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "relevance": "Northern neighbor; Hungarian minority in Vojvodina; transit route"
+    },
+    {
+      "id": "ROU",
+      "name": "Romania",
+      "relevance": "Eastern neighbor; Danube border; trade partner"
+    },
+    {
+      "id": "BGR",
+      "name": "Bulgaria",
+      "relevance": "Southeastern neighbor; transit corridor"
+    },
+    {
+      "id": "MKD",
+      "name": "North Macedonia",
+      "relevance": "Southern neighbor; former Yugoslav republic; economic ties"
+    },
+    {
+      "id": "MNE",
+      "name": "Montenegro",
+      "relevance": "Southwestern neighbor; Serbian minority; historical ties"
+    },
+    {
+      "id": "BIH",
+      "name": "Bosnia and Herzegovina",
+      "relevance": "Western neighbor; Republika Srpska entity; complex post-war relations"
+    },
+    {
+      "id": "HRV",
+      "name": "Croatia",
+      "relevance": "Northwestern neighbor; post-conflict normalization; Serbian minority"
+    },
+    {
+      "id": "ALB",
+      "name": "Albania",
+      "relevance": "Southwestern neighbor via Kosovo; Kosovo status dispute"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate since 2012; accession chapters open but progress stalled"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Russian gas dependency; military cooperation; refused to join EU sanctions"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Major Chinese investment; Zijin Mining; Belgrade-Budapest railway"
+    },
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; automotive supplier base growing"
+    },
+    {
+      "target": "XKX",
+      "type": "rivalry",
+      "description": "Kosovo independence dispute; EU-mediated dialogue; periodic tensions"
+    }
+  ],
+  "tags": [
+    "eu_candidate",
+    "landlocked",
+    "western_balkans"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

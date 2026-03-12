@@ -1,0 +1,105 @@
+{
+  "id": "LBY",
+  "name": "Libya",
+  "iso2": "LY",
+  "region": "Middle East & North Africa",
+  "currency": "LYD",
+  "capital": "Tripoli",
+  "population": 7500000,
+  "trade": {
+    "top_exports": ["petroleum", "natural_gas", "petrochemicals"],
+    "top_partners": ["ITA", "DEU", "ESP", "FRA", "CHN"],
+    "major_ports": ["Tripoli", "Misrata", "Benghazi", "Tobruk", "Es Sider"],
+    "chokepoint_exposure": ["sicily_strait", "suez"]
+  },
+  "exposure": {
+    "commodities_import": ["food_products", "machinery", "vehicles", "iron_steel"],
+    "energy_mix": {
+      "oil": 0.50,
+      "gas": 0.45,
+      "renewables": 0.01,
+      "hydro": 0.0,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "civil_conflict",
+      "political_fragmentation",
+      "oil_dependence",
+      "militia_control",
+      "infrastructure_damage",
+      "dual_government"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.0,
+    "press_freedom_rank": 134,
+    "corruption_perception": 13
+  },
+  "neighbors": [
+    {
+      "id": "EGY",
+      "name": "Egypt",
+      "relevance": "Eastern border; migration; security cooperation; LNA support"
+    },
+    {
+      "id": "TUN",
+      "name": "Tunisia",
+      "relevance": "Western border; refugee flows; trade; smuggling"
+    },
+    {
+      "id": "DZA",
+      "name": "Algeria",
+      "relevance": "Western border; mediation attempts; Sahel security"
+    },
+    {
+      "id": "TCD",
+      "name": "Chad",
+      "relevance": "Southern border; mercenary flows; Aouzou Strip history"
+    },
+    {
+      "id": "SDN",
+      "name": "Sudan",
+      "relevance": "Southern border; arms flows; migration corridor"
+    }
+  ],
+  "links": [
+    {
+      "target": "ITA",
+      "type": "trade",
+      "description": "Largest oil buyer; ENI operations; migration management; colonial history"
+    },
+    {
+      "target": "TUR",
+      "type": "alliance",
+      "description": "Military support for Tripoli government (GNA); maritime boundary deal"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Wagner Group support for eastern LNA forces; military presence"
+    },
+    {
+      "target": "OPEC",
+      "type": "alliance",
+      "description": "OPEC member; largest proven reserves in Africa; ~1.4M bpd production"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "Arab_League",
+    "AU",
+    "conflict_zone"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIA",
+    "Transparency International"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

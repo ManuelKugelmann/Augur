@@ -1,0 +1,43 @@
+{
+  "id": "CRI",
+  "name": "Costa Rica",
+  "iso2": "CR",
+  "region": "Latin America",
+  "currency": "CRC",
+  "capital": "San Jose",
+  "population": 5270000,
+  "trade": {
+    "top_exports": ["medical_devices", "bananas", "pineapples", "coffee", "electronics"],
+    "top_partners": ["USA", "NLD", "GTM", "BEL", "PAN"],
+    "major_ports": ["Puerto Limon", "Caldera"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "chemicals"],
+    "energy_mix": {
+      "hydro": 0.65, "renewables": 0.20, "oil": 0.05, "gas": 0.02, "coal": 0.0, "nuclear": 0.0, "other": 0.08
+    },
+    "risk_factors": ["fiscal_deficit", "narcotrafficking_transit", "costa_rica_dollar_dependency", "inequality"]
+  },
+  "ratings": {
+    "credit": "BB",
+    "democracy_index": 8.29,
+    "press_freedom_rank": 26,
+    "corruption_perception": 56
+  },
+  "neighbors": [
+    {"id": "NIC", "name": "Nicaragua", "relevance": "Northern border; migration flows; political tensions"},
+    {"id": "PAN", "name": "Panama", "relevance": "Southern border; trade corridor; Darien migration"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Dominant trade partner; CAFTA-DR; medical device exports"},
+    {"target": "EU", "type": "trade", "description": "Association agreement; agricultural exports; sustainability partner"},
+    {"target": "CHN", "type": "trade", "description": "Diplomatic relations since 2007; trade growth; FTA signed"},
+    {"target": "CAFTA-DR", "type": "alliance", "description": "CAFTA-DR member; regional trade integration"}
+  ],
+  "tags": ["OAS", "CAFTA-DR", "SICA", "Pacific_Alliance_observer"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

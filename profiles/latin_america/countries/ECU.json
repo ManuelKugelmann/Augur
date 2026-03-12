@@ -1,0 +1,43 @@
+{
+  "id": "ECU",
+  "name": "Ecuador",
+  "iso2": "EC",
+  "region": "Latin America",
+  "currency": "USD",
+  "capital": "Quito",
+  "population": 18400000,
+  "trade": {
+    "top_exports": ["petroleum", "bananas", "shrimp", "cocoa", "flowers"],
+    "top_partners": ["USA", "CHN", "PAN", "CHL", "COL"],
+    "major_ports": ["Guayaquil", "Esmeraldas", "Manta"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "chemicals", "pharmaceuticals"],
+    "energy_mix": {
+      "hydro": 0.60, "oil": 0.25, "gas": 0.08, "renewables": 0.03, "coal": 0.01, "nuclear": 0.0, "other": 0.03
+    },
+    "risk_factors": ["oil_price_dependence", "dollarization", "drought_energy_crisis", "gang_violence"]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 5.08,
+    "press_freedom_rank": 110,
+    "corruption_perception": 32
+  },
+  "neighbors": [
+    {"id": "COL", "name": "Colombia", "relevance": "Northern border; trade corridor; refugee flows; security cooperation"},
+    {"id": "PER", "name": "Peru", "relevance": "Southern border; trade partner; shared Andean heritage"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Top export destination; dollarized economy; oil exports"},
+    {"target": "CHN", "type": "trade", "description": "Major oil buyer; infrastructure investment; growing trade"},
+    {"target": "CAN", "type": "alliance", "description": "Andean Community; trade and development cooperation"},
+    {"target": "OPEC", "type": "trade", "description": "Former OPEC member; oil export coordination"}
+  ],
+  "tags": ["OAS", "Andean_Community", "UNASUR"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

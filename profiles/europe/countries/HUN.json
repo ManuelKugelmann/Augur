@@ -1,0 +1,132 @@
+{
+  "id": "HUN",
+  "name": "Hungary",
+  "iso2": "HU",
+  "region": "Europe",
+  "currency": "HUF",
+  "capital": "Budapest",
+  "population": 9600000,
+  "trade": {
+    "top_exports": [
+      "vehicles",
+      "electrical_machinery",
+      "machinery",
+      "pharmaceuticals"
+    ],
+    "top_partners": [
+      "DEU",
+      "ITA",
+      "ROU",
+      "AUT",
+      "SVK"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "natural_gas",
+      "crude_oil",
+      "electronics"
+    ],
+    "energy_mix": {
+      "renewables": 0.11,
+      "gas": 0.31,
+      "coal": 0.07,
+      "nuclear": 0.44,
+      "oil": 0.01,
+      "hydro": 0.01,
+      "other": 0.05
+    },
+    "risk_factors": [
+      "russian_energy_dependence",
+      "eu_rule_of_law_disputes",
+      "forint_volatility",
+      "democratic_backsliding"
+    ]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 5.6,
+    "press_freedom_rank": 85,
+    "corruption_perception": 42
+  },
+  "neighbors": [
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "relevance": "Western neighbor; deep economic ties; shared Habsburg history"
+    },
+    {
+      "id": "SVK",
+      "name": "Slovakia",
+      "relevance": "Northern neighbor; Visegrad partner; automotive supply chain"
+    },
+    {
+      "id": "UKR",
+      "name": "Ukraine",
+      "relevance": "Eastern neighbor; Hungarian minority in Zakarpattia; refugee transit"
+    },
+    {
+      "id": "ROU",
+      "name": "Romania",
+      "relevance": "Southeastern neighbor; Hungarian minority in Transylvania; trade partner"
+    },
+    {
+      "id": "SRB",
+      "name": "Serbia",
+      "relevance": "Southern neighbor; transit route; Turkish Stream gas pipeline"
+    },
+    {
+      "id": "HRV",
+      "name": "Croatia",
+      "relevance": "Southwestern neighbor; Adriatic access; tourism"
+    },
+    {
+      "id": "SVN",
+      "name": "Slovenia",
+      "relevance": "Western neighbor; short border; transit route"
+    }
+  ],
+  "links": [
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; automotive manufacturing hub for German OEMs"
+    },
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; frequent disputes over rule of law and frozen funds"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 1999"
+    },
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Heavy reliance on Russian gas via TurkStream; Paks nuclear expansion by Rosatom"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Growing Chinese investment; BYD and CATL factories; Belt and Road participant"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "visegrad",
+    "landlocked"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

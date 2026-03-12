@@ -1,0 +1,44 @@
+{
+  "id": "VEN",
+  "name": "Venezuela",
+  "iso2": "VE",
+  "region": "Latin America",
+  "currency": "VES",
+  "capital": "Caracas",
+  "population": 28500000,
+  "trade": {
+    "top_exports": ["petroleum", "iron_ore", "aluminum", "steel", "chemicals"],
+    "top_partners": ["CHN", "IND", "USA", "TUR", "ESP"],
+    "major_ports": ["Puerto Cabello", "Maracaibo", "La Guaira", "Jose"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "food", "pharmaceuticals"],
+    "energy_mix": {
+      "hydro": 0.57, "oil": 0.25, "gas": 0.16, "renewables": 0.01, "coal": 0.0, "nuclear": 0.0, "other": 0.01
+    },
+    "risk_factors": ["hyperinflation", "sanctions", "oil_infrastructure_decay", "mass_emigration", "political_crisis"]
+  },
+  "ratings": {
+    "credit": "SD",
+    "democracy_index": 2.25,
+    "press_freedom_rank": 146,
+    "corruption_perception": 10
+  },
+  "neighbors": [
+    {"id": "COL", "name": "Colombia", "relevance": "Longest border; refugee crisis; trade corridor; political tension"},
+    {"id": "BRA", "name": "Brazil", "relevance": "Southern border; refugee flows; Amazon cooperation"},
+    {"id": "GUY", "name": "Guyana", "relevance": "Essequibo territorial dispute; oil competition"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "dependency", "description": "Largest creditor; oil-for-loans; infrastructure investment"},
+    {"target": "RUS", "type": "alliance", "description": "Military cooperation; political support; sanctions evasion"},
+    {"target": "CUB", "type": "alliance", "description": "ALBA anchor; ideological alignment; security advisors"},
+    {"target": "USA", "type": "sanctions", "description": "Sanctions regime; oil export restrictions; political tensions"}
+  ],
+  "tags": ["OPEC", "ALBA", "OAS"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

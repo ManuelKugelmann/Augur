@@ -1,0 +1,108 @@
+{
+  "id": "BIH",
+  "name": "Bosnia and Herzegovina",
+  "iso2": "BA",
+  "region": "Europe",
+  "currency": "BAM",
+  "capital": "Sarajevo",
+  "population": 3210000,
+  "trade": {
+    "top_exports": [
+      "iron_steel",
+      "aluminum",
+      "furniture",
+      "electricity"
+    ],
+    "top_partners": [
+      "DEU",
+      "HRV",
+      "SRB",
+      "ITA",
+      "AUT"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.04,
+      "gas": 0.04,
+      "coal": 0.52,
+      "nuclear": 0.0,
+      "oil": 0.06,
+      "hydro": 0.30,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "political_fragmentation",
+      "entity_governance_dysfunction",
+      "coal_dependence",
+      "brain_drain",
+      "corruption",
+      "ethnic_tensions"
+    ]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 4.9,
+    "press_freedom_rank": 68,
+    "corruption_perception": 34
+  },
+  "neighbors": [
+    {
+      "id": "HRV",
+      "name": "Croatia",
+      "relevance": "Northern/western neighbor; Croatian minority; Neum corridor; EU border"
+    },
+    {
+      "id": "SRB",
+      "name": "Serbia",
+      "relevance": "Eastern neighbor; Republika Srpska entity ties; trade partner"
+    },
+    {
+      "id": "MNE",
+      "name": "Montenegro",
+      "relevance": "Southeastern neighbor; short border; former Yugoslav ties"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "EU candidate since 2022; slow reform progress; OHR still in place"
+    },
+    {
+      "target": "NATO",
+      "type": "trade",
+      "description": "Membership Action Plan activated; blocked by Republika Srpska opposition"
+    },
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; diaspora remittances"
+    },
+    {
+      "target": "TUR",
+      "type": "trade",
+      "description": "Political and economic ties; Turkish investment; Bosniak cultural connection"
+    }
+  ],
+  "tags": [
+    "eu_candidate",
+    "western_balkans",
+    "landlocked"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}
