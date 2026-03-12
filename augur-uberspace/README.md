@@ -87,46 +87,25 @@ This clones the repo, creates Python venv, installs LibreChat (release bundle or
 <summary>Manual install (if the one-liner fails or you prefer step-by-step)</summary>
 
 ```bash
-# 1. Clone repo
 git clone https://github.com/ManuelKugelmann/Augur.git ~/augur
 cd ~/augur
-
-# 2. Create Python venv + install deps
 python3 -m venv --without-pip venv
 venv/bin/python -m ensurepip
 venv/bin/python -m pip install --prefer-binary -r requirements.txt
-
-# 3. Create .env from template
 cp .env.example .env
-nano .env   # set MONGO_URI_SIGNALS
-
-# 4. Download LibreChat release bundle
+nano .env                        # set MONGO_URI_SIGNALS
 TAG=$(curl -sf https://api.github.com/repos/ManuelKugelmann/Augur/releases/latest | grep -o '"tag_name":"[^"]*"' | cut -d'"' -f4)
 URL=$(curl -sf https://api.github.com/repos/ManuelKugelmann/Augur/releases/latest | grep -oE '"browser_download_url":\s*"[^"]*librechat-(bundle|build)\.tar\.gz"' | head -1 | grep -oE 'https://[^"]+')
-mkdir -p /tmp/lc-install && curl -fL -o /tmp/lc-install/bundle.tar.gz "$URL"
-mkdir -p ~/LibreChat && tar xzf /tmp/lc-install/bundle.tar.gz -C ~/LibreChat
-rm -rf /tmp/lc-install
-
-# 5. Run setup (configures LibreChat .env, librechat.yaml, services)
+curl -fL --create-dirs -o /tmp/lc-install/bundle.tar.gz "$URL"
+mkdir -p ~/LibreChat && tar xzf /tmp/lc-install/bundle.tar.gz -C ~/LibreChat && rm -rf /tmp/lc-install
 bash ~/augur/augur-uberspace/scripts/setup.sh ~/LibreChat "$TAG"
-nano ~/LibreChat/.env   # set MONGO_URI + LLM API key(s)
-
-# 6. Register services (U8/systemd — see install.sh for U7/supervisord)
-mkdir -p ~/.config/systemd/user ~/logs
-# trading.service, charts.service, librechat.service are created by setup.sh
+nano ~/LibreChat/.env            # set MONGO_URI + LLM API key(s)
 systemctl --user daemon-reload
 systemctl --user enable trading charts librechat
-
-# 7. Web backend for charts
 uberspace web backend add /charts port 8066 --force
-
-# 8. Install augur CLI shortcut
-mkdir -p ~/bin
-cp ~/augur/Augur.sh ~/bin/augur && chmod +x ~/bin/augur
+mkdir -p ~/bin && cp ~/augur/Augur.sh ~/bin/augur && chmod +x ~/bin/augur
 ln -sf ~/bin/augur ~/bin/Augur
 echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
-
-# 9. Start
 systemctl --user start librechat trading charts
 ```
 
