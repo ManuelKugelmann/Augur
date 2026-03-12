@@ -391,7 +391,7 @@ Built on same base as LibreChat + OSINT MCP-based trading system:
 
 | Asset | Existing Source | Reuse |
 |-------|----------------|-------|
-| Uberspace + supervisord | LibreChat | Pipeline engine (cron + scripts) |
+| Uberspace + systemd | LibreChat | Pipeline engine (cron + scripts) |
 | GitHub Pages + Jekyll | — | Static site hosting (free, CDN, Actions-based build) |
 | GitHub Actions | — | Jekyll build + deploy to Pages on push |
 | GitHub deploy (CI/CD) | LibreChat bootstrap | Deployment |

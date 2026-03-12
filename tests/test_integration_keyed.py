@@ -164,6 +164,8 @@ class TestCloudflare:
 
     def test_internet_traffic(self):
         result = run(self.m.internet_traffic(location="DE", date_range="1d"))
+        if "error" in result and "429" in result["error"]:
+            pytest.skip("Cloudflare rate-limited (429)")
         assert "result" in result or "success" in result
 
 

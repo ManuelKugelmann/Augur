@@ -117,7 +117,7 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
       No git — dumps don't diff well. ~10-50 MB compressed per dump.
 - [ ] **Test Uberspace deployment end-to-end**
       Run `ta install` on a live Uberspace host.
-      Verify supervisord services start, logs rotate, .env is picked up.
+      Verify systemd services start, logs rotate, .env is picked up.
 - [ ] **Test LibreChat deployment end-to-end**
       Run the `augur-uberspace/` deployment package. Verify LibreChat connects
       to Atlas, MCP servers respond, git-versioned data sync works.

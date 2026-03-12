@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 # Uberspace-only tests — run on the deployed host via: augur check --test
 #
-# These tests require a live Uberspace environment:
-#   - supervisord running
+# These tests require a live Uberspace U8 environment:
+#   - systemd user services running
 #   - LibreChat installed and configured
 #   - Real services, ports, and filesystem
 #
@@ -93,18 +93,17 @@ setup() {
 #  Services
 # ══════════════════════════════════════════
 
-@test "uberspace: supervisord is running" {
-    supervisorctl status 2>/dev/null
+@test "uberspace: systemd user session is active" {
+    systemctl --user status 2>/dev/null
 }
 
 @test "uberspace: librechat service registered" {
-    run supervisorctl status librechat
-    [[ "$status" -eq 0 ]]
+    [[ -f "$HOME/.config/systemd/user/librechat.service" ]]
 }
 
-@test "uberspace: librechat service is RUNNING" {
-    run supervisorctl status librechat
-    [[ "$output" == *"RUNNING"* ]]
+@test "uberspace: librechat service is active" {
+    run systemctl --user is-active librechat
+    [[ "$output" == "active" ]]
 }
 
 @test "uberspace: LibreChat responds on HTTP" {
@@ -159,7 +158,7 @@ setup() {
 # ══════════════════════════════════════════
 
 @test "uberspace: CLIProxyAPI responds (if configured)" {
-    if [[ ! -f "$HOME/.claude-auth.env" ]] && [[ ! -f "$HOME/etc/services.d/cliproxyapi.ini" ]]; then
+    if [[ ! -f "$HOME/.claude-auth.env" ]] && [[ ! -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
         skip "CLIProxyAPI not configured"
     fi
     PROXY_PORT="${CLIPROXY_PORT:-8317}"
@@ -260,7 +259,7 @@ print('OK: signals store')
 }
 
 @test "uberspace: CLIProxyAPI is installed" {
-    if [[ ! -f "$HOME/etc/services.d/cliproxyapi.ini" ]]; then
+    if [[ ! -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
         skip "CLIProxyAPI not configured"
     fi
     command -v cliproxyapi

@@ -13,7 +13,7 @@ setup_sandbox() {
     export STACK_DIR="$TEST_SANDBOX/mcps"
     export APP_DIR="$TEST_SANDBOX/LibreChat"
     export LC_PORT="3080"
-    export NODE_VERSION="22"
+    export NODE_VERSION="24"
     export GH_USER="TestUser"
     export GH_REPO="TestRepo"
     export UBER_USER="testuser"
@@ -44,7 +44,7 @@ GH_REPO="${GH_REPO:-TestRepo}"
 STACK_DIR="${STACK_DIR:-$HOME/augur}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
-NODE_VERSION="${NODE_VERSION:-22}"
+NODE_VERSION="${NODE_VERSION:-24}"
 EOF
 }
 

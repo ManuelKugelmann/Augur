@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # Smoke test for the install path.
 # Uses real git/python3/node/curl — only stubs Uberspace-specific commands
-# (supervisorctl, uberspace, hostname).
+# (systemctl, uberspace, hostname).
 # Basic tests pre-create APP_DIR/.version to skip LC download.
 # Full lifecycle test exercises the complete flow including LC bundle download.
 #
@@ -26,7 +26,7 @@ setup() {
     prepend_bin_to_path
 
     # Only stub what CI genuinely lacks (Uberspace-specific)
-    stub_command "supervisorctl" 'echo "stubbed supervisorctl $*"'
+    stub_command "systemctl" 'echo "stubbed systemctl $*"'
     stub_command "uberspace" 'echo "stubbed uberspace $*"'
     stub_command "hostname" 'echo "test.uber.space"'
     stub_command "crontab" 'echo ""'
@@ -112,13 +112,11 @@ teardown() {
     [[ -f "$STACK_DIR/.env" ]]
 }
 
-@test "install registers supervisord services" {
+@test "install registers systemd services" {
     run bash "$REPO_ROOT/augur-uberspace/install.sh" 2>&1
     [[ "$status" -eq 0 ]]
-    [[ -f "$HOME/etc/services.d/trading.ini" ]]
-    run grep "program:trading" "$HOME/etc/services.d/trading.ini"
-    [[ "$status" -eq 0 ]]
-    run grep "combined_server.py" "$HOME/etc/services.d/trading.ini"
+    [[ -f "$HOME/.config/systemd/user/trading.service" ]]
+    run grep "combined_server.py" "$HOME/.config/systemd/user/trading.service"
     [[ "$status" -eq 0 ]]
 }
 
@@ -232,9 +230,9 @@ CURLEOF
     [[ -f "$APP_DIR/librechat.yaml" ]]
     ! grep -q "__HOME__" "$APP_DIR/librechat.yaml"
 
-    # Verify supervisord service was created
-    [[ -f "$HOME/etc/services.d/librechat.ini" ]]
-    grep -q "program:librechat" "$HOME/etc/services.d/librechat.ini"
+    # Verify systemd service was created
+    [[ -f "$HOME/.config/systemd/user/librechat.service" ]]
+    grep -q "ExecStart=node" "$HOME/.config/systemd/user/librechat.service"
 
     # Verify completion banner
     [[ "$output" == *"Installation complete"* ]] || [[ "$output" == *"Installed"* ]]

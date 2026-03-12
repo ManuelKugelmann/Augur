@@ -9,7 +9,7 @@ setup() {
     create_deploy_conf
 
     # Stub external commands
-    stub_command "supervisorctl" 'echo "stubbed supervisorctl $*"'
+    stub_command "systemctl" 'echo "stubbed systemctl $*"'
     stub_command "uberspace" 'echo "stubbed uberspace $*"'
     stub_command "node" 'echo "v22.0.0"'
     stub_command "npm" 'echo "stubbed npm $*"'
@@ -129,7 +129,7 @@ EOF
     [[ -d "${APP_DIR}.prev" ]]
 }
 
-@test "setup.sh creates supervisord service file on install" {
+@test "setup.sh creates systemd service file on install" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
     cat > "$STACK_DIR/augur-uberspace/config/.env.example" <<'EOF'
@@ -143,9 +143,9 @@ EOF
 
     run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v1.0.0"
     [[ "$status" -eq 0 ]]
-    [[ -f "$HOME/etc/services.d/librechat.ini" ]]
+    [[ -f "$HOME/.config/systemd/user/librechat.service" ]]
 
-    run grep "program:librechat" "$HOME/etc/services.d/librechat.ini"
+    run grep "ExecStart=node" "$HOME/.config/systemd/user/librechat.service"
     [[ "$status" -eq 0 ]]
 }
 

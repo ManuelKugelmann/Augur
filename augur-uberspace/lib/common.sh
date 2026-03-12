@@ -8,7 +8,7 @@ GH_REPO="${GH_REPO:-Augur}"
 STACK_DIR="${STACK_DIR:-$HOME/augur}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
-NODE_VERSION="${NODE_VERSION:-22}"
+NODE_VERSION="${NODE_VERSION:-24}"
 BRANCH="${BRANCH:-main}"
 
 # ── Load central config if available ──
@@ -32,35 +32,21 @@ log()  { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
-# ── Platform detection: U7 (supervisord) vs U8 (systemd) ──
-_is_u8() { [[ -f /etc/arch-release ]]; }
+# ── Service management (systemd on U8) ──
+_svc_start()   { systemctl --user start "$1"; }
+_svc_stop()    { systemctl --user stop "$1"; }
+_svc_restart() { systemctl --user restart "$1"; }
+_svc_status()  { systemctl --user status "$1" --no-pager; }
+_svc_logs()    { journalctl --user -u "$1" -f; }
+_svc_reload()  { systemctl --user daemon-reload || true; }
 
-# ── Service management (abstracts supervisord vs systemd) ──
-_svc_start()   { if _is_u8; then systemctl --user start "$1"; else supervisorctl start "$1"; fi; }
-_svc_stop()    { if _is_u8; then systemctl --user stop "$1"; else supervisorctl stop "$1"; fi; }
-_svc_restart() { if _is_u8; then systemctl --user restart "$1"; else supervisorctl restart "$1"; fi; }
-_svc_status()  { if _is_u8; then systemctl --user status "$1" --no-pager; else supervisorctl status "$1"; fi; }
-_svc_logs()    { if _is_u8; then journalctl --user -u "$1" -f; else supervisorctl tail -f "$1"; fi; }
-_svc_reload()  {
-    if _is_u8; then
-        systemctl --user daemon-reload || true
-    else
-        supervisorctl reread || true
-        supervisorctl update || true
-    fi
-}
-
-# ── Web backend (abstracts U7 set vs U8 add) ──
+# ── Web backend ──
 _web_backend() {
     local path="$1" port="$2"
-    if _is_u8; then
-        uberspace web backend add "$path" port "$port" --force
-    else
-        uberspace web backend set "$path" --http --port "$port"
-    fi
+    uberspace web backend add "$path" port "$port" --force
 }
 
-# ── pip install helper (U7: pin pandas<3 to avoid slow source builds) ──
+# ── pip install helper ──
 _pip_upgrade() {
     local python="$1" min_ver=22
     log "  → $python -m pip --version"
@@ -87,12 +73,8 @@ _pip_upgrade() {
 
 _pip_install() {
     local python="$1" req="$2"
-    local constraint
-    constraint=$(mktemp)
-    if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    log "  → $python -m pip install -v --prefer-binary -c <constraint> -r $req ${*:3}"
-    timeout 600 "$python" -m pip install -v --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
-    rm -f "$constraint"
+    log "  → $python -m pip install -v --prefer-binary -r $req ${*:3}"
+    timeout 600 "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
 }
 
 # ── HTTP helpers ──

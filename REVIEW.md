@@ -83,7 +83,7 @@ O(n) disk reads per query. Will degrade at scale. Mitigated by INDEX files for `
 ### 18. Domain Server `.env` Not Loaded via LibreChat — NOT APPLICABLE
 **File:** `augur-uberspace/config/librechat.yaml`
 
-Domain servers run inside the combined trading server process (not as separate LibreChat-launched MCPs). The combined server is a supervisord service that sources `.env`. API keys are available via the process environment.
+Domain servers run inside the combined trading server process (not as separate LibreChat-launched MCPs). The combined server is a systemd service that sources `.env`. API keys are available via the process environment.
 
 ### 19. ~~`deploy.conf` Variable Not Used by Ops Script~~ ✅ CLARIFIED
 `Augur.sh` sets `GH_REPO` default before sourcing config — intentional for `curl|bash` one-liner where config doesn't exist yet. Comment added to explain.
