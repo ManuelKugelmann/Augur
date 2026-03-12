@@ -11,7 +11,7 @@ setup() {
     create_deploy_conf
 
     # Stub commands
-    stub_command "supervisorctl" 'echo "stubbed supervisorctl $*"'
+    stub_command "systemctl" 'echo "stubbed systemctl $*"'
     stub_command "hostname" 'echo "test.uber.space"'
     stub_command "node" 'echo "v22.0.0"'
     stub_command "crontab" 'echo "no crontab"'

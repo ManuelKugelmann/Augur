@@ -29,7 +29,7 @@ setup() {
     prepend_bin_to_path
 
     # Stub external commands that aren't available in CI
-    stub_command "supervisorctl" 'echo "stubbed: $*"'
+    stub_command "systemctl" 'echo "stubbed: $*"'
     stub_command "uberspace" 'echo "stubbed: $*"'
     stub_command "hostname" 'echo "test.uber.space"'
 
@@ -91,22 +91,27 @@ teardown() {
     grep -q "MONGO_URI_SIGNALS" "$STACK_DIR/.env"
 }
 
-@test "install: registers supervisord service files" {
-    mkdir -p "$HOME/etc/services.d"
+@test "install: registers systemd service files" {
+    mkdir -p "$HOME/.config/systemd/user"
 
     # Simulate the service registration from _do_install
-    cat > "$HOME/etc/services.d/trading.ini" << SVCEOF
-[program:trading]
-directory=${STACK_DIR}
-command=bash -c 'set -a; [ -f ${STACK_DIR}/.env ] && . ${STACK_DIR}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071 PROFILES_DIR=${STACK_DIR}/profiles; exec ${STACK_DIR}/venv/bin/python src/servers/combined_server.py'
-autostart=true
-autorestart=true
-startsecs=10
+    cat > "$HOME/.config/systemd/user/trading.service" << SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${STACK_DIR}
+EnvironmentFile=${STACK_DIR}/.env
+Environment=MCP_TRANSPORT=http
+Environment=MCP_PORT=8071
+ExecStart=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
+Restart=always
+RestartSec=10
 SVCEOF
 
-    [ -f "$HOME/etc/services.d/trading.ini" ]
-    grep -q "MCP_TRANSPORT=http" "$HOME/etc/services.d/trading.ini"
-    grep -q "combined_server.py" "$HOME/etc/services.d/trading.ini"
+    [ -f "$HOME/.config/systemd/user/trading.service" ]
+    grep -q "MCP_TRANSPORT=http" "$HOME/.config/systemd/user/trading.service"
+    grep -q "combined_server.py" "$HOME/.config/systemd/user/trading.service"
 }
 
 @test "install: installs augur shortcut" {
@@ -140,12 +145,14 @@ SVCEOF
     [ -f "$STACK_DIR/.env" ]
 
     # Step 5: Services
-    cat > "$HOME/etc/services.d/trading.ini" << SVCEOF
-[program:trading]
-directory=${STACK_DIR}
-command=bash -c 'set -a; [ -f ${STACK_DIR}/.env ] && . ${STACK_DIR}/.env; set +a; exec ${STACK_DIR}/venv/bin/python src/servers/combined_server.py'
+    mkdir -p "$HOME/.config/systemd/user"
+    cat > "$HOME/.config/systemd/user/trading.service" << SVCEOF
+[Service]
+WorkingDirectory=${STACK_DIR}
+EnvironmentFile=${STACK_DIR}/.env
+ExecStart=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
 SVCEOF
-    [ -f "$HOME/etc/services.d/trading.ini" ]
+    [ -f "$HOME/.config/systemd/user/trading.service" ]
 
     # Step 8: augur shortcut
     cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur"
@@ -359,10 +366,11 @@ ENVEOF
     cp "$STACK_DIR/.env.example" "$STACK_DIR/.env"
 
     # Register services
-    cat > "$HOME/etc/services.d/trading.ini" <<SVCEOF
-[program:trading]
-directory=${STACK_DIR}
-command=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
+    mkdir -p "$HOME/.config/systemd/user"
+    cat > "$HOME/.config/systemd/user/trading.service" <<SVCEOF
+[Service]
+WorkingDirectory=${STACK_DIR}
+ExecStart=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
 SVCEOF
 
     # Install augur shortcut
@@ -377,7 +385,7 @@ SVCEOF
     # Verify install state
     [ -x "$STACK_DIR/venv/bin/python" ]
     [ -f "$STACK_DIR/.env" ]
-    [ -f "$HOME/etc/services.d/trading.ini" ]
+    [ -f "$HOME/.config/systemd/user/trading.service" ]
     [ -x "$HOME/bin/augur" ]
 
     # === PULL ===

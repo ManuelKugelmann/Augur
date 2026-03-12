@@ -21,37 +21,19 @@ log()  { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
-# ── Platform detection ──
-_is_u8() { [[ -f /etc/arch-release ]]; }
-
-_svc_stop_lc() {
-    if _is_u8; then
-        systemctl --user stop librechat || true
-    else
-        supervisorctl stop librechat || true
-    fi
-}
-_svc_start_lc() {
-    if _is_u8; then
-        systemctl --user start librechat || true
-    else
-        supervisorctl start librechat || supervisorctl restart librechat || true
-    fi
-}
+# ── Service management (systemd) ──
+_svc_stop_lc()  { systemctl --user stop librechat || true; }
+_svc_start_lc() { systemctl --user start librechat || true; }
 _web_backend() {
     local path="$1" port="$2"
-    if _is_u8; then
-        uberspace web backend add "$path" port "$port" --force
-    else
-        uberspace web backend set "$path" --http --port "$port"
-    fi
+    uberspace web backend add "$path" port "$port" --force
 }
 
 # Dirs that survive updates
 PERSIST=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
-command -v node &>/dev/null || die "Node.js not found. On U7: uberspace tools version use node ${NODE_VERSION:-22}. On U8: node is system-provided."
+command -v node &>/dev/null || die "Node.js not found (system-provided on Uberspace)."
 NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d 'v')
 [[ "$NODE_MAJOR" -lt 20 ]] && die "Node.js ≥20 required (got $(node -v))."
 
@@ -148,7 +130,7 @@ fi
 
 # ── Install signals stack (Python MCP servers) ──
 # Resolve Python binary: try explicit PYTHON_VERSION first, then scan
-# descending 3.14→3.10, then bare python3 (works on U7 + U8 + generic Linux)
+# descending 3.14→3.10, then bare python3
 _PYTHON_BIN=""
 for _py in "python${PYTHON_VERSION:-}" python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
     [[ -z "$_py" || "$_py" == "python" ]] && continue
@@ -186,13 +168,9 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
             timeout 600 venv/bin/python -m pip install -v --upgrade pip </dev/null
         fi
         log "Installing Python requirements (this may take a few minutes)..."
-        _pip_constraint=$(mktemp)
-        # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
-        if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
-        log "  → venv/bin/python -m pip install -v --prefer-binary -c <constraint> -r requirements.txt"
+        log "  → venv/bin/python -m pip install -v --prefer-binary -r requirements.txt"
         timeout 600 venv/bin/python -m pip install -v --prefer-binary \
-            -c "$_pip_constraint" -r requirements.txt </dev/null
-        rm -f "$_pip_constraint"
+            -r requirements.txt </dev/null
         cd - >/dev/null
         log "Signals stack ready"
     fi
@@ -260,12 +238,11 @@ if [[ "$MODE" == "install" ]]; then
         fi
     fi
 
-    # Register librechat service (U7: supervisord, U8: systemd)
+    # Register librechat systemd service
     log "Registering librechat service..."
-    if _is_u8; then
-        SVC_DIR="$HOME/.config/systemd/user"
-        mkdir -p "$SVC_DIR"
-        cat > "$SVC_DIR/librechat.service" <<EOF
+    SVC_DIR="$HOME/.config/systemd/user"
+    mkdir -p "$SVC_DIR"
+    cat > "$SVC_DIR/librechat.service" <<EOF
 [Install]
 WantedBy=default.target
 
@@ -276,25 +253,8 @@ ExecStart=node --max-old-space-size=1024 api/server/index.js
 Restart=always
 RestartSec=60
 EOF
-        systemctl --user daemon-reload
-        systemctl --user enable librechat || true
-    else
-        SVC="$HOME/etc/services.d/librechat.ini"
-        mkdir -p "$(dirname "$SVC")"
-        cat > "$SVC" <<EOF
-[program:librechat]
-directory=${APP}
-command=node --max-old-space-size=1024 api/server/index.js
-environment=NODE_ENV=production
-autostart=true
-autorestart=true
-startsecs=60
-stopsignal=TERM
-stopwaitsecs=10
-EOF
-        supervisorctl reread
-        supervisorctl add librechat || true
-    fi
+    systemctl --user daemon-reload
+    systemctl --user enable librechat || true
 
     # Web backend
     log "  → web backend / → port $PORT"

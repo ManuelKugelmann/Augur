@@ -11,7 +11,7 @@
 |---|---|
 | Node.js (`npx`, `npm`) | Docker |
 | Python (`pip`, `uv`, `uvx`) | Root access |
-| `supervisord` background services | GPU / CUDA |
+| `systemd` background services | GPU / CUDA |
 | `uberspace web backend set` (ports) | Playwright / Puppeteer (no Chrome) |
 | ~1.5 GB usable RAM | Heavy runtimes (R, Mathematica) |
 | Outbound HTTP/WebSocket | System-level packages (`apt`) |
@@ -22,7 +22,7 @@
 
 ## 📦 Deployment Pattern
 
-Each MCP runs as a **supervisord service** with SSE/HTTP transport for remote access, or STDIO for local piping.
+Each MCP runs as a **systemd service** with SSE/HTTP transport for remote access, or STDIO for local piping.
 
 ```bash
 # Install an MCP
@@ -39,7 +39,7 @@ stderr_logfile=~/logs/mcp-prediction.err.log
 stdout_logfile=~/logs/mcp-prediction.out.log
 EOF
 
-supervisorctl reread && supervisorctl update
+systemctl --user reread && systemctl --user update
 ```
 
 For FastMCP gap-fillers:
@@ -588,7 +588,7 @@ set -euo pipefail
 mkdir -p ~/mcp-servers ~/logs
 
 # ── Node.js MCPs ──
-uberspace tools version use node 20
+# Node.js is system-provided on U8
 
 # ── Python MCPs ──
 cd ~/mcp-servers
@@ -600,7 +600,7 @@ pip install fastmcp httpx pytrends
 pip install yahoo-finance-mcp crypto-feargreed-mcp
 # ... add more as needed
 
-# ── Create supervisord entries ──
+# ── Create systemd entries ──
 for svc in prediction-mcp hn-mcp rss-mcp; do
   cat > ~/etc/services.d/mcp-${svc}.ini << EOF
 [program:mcp-${svc}]
@@ -624,8 +624,8 @@ stdout_logfile=%(ENV_HOME)s/logs/fastmcp-${svc}.out.log
 EOF
 done
 
-supervisorctl reread
-echo "✅ Stack registered. Start with: supervisorctl start mcp-prediction-mcp"
+systemctl --user reread
+echo "✅ Stack registered. Start with: systemctl --user start mcp-prediction-mcp"
 ```
 
 ---

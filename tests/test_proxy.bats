@@ -11,7 +11,7 @@ setup() {
     create_deploy_conf
 
     # Stub commands
-    stub_command "supervisorctl" 'echo "stubbed supervisorctl $*"'
+    stub_command "systemctl" 'echo "stubbed systemctl $*"'
     stub_command "hostname" 'echo "test.uber.space"'
     stub_command "npm" 'echo "stubbed npm $*"'
     stub_command "cliproxyapi" 'echo "0.1.0"'
@@ -85,24 +85,20 @@ teardown() {
     [[ "$output" != *"No token found"* ]]
 }
 
-@test "proxy setup registers supervisord service without token" {
+@test "proxy setup registers systemd service" {
     run bash "$TA" proxy setup
     [[ "$status" -eq 0 ]]
-    [[ -f "$HOME/etc/services.d/cliproxyapi.ini" ]]
-    grep -q "\[program:cliproxyapi\]" "$HOME/etc/services.d/cliproxyapi.ini"
-    # Without token file, should use direct command (not bash -c wrapper)
-    grep -q "command=cliproxyapi" "$HOME/etc/services.d/cliproxyapi.ini"
+    [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]
+    grep -q "ExecStart=cliproxyapi" "$HOME/.config/systemd/user/cliproxyapi.service"
 }
 
-@test "proxy setup registers supervisord service with token (bash wrapper)" {
+@test "proxy setup registers systemd service with EnvironmentFile" {
     echo "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-testtoken1234" > "$HOME/.claude-auth.env"
 
     run bash "$TA" proxy setup
     [[ "$status" -eq 0 ]]
-    [[ -f "$HOME/etc/services.d/cliproxyapi.ini" ]]
-    # With token file, should use bash -c to source the env
-    grep -q "bash -c" "$HOME/etc/services.d/cliproxyapi.ini"
-    grep -q "source" "$HOME/etc/services.d/cliproxyapi.ini"
+    [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]
+    grep -q "EnvironmentFile=" "$HOME/.config/systemd/user/cliproxyapi.service"
 }
 
 @test "proxy setup installs auth daemon to ~/bin" {
@@ -122,22 +118,22 @@ teardown() {
 
 # ── proxy start/stop/status ──
 
-@test "proxy start calls supervisorctl start" {
+@test "proxy start calls systemctl start" {
     run bash "$TA" proxy start
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"stubbed supervisorctl start cliproxyapi"* ]]
+    [[ "$output" == *"stubbed systemctl --user start cliproxyapi"* ]]
 }
 
-@test "proxy stop calls supervisorctl stop" {
+@test "proxy stop calls systemctl stop" {
     run bash "$TA" proxy stop
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"stubbed supervisorctl stop cliproxyapi"* ]]
+    [[ "$output" == *"stubbed systemctl --user stop cliproxyapi"* ]]
 }
 
-@test "proxy status calls supervisorctl status" {
+@test "proxy status calls systemctl status" {
     run bash "$TA" proxy status
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"stubbed supervisorctl status cliproxyapi"* ]]
+    [[ "$output" == *"stubbed systemctl --user status cliproxyapi"* ]]
 }
 
 # ── proxy test ──

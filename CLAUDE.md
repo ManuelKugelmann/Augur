@@ -15,7 +15,7 @@
 - **Repo**: `ManuelKugelmann/Augur`
 - **Ops CLI**: `Augur.sh` → installed as `~/bin/augur` (symlink `~/bin/Augur`)
 - **Uberspace host**: `augur.uber.space` (`UBER_USER=augur`)
-- **Platform**: U8 (Arch Linux / systemd). U7 (CentOS 7 / supervisord) dormant but code paths remain.
+- **Platform**: U8 (Arch Linux / systemd).
 - **deploy.conf**: Central config sourced by all scripts. Key vars: `GH_USER`, `GH_REPO`, `STACK_DIR=$HOME/augur`, `APP_DIR=$HOME/LibreChat`, `LC_PORT=3080`
 
 | Uberspace Path | Purpose |

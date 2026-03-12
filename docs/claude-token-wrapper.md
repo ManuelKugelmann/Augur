@@ -107,10 +107,10 @@ WantedBy=default.target
 systemctl --user enable --now cliproxyapi
 ```
 
-**On Uberspace (supervisord):**
+**On Uberspace (systemd):**
 ```bash
 augur proxy start
-# Uses ~/etc/services.d/cliproxyapi.ini
+# Uses ~/.config/systemd/user/cliproxyapi.service
 ```
 
 ---

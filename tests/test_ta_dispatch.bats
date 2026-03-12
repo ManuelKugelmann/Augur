@@ -9,7 +9,7 @@ setup() {
     create_deploy_conf
 
     # Stub commands that Augur.sh calls
-    stub_command "supervisorctl" 'echo "stubbed supervisorctl $*"'
+    stub_command "systemctl" 'echo "stubbed systemctl $*"'
     stub_command "uberspace" 'echo "stubbed uberspace $*"'
     stub_command "node" 'echo "v22.0.0"'
     stub_command "hostname" 'echo "test.uber.space"'
@@ -68,10 +68,10 @@ teardown() {
     [[ "$output" == *"v0.5.0"* ]]
 }
 
-@test "restart command calls supervisorctl" {
+@test "restart command calls systemctl" {
     run bash "$REPO_ROOT/Augur.sh" restart
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"stubbed supervisorctl restart librechat"* ]]
+    [[ "$output" == *"stubbed systemctl --user restart librechat"* ]]
 }
 
 @test "rollback fails when no .prev directory exists" {

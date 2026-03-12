@@ -29,7 +29,7 @@ GH_REPO="${GH_REPO:-Augur}"
 STACK_DIR="${STACK_DIR:-$HOME/augur}"
 APP_DIR="${APP_DIR:-$HOME/LibreChat}"
 LC_PORT="${LC_PORT:-3080}"
-NODE_VERSION="${NODE_VERSION:-22}"
+NODE_VERSION="${NODE_VERSION:-24}"
 BRANCH="${BRANCH:-main}"
 
 # ── Load config if available (re-run from cloned repo) ──
@@ -46,24 +46,14 @@ log()  { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
-# ── Platform detection ──
-_is_u8() { [[ -f /etc/arch-release ]]; }
-
-# ── Service management ──
-_svc_start()   { if _is_u8; then systemctl --user start "$1"; else supervisorctl start "$1"; fi; }
-_svc_stop()    { if _is_u8; then systemctl --user stop "$1"; else supervisorctl stop "$1"; fi; }
-_svc_restart() { if _is_u8; then systemctl --user restart "$1"; else supervisorctl restart "$1"; fi; }
-_svc_reload()  {
-    if _is_u8; then
-        systemctl --user daemon-reload || true
-    else
-        supervisorctl reread || true
-        supervisorctl update || true
-    fi
-}
+# ── Service management (systemd) ──
+_svc_start()   { systemctl --user start "$1"; }
+_svc_stop()    { systemctl --user stop "$1"; }
+_svc_restart() { systemctl --user restart "$1"; }
+_svc_reload()  { systemctl --user daemon-reload || true; }
 _web_backend() {
     local path="$1" port="$2"
-    # Skip if already configured (avoids httpx timeout on U8 uberspace CLI)
+    # Skip if already configured (avoids httpx timeout on uberspace CLI)
     local existing
     existing=$(uberspace web backend list 2>&1 || true)
     if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
@@ -73,11 +63,7 @@ _web_backend() {
     local attempt=0 delay=2
     while (( attempt < 3 )); do
         attempt=$((attempt + 1))
-        if _is_u8; then
-            uberspace web backend add "$path" port "$port" --force && return 0
-        else
-            uberspace web backend set "$path" --http --port "$port" && return 0
-        fi
+        uberspace web backend add "$path" port "$port" --force && return 0
         (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
     done
     return 1
@@ -110,12 +96,8 @@ _pip_upgrade() {
 
 _pip_install() {
     local python="$1" req="$2"
-    local constraint
-    constraint=$(mktemp)
-    if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    log "  → $python -m pip install -v --prefer-binary -c <constraint> -r $req ${*:3}"
-    timeout 600 "$python" -m pip install -v --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
-    rm -f "$constraint"
+    log "  → $python -m pip install -v --prefer-binary -r $req ${*:3}"
+    timeout 600 "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
 }
 
 # ── HTTP helpers ──
@@ -321,20 +303,8 @@ _do_install() {
     echo ""
 
     # ── 1. Node.js ──
-    if _is_u8; then
-        command -v node &>/dev/null || die "Node.js not available"
-        log "Node.js $(node -v) (U8 system-provided)"
-    else
-        local current_node
-        current_node="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)" || true
-        if [[ "$current_node" != "$NODE_VERSION" ]]; then
-            log "Setting Node.js ${NODE_VERSION} (current: ${current_node:-none})..."
-            log "  → uberspace tools version use node $NODE_VERSION"
-            uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
-        fi
-        command -v node &>/dev/null || die "Node.js not available"
-        log "Node.js $(node -v)"
-    fi
+    command -v node &>/dev/null || die "Node.js not available"
+    log "Node.js $(node -v) (system-provided)"
 
     # ── 2. Clone or update repo ──
     if [[ -d "$STACK/.git" ]]; then
@@ -367,7 +337,7 @@ _do_install() {
             PYTHON_BIN="$_py"; break
         fi
     done
-    [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. On U7: check python3.12 --version. On U8: check python3 --version."
+    [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. Check: python3 --version"
     _pyver=$("$PYTHON_BIN" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
     log "Using $PYTHON_BIN (Python $_pyver)"
 
@@ -419,9 +389,8 @@ _do_install() {
 
     # ── 5. Register services ──
     log "Registering services..."
-    if _is_u8; then
-        mkdir -p ~/.config/systemd/user ~/logs
-        cat > ~/.config/systemd/user/trading.service << SVCEOF
+    mkdir -p ~/.config/systemd/user ~/logs
+    cat > ~/.config/systemd/user/trading.service << SVCEOF
 [Install]
 WantedBy=default.target
 
@@ -434,7 +403,7 @@ ExecStart=${STACK}/venv/bin/python src/servers/combined_server.py
 Restart=always
 RestartSec=10
 SVCEOF
-        cat > ~/.config/systemd/user/charts.service << SVCEOF
+    cat > ~/.config/systemd/user/charts.service << SVCEOF
 [Install]
 WantedBy=default.target
 
@@ -444,28 +413,9 @@ ExecStart=${STACK}/venv/bin/python src/store/charts.py
 Restart=always
 RestartSec=60
 SVCEOF
-        systemctl --user daemon-reload
-        systemctl --user enable trading || true
-        systemctl --user enable charts || true
-    else
-        mkdir -p ~/etc/services.d ~/logs
-        cat > ~/etc/services.d/trading.ini << SVCEOF
-[program:trading]
-directory=${STACK}
-command=bash -c 'set -a; [ -f ${STACK}/.env ] && . ${STACK}/.env; set +a; export MCP_TRANSPORT=http MCP_PORT=8071; exec ${STACK}/venv/bin/python src/servers/combined_server.py'
-autostart=true
-autorestart=true
-startsecs=10
-SVCEOF
-        cat > ~/etc/services.d/charts.ini << SVCEOF
-[program:charts]
-directory=${STACK}
-command=${STACK}/venv/bin/python src/store/charts.py
-autostart=true
-autorestart=true
-startsecs=60
-SVCEOF
-    fi
+    systemctl --user daemon-reload
+    systemctl --user enable trading || true
+    systemctl --user enable charts || true
     _web_backend /charts 8066 || warn "Failed to set /charts web backend"
     log "Services registered (trading, charts)"
 
@@ -486,11 +436,10 @@ SVCEOF
     fi
 
     if [[ "$NEED_LC_SETUP" == false ]]; then
-        if _is_u8; then
-            local SVC="$HOME/.config/systemd/user/librechat.service"
-            if [[ ! -f "$SVC" ]]; then
-                mkdir -p "$(dirname "$SVC")"
-                cat > "$SVC" <<SVCEOF
+        local SVC="$HOME/.config/systemd/user/librechat.service"
+        if [[ ! -f "$SVC" ]]; then
+            mkdir -p "$(dirname "$SVC")"
+            cat > "$SVC" <<SVCEOF
 [Install]
 WantedBy=default.target
 
@@ -501,29 +450,9 @@ ExecStart=node --max-old-space-size=1024 api/server/index.js
 Restart=always
 RestartSec=60
 SVCEOF
-                systemctl --user daemon-reload
-                systemctl --user enable librechat || true
-                log "Systemd service re-registered"
-            fi
-        else
-            local SVC="$HOME/etc/services.d/librechat.ini"
-            if [[ ! -f "$SVC" ]]; then
-                mkdir -p "$(dirname "$SVC")"
-                cat > "$SVC" <<SVCEOF
-[program:librechat]
-directory=${APP}
-command=node --max-old-space-size=1024 api/server/index.js
-environment=NODE_ENV=production
-autostart=true
-autorestart=true
-startsecs=60
-stopsignal=TERM
-stopwaitsecs=10
-SVCEOF
-                supervisorctl reread
-                supervisorctl add librechat || true
-                log "Supervisord service re-registered"
-            fi
+            systemctl --user daemon-reload
+            systemctl --user enable librechat || true
+            log "Systemd service re-registered"
         fi
         _web_backend / "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
     fi
@@ -610,18 +539,10 @@ SVCEOF
     echo ""
 
     for svc in librechat trading charts; do
-        if _is_u8; then
-            if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
-                log "$svc service: registered"
-            else
-                warn "$svc service: NOT registered"
-            fi
+        if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
+            log "$svc service: registered"
         else
-            if [[ -f "$HOME/etc/services.d/${svc}.ini" ]]; then
-                log "$svc service: registered"
-            else
-                warn "$svc service: NOT registered"
-            fi
+            warn "$svc service: NOT registered"
         fi
     done
 
@@ -677,11 +598,7 @@ SVCEOF
     fi
 
     echo -e "  ${CYAN}Start:${NC}"
-    if _is_u8; then
-        echo "    systemctl --user start librechat"
-    else
-        echo "    supervisorctl start librechat"
-    fi
+    echo "    systemctl --user start librechat"
     echo ""
     echo -e "  ${CYAN}Access:${NC}"
     echo "    https://${UBER}"

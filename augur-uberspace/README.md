@@ -42,7 +42,7 @@ cat deploy.conf
 | `STACK_DIR` | `$HOME/augur` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
 | `LC_PORT` | `3080` | LibreChat port |
-| `NODE_VERSION` | `22` | Node.js version |
+| `NODE_VERSION` | `24` | Node.js version |
 
 Override any value via environment: `UBER_USER=other augur install`
 
@@ -124,8 +124,8 @@ nano ~/LibreChat/.env
 ### Step 4: Start
 
 ```bash
-supervisorctl start librechat
-supervisorctl start trading
+systemctl --user start librechat
+systemctl --user start trading
 augur status
 ```
 

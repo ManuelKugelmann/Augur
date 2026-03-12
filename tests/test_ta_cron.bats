@@ -9,7 +9,7 @@ setup() {
     create_deploy_conf
 
     # Stub external commands
-    stub_command "supervisorctl" 'echo "stubbed"'
+    stub_command "systemctl" 'echo "stubbed"'
     stub_command "uberspace" 'echo "stubbed"'
     stub_command "hostname" 'echo "test.uber.space"'
 

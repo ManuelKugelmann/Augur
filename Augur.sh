@@ -42,7 +42,6 @@ else
     log()  { echo -e "${GREEN}✓${NC} $1"; }
     warn() { echo -e "${YELLOW}⚠${NC} $1"; }
     die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
-    _is_u8() { [[ -f /etc/arch-release ]]; }
 fi
 
 # ── Command dispatch ──
@@ -55,7 +54,7 @@ case "$CMD" in
         _svc_status charts || true
         echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
-        echo -e "${CYAN}Platform:${NC} $(_is_u8 && echo 'U8 (Arch/systemd)' || echo 'U7 (CentOS/supervisord)')"
+        echo -e "${CYAN}Platform:${NC} U8 (Arch/systemd)"
         ;;
     r|restart)
         _svc_restart librechat || die "Failed to restart librechat"
@@ -303,11 +302,7 @@ PYEOF
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
         PROXY_CONFIG="$HOME/.cli-proxy-api/config.yaml"
         PROXY_AUTH="$HOME/.claude-auth.env"
-        if _is_u8; then
-            PROXY_SVC="$HOME/.config/systemd/user/cliproxyapi.service"
-        else
-            PROXY_SVC="$HOME/etc/services.d/cliproxyapi.ini"
-        fi
+        PROXY_SVC="$HOME/.config/systemd/user/cliproxyapi.service"
         SUB="${2:-help}"
         case "$SUB" in
             setup)
@@ -341,8 +336,7 @@ CFGEOF
                     echo "    chmod 600 $PROXY_AUTH"
                 fi
                 mkdir -p "$(dirname "$PROXY_SVC")"
-                if _is_u8; then
-                    cat > "$PROXY_SVC" << SVCEOF
+                cat > "$PROXY_SVC" << SVCEOF
 [Install]
 WantedBy=default.target
 
@@ -353,28 +347,6 @@ ExecStart=cliproxyapi --config ${PROXY_CONFIG}
 Restart=always
 RestartSec=10
 SVCEOF
-                else
-                    if [[ -f "$PROXY_AUTH" ]]; then
-                        cat > "$PROXY_SVC" << SVCEOF
-[program:cliproxyapi]
-directory=${HOME}
-command=bash -c 'source ${PROXY_AUTH} && exec cliproxyapi --config ${PROXY_CONFIG}'
-autostart=true
-autorestart=true
-startsecs=10
-SVCEOF
-                    else
-                        cat > "$PROXY_SVC" << SVCEOF
-[program:cliproxyapi]
-directory=${HOME}
-command=cliproxyapi --config ${PROXY_CONFIG}
-environment=HOME="${HOME}"
-autostart=true
-autorestart=true
-startsecs=10
-SVCEOF
-                    fi
-                fi
                 _svc_reload
                 log "Service registered (cliproxyapi)"
                 cp "$STACK/augur-uberspace/scripts/claude-auth-daemon.sh" "$HOME/bin/claude-auth-daemon.sh" 2>/dev/null || true
@@ -464,20 +436,12 @@ SVCEOF
         [[ -d "$STACK/mcp-nodes/node_modules" ]] && _ok "MCP Node servers bundle present" || _warn "MCP Node servers bundle missing (run: augur install)"
         [[ -f "$STACK/.env" ]] && _ok "Signals .env present" || _warn "Signals .env missing (optional)"
 
-        echo ""; echo -e "${CYAN}── Services ($(_is_u8 && echo 'systemd' || echo 'supervisord')) ──${NC}"; echo ""
+        echo ""; echo -e "${CYAN}── Services (systemd) ──${NC}"; echo ""
         for svc in librechat trading charts cliproxyapi; do
-            if _is_u8; then
-                if systemctl --user is-active "$svc" &>/dev/null; then _ok "$svc: RUNNING"
-                elif systemctl --user is-enabled "$svc" &>/dev/null; then _warn "$svc: STOPPED (enabled)"
-                elif [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then _warn "$svc: STOPPED"
-                else _skip "$svc: not registered"; fi
-            else
-                SVC_STATUS="$(supervisorctl status "$svc" 2>/dev/null || true)"
-                if [[ -z "$SVC_STATUS" ]]; then _skip "$svc: not registered"
-                elif echo "$SVC_STATUS" | grep -q "RUNNING"; then _ok "$svc: RUNNING"
-                elif echo "$SVC_STATUS" | grep -q "STOPPED"; then _warn "$svc: STOPPED"
-                else _fail "$svc: $(echo "$SVC_STATUS" | head -1)"; fi
-            fi
+            if systemctl --user is-active "$svc" &>/dev/null; then _ok "$svc: RUNNING"
+            elif systemctl --user is-enabled "$svc" &>/dev/null; then _warn "$svc: STOPPED (enabled)"
+            elif [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then _warn "$svc: STOPPED"
+            else _skip "$svc: not registered"; fi
         done
 
         echo ""; echo -e "${CYAN}── Web Backends ──${NC}"; echo ""
@@ -498,7 +462,7 @@ SVCEOF
         CHARTS_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8066/charts/" 2>/dev/null || echo "000")"
         [[ "$CHARTS_CODE" != "000" ]] && _ok "Charts HTTP: ${CHARTS_CODE} on port 8066" || _warn "Charts HTTP: not reachable on port 8066"
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
-        if [[ -f "$HOME/.claude-auth.env" ]] || [[ -f "$HOME/etc/services.d/cliproxyapi.ini" ]] || [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
+        if [[ -f "$HOME/.claude-auth.env" ]] || [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
             PROXY_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${PROXY_PORT}/v1/models" 2>/dev/null || echo "000")"
             if [[ "$PROXY_CODE" == "200" ]]; then _ok "CLIProxyAPI: OK on port ${PROXY_PORT}"
             elif [[ "$PROXY_CODE" == "401" ]]; then _fail "CLIProxyAPI: 401 — token expired"

@@ -166,7 +166,7 @@ What happens:
 2. Clones `Augur` repo to `~/augur/`
 3. Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`, `python-dotenv`
 4. Generates `~/augur/.env` from template
-5. Registers services (`trading`, `charts`) — systemd on U8, supervisord on U7
+5. Registers systemd services (`trading`, `charts`)
 6. Downloads `librechat-build.tar.gz` from the CI prebuilt release (or latest tagged release bundle)
 7. If no CI build exists: clones `danny-avila/LibreChat` and builds locally (~10 min, needs ~2 GB RAM)
 8. Runs `setup.sh` — atomic swap into `~/LibreChat/`, generates `.env` with crypto keys
@@ -360,7 +360,7 @@ All deployment settings live in `deploy.conf` (sourced by all scripts):
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
 | `BACKUP_DIR` | `$HOME/backups/mongo` | Rolling MongoDB backups |
 | `LC_PORT` | `3080` | LibreChat port |
-| `NODE_VERSION` | `22` | Node.js version |
+| `NODE_VERSION` | `24` | Node.js version |
 | `PYTHON_VERSION` | *(auto-detected)* | Python version (scans 3.13-3.10) |
 | `RELEASE_TAG` | *(empty = latest)* | Pin to specific release tag |
 
