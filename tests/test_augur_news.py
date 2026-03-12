@@ -11,6 +11,11 @@ from unittest.mock import patch
 
 import pytest
 
+pytest.importorskip(
+    "pytest_asyncio",
+    reason="pytest-asyncio required (pip install pytest-asyncio)",
+)
+
 
 # ---------------------------------------------------------------------------
 # augur_common tests
