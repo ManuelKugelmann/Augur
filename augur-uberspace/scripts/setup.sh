@@ -173,7 +173,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         # and pip can consume bytes meant for bash or block on the pipe.
         timeout 600 venv/bin/python -m ensurepip </dev/null
         log "Venv created. Checking pip version..."
-        local _pip_err; _pip_err=$(mktemp)
+        _pip_err=$(mktemp)
         _pip_ver=$(timeout 30 venv/bin/python -m pip --version </dev/null 2>"$_pip_err" | awk '{print $2}' | cut -d. -f1)
         if [[ -s "$_pip_err" ]]; then warn "pip stderr: $(cat "$_pip_err")"; fi
         rm -f "$_pip_err"
