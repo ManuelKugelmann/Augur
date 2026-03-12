@@ -531,7 +531,7 @@ SVCEOF
     # ── 6.5. MCP Node servers (prebuilt bundle) ──
     log "Checking MCP Node servers bundle..."
     if ! _mcp_nodes_download_and_setup --skip-if-current; then
-        warn "MCP Node servers bundle not found — Node MCPs (rss, prediction-markets, hackernews, alphavantage) won't be available"
+        warn "MCP Node servers bundle not found — Node MCPs (rss, prediction-markets, hackernews) won't be available"
         warn "Build one via: Actions → Build MCP Nodes → Run workflow"
     fi
 

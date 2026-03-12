@@ -6,7 +6,6 @@
   "dependencies": {
     "rss-mcp": "latest",
     "prediction-markets-mcp": "latest",
-    "@devabdultech/hn-mcp-server": "latest",
-    "mcp-remote": "latest"
+    "@devabdultech/hn-mcp-server": "latest"
   }
 }

@@ -155,12 +155,6 @@ mcpServers:
 
   # ── External MCPs (Tier 2 — additive analytics & signals) ──
 
-  alphavantage:
-    command: node
-    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/mcp-remote", "https://mcp.alphavantage.co"]
-    chatMenu: false
-    serverInstructions: "Stock/forex/crypto prices, 50+ technical indicators (RSI, MACD, Bollinger, etc.), fundamentals. Free key: 25 calls/day."
-
   hackernews:
     command: node
     args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/hn-mcp-server"]

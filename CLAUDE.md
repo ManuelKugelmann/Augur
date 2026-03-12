@@ -8,7 +8,7 @@
 
 ## Project
 
-**Augur** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit, alphavantage, hackernews, arxiv, math, regression, crypto-sentiment). Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**Augur** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit, hackernews, arxiv, math, regression, crypto-sentiment). Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
 
 ## Key Names & Paths
 
@@ -34,7 +34,7 @@ GitHub (Augur) ──tag──▶ CI builds bundle ──▶ GitHub Release
                          ├─ LibreChat (:3080, Node.js)
                          │   ├─ MCP: trading ──streamable-http──▶ :8071/mcp
                          │   ├─ MCP: Tier 1 (finance, gdelt, predictions, rss, reddit)
-                         │   └─ MCP: Tier 2 (alphavantage, hackernews, arxiv, math, etc.)
+                         │   └─ MCP: Tier 2 (hackernews, arxiv, math, regression, crypto-sentiment)
                          ├─ trading server (:8071, Python, store + 12 domains, 50+ tools)
                          └─ cron → MongoDB Atlas + 75+ free data APIs
 ```
