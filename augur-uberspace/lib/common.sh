@@ -72,13 +72,13 @@ _pip_upgrade() {
     fi
     log "pip $ver < $min_ver, upgrading..."
     log "  → $python -m pip install -v --upgrade pip"
-    timeout 600 "$python" -m pip install -v --upgrade pip </dev/null
+    "$python" -m pip install -v --upgrade pip </dev/null
 }
 
 _pip_install() {
     local python="$1" req="$2"
     log "  → $python -m pip install -v --prefer-binary -r $req ${*:3}"
-    timeout 600 "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
+    "$python" -m pip install -v --prefer-binary -r "$req" "${@:3}" </dev/null
 }
 
 # ── HTTP helpers ──

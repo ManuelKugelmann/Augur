@@ -154,7 +154,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         # Redirect stdin to /dev/null for all pip/ensurepip commands —
         # when running via `curl | bash`, inherited stdin is the curl pipe
         # and pip can consume bytes meant for bash or block on the pipe.
-        timeout 600 venv/bin/python -m ensurepip </dev/null
+        venv/bin/python -m ensurepip </dev/null
         log "Venv created. Checking pip version..."
         _pip_err=$(mktemp)
         _pip_ver=$(timeout 30 venv/bin/python -m pip --version </dev/null 2>"$_pip_err" | awk '{print $2}' | cut -d. -f1)
@@ -165,11 +165,11 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         else
             log "pip $_pip_ver < 22, upgrading..."
             log "  → venv/bin/python -m pip install -v --upgrade pip"
-            timeout 600 venv/bin/python -m pip install -v --upgrade pip </dev/null
+            venv/bin/python -m pip install -v --upgrade pip </dev/null
         fi
         log "Installing Python requirements (this may take a few minutes)..."
         log "  → venv/bin/python -m pip install -v --prefer-binary -r requirements.txt"
-        timeout 600 venv/bin/python -m pip install -v --prefer-binary \
+        venv/bin/python -m pip install -v --prefer-binary \
             -r requirements.txt </dev/null
         cd - >/dev/null
         log "Signals stack ready"
