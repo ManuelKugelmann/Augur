@@ -87,7 +87,11 @@ class TestStoreLive:
     # ── Profile tools ────────────────────────────────
 
     def test_get_profile(self):
+        self.s.put_profile(
+            kind="countries", id="DEU", region="europe",
+            data={"name": "Germany", "tags": ["eu", "g7"]})
         result = self.s.get_profile(kind="countries", id="DEU")
+        assert "id" in result, f"get_profile returned: {result}"
         assert result["id"] == "DEU"
         assert result["name"] == "Germany"
 

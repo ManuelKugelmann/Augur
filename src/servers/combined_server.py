@@ -58,6 +58,20 @@ mcp.mount(augur_score, namespace="augur_score")
 
 if __name__ == "__main__":
     import os
+
+    # Auto-seed profiles on first start (idempotent — skips existing)
+    _profiles_dir = _here.parent.parent / "profiles"
+    if _profiles_dir.is_dir() and os.environ.get("MONGO_URI_SIGNALS"):
+        try:
+            from server import seed_profiles
+            result = seed_profiles(str(_profiles_dir))
+            if "error" not in result:
+                total = sum(v.get("seeded", 0) for v in result.values())
+                if total:
+                    print(f"Auto-seeded {total} profiles from {_profiles_dir}")
+        except Exception as exc:
+            print(f"Profile auto-seed skipped: {exc}")
+
     transport_mode = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport_mode in ("streamable-http", "http"):
         port = int(os.environ.get("MCP_PORT", "8071"))

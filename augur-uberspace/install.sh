@@ -50,22 +50,22 @@ die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 _is_u8() { [[ -f /etc/arch-release ]]; }
 
 # ── Service management ──
-_svc_start()   { if _is_u8; then systemctl --user start "$1" 2>/dev/null; else supervisorctl start "$1" 2>/dev/null; fi; }
-_svc_stop()    { if _is_u8; then systemctl --user stop "$1" 2>/dev/null; else supervisorctl stop "$1" 2>/dev/null; fi; }
-_svc_restart() { if _is_u8; then systemctl --user restart "$1" 2>/dev/null; else supervisorctl restart "$1" 2>/dev/null; fi; }
+_svc_start()   { if _is_u8; then systemctl --user start "$1"; else supervisorctl start "$1"; fi; }
+_svc_stop()    { if _is_u8; then systemctl --user stop "$1"; else supervisorctl stop "$1"; fi; }
+_svc_restart() { if _is_u8; then systemctl --user restart "$1"; else supervisorctl restart "$1"; fi; }
 _svc_reload()  {
     if _is_u8; then
-        systemctl --user daemon-reload 2>/dev/null || true
+        systemctl --user daemon-reload || true
     else
-        supervisorctl reread 2>/dev/null || true
-        supervisorctl update 2>/dev/null || true
+        supervisorctl reread || true
+        supervisorctl update || true
     fi
 }
 _web_backend() {
     local path="$1" port="$2"
     # Skip if already configured (avoids httpx timeout on U8 uberspace CLI)
     local existing
-    existing=$(uberspace web backend list 2>/dev/null || true)
+    existing=$(uberspace web backend list 2>&1 || true)
     if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
         log "Web backend ${path} → port ${port} already set"
         return 0
@@ -74,9 +74,9 @@ _web_backend() {
     while (( attempt < 3 )); do
         attempt=$((attempt + 1))
         if _is_u8; then
-            uberspace web backend add "$path" port "$port" --force 2>/dev/null && return 0
+            uberspace web backend add "$path" port "$port" --force && return 0
         else
-            uberspace web backend set "$path" --http --port "$port" 2>/dev/null && return 0
+            uberspace web backend set "$path" --http --port "$port" && return 0
         fi
         (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
     done
@@ -104,8 +104,8 @@ _pip_upgrade() {
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
-    log "  → $python -m pip install --upgrade pip"
-    timeout 600 "$python" -m pip install --upgrade pip </dev/null
+    log "  → $python -m pip install -v --upgrade pip"
+    timeout 600 "$python" -m pip install -v --upgrade pip </dev/null
 }
 
 _pip_install() {
@@ -113,8 +113,8 @@ _pip_install() {
     local constraint
     constraint=$(mktemp)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    log "  → $python -m pip install --prefer-binary -c <constraint> -r $req ${*:3}"
-    timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
+    log "  → $python -m pip install -v --prefer-binary -c <constraint> -r $req ${*:3}"
+    timeout 600 "$python" -m pip install -v --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
     rm -f "$constraint"
 }
 
@@ -219,13 +219,20 @@ _lc_download_and_setup() {
     fi
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
-    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+    if command -v pigz &>/dev/null; then
+        log "  → tar -I pigz -xf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+        tar -I pigz -xf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+    else
+        log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+    fi
     log "Extraction complete"
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
     [[ -z "$bundle_ver" ]] && bundle_ver="${_BUNDLE_TAG:-unknown}"
     log "LibreChat version: ${bundle_ver}"
     log "Running setup..."
+    log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
     return 0
 }
@@ -268,6 +275,7 @@ _do_install() {
         current_node="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)" || true
         if [[ "$current_node" != "$NODE_VERSION" ]]; then
             log "Setting Node.js ${NODE_VERSION} (current: ${current_node:-none})..."
+            log "  → uberspace tools version use node $NODE_VERSION"
             uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
         fi
         command -v node &>/dev/null || die "Node.js not available"
@@ -277,12 +285,15 @@ _do_install() {
     # ── 2. Clone or update repo ──
     if [[ -d "$STACK/.git" ]]; then
         log "Repo exists at $STACK, pulling latest..."
-        git -C "$STACK" pull --ff-only origin "$BRANCH" 2>/dev/null || \
-            { git -C "$STACK" fetch origin "$BRANCH" && \
+        log "  → git -C $STACK pull --ff-only origin $BRANCH"
+        git -C "$STACK" pull --ff-only origin "$BRANCH" || \
+            { log "  → git -C $STACK fetch origin $BRANCH && git reset --hard origin/$BRANCH"
+              git -C "$STACK" fetch origin "$BRANCH" && \
               git -C "$STACK" reset --hard "origin/$BRANCH"; }
         log "Repo updated"
     else
         log "Cloning repo..."
+        log "  → git clone -b $BRANCH https://github.com/${GH_USER}/${GH_REPO}.git $STACK"
         git clone -b "$BRANCH" "https://github.com/${GH_USER}/${GH_REPO}.git" "$STACK"
         log "Cloned → $STACK"
     fi
@@ -323,6 +334,7 @@ _do_install() {
     fi
     if [[ ! -d "$STACK/venv" ]]; then
         log "Creating Python venv..."
+        log "  → $PYTHON_BIN -m venv --without-pip $STACK/venv"
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
         log "  → $STACK/venv/bin/python -m ensurepip"
@@ -379,8 +391,8 @@ Restart=always
 RestartSec=60
 SVCEOF
         systemctl --user daemon-reload
-        systemctl --user enable trading 2>/dev/null || true
-        systemctl --user enable charts 2>/dev/null || true
+        systemctl --user enable trading || true
+        systemctl --user enable charts || true
     else
         mkdir -p ~/etc/services.d ~/logs
         cat > ~/etc/services.d/trading.ini << SVCEOF
@@ -436,7 +448,7 @@ Restart=always
 RestartSec=60
 SVCEOF
                 systemctl --user daemon-reload
-                systemctl --user enable librechat 2>/dev/null || true
+                systemctl --user enable librechat || true
                 log "Systemd service re-registered"
             fi
         else
@@ -454,8 +466,8 @@ startsecs=60
 stopsignal=TERM
 stopwaitsecs=10
 SVCEOF
-                supervisorctl reread 2>/dev/null
-                supervisorctl add librechat 2>/dev/null || true
+                supervisorctl reread
+                supervisorctl add librechat || true
                 log "Supervisord service re-registered"
             fi
         fi
@@ -495,6 +507,7 @@ SVCEOF
         done
         if [[ "$LC_READY" == true ]]; then
             log "LibreChat is ready, seeding agents..."
+            log "  → $STACK/venv/bin/python $STACK/augur-uberspace/scripts/seed-agents.py --email ... --base-url $LC_URL"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
                 --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
                 --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
@@ -503,31 +516,8 @@ SVCEOF
         fi
     fi
 
-    # ── 10. Seed profile data ──
-    if [[ -x "$STACK/venv/bin/python" ]] && [[ -d "$STACK/profiles" ]]; then
-        log "Seeding profiles from disk into MongoDB..."
-        MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
-        "$STACK/venv/bin/python" -c "
-import sys, os
-sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-try:
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join('$STACK', '.env'))
-except ImportError:
-    pass
-try:
-    from server import seed_profiles
-    result = seed_profiles('$STACK/profiles')
-    if 'error' in result:
-        print(f'Seed skipped: {result[\"error\"]}')
-    else:
-        total_seeded = sum(v.get('seeded', 0) for v in result.values())
-        total_skipped = sum(v.get('skipped', 0) for v in result.values())
-        print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
-except Exception as e:
-    print(f'Seed skipped: {e}')
-" 2>&1 | while read -r line; do log "$line"; done
-    fi
+    # Profile seeding happens automatically on first trading server start
+    # (see combined_server.py). No need to seed during install.
 
     # ── 11. Bootstrap profile data via agent ──
     if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -n "${AUGUR_BOOTSTRAP_AGENT_ID:-}" ]]; then
@@ -541,6 +531,7 @@ except Exception as e:
         done
         if [[ "$LC_READY" == true ]]; then
             log "Bootstrapping profile data via agent..."
+            log "  → $STACK/venv/bin/python $STACK/augur-uberspace/scripts/bootstrap-data.py --base-url $LC_URL --timeseries"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
                 --api-key "$AUGUR_AGENTS_API_KEY" \
                 --agent-id "$AUGUR_BOOTSTRAP_AGENT_ID" \
@@ -574,11 +565,13 @@ except Exception as e:
     done
 
     if crontab -l 2>/dev/null | grep -q "augur cron"; then
-        log "Cron: augur cron scheduled"
+        log "Cron: augur cron already scheduled"
     else
-        warn "Cron: augur cron not scheduled"
-        echo -e "      Add with: ${CYAN}crontab -e${NC}"
-        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron${NC}"
+        log "Adding augur cron job..."
+        log "  → crontab: */15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron"
+        ( crontab -l 2>/dev/null || true; echo "*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron" ) | crontab - \
+            && log "Cron: augur cron scheduled" \
+            || warn "Failed to add cron job — add manually: crontab -e"
     fi
 
     # ── Done ──
