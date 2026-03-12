@@ -26,24 +26,24 @@ _is_u8() { [[ -f /etc/arch-release ]]; }
 
 _svc_stop_lc() {
     if _is_u8; then
-        systemctl --user stop librechat 2>/dev/null || true
+        systemctl --user stop librechat || true
     else
-        supervisorctl stop librechat 2>/dev/null || true
+        supervisorctl stop librechat || true
     fi
 }
 _svc_start_lc() {
     if _is_u8; then
-        systemctl --user start librechat 2>/dev/null || true
+        systemctl --user start librechat || true
     else
-        supervisorctl start librechat 2>/dev/null || supervisorctl restart librechat 2>/dev/null || true
+        supervisorctl start librechat || supervisorctl restart librechat || true
     fi
 }
 _web_backend() {
     local path="$1" port="$2"
     if _is_u8; then
-        uberspace web backend add "$path" port "$port" --force 2>/dev/null
+        uberspace web backend add "$path" port "$port" --force
     else
-        uberspace web backend set "$path" --http --port "$port" 2>/dev/null
+        uberspace web backend set "$path" --http --port "$port"
     fi
 }
 
@@ -126,8 +126,8 @@ if [[ -d "$STACK/venv" ]]; then
     # finance-mcp-server (provides python -m finance_mcp)
     if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
         log "Installing finance-mcp-server..."
-        log "  → ${VPIP[*]} install finance-mcp-server"
-        timeout 60 "${VPIP[@]}" install finance-mcp-server || warn "finance-mcp-server install failed"
+        log "  → ${VPIP[*]} install -v finance-mcp-server"
+        timeout 60 "${VPIP[@]}" install -v finance-mcp-server || warn "finance-mcp-server install failed"
     fi
 fi
 
@@ -186,15 +186,15 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
             log "pip $_pip_ver is recent enough (>=22), skipping upgrade"
         else
             log "pip $_pip_ver < 22, upgrading..."
-            log "  → venv/bin/python -m pip install --upgrade pip"
-            timeout 600 venv/bin/python -m pip install --upgrade pip </dev/null
+            log "  → venv/bin/python -m pip install -v --upgrade pip"
+            timeout 600 venv/bin/python -m pip install -v --upgrade pip </dev/null
         fi
         log "Installing Python requirements (this may take a few minutes)..."
         _pip_constraint=$(mktemp)
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
         if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
-        log "  → venv/bin/python -m pip install --prefer-binary -c <constraint> -r requirements.txt"
-        timeout 600 venv/bin/python -m pip install --prefer-binary \
+        log "  → venv/bin/python -m pip install -v --prefer-binary -c <constraint> -r requirements.txt"
+        timeout 600 venv/bin/python -m pip install -v --prefer-binary \
             -c "$_pip_constraint" -r requirements.txt </dev/null
         rm -f "$_pip_constraint"
         cd - >/dev/null
@@ -281,7 +281,7 @@ Restart=always
 RestartSec=60
 EOF
         systemctl --user daemon-reload
-        systemctl --user enable librechat 2>/dev/null || true
+        systemctl --user enable librechat || true
     else
         SVC="$HOME/etc/services.d/librechat.ini"
         mkdir -p "$(dirname "$SVC")"
@@ -296,8 +296,8 @@ startsecs=60
 stopsignal=TERM
 stopwaitsecs=10
 EOF
-        supervisorctl reread 2>/dev/null
-        supervisorctl add librechat 2>/dev/null || true
+        supervisorctl reread
+        supervisorctl add librechat || true
     fi
 
     # Web backend
@@ -310,32 +310,7 @@ EOF
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
-    echo ""
     log "Installed ${VER}"
-    echo ""
-    echo -e "${CYAN}Next steps:${NC}"
-    echo ""
-    echo -e "  ${YELLOW}1.${NC} Configure LibreChat:"
-    echo "     nano $APP/.env"
-    echo ""
-    echo "     Required:"
-    echo "       MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/LibreChat"
-    echo "       MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster.mongodb.net/signals"
-    echo "       At least one LLM key (many free tiers — see docs/llm-keys.md)"
-    echo ""
-    echo -e "  ${YELLOW}2.${NC} Configure MCP servers (optional, defaults are fine):"
-    echo "     nano $APP/librechat.yaml"
-    echo ""
-    echo -e "  ${YELLOW}3.${NC} Start (auto-restarts on reboot):"
-    if _is_u8; then
-        echo "     systemctl --user start librechat"
-    else
-        echo "     supervisorctl start librechat"
-    fi
-    echo ""
-    echo -e "  ${YELLOW}4.${NC} Access:"
-    echo "     https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'YOUR_USER.uber.space')}"
-    echo ""
 else
     # ── Update: restart ─────────────────────
     log "  → starting librechat service"

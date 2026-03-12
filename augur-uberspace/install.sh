@@ -50,22 +50,22 @@ die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 _is_u8() { [[ -f /etc/arch-release ]]; }
 
 # ── Service management ──
-_svc_start()   { if _is_u8; then systemctl --user start "$1" 2>/dev/null; else supervisorctl start "$1" 2>/dev/null; fi; }
-_svc_stop()    { if _is_u8; then systemctl --user stop "$1" 2>/dev/null; else supervisorctl stop "$1" 2>/dev/null; fi; }
-_svc_restart() { if _is_u8; then systemctl --user restart "$1" 2>/dev/null; else supervisorctl restart "$1" 2>/dev/null; fi; }
+_svc_start()   { if _is_u8; then systemctl --user start "$1"; else supervisorctl start "$1"; fi; }
+_svc_stop()    { if _is_u8; then systemctl --user stop "$1"; else supervisorctl stop "$1"; fi; }
+_svc_restart() { if _is_u8; then systemctl --user restart "$1"; else supervisorctl restart "$1"; fi; }
 _svc_reload()  {
     if _is_u8; then
-        systemctl --user daemon-reload 2>/dev/null || true
+        systemctl --user daemon-reload || true
     else
-        supervisorctl reread 2>/dev/null || true
-        supervisorctl update 2>/dev/null || true
+        supervisorctl reread || true
+        supervisorctl update || true
     fi
 }
 _web_backend() {
     local path="$1" port="$2"
     # Skip if already configured (avoids httpx timeout on U8 uberspace CLI)
     local existing
-    existing=$(uberspace web backend list 2>/dev/null || true)
+    existing=$(uberspace web backend list 2>&1 || true)
     if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
         log "Web backend ${path} → port ${port} already set"
         return 0
@@ -74,9 +74,9 @@ _web_backend() {
     while (( attempt < 3 )); do
         attempt=$((attempt + 1))
         if _is_u8; then
-            uberspace web backend add "$path" port "$port" --force 2>/dev/null && return 0
+            uberspace web backend add "$path" port "$port" --force && return 0
         else
-            uberspace web backend set "$path" --http --port "$port" 2>/dev/null && return 0
+            uberspace web backend set "$path" --http --port "$port" && return 0
         fi
         (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
     done
@@ -104,8 +104,8 @@ _pip_upgrade() {
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
-    log "  → $python -m pip install --upgrade pip"
-    timeout 600 "$python" -m pip install --upgrade pip </dev/null
+    log "  → $python -m pip install -v --upgrade pip"
+    timeout 600 "$python" -m pip install -v --upgrade pip </dev/null
 }
 
 _pip_install() {
@@ -113,8 +113,8 @@ _pip_install() {
     local constraint
     constraint=$(mktemp)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    log "  → $python -m pip install --prefer-binary -c <constraint> -r $req ${*:3}"
-    timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
+    log "  → $python -m pip install -v --prefer-binary -c <constraint> -r $req ${*:3}"
+    timeout 600 "$python" -m pip install -v --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
     rm -f "$constraint"
 }
 
@@ -219,15 +219,13 @@ _lc_download_and_setup() {
     fi
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
-    log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
-    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v 2>&1 | {
-        _n=0
-        while IFS= read -r _; do
-            _n=$((_n + 1))
-            (( _n % 1000 == 0 )) && printf '\r    %d files...' "$_n"
-        done
-        printf '\r    %d files extracted\n' "$_n"
-    }
+    if command -v pigz &>/dev/null; then
+        log "  → tar -I pigz -xf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+        tar -I pigz -xf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+    else
+        log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+    fi
     log "Extraction complete"
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
@@ -288,7 +286,7 @@ _do_install() {
     if [[ -d "$STACK/.git" ]]; then
         log "Repo exists at $STACK, pulling latest..."
         log "  → git -C $STACK pull --ff-only origin $BRANCH"
-        git -C "$STACK" pull --ff-only origin "$BRANCH" 2>/dev/null || \
+        git -C "$STACK" pull --ff-only origin "$BRANCH" || \
             { log "  → git -C $STACK fetch origin $BRANCH && git reset --hard origin/$BRANCH"
               git -C "$STACK" fetch origin "$BRANCH" && \
               git -C "$STACK" reset --hard "origin/$BRANCH"; }
@@ -393,8 +391,8 @@ Restart=always
 RestartSec=60
 SVCEOF
         systemctl --user daemon-reload
-        systemctl --user enable trading 2>/dev/null || true
-        systemctl --user enable charts 2>/dev/null || true
+        systemctl --user enable trading || true
+        systemctl --user enable charts || true
     else
         mkdir -p ~/etc/services.d ~/logs
         cat > ~/etc/services.d/trading.ini << SVCEOF
@@ -450,7 +448,7 @@ Restart=always
 RestartSec=60
 SVCEOF
                 systemctl --user daemon-reload
-                systemctl --user enable librechat 2>/dev/null || true
+                systemctl --user enable librechat || true
                 log "Systemd service re-registered"
             fi
         else
@@ -468,8 +466,8 @@ startsecs=60
 stopsignal=TERM
 stopwaitsecs=10
 SVCEOF
-                supervisorctl reread 2>/dev/null
-                supervisorctl add librechat 2>/dev/null || true
+                supervisorctl reread
+                supervisorctl add librechat || true
                 log "Supervisord service re-registered"
             fi
         fi
@@ -591,11 +589,13 @@ except Exception as e:
     done
 
     if crontab -l 2>/dev/null | grep -q "augur cron"; then
-        log "Cron: augur cron scheduled"
+        log "Cron: augur cron already scheduled"
     else
-        warn "Cron: augur cron not scheduled"
-        echo -e "      Add with: ${CYAN}crontab -e${NC}"
-        echo -e "      Line:     ${CYAN}*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron${NC}"
+        log "Adding augur cron job..."
+        log "  → crontab: */15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron"
+        ( crontab -l 2>/dev/null || true; echo "*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron" ) | crontab - \
+            && log "Cron: augur cron scheduled" \
+            || warn "Failed to add cron job — add manually: crontab -e"
     fi
 
     # ── Done ──

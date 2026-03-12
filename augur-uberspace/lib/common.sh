@@ -36,17 +36,17 @@ die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 _is_u8() { [[ -f /etc/arch-release ]]; }
 
 # ── Service management (abstracts supervisord vs systemd) ──
-_svc_start()   { if _is_u8; then systemctl --user start "$1" 2>/dev/null; else supervisorctl start "$1" 2>/dev/null; fi; }
-_svc_stop()    { if _is_u8; then systemctl --user stop "$1" 2>/dev/null; else supervisorctl stop "$1" 2>/dev/null; fi; }
-_svc_restart() { if _is_u8; then systemctl --user restart "$1" 2>/dev/null; else supervisorctl restart "$1" 2>/dev/null; fi; }
-_svc_status()  { if _is_u8; then systemctl --user status "$1" --no-pager 2>/dev/null; else supervisorctl status "$1" 2>/dev/null; fi; }
+_svc_start()   { if _is_u8; then systemctl --user start "$1"; else supervisorctl start "$1"; fi; }
+_svc_stop()    { if _is_u8; then systemctl --user stop "$1"; else supervisorctl stop "$1"; fi; }
+_svc_restart() { if _is_u8; then systemctl --user restart "$1"; else supervisorctl restart "$1"; fi; }
+_svc_status()  { if _is_u8; then systemctl --user status "$1" --no-pager; else supervisorctl status "$1"; fi; }
 _svc_logs()    { if _is_u8; then journalctl --user -u "$1" -f; else supervisorctl tail -f "$1"; fi; }
 _svc_reload()  {
     if _is_u8; then
-        systemctl --user daemon-reload 2>/dev/null || true
+        systemctl --user daemon-reload || true
     else
-        supervisorctl reread 2>/dev/null || true
-        supervisorctl update 2>/dev/null || true
+        supervisorctl reread || true
+        supervisorctl update || true
     fi
 }
 
@@ -54,9 +54,9 @@ _svc_reload()  {
 _web_backend() {
     local path="$1" port="$2"
     if _is_u8; then
-        uberspace web backend add "$path" port "$port" --force 2>/dev/null
+        uberspace web backend add "$path" port "$port" --force
     else
-        uberspace web backend set "$path" --http --port "$port" 2>/dev/null
+        uberspace web backend set "$path" --http --port "$port"
     fi
 }
 
@@ -81,8 +81,8 @@ _pip_upgrade() {
         return 0
     fi
     log "pip $ver < $min_ver, upgrading..."
-    log "  → $python -m pip install --upgrade pip"
-    timeout 600 "$python" -m pip install --upgrade pip </dev/null
+    log "  → $python -m pip install -v --upgrade pip"
+    timeout 600 "$python" -m pip install -v --upgrade pip </dev/null
 }
 
 _pip_install() {
@@ -90,8 +90,8 @@ _pip_install() {
     local constraint
     constraint=$(mktemp)
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
-    log "  → $python -m pip install --prefer-binary -c <constraint> -r $req ${*:3}"
-    timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
+    log "  → $python -m pip install -v --prefer-binary -c <constraint> -r $req ${*:3}"
+    timeout 600 "$python" -m pip install -v --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null
     rm -f "$constraint"
 }
 
@@ -219,15 +219,13 @@ _lc_download_and_setup() {
     fi
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
-    log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
-    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v 2>&1 | {
-        _n=0
-        while IFS= read -r _; do
-            _n=$((_n + 1))
-            (( _n % 1000 == 0 )) && printf '\r    %d files...' "$_n"
-        done
-        printf '\r    %d files extracted\n' "$_n"
-    }
+    if command -v pigz &>/dev/null; then
+        log "  → tar -I pigz -xf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+        tar -I pigz -xf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+    else
+        log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+    fi
     log "Extraction complete"
 
     local bundle_ver=""
