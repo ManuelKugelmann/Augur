@@ -516,32 +516,8 @@ SVCEOF
         fi
     fi
 
-    # ── 10. Seed profile data ──
-    if [[ -x "$STACK/venv/bin/python" ]] && [[ -d "$STACK/profiles" ]]; then
-        log "Seeding profiles from disk into MongoDB..."
-        log "  → $STACK/venv/bin/python -c 'from server import seed_profiles; seed_profiles(...)'"
-        MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
-        "$STACK/venv/bin/python" -c "
-import sys, os
-sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
-try:
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join('$STACK', '.env'))
-except ImportError:
-    pass
-try:
-    from server import seed_profiles
-    result = seed_profiles('$STACK/profiles')
-    if 'error' in result:
-        print(f'Seed skipped: {result[\"error\"]}')
-    else:
-        total_seeded = sum(v.get('seeded', 0) for v in result.values())
-        total_skipped = sum(v.get('skipped', 0) for v in result.values())
-        print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
-except Exception as e:
-    print(f'Seed skipped: {e}')
-" 2>&1 | while read -r line; do log "$line"; done
-    fi
+    # Profile seeding happens automatically on first trading server start
+    # (see combined_server.py). No need to seed during install.
 
     # ── 11. Bootstrap profile data via agent ──
     if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -n "${AUGUR_BOOTSTRAP_AGENT_ID:-}" ]]; then

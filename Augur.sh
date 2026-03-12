@@ -590,6 +590,32 @@ SVCEOF
             echo -e "${GREEN}✓${NC} Agent seeding complete"
         fi
         ;;
+    reseed)
+        if [[ ! -x "$STACK/venv/bin/python" ]]; then
+            die "Python venv not found at $STACK/venv"
+        fi
+        echo -e "${CYAN}Re-seeding profiles from $STACK/profiles into MongoDB...${NC}"
+        log "  → $STACK/venv/bin/python -c 'seed_profiles(\"$STACK/profiles\", clear=${2:+True}${2:-False})'"
+        "$STACK/venv/bin/python" -c "
+import sys, os
+sys.path.insert(0, os.path.join('$STACK', 'src', 'store'))
+from dotenv import load_dotenv
+load_dotenv(os.path.join('$STACK', '.env'))
+from server import seed_profiles
+clear = '${2:-}' == '--clear'
+result = seed_profiles('$STACK/profiles', clear=clear)
+if 'error' in result:
+    print(f'Error: {result[\"error\"]}')
+    sys.exit(1)
+total_seeded = sum(v.get('seeded', 0) for v in result.values() if isinstance(v, dict))
+total_skipped = sum(v.get('skipped', 0) for v in result.values() if isinstance(v, dict))
+print(f'Profiles seeded: {total_seeded} new, {total_skipped} existing (kept)')
+for kind, info in sorted(result.items()):
+    if isinstance(info, dict) and (info.get('seeded') or info.get('skipped')):
+        print(f'  {kind}: {info.get(\"seeded\", 0)} new, {info.get(\"skipped\", 0)} existing')
+"
+        echo -e "${GREEN}✓${NC} Reseed complete"
+        ;;
     *)
         echo -e "${CYAN}Augur — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
@@ -610,6 +636,7 @@ SVCEOF
         echo "  augur cron         Run cron hook (compact + agent invocation)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  augur agents       Seed multi-agent architecture (11 agents)"
+        echo "  augur reseed       Re-seed profiles from disk into MongoDB"
         echo "  augur check        Health check (services, config, connectivity)"
         echo "  augur check -t     Health check + run test suite (bats + pytest)"
         echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
