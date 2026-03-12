@@ -61,21 +61,66 @@ USDA_NASS_API_KEY=      # https://quickstats.nass.usda.gov/api/
 
 ## Local Development
 
+#### Step 1: Clone the repo
+
 ```bash
 git clone https://github.com/ManuelKugelmann/Augur.git
+```
+
+#### Step 2: Enter the project directory
+
+```bash
 cd Augur
-python3 -m venv venv && source venv/bin/activate
+```
+
+#### Step 3: Create a Python virtual environment
+
+```bash
+python3 -m venv venv
+```
+
+#### Step 4: Activate the virtual environment
+
+```bash
+source venv/bin/activate
+```
+
+#### Step 5: Install dependencies
+
+```bash
 pip install -r requirements.txt
-cp .env.example .env    # edit: set MONGO_URI_SIGNALS + optional API keys
-python src/servers/combined_server.py  # all tools (store + 12 domains)
+```
+
+#### Step 6: Create your `.env` file from the template
+
+```bash
+cp .env.example .env
+```
+
+#### Step 7: Edit `.env` — set at minimum `MONGO_URI_SIGNALS`
+
+```bash
+nano .env
+```
+
+#### Step 8: Start the combined server (all tools: store + 12 domains)
+
+```bash
+python src/servers/combined_server.py
 ```
 
 Run individual servers standalone for testing:
 
 ```bash
-python src/store/server.py             # signals store only
-python src/servers/weather_server.py   # no key needed
-python src/servers/macro_server.py     # needs FRED_API_KEY for FRED tools
+python src/store/server.py
+```
+
+```bash
+python src/servers/weather_server.py
+```
+
+```bash
+python src/servers/macro_server.py
 ```
 
 ---
@@ -128,63 +173,93 @@ What happens:
 9. Registers LibreChat service, sets up web backend on port 3080
 10. Installs `augur` CLI to `~/bin/augur`
 
-#### Step 4: Configure environment
+#### Step 4: Configure signals stack — set `MONGO_URI_SIGNALS`
 
 ```bash
-# Signals stack — one shared MongoDB Atlas cluster, database: signals
 augur conf
-# Set: MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
-
-# LibreChat — same cluster, database: LibreChat
-augur env
-# Set: MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/LibreChat
-# Set at least one LLM key:
-#   OPENROUTER_API_KEY=sk-or-...
-#   ANTHROPIC_API_KEY=sk-ant-...
-#   OPENAI_API_KEY=sk-...
 ```
+
+In the editor, add your MongoDB connection string (database: `signals`):
+
+```
+MONGO_URI_SIGNALS=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/signals
+```
+
+#### Step 5: Configure LibreChat — set `MONGO_URI` + LLM key
+
+```bash
+augur env
+```
+
+In the editor, set these values (same Atlas cluster, database: `LibreChat`):
+
+```
+MONGO_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/LibreChat
+OPENROUTER_API_KEY=sk-or-...
+```
+
+Or use `ANTHROPIC_API_KEY=sk-ant-...` or `OPENAI_API_KEY=sk-...` instead.
 
 Crypto secrets (`CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`) are auto-generated.
 
-#### Step 5: Verify MCP paths
+#### Step 6: Verify MCP paths in `librechat.yaml`
 
 ```bash
 augur yaml
-# All __HOME__ placeholders should be replaced with /home/augur
-# Verify paths like /home/augur/augur/src/store/server.py exist
 ```
 
-#### Step 6: Start
+All `__HOME__` placeholders should already be replaced with `/home/augur`. Verify paths like `/home/augur/augur/src/store/server.py` exist.
+
+#### Step 7: Start all services
 
 ```bash
 augur restart
-augur s    # should show RUNNING + version like "dev-a1b2c3d"
 ```
 
-#### Step 7: Access
+#### Step 8: Verify services are running
+
+```bash
+augur s
+```
+
+Should show RUNNING + version like `dev-a1b2c3d`.
+
+#### Step 9: Access the web UI
+
+Open in your browser:
 
 ```
 https://augur.uber.space
 ```
 
-Register first account (becomes admin). Then lock registration:
+Register the first account (becomes admin).
+
+#### Step 10: Lock registration
+
 ```bash
-augur env   # add: ALLOW_REGISTRATION=false
-augur r     # restart
+augur env
 ```
 
-#### Step 8: Iterate with git pull
+Add this line: `ALLOW_REGISTRATION=false`, then restart:
+
+```bash
+augur r
+```
+
+#### Step 11: Iterate with git pull (ongoing development)
 
 After pushing changes to `main` on your dev machine:
+
 ```bash
-augur pull    # git pull ~/augur + restart LibreChat
+augur pull
 ```
 
-This pulls the latest signals stack code (servers, profiles, config) and restarts. No tagging, no CI, no release — just push and pull.
+This pulls the latest signals stack code and restarts. No tagging, no CI, no release — just push and pull.
 
-To update LibreChat itself (new upstream version), re-run:
+#### Step 12: Update LibreChat itself (when upstream changes)
+
 ```bash
-augur install dev    # re-downloads CI build or rebuilds from source
+augur install dev
 ```
 
 ---
@@ -193,47 +268,80 @@ augur install dev    # re-downloads CI build or rebuilds from source
 
 For stable deployments using tagged releases.
 
-#### One-liner install
+#### Step 1: Create a tagged release (on your dev machine)
+
+```bash
+git tag v0.1.0
+```
+
+```bash
+git push --tags
+```
+
+Wait for CI to build `librechat-bundle.tar.gz` and attach it to the release.
+
+#### Step 2: SSH into Uberspace
 
 ```bash
 ssh augur@augur.uber.space
+```
+
+#### Step 3: Run the installer
+
+```bash
 curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-uberspace/install.sh?$(date +%s)" | bash
 ```
 
-Requires a tagged release to exist first. On your dev machine:
-```bash
-git tag v0.1.0 && git push --tags
-# Wait for CI to build librechat-bundle.tar.gz and attach to release
-```
-
-#### Configure
+#### Step 4: Configure signals stack
 
 ```bash
-augur conf   # signals stack: set MONGO_URI_SIGNALS
-augur env    # LibreChat: set MONGO_URI + LLM key
+augur conf
 ```
 
-#### Start
+Set `MONGO_URI_SIGNALS` in the editor.
+
+#### Step 5: Configure LibreChat
+
+```bash
+augur env
+```
+
+Set `MONGO_URI` + at least one LLM API key in the editor.
+
+#### Step 6: Start all services
 
 ```bash
 augur restart
+```
+
+#### Step 7: Verify
+
+```bash
 augur s
 ```
 
-#### Update
+#### Update to a new release
+
+On your dev machine:
 
 ```bash
-# Dev machine: tag new release
-git tag v0.2.0 && git push --tags
+git tag v0.2.0
+```
 
-# Uberspace: download and install
+```bash
+git push --tags
+```
+
+On Uberspace:
+
+```bash
 augur u
 ```
 
 #### Rollback
 
 ```bash
-augur rb    # restores ~/LibreChat.prev from last update
+augur rb
 ```
 
 ---
@@ -285,22 +393,44 @@ augur yaml          # edit librechat.yaml
 augur conf          # edit deploy.conf
 ```
 
-### Updates
+### Updates — Production
+
+On your dev machine, tag and push:
 
 ```bash
-# Production: tag > CI builds bundle > deploy
-git tag v0.2.0 && git push --tags   # from dev
-augur u                                  # on Uberspace
+git tag v0.2.0
+```
 
-# Dev: push to main > quick pull
-git push                              # from dev
-augur pull                               # on Uberspace
+```bash
+git push --tags
+```
+
+On Uberspace, download and install:
+
+```bash
+augur u
+```
+
+### Updates — Dev
+
+On your dev machine:
+
+```bash
+git push
+```
+
+On Uberspace:
+
+```bash
+augur pull
 ```
 
 ### Rollback
 
+Restores `~/LibreChat.prev` from the last update:
+
 ```bash
-augur rb    # restores ~/LibreChat.prev
+augur rb
 ```
 
 ---
@@ -308,35 +438,58 @@ augur rb    # restores ~/LibreChat.prev
 ## Troubleshooting
 
 ### LibreChat won't start
+
+Check the logs for errors:
+
 ```bash
 augur logs
-# Common: wrong MONGO_URI, missing LLM key, port conflict
 ```
+
+Common causes: wrong `MONGO_URI`, missing LLM key, port conflict.
 
 ### Out of memory (Uberspace)
+
+Check the kernel log:
+
 ```bash
 dmesg | tail -20
-# LibreChat is configured with --max-old-space-size=1024
-# If still dying: reduce to 768, or run fewer domain servers
 ```
+
+LibreChat is configured with `--max-old-space-size=1024`. If still dying, reduce to 768 or run fewer domain servers.
 
 ### MongoDB connection fails
+
+Test the connection from Uberspace:
+
 ```bash
-# Test from Uberspace
 python3 -c "from pymongo import MongoClient; MongoClient('YOUR_URI').server_info(); print('ok')"
-# Check: Atlas Network Access allows 0.0.0.0/0
 ```
 
+Check that Atlas Network Access allows `0.0.0.0/0`.
+
 ### MCP server not finding API keys
+
 When launched by LibreChat, servers inherit env from `librechat.yaml` `env:` blocks, not from `.env`. Verify the key is in both places:
+
 ```bash
 grep FRED_API_KEY ~/augur/.env
+```
+
+```bash
 grep FRED_API_KEY ~/LibreChat/librechat.yaml
 ```
 
 ### Port conflict
+
+Check what is using port 3080:
+
 ```bash
 lsof -i :3080
+```
+
+Re-register the web backend:
+
+```bash
 uberspace web backend set / --http --port 3080
 ```
 
