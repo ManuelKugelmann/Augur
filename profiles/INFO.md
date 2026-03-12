@@ -10,8 +10,6 @@ are loaded via `seed_profiles`.
 ```
 profiles/
 ├── INFO.md                        ← this file
-├── INDEX_{kind}.json              ← per-kind indexes (auto-generated)
-│
 ├── north_america/                 ← seed data by region
 │   ├── countries/USA.json
 │   ├── stocks/AAPL.json
@@ -74,15 +72,6 @@ profiles/
 
 All extra fields are allowed. Use `notes` for freeform data.
 
-## Index Files
-
-Top-level `INDEX_{kind}.json` per kind — array of `{id, kind, name, region, tags?, sector?}`.
-
-- Auto-updated on `put_profile()` calls
-- Full rebuild via `rebuild_index(kind?)`
-- `find_profile(query, region?)` merges all indexes for cross-kind search
-- Region key always present for geographic filtering
-
 ## MongoDB Collections
 
 Per-kind timeseries collections mirror the profile structure:
@@ -108,7 +97,6 @@ Optional `location` GeoJSON Point field for spatial queries via `nearby()`.
 | `find_profile(query, region?)` | Cross-kind search by name/ID/tag |
 | `search_profiles(kind, field, value, region?)` | Field-level search |
 | `list_regions()` | List regions and their kinds |
-| `rebuild_index(kind?)` | Rebuild indexes from disk |
 | `lint_profiles(kind?, id?)` | Validate required fields |
 
 ### Snapshot tools (MongoDB, same API + time fields)

@@ -127,7 +127,7 @@ setup() {
 }
 
 @test "uberspace: at least one profile exists" {
-    PROFILE_COUNT=$(find "$STACK_DIR/profiles" -name '*.json' -not -name 'INDEX_*' -not -path '*/SCHEMAS/*' | wc -l)
+    PROFILE_COUNT=$(find "$STACK_DIR/profiles" -name '*.json' | wc -l)
     [[ "$PROFILE_COUNT" -gt 0 ]]
 }
 

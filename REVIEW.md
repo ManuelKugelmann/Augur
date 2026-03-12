@@ -78,7 +78,7 @@ Index creation now happens on-demand in `_snap_col()`, `_arch_col()`, `_events_c
 ### 17. `search_profiles` Reads Every File — OPEN
 **File:** `src/store/server.py`
 
-O(n) disk reads per query. Will degrade at scale. Mitigated by INDEX files for `find_profile()` and `list_profiles()`, but `search_profiles()` still does field-level scans.
+O(n) disk reads per query. Will degrade at scale. `search_profiles()` does field-level scans. Options: in-memory cache with TTL, or MongoDB text search.
 
 ### 18. Domain Server `.env` Not Loaded via LibreChat — NOT APPLICABLE
 **File:** `augur-uberspace/config/librechat.yaml`

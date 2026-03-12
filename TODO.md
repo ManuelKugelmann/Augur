@@ -22,9 +22,6 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 - [ ] **Add more source profiles** for the 75+ data sources
       Currently only 3 (usgs, faostat, open-meteo). Each FastMCP server maps to
       multiple sources — create profiles for at least the top 2 per domain.
-- [ ] **Generate INDEX files** (`profiles/INDEX_*.json`)
-      Currently missing on disk. `rebuild_index()` exists but hasn't been run.
-      Install script calls it at step 13 — verify it works with current profiles.
 - [ ] **Fix placeholder profiles** (USA.json, faostat.json)
       Both have `_placeholder: true` with incomplete data. Fill in real values.
 
@@ -63,8 +60,7 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 
 - [ ] **Optimize `search_profiles()` for scale** (REVIEW.md #17)
       O(n) disk reads per query — reads every profile file. Fine for <100 profiles,
-      will degrade at 500+. Options: in-memory cache with TTL, extend INDEX files
-      with searchable fields, or MongoDB text search.
+      will degrade at 500+. Options: in-memory cache with TTL, or MongoDB text search.
 - [ ] **Add `econ_indicator()` routing improvements** (review-mcp-tools.md §2.1)
       Router exists in `macro_server.py`. Extend with ECB, OECD, Eurostat providers
       as they're added.
