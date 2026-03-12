@@ -1,0 +1,43 @@
+{
+  "id": "GNQ",
+  "name": "Equatorial Guinea",
+  "iso2": "GQ",
+  "region": "Sub-Saharan Africa",
+  "currency": "XAF",
+  "capital": "Malabo",
+  "population": 1700000,
+  "trade": {
+    "top_exports": ["crude_oil", "natural_gas", "methanol", "timber"],
+    "top_partners": ["CHN", "IND", "ESP", "USA", "JPN"],
+    "major_ports": ["Malabo", "Bata", "Luba"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "food", "vehicles", "petroleum_products"],
+    "energy_mix": {
+      "renewables": 0.01, "gas": 0.50, "coal": 0.0, "nuclear": 0.0, "oil": 0.30, "hydro": 0.15, "other": 0.04
+    },
+    "risk_factors": ["oil_depletion", "authoritarian_governance", "extreme_inequality", "dutch_disease"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.92,
+    "press_freedom_rank": 164,
+    "corruption_perception": 17
+  },
+  "neighbors": [
+    {"id": "CMR", "name": "Cameroon", "relevance": "Northern border (Bioko is island; mainland borders Cameroon); CEMAC"},
+    {"id": "GAB", "name": "Gabon", "relevance": "Southern border (mainland); CEMAC; oil"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "ExxonMobil/Marathon operations; oil exports; sanctions on officials"},
+    {"target": "CHN", "type": "trade", "description": "Oil buyer; infrastructure; growing investment"},
+    {"target": "ESP", "type": "trade", "description": "Former colonial power; Spanish-speaking; trade partner; diaspora"},
+    {"target": "FRA", "type": "trade", "description": "CFA franc zone; CEMAC; Francophone orbit despite Spanish heritage"}
+  ],
+  "tags": ["AU", "CEMAC", "OPEC"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

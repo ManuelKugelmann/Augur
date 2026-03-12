@@ -1,0 +1,128 @@
+{
+  "id": "AZE",
+  "name": "Azerbaijan",
+  "iso2": "AZ",
+  "region": "Europe",
+  "currency": "AZN",
+  "capital": "Baku",
+  "population": 10200000,
+  "trade": {
+    "top_exports": [
+      "crude_oil",
+      "natural_gas",
+      "refined_petroleum",
+      "fruit"
+    ],
+    "top_partners": [
+      "ITA",
+      "TUR",
+      "ISR",
+      "GEO",
+      "IND"
+    ],
+    "major_ports": [
+      "Baku",
+      "Alat"
+    ],
+    "chokepoint_exposure": [
+      "bosphorus"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "food"
+    ],
+    "energy_mix": {
+      "renewables": 0.02,
+      "gas": 0.66,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "oil": 0.15,
+      "hydro": 0.15,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "oil_price_dependency",
+      "dutch_disease",
+      "authoritarian_governance",
+      "corruption",
+      "armenia_conflict_legacy"
+    ]
+  },
+  "ratings": {
+    "credit": "BB+",
+    "democracy_index": 2.7,
+    "press_freedom_rank": 164,
+    "corruption_perception": 23
+  },
+  "neighbors": [
+    {
+      "id": "GEO",
+      "name": "Georgia",
+      "relevance": "Northwestern neighbor; BTC pipeline transit; trade partner; transit corridor"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Northern neighbor (Dagestan); balancing act; peacekeepers withdrew from Karabakh"
+    },
+    {
+      "id": "ARM",
+      "name": "Armenia",
+      "relevance": "Western neighbor; Karabakh conflict won 2023; peace treaty negotiations"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Southern neighbor; Azeri minority in Iran; North-South corridor; tensions"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Nakhchivan border; closest ally; 'one nation two states'; military cooperation"
+    }
+  ],
+  "links": [
+    {
+      "target": "TUR",
+      "type": "alliance",
+      "description": "Closest ally; military pact; energy corridor; BTC pipeline to Ceyhan"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Major gas supplier via Southern Gas Corridor (TAP/TANAP); energy diversification partner"
+    },
+    {
+      "target": "ISR",
+      "type": "trade",
+      "description": "Major oil buyer; defense and intelligence cooperation"
+    },
+    {
+      "target": "ARM",
+      "type": "rivalry",
+      "description": "Karabakh recaptured 2023; peace talks ongoing; Zangezur corridor demand"
+    },
+    {
+      "target": "ITA",
+      "type": "trade",
+      "description": "Largest export destination; TAP pipeline terminus"
+    }
+  ],
+  "tags": [
+    "oil_exporter",
+    "caucasus",
+    "non_aligned",
+    "caspian"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

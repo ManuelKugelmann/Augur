@@ -1,0 +1,119 @@
+{
+  "id": "BLR",
+  "name": "Belarus",
+  "iso2": "BY",
+  "region": "Europe",
+  "currency": "BYN",
+  "capital": "Minsk",
+  "population": 9200000,
+  "trade": {
+    "top_exports": [
+      "refined_petroleum",
+      "potash",
+      "dairy",
+      "trucks"
+    ],
+    "top_partners": [
+      "RUS",
+      "CHN",
+      "UKR",
+      "KAZ",
+      "TUR"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.02,
+      "gas": 0.58,
+      "coal": 0.01,
+      "nuclear": 0.22,
+      "oil": 0.12,
+      "hydro": 0.01,
+      "other": 0.04
+    },
+    "risk_factors": [
+      "western_sanctions",
+      "russian_dependency",
+      "authoritarian_governance",
+      "economic_isolation",
+      "demographic_decline"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.0,
+    "press_freedom_rank": 167,
+    "corruption_perception": 33
+  },
+  "neighbors": [
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Eastern neighbor; Union State; military integration; economic lifeline"
+    },
+    {
+      "id": "UKR",
+      "name": "Ukraine",
+      "relevance": "Southern neighbor; 2022 invasion staging ground; border tensions"
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "relevance": "Western neighbor; closed border; migration hybrid attack; NATO frontier"
+    },
+    {
+      "id": "LTU",
+      "name": "Lithuania",
+      "relevance": "Northwestern neighbor; closed border; Astravets nuclear dispute"
+    },
+    {
+      "id": "LVA",
+      "name": "Latvia",
+      "relevance": "Northern neighbor; closed border; EU frontier"
+    }
+  ],
+  "links": [
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Union State; total economic and military dependency; cheap Russian energy"
+    },
+    {
+      "target": "EU",
+      "type": "sanctions",
+      "description": "Comprehensive EU sanctions since 2020 crackdown and 2022 war complicity"
+    },
+    {
+      "target": "USA",
+      "type": "sanctions",
+      "description": "US sanctions on Lukashenko regime and state enterprises"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Growing trade partner; Great Stone Industrial Park"
+    }
+  ],
+  "tags": [
+    "EAEU",
+    "CSTO",
+    "sanctioned",
+    "landlocked",
+    "authoritarian"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

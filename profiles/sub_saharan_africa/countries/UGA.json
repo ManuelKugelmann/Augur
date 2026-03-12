@@ -1,0 +1,46 @@
+{
+  "id": "UGA",
+  "name": "Uganda",
+  "iso2": "UG",
+  "region": "Sub-Saharan Africa",
+  "currency": "UGX",
+  "capital": "Kampala",
+  "population": 47200000,
+  "trade": {
+    "top_exports": ["coffee", "gold", "fish", "tea", "tobacco"],
+    "top_partners": ["KEN", "ARE", "IND", "CHN", "ITA"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "iron_steel"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "oil": 0.10, "hydro": 0.80, "other": 0.05
+    },
+    "risk_factors": ["political_succession", "oil_development_delays", "debt_sustainability", "regional_conflicts"]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 4.39,
+    "press_freedom_rank": 128,
+    "corruption_perception": 26
+  },
+  "neighbors": [
+    {"id": "KEN", "name": "Kenya", "relevance": "Eastern border; Northern Corridor; major trade partner"},
+    {"id": "TZA", "name": "Tanzania", "relevance": "Southern border; EAC partner; Lake Victoria"},
+    {"id": "COD", "name": "DR Congo", "relevance": "Western border; conflict spillover; minerals trade; M23"},
+    {"id": "SSD", "name": "South Sudan", "relevance": "Northern border; refugees; oil pipeline; security"},
+    {"id": "RWA", "name": "Rwanda", "relevance": "Southwestern border; tensions; EAC partner; Congo conflict"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "trade", "description": "Infrastructure; Karuma Dam; oil sector investment"},
+    {"target": "USA", "type": "trade", "description": "AGOA; coffee exports; security cooperation; anti-LGBT law tensions"},
+    {"target": "EU", "type": "trade", "description": "Coffee exports; development aid; governance concerns"},
+    {"target": "EAC", "type": "alliance", "description": "Founding EAC member; customs union; regional trade"}
+  ],
+  "tags": ["AU", "EAC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

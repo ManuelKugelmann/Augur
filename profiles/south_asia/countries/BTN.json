@@ -1,0 +1,48 @@
+{
+  "id": "BTN",
+  "name": "Bhutan",
+  "iso2": "BT",
+  "region": "South Asia",
+  "currency": "BTN",
+  "capital": "Thimphu",
+  "population": 780000,
+  "trade": {
+    "top_exports": ["electricity", "ferroalloys", "dolomite", "gypsum", "cement"],
+    "top_partners": ["IND", "BGD", "ITA", "NPL", "CHN"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "electronics", "rice"],
+    "energy_mix": {
+      "hydro": 0.85, "renewables": 0.05, "oil": 0.05, "coal": 0.0, "gas": 0.0, "nuclear": 0.0, "other": 0.05
+    },
+    "risk_factors": [
+      "india_dependence",
+      "landlocked",
+      "small_economy",
+      "hydropower_debt",
+      "youth_unemployment"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 5.71,
+    "press_freedom_rank": 90,
+    "corruption_perception": 68
+  },
+  "neighbors": [
+    {"id": "IND", "name": "India", "relevance": "Dominant trade partner (80% of trade); hydropower buyer; security guarantor; financial aid"},
+    {"id": "CHN", "name": "China", "relevance": "Northern border; boundary disputes; strategic balancing"}
+  ],
+  "links": [
+    {"target": "IND", "type": "dependency", "description": "India buys surplus electricity; funds hydropower projects; 80% of trade; pegged currency"},
+    {"target": "CHN", "type": "rivalry", "description": "Ongoing boundary negotiations; Doklam standoff area; growing engagement attempts"},
+    {"target": "SAARC", "type": "alliance", "description": "SAARC and BIMSTEC member; SAFTA participant; WTO accession approved 2023"}
+  ],
+  "tags": ["SAARC", "LDC_graduating", "carbon_negative"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "OEC"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

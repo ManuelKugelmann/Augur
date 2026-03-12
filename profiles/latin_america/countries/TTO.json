@@ -1,0 +1,43 @@
+{
+  "id": "TTO",
+  "name": "Trinidad and Tobago",
+  "iso2": "TT",
+  "region": "Latin America",
+  "currency": "TTD",
+  "capital": "Port of Spain",
+  "population": 1500000,
+  "trade": {
+    "top_exports": ["petroleum", "LNG", "ammonia", "methanol", "iron_steel"],
+    "top_partners": ["USA", "GUY", "BEL", "NLD", "BRA"],
+    "major_ports": ["Point Lisas", "Port of Spain", "Point Fortin"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "food", "chemicals"],
+    "energy_mix": {
+      "gas": 0.85, "oil": 0.10, "renewables": 0.02, "hydro": 0.0, "coal": 0.0, "nuclear": 0.0, "other": 0.03
+    },
+    "risk_factors": ["oil_gas_price_dependence", "dutch_disease", "declining_reserves", "crime", "population_decline"]
+  },
+  "ratings": {
+    "credit": "BBB-",
+    "democracy_index": 7.16,
+    "press_freedom_rank": 25,
+    "corruption_perception": 40
+  },
+  "neighbors": [
+    {"id": "VEN", "name": "Venezuela", "relevance": "Closest mainland neighbor; maritime border; energy cooperation; refugee flows"},
+    {"id": "GRD", "name": "Grenada", "relevance": "Caribbean neighbor; CARICOM partner"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Top trade partner; LNG and petrochemical exports; energy ties"},
+    {"target": "VEN", "type": "trade", "description": "Cross-border gas field (Dragon); maritime boundary; refugee impact"},
+    {"target": "GBR", "type": "trade", "description": "Commonwealth ties; London financial links; trade"},
+    {"target": "CARICOM", "type": "alliance", "description": "CARICOM founding member; headquarters of Caribbean Court of Justice"}
+  ],
+  "tags": ["CARICOM", "OAS", "Commonwealth", "OPEC_former"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,49 @@
+{
+  "id": "HKG",
+  "name": "Hong Kong SAR",
+  "iso2": "HK",
+  "region": "East Asia",
+  "currency": "HKD",
+  "capital": "Hong Kong",
+  "population": 7510000,
+  "trade": {
+    "top_exports": ["electronics", "telecommunications_equipment", "office_machines", "jewelry", "watches"],
+    "top_partners": ["CHN", "USA", "VNM", "SGP", "TWN"],
+    "major_ports": ["Hong Kong"],
+    "chokepoint_exposure": ["taiwan_strait", "malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["electronics", "machinery", "food", "petroleum", "raw_materials"],
+    "energy_mix": {
+      "gas": 0.48, "coal": 0.2, "nuclear": 0.25, "renewables": 0.02, "oil": 0.03, "hydro": 0.0, "other": 0.02
+    },
+    "risk_factors": [
+      "china_political_integration",
+      "capital_flight_risk",
+      "aging_population",
+      "housing_affordability",
+      "geopolitical_sensitivity"
+    ]
+  },
+  "ratings": {
+    "credit": "AA+",
+    "democracy_index": 5.28,
+    "press_freedom_rank": 135,
+    "corruption_perception": 75
+  },
+  "neighbors": [
+    {"id": "CHN", "name": "China", "relevance": "Sovereign power; one country two systems; Guangdong-HK-Macao Greater Bay Area; 40% of exports"},
+    {"id": "MAC", "name": "Macao", "relevance": "Sister SAR; Greater Bay Area; bridge-connected; shared autonomy framework"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "dependency", "description": "Sovereign; largest trade partner (40% exports); NSL enacted 2020; Greater Bay Area integration"},
+    {"target": "USA", "type": "trade", "description": "Second-largest export market; Hong Kong Policy Act; financial hub tensions; tech controls"},
+    {"target": "SGP", "type": "rivalry", "description": "Competing financial center; talent attraction; capital flows; regional hub status"},
+    {"target": "GBR", "type": "trade", "description": "Former colonial power; BN(O) visa scheme; financial ties; rule of law legacy"}
+  ],
+  "tags": ["financial_center", "APEC", "re_export_hub", "SAR"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "S&P", "Moody's", "Fitch"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

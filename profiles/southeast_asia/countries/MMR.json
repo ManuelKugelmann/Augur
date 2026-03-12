@@ -1,0 +1,53 @@
+{
+  "id": "MMR",
+  "name": "Myanmar",
+  "iso2": "MM",
+  "region": "Southeast Asia",
+  "currency": "MMK",
+  "capital": "Naypyidaw",
+  "population": 54900000,
+  "trade": {
+    "top_exports": ["natural_gas", "garments", "jade", "rice", "minerals"],
+    "top_partners": ["CHN", "THA", "JPN", "IND", "SGP"],
+    "major_ports": ["Yangon", "Thilawa"],
+    "chokepoint_exposure": ["malacca"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "iron_steel", "edible_oils"],
+    "energy_mix": {
+      "hydro": 0.45, "gas": 0.35, "oil": 0.1, "coal": 0.05, "renewables": 0.03, "nuclear": 0.0, "other": 0.02
+    },
+    "risk_factors": [
+      "civil_war",
+      "military_coup",
+      "western_sanctions",
+      "economic_collapse",
+      "refugee_crisis",
+      "narcotics_trade"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 1.74,
+    "press_freedom_rank": 171,
+    "corruption_perception": 20
+  },
+  "neighbors": [
+    {"id": "CHN", "name": "China", "relevance": "Dominant trade partner; arms supplier to junta; BRI corridor; border instability"},
+    {"id": "IND", "name": "India", "relevance": "Western border; insurgency spillover; Act East corridor; refugee flows"},
+    {"id": "THA", "name": "Thailand", "relevance": "Eastern border; refugee host; cross-border trade; energy buyer"},
+    {"id": "LAO", "name": "Laos", "relevance": "Eastern border; Golden Triangle; limited interaction"},
+    {"id": "BGD", "name": "Bangladesh", "relevance": "Western border; Rohingya refugee crisis; maritime boundary"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "dependency", "description": "Largest trade partner; arms supplier; BRI infrastructure; shields junta at UNSC"},
+    {"target": "USA", "type": "sanctions", "description": "Sanctions on military regime; arms embargo; democracy promotion"},
+    {"target": "EU", "type": "sanctions", "description": "Arms embargo; targeted sanctions on military leaders; GSP suspended"},
+    {"target": "ASEAN", "type": "alliance", "description": "ASEAN member; Five-Point Consensus; limited junta compliance"}
+  ],
+  "tags": ["ASEAN", "sanctioned", "civil_conflict"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "OEC"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

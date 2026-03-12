@@ -1,0 +1,46 @@
+{
+  "id": "SEN",
+  "name": "Senegal",
+  "iso2": "SN",
+  "region": "Sub-Saharan Africa",
+  "currency": "XOF",
+  "capital": "Dakar",
+  "population": 17900000,
+  "trade": {
+    "top_exports": ["gold", "petroleum_products", "phosphoric_acid", "fish", "groundnuts"],
+    "top_partners": ["MLI", "CHE", "IND", "CHN", "FRA"],
+    "major_ports": ["Dakar"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "rice", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.15, "gas": 0.20, "coal": 0.10, "nuclear": 0.0, "oil": 0.45, "hydro": 0.05, "other": 0.05
+    },
+    "risk_factors": ["oil_gas_transition", "sahel_instability", "youth_unemployment", "fiscal_deficit"]
+  },
+  "ratings": {
+    "credit": "B+",
+    "democracy_index": 5.74,
+    "press_freedom_rank": 56,
+    "corruption_perception": 43
+  },
+  "neighbors": [
+    {"id": "MRT", "name": "Mauritania", "relevance": "Northern border; Senegal River; shared gas field (GTA)"},
+    {"id": "MLI", "name": "Mali", "relevance": "Eastern border; Sahel crisis; Dakar-Bamako corridor; trade"},
+    {"id": "GMB", "name": "Gambia", "relevance": "Enclosed within Senegal; Casamance transit; ECOWAS intervention 2017"},
+    {"id": "GIN", "name": "Guinea", "relevance": "Southeastern border; refugees; Casamance"},
+    {"id": "GNB", "name": "Guinea-Bissau", "relevance": "Southern border; Casamance conflict; drug trafficking"}
+  ],
+  "links": [
+    {"target": "FRA", "type": "trade", "description": "Former colonial power; CFA franc; military base; largest EU investor"},
+    {"target": "CHN", "type": "trade", "description": "Infrastructure investment; fishing; growing trade"},
+    {"target": "TUR", "type": "trade", "description": "Growing investment; construction; political ties"},
+    {"target": "EU", "type": "trade", "description": "EPA; fish exports; migration management; development aid"}
+  ],
+  "tags": ["AU", "ECOWAS"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

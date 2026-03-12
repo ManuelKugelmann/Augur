@@ -1,0 +1,114 @@
+{
+  "id": "SVN",
+  "name": "Slovenia",
+  "iso2": "SI",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Ljubljana",
+  "population": 2120000,
+  "trade": {
+    "top_exports": [
+      "vehicles",
+      "pharmaceuticals",
+      "machinery",
+      "electrical_equipment"
+    ],
+    "top_partners": [
+      "DEU",
+      "ITA",
+      "HRV",
+      "AUT",
+      "FRA"
+    ],
+    "major_ports": [
+      "Koper"
+    ],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.10,
+      "gas": 0.10,
+      "coal": 0.16,
+      "nuclear": 0.37,
+      "oil": 0.01,
+      "hydro": 0.23,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "small_open_economy",
+      "eurozone_exposure",
+      "aging_population"
+    ]
+  },
+  "ratings": {
+    "credit": "AA-",
+    "democracy_index": 7.7,
+    "press_freedom_rank": 20,
+    "corruption_perception": 56
+  },
+  "neighbors": [
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "relevance": "Western neighbor; Trieste-Koper corridor; Italian minority"
+    },
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "relevance": "Northern neighbor; major trade partner and investor"
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "relevance": "Eastern neighbor; Hungarian minority in Prekmurje"
+    },
+    {
+      "id": "HRV",
+      "name": "Croatia",
+      "relevance": "Southern neighbor; Krsko nuclear plant co-owned; Adriatic access"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; eurozone since 2007; Schengen since 2007"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2004"
+    },
+    {
+      "target": "DEU",
+      "type": "trade",
+      "description": "Largest trade partner; automotive and pharma exports"
+    },
+    {
+      "target": "HRV",
+      "type": "trade",
+      "description": "Krsko nuclear co-ownership; deep bilateral trade"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "schengen",
+    "alpine"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,121 @@
+{
+  "id": "LTU",
+  "name": "Lithuania",
+  "iso2": "LT",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Vilnius",
+  "population": 2860000,
+  "trade": {
+    "top_exports": [
+      "refined_petroleum",
+      "furniture",
+      "chemicals",
+      "wheat"
+    ],
+    "top_partners": [
+      "DEU",
+      "LVA",
+      "POL",
+      "NLD",
+      "EST"
+    ],
+    "major_ports": [
+      "Klaipeda"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "natural_gas",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.28,
+      "gas": 0.22,
+      "coal": 0.01,
+      "nuclear": 0.0,
+      "oil": 0.05,
+      "hydro": 0.04,
+      "other": 0.40
+    },
+    "risk_factors": [
+      "russian_military_proximity",
+      "suwalki_gap_vulnerability",
+      "demographic_decline",
+      "brain_drain"
+    ]
+  },
+  "ratings": {
+    "credit": "A+",
+    "democracy_index": 7.5,
+    "press_freedom_rank": 9,
+    "corruption_perception": 61
+  },
+  "neighbors": [
+    {
+      "id": "LVA",
+      "name": "Latvia",
+      "relevance": "Northern neighbor; Baltic partner; shared electricity grid"
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "relevance": "Southern neighbor; Suwalki Gap; Polish minority; strategic ally"
+    },
+    {
+      "id": "BLR",
+      "name": "Belarus",
+      "relevance": "Eastern neighbor; closed border; migration pressure weapon; Astravets nuclear plant concern"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Kaliningrad exclave border; military threat; transit disputes"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; eurozone since 2015"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2004; hosts NATO battlegroup"
+    },
+    {
+      "target": "RUS",
+      "type": "rivalry",
+      "description": "Security threat; Kaliningrad exclave; fully decoupled energy"
+    },
+    {
+      "target": "BLR",
+      "type": "sanctions",
+      "description": "Border closed; sanctions on Lukashenko regime; migration hybrid attack"
+    },
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "US troops stationed; strong transatlantic alignment"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "baltic"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

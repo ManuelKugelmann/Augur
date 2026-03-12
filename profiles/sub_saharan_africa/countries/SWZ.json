@@ -1,0 +1,43 @@
+{
+  "id": "SWZ",
+  "name": "Eswatini",
+  "iso2": "SZ",
+  "region": "Sub-Saharan Africa",
+  "currency": "SZL",
+  "capital": "Mbabane",
+  "population": 1200000,
+  "trade": {
+    "top_exports": ["sugar", "soft_drink_concentrates", "textiles", "wood_pulp", "citrus"],
+    "top_partners": ["ZAF", "USA", "KEN", "MOZ", "NGA"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "food"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.15, "nuclear": 0.0, "oil": 0.05, "hydro": 0.20, "other": 0.55
+    },
+    "risk_factors": ["absolute_monarchy", "hiv_prevalence", "south_africa_dependence", "pro_democracy_unrest"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 3.08,
+    "press_freedom_rank": 144,
+    "corruption_perception": 32
+  },
+  "neighbors": [
+    {"id": "ZAF", "name": "South Africa", "relevance": "Borders ZAF on three sides; SACU; SZL pegged to ZAR; trade dominance"},
+    {"id": "MOZ", "name": "Mozambique", "relevance": "Eastern border; Maputo corridor transit"}
+  ],
+  "links": [
+    {"target": "ZAF", "type": "dependency", "description": "Dominant trade partner; SACU revenue; electricity imports; SZL pegged to ZAR"},
+    {"target": "USA", "type": "trade", "description": "AGOA (suspended over governance); Coca-Cola concentrates; PEPFAR"},
+    {"target": "TWN", "type": "alliance", "description": "One of few African states recognizing Taiwan; aid; diplomatic partner"},
+    {"target": "SACU", "type": "alliance", "description": "SACU member; customs revenue critical to budget"}
+  ],
+  "tags": ["AU", "SADC", "SACU", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

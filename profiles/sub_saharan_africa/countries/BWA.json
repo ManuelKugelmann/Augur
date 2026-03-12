@@ -1,0 +1,45 @@
+{
+  "id": "BWA",
+  "name": "Botswana",
+  "iso2": "BW",
+  "region": "Sub-Saharan Africa",
+  "currency": "BWP",
+  "capital": "Gaborone",
+  "population": 2600000,
+  "trade": {
+    "top_exports": ["diamonds", "copper", "nickel", "soda_ash", "beef"],
+    "top_partners": ["BEL", "IND", "ZAF", "ARE", "GBR"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "food"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.65, "nuclear": 0.0, "oil": 0.10, "hydro": 0.0, "other": 0.20
+    },
+    "risk_factors": ["diamond_dependence", "hiv_prevalence", "water_scarcity", "small_domestic_market"]
+  },
+  "ratings": {
+    "credit": "BBB+",
+    "democracy_index": 7.73,
+    "press_freedom_rank": 42,
+    "corruption_perception": 60
+  },
+  "neighbors": [
+    {"id": "ZAF", "name": "South Africa", "relevance": "Southern border; SACU member; dominant trade partner"},
+    {"id": "NAM", "name": "Namibia", "relevance": "Western border; Caprivi Strip; water rights; tourism"},
+    {"id": "ZWE", "name": "Zimbabwe", "relevance": "Northeastern border; migration; Kazungula bridge"},
+    {"id": "ZMB", "name": "Zambia", "relevance": "Northern border (short); Kazungula bridge; transit"}
+  ],
+  "links": [
+    {"target": "ZAF", "type": "trade", "description": "SACU; dominant trade partner; electricity imports; rand peg"},
+    {"target": "EU", "type": "trade", "description": "Diamond exports (Antwerp); EPA; development cooperation"},
+    {"target": "USA", "type": "trade", "description": "AGOA; governance model; PEPFAR; military cooperation"},
+    {"target": "De_Beers", "type": "dependency", "description": "Diamond partnership (Debswana); revenue lifeline; beneficiation push"}
+  ],
+  "tags": ["AU", "SADC", "SACU"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

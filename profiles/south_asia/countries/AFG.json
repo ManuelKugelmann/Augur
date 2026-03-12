@@ -1,0 +1,53 @@
+{
+  "id": "AFG",
+  "name": "Afghanistan",
+  "iso2": "AF",
+  "region": "South Asia",
+  "currency": "AFN",
+  "capital": "Kabul",
+  "population": 40000000,
+  "trade": {
+    "top_exports": ["carpets", "dried_fruits", "medicinal_plants", "coal", "textiles"],
+    "top_partners": ["PAK", "IND", "RUS", "IRN", "TUR"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["wheat", "petroleum", "textiles", "machinery", "cement"],
+    "energy_mix": {
+      "hydro": 0.35, "oil": 0.3, "coal": 0.15, "gas": 0.1, "renewables": 0.05, "nuclear": 0.0, "other": 0.05
+    },
+    "risk_factors": [
+      "taliban_governance",
+      "sanctions_isolation",
+      "landlocked",
+      "food_insecurity",
+      "opium_economy"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 0.32,
+    "press_freedom_rank": 178,
+    "corruption_perception": 20
+  },
+  "neighbors": [
+    {"id": "PAK", "name": "Pakistan", "relevance": "Largest export partner; Durand Line dispute; refugee flows; transit trade"},
+    {"id": "IRN", "name": "Iran", "relevance": "Western border; trade corridor; water disputes; refugee host"},
+    {"id": "CHN", "name": "China", "relevance": "Wakhan Corridor border; mineral investment interests; BRI potential"},
+    {"id": "TJK", "name": "Tajikistan", "relevance": "Northern border; ethnic Tajik ties; security concerns"},
+    {"id": "UZB", "name": "Uzbekistan", "relevance": "Northern border; trade route; rail connectivity plans"},
+    {"id": "TKM", "name": "Turkmenistan", "relevance": "Northwestern border; TAPI pipeline route"}
+  ],
+  "links": [
+    {"target": "PAK", "type": "dependency", "description": "Primary trade corridor; 48% of exports; transit access; Durand Line tensions"},
+    {"target": "CHN", "type": "trade", "description": "Tariff exemptions boosting food exports; mineral resource interest; strategic engagement"},
+    {"target": "USA", "type": "sanctions", "description": "Frozen central bank reserves ($7B); aid restrictions under Taliban; counter-terrorism"},
+    {"target": "IND", "type": "trade", "description": "Second-largest export destination; Chabahar port route; development aid legacy"}
+  ],
+  "tags": ["sanctioned", "landlocked", "fragile_state"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "OEC"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

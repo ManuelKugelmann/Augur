@@ -1,0 +1,113 @@
+{
+  "id": "EST",
+  "name": "Estonia",
+  "iso2": "EE",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Tallinn",
+  "population": 1370000,
+  "trade": {
+    "top_exports": [
+      "electronics",
+      "machinery",
+      "wood",
+      "mineral_fuels"
+    ],
+    "top_partners": [
+      "FIN",
+      "LVA",
+      "SWE",
+      "DEU",
+      "LTU"
+    ],
+    "major_ports": [
+      "Tallinn",
+      "Muuga"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "machinery",
+      "vehicles",
+      "chemicals"
+    ],
+    "energy_mix": {
+      "renewables": 0.22,
+      "gas": 0.08,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "oil": 0.04,
+      "hydro": 0.01,
+      "other": 0.65
+    },
+    "risk_factors": [
+      "russian_military_proximity",
+      "oil_shale_transition",
+      "small_economy_vulnerability",
+      "demographic_decline"
+    ]
+  },
+  "ratings": {
+    "credit": "AA-",
+    "democracy_index": 7.8,
+    "press_freedom_rank": 6,
+    "corruption_perception": 74
+  },
+  "neighbors": [
+    {
+      "id": "LVA",
+      "name": "Latvia",
+      "relevance": "Southern neighbor; Baltic partner; shared grid and defense"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Eastern neighbor; border treaty unratified; Narva river border; Russian minority"
+    },
+    {
+      "id": "FIN",
+      "name": "Finland",
+      "relevance": "Gulf of Finland neighbor; largest trade partner; cultural ties; Helsinki-Tallinn tunnel plans"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; eurozone since 2011; digital governance leader"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2004; NATO Cyber Defence Centre in Tallinn"
+    },
+    {
+      "target": "FIN",
+      "type": "trade",
+      "description": "Largest trade partner; Helsinki-Tallinn corridor; shared digital infrastructure"
+    },
+    {
+      "target": "RUS",
+      "type": "rivalry",
+      "description": "Security threat; full energy decoupling; Russian minority integration"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "baltic",
+    "digital_leader"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

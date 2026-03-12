@@ -1,0 +1,44 @@
+{
+  "id": "MWI",
+  "name": "Malawi",
+  "iso2": "MW",
+  "region": "Sub-Saharan Africa",
+  "currency": "MWK",
+  "capital": "Lilongwe",
+  "population": 20400000,
+  "trade": {
+    "top_exports": ["tobacco", "tea", "sugar", "uranium", "soybeans"],
+    "top_partners": ["BEL", "USA", "GBR", "ZAF", "DEU"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "fertilizers", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.05, "gas": 0.0, "coal": 0.05, "nuclear": 0.0, "oil": 0.05, "hydro": 0.80, "other": 0.05
+    },
+    "risk_factors": ["tobacco_dependence", "forex_shortage", "climate_vulnerability", "poverty", "landlocked"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 5.74,
+    "press_freedom_rank": 55,
+    "corruption_perception": 34
+  },
+  "neighbors": [
+    {"id": "MOZ", "name": "Mozambique", "relevance": "Eastern/southern border; Nacala corridor; trade route"},
+    {"id": "TZA", "name": "Tanzania", "relevance": "Northern border; Lake Malawi dispute; trade"},
+    {"id": "ZMB", "name": "Zambia", "relevance": "Western border; trade; power interconnection"}
+  ],
+  "links": [
+    {"target": "GBR", "type": "trade", "description": "Commonwealth; tobacco buyer; development aid; governance support"},
+    {"target": "USA", "type": "trade", "description": "AGOA; MCC compact; tobacco exports; PEPFAR"},
+    {"target": "EU", "type": "trade", "description": "Tobacco/tea/sugar exports; EPA; development aid; Everything But Arms"},
+    {"target": "CHN", "type": "trade", "description": "Infrastructure investment; growing trade; One China policy"}
+  ],
+  "tags": ["AU", "SADC", "COMESA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

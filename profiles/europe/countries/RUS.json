@@ -1,0 +1,143 @@
+{
+  "id": "RUS",
+  "name": "Russia",
+  "iso2": "RU",
+  "region": "Europe",
+  "currency": "RUB",
+  "capital": "Moscow",
+  "population": 144000000,
+  "trade": {
+    "top_exports": [
+      "crude_oil",
+      "natural_gas",
+      "refined_petroleum",
+      "wheat"
+    ],
+    "top_partners": [
+      "CHN",
+      "IND",
+      "TUR",
+      "BRA",
+      "KAZ"
+    ],
+    "major_ports": [
+      "Saint Petersburg",
+      "Novorossiysk",
+      "Vladivostok",
+      "Murmansk"
+    ],
+    "chokepoint_exposure": [
+      "bosphorus",
+      "danish_straits"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "electronics",
+      "machinery",
+      "pharmaceuticals"
+    ],
+    "energy_mix": {
+      "renewables": 0.01,
+      "gas": 0.47,
+      "coal": 0.16,
+      "nuclear": 0.20,
+      "oil": 0.01,
+      "hydro": 0.14,
+      "other": 0.01
+    },
+    "risk_factors": [
+      "western_sanctions",
+      "war_in_ukraine",
+      "capital_flight",
+      "demographic_decline",
+      "technology_import_restrictions"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.2,
+    "press_freedom_rank": 164,
+    "corruption_perception": 26
+  },
+  "neighbors": [
+    {
+      "id": "UKR",
+      "name": "Ukraine",
+      "relevance": "Active war since 2022; territorial disputes; former major trade partner"
+    },
+    {
+      "id": "BLR",
+      "name": "Belarus",
+      "relevance": "Union State; military alliance; economic dependency; sanctions passthrough risk"
+    },
+    {
+      "id": "KAZ",
+      "name": "Kazakhstan",
+      "relevance": "Longest land border; energy transit; EAEU member; sanctions circumvention concerns"
+    },
+    {
+      "id": "CHN",
+      "name": "China",
+      "relevance": "Strategic partner; growing energy exports; technology dependency"
+    },
+    {
+      "id": "FIN",
+      "name": "Finland",
+      "relevance": "NATO border; closed border crossings; former trade partner"
+    },
+    {
+      "id": "GEO",
+      "name": "Georgia",
+      "relevance": "Occupied territories (South Ossetia, Abkhazia); frozen conflict"
+    },
+    {
+      "id": "NOR",
+      "name": "Norway",
+      "relevance": "Arctic neighbor; Barents Sea boundary; NATO frontier"
+    }
+  ],
+  "links": [
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest trade partner post-sanctions; energy exports pivot to China"
+    },
+    {
+      "target": "EU",
+      "type": "sanctions",
+      "description": "Comprehensive EU sanctions since 2022; energy decoupling; asset freezes"
+    },
+    {
+      "target": "USA",
+      "type": "sanctions",
+      "description": "Extensive US sanctions; technology export controls; financial restrictions"
+    },
+    {
+      "target": "BRICS",
+      "type": "alliance",
+      "description": "Founding BRICS member; seeks alternative to Western financial system"
+    },
+    {
+      "target": "UKR",
+      "type": "rivalry",
+      "description": "Active military conflict; territorial occupation of Crimea and eastern regions"
+    }
+  ],
+  "tags": [
+    "G20",
+    "BRICS",
+    "EAEU",
+    "OPEC_plus",
+    "sanctioned",
+    "nuclear_power"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

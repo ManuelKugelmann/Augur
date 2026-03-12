@@ -1,0 +1,51 @@
+{
+  "id": "PNG",
+  "name": "Papua New Guinea",
+  "iso2": "PG",
+  "region": "Oceania",
+  "currency": "PGK",
+  "capital": "Port Moresby",
+  "population": 10500000,
+  "trade": {
+    "top_exports": ["natural_gas", "gold", "copper", "palm_oil", "coffee"],
+    "top_partners": ["JPN", "AUS", "CHN", "TWN", "DEU"],
+    "major_ports": ["Port Moresby", "Lae", "Madang"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "rice", "machinery", "vehicles", "food"],
+    "energy_mix": {
+      "hydro": 0.3, "gas": 0.25, "oil": 0.3, "renewables": 0.05, "coal": 0.0, "nuclear": 0.0, "other": 0.1
+    },
+    "risk_factors": [
+      "commodity_price_dependence",
+      "governance_weakness",
+      "tribal_conflict",
+      "natural_disaster_risk",
+      "infrastructure_deficit",
+      "fx_shortage"
+    ]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 6.03,
+    "press_freedom_rank": 67,
+    "corruption_perception": 28
+  },
+  "neighbors": [
+    {"id": "IDN", "name": "Indonesia", "relevance": "Land border (West Papua); maritime boundary; resource competition; migration"},
+    {"id": "AUS", "name": "Australia", "relevance": "Largest aid donor; defence alliance (2025 treaty); Torres Strait; security partner"},
+    {"id": "SLB", "name": "Solomon Islands", "relevance": "Eastern maritime neighbor; Melanesian ties; regional security"}
+  ],
+  "links": [
+    {"target": "AUS", "type": "alliance", "description": "Mutual Defence Treaty (2025); largest aid donor; LNG buyer; Pacific security anchor"},
+    {"target": "JPN", "type": "trade", "description": "Largest export market (22%); LNG buyer; development aid; Pacific partnership"},
+    {"target": "CHN", "type": "trade", "description": "Growing trade partner (18%); infrastructure investment; Pacific geopolitical competition"},
+    {"target": "USA", "type": "alliance", "description": "Defense cooperation agreement; Pacific Islands strategy; WWII legacy"}
+  ],
+  "tags": ["PIF", "APEC", "commodity_exporter", "fragile_state"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "S&P", "Moody's"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,92 @@
+{
+  "id": "OMN",
+  "name": "Oman",
+  "iso2": "OM",
+  "region": "Middle East & North Africa",
+  "currency": "OMR",
+  "capital": "Muscat",
+  "population": 5500000,
+  "trade": {
+    "top_exports": ["petroleum", "natural_gas", "petrochemicals", "metals", "fish"],
+    "top_partners": ["CHN", "KOR", "ARE", "JPN", "IND"],
+    "major_ports": ["Sohar", "Salalah", "Muscat", "Duqm"],
+    "chokepoint_exposure": ["hormuz"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "food_products", "iron_steel", "electronics"],
+    "energy_mix": {
+      "gas": 0.92,
+      "oil": 0.04,
+      "renewables": 0.03,
+      "hydro": 0.0,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.01
+    },
+    "risk_factors": [
+      "oil_price_dependence",
+      "water_scarcity",
+      "expat_labor_dependence",
+      "fiscal_vulnerability"
+    ]
+  },
+  "ratings": {
+    "credit": "BBB-",
+    "democracy_index": 3.00,
+    "press_freedom_rank": 137,
+    "corruption_perception": 55
+  },
+  "neighbors": [
+    {
+      "id": "ARE",
+      "name": "UAE",
+      "relevance": "Northern border; GCC partner; Musandam exclave; trade"
+    },
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "Western border; GCC partner; oil coordination"
+    },
+    {
+      "id": "YEM",
+      "name": "Yemen",
+      "relevance": "Southwestern border; conflict spillover; mediator role; migration"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "Defense partner; FTA; port access; counterterrorism cooperation"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest oil buyer at 30% of exports; Duqm refinery investment"
+    },
+    {
+      "target": "IRN",
+      "type": "trade",
+      "description": "Diplomatic mediator; Strait of Hormuz cooperation; balanced regional stance"
+    },
+    {
+      "target": "GCC",
+      "type": "alliance",
+      "description": "GCC member; independent foreign policy; diplomatic mediator role"
+    }
+  ],
+  "tags": [
+    "GCC",
+    "Arab_League",
+    "OPEC"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "S&P Global",
+    "IEA"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

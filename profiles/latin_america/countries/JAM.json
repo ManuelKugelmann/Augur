@@ -1,0 +1,43 @@
+{
+  "id": "JAM",
+  "name": "Jamaica",
+  "iso2": "JM",
+  "region": "Latin America",
+  "currency": "JMD",
+  "capital": "Kingston",
+  "population": 2800000,
+  "trade": {
+    "top_exports": ["aluminum_oxide", "rum", "coffee", "sugar", "yams"],
+    "top_partners": ["USA", "CAN", "NLD", "GBR", "RUS"],
+    "major_ports": ["Kingston", "Montego Bay"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "food", "machinery", "vehicles"],
+    "energy_mix": {
+      "oil": 0.70, "renewables": 0.12, "gas": 0.08, "hydro": 0.03, "coal": 0.0, "nuclear": 0.0, "other": 0.07
+    },
+    "risk_factors": ["hurricane_exposure", "debt_burden", "energy_import_dependency", "crime", "brain_drain"]
+  },
+  "ratings": {
+    "credit": "BB",
+    "democracy_index": 6.65,
+    "press_freedom_rank": 24,
+    "corruption_perception": 41
+  },
+  "neighbors": [
+    {"id": "CUB", "name": "Cuba", "relevance": "Northern maritime neighbor; Caribbean cooperation"},
+    {"id": "HTI", "name": "Haiti", "relevance": "Eastern maritime neighbor; Caribbean solidarity"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Dominant trade partner; remittances; tourism; diaspora"},
+    {"target": "GBR", "type": "trade", "description": "Commonwealth ties; trade; diaspora; cultural links"},
+    {"target": "CHN", "type": "trade", "description": "Infrastructure investment; growing imports; Belt and Road"},
+    {"target": "CARICOM", "type": "alliance", "description": "CARICOM founding member; regional integration; headquarters host"}
+  ],
+  "tags": ["CARICOM", "OAS", "Commonwealth"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

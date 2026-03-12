@@ -1,0 +1,93 @@
+{
+  "id": "BHR",
+  "name": "Bahrain",
+  "iso2": "BH",
+  "region": "Middle East & North Africa",
+  "currency": "BHD",
+  "capital": "Manama",
+  "population": 1650000,
+  "trade": {
+    "top_exports": ["refined_petroleum", "aluminum", "iron_ore", "chemicals", "plastics"],
+    "top_partners": ["SAU", "ARE", "USA", "NLD", "EGY"],
+    "major_ports": ["Mina Salman", "Khalifa bin Salman"],
+    "chokepoint_exposure": ["hormuz"]
+  },
+  "exposure": {
+    "commodities_import": ["crude_oil", "machinery", "vehicles", "food_products", "electronics"],
+    "energy_mix": {
+      "gas": 0.85,
+      "oil": 0.10,
+      "renewables": 0.02,
+      "hydro": 0.0,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.03
+    },
+    "risk_factors": [
+      "high_public_debt",
+      "fiscal_deficit",
+      "oil_price_dependence",
+      "water_scarcity",
+      "sectarian_tensions",
+      "small_market"
+    ]
+  },
+  "ratings": {
+    "credit": "B",
+    "democracy_index": 2.10,
+    "press_freedom_rank": 173,
+    "corruption_perception": 53
+  },
+  "neighbors": [
+    {
+      "id": "SAU",
+      "name": "Saudi Arabia",
+      "relevance": "King Fahd Causeway; security guarantor; GCC partner; political support"
+    },
+    {
+      "id": "QAT",
+      "name": "Qatar",
+      "relevance": "Maritime neighbor; historical rivalry; GCC normalization"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Maritime proximity; Shia population ties; security concern; territorial claims"
+    }
+  ],
+  "links": [
+    {
+      "target": "USA",
+      "type": "alliance",
+      "description": "US Fifth Fleet headquarters; defense cooperation; FTA since 2006"
+    },
+    {
+      "target": "SAU",
+      "type": "alliance",
+      "description": "Security guarantor; 2011 intervention; King Fahd Causeway; financial support"
+    },
+    {
+      "target": "GCC",
+      "type": "alliance",
+      "description": "GCC member; financial center ambitions; banking hub"
+    },
+    {
+      "target": "IRN",
+      "type": "rivalry",
+      "description": "Sectarian tensions; Shia majority population; alleged interference"
+    }
+  ],
+  "tags": [
+    "GCC",
+    "Arab_League"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "S&P Global",
+    "Transparency International"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

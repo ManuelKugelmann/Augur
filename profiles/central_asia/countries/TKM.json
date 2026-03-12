@@ -1,0 +1,51 @@
+{
+  "id": "TKM",
+  "name": "Turkmenistan",
+  "iso2": "TM",
+  "region": "Central Asia",
+  "currency": "TMT",
+  "capital": "Ashgabat",
+  "population": 6500000,
+  "trade": {
+    "top_exports": ["natural_gas", "petroleum", "textiles", "cotton", "petrochemicals"],
+    "top_partners": ["CHN", "TUR", "RUS", "UZB", "IRN"],
+    "major_ports": ["Turkmenbashi (Caspian)"],
+    "chokepoint_exposure": ["turkish_straits"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "food", "iron_steel", "electronics"],
+    "energy_mix": {
+      "gas": 0.85, "oil": 0.1, "renewables": 0.01, "hydro": 0.01, "coal": 0.0, "nuclear": 0.0, "other": 0.03
+    },
+    "risk_factors": [
+      "gas_export_dependence",
+      "china_monopsony",
+      "authoritarian_governance",
+      "data_opacity",
+      "water_scarcity"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 1.72,
+    "press_freedom_rank": 176,
+    "corruption_perception": 19
+  },
+  "neighbors": [
+    {"id": "AFG", "name": "Afghanistan", "relevance": "Southern border; TAPI pipeline route; security concerns; trade corridor"},
+    {"id": "IRN", "name": "Iran", "relevance": "Southern border; Caspian energy neighbor; gas disputes; trade partner"},
+    {"id": "UZB", "name": "Uzbekistan", "relevance": "Eastern border; water-sharing; ethnic ties; regional trade"},
+    {"id": "KAZ", "name": "Kazakhstan", "relevance": "Northern border; Caspian energy neighbor; trans-Caspian pipeline politics"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "dependency", "description": "Dominant gas buyer (80%+ of gas exports); Central Asia-China pipeline; BRI investment"},
+    {"target": "RUS", "type": "trade", "description": "Historical gas buyer; resumed imports 2019; Caspian cooperation; neutral stance"},
+    {"target": "TUR", "type": "trade", "description": "Turkic cultural ties; construction sector partner; trade diversification"},
+    {"target": "IRN", "type": "trade", "description": "Gas swap arrangements; Caspian delimitation; trade corridor potential"}
+  ],
+  "tags": ["gas_exporter", "neutral_status", "landlocked"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "Fitch"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

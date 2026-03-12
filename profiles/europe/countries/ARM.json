@@ -1,0 +1,118 @@
+{
+  "id": "ARM",
+  "name": "Armenia",
+  "iso2": "AM",
+  "region": "Europe",
+  "currency": "AMD",
+  "capital": "Yerevan",
+  "population": 2780000,
+  "trade": {
+    "top_exports": [
+      "copper",
+      "gold",
+      "diamonds",
+      "tobacco"
+    ],
+    "top_partners": [
+      "RUS",
+      "CHN",
+      "UAE",
+      "GEO",
+      "IRN"
+    ],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": [
+      "natural_gas",
+      "petroleum_products",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.05,
+      "gas": 0.48,
+      "coal": 0.0,
+      "nuclear": 0.26,
+      "oil": 0.01,
+      "hydro": 0.18,
+      "other": 0.02
+    },
+    "risk_factors": [
+      "nagorno_karabakh_defeat",
+      "turkish_azerbaijani_pressure",
+      "landlocked_blockade",
+      "russian_dependency_declining",
+      "demographic_decline"
+    ]
+  },
+  "ratings": {
+    "credit": "BB-",
+    "democracy_index": 5.4,
+    "press_freedom_rank": 49,
+    "corruption_perception": 46
+  },
+  "neighbors": [
+    {
+      "id": "GEO",
+      "name": "Georgia",
+      "relevance": "Northern neighbor; main trade transit route; vital corridor"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Western neighbor; closed border; genocide recognition dispute; normalization talks"
+    },
+    {
+      "id": "AZE",
+      "name": "Azerbaijan",
+      "relevance": "Eastern neighbor; post-Karabakh defeat; border demarcation ongoing; blockade history"
+    },
+    {
+      "id": "IRN",
+      "name": "Iran",
+      "relevance": "Southern neighbor; alternative trade route; energy supply; geopolitical balance"
+    }
+  ],
+  "links": [
+    {
+      "target": "RUS",
+      "type": "dependency",
+      "description": "Security guarantor (declining); gas supplier; CSTO member (frozen); Russian base in Gyumri"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "CEPA agreement; increasing Western orientation post-Karabakh"
+    },
+    {
+      "target": "AZE",
+      "type": "rivalry",
+      "description": "Nagorno-Karabakh conflict; 2023 ethnic cleansing; border tensions; peace talks"
+    },
+    {
+      "target": "TUR",
+      "type": "rivalry",
+      "description": "Closed border; genocide recognition; normalization talks stalled"
+    },
+    {
+      "target": "FRA",
+      "type": "alliance",
+      "description": "Growing defense ties; arms sales; diaspora connection; ICC cooperation"
+    }
+  ],
+  "tags": [
+    "EAEU",
+    "caucasus",
+    "landlocked",
+    "post_conflict"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

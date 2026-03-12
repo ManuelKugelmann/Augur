@@ -1,0 +1,88 @@
+{
+  "id": "TUN",
+  "name": "Tunisia",
+  "iso2": "TN",
+  "region": "Middle East & North Africa",
+  "currency": "TND",
+  "capital": "Tunis",
+  "population": 12400000,
+  "trade": {
+    "top_exports": ["insulated_wire", "olive_oil", "textiles", "petroleum", "phosphates"],
+    "top_partners": ["FRA", "ITA", "DEU", "USA", "LBY"],
+    "major_ports": ["Tunis", "Sfax", "Bizerte", "Sousse"],
+    "chokepoint_exposure": ["sicily_strait", "suez"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum_products", "machinery", "vehicles", "cereals"],
+    "energy_mix": {
+      "gas": 0.55,
+      "oil": 0.30,
+      "renewables": 0.05,
+      "hydro": 0.02,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.08
+    },
+    "risk_factors": [
+      "energy_import_dependence",
+      "water_scarcity",
+      "youth_unemployment",
+      "fiscal_pressure",
+      "political_instability"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 5.51,
+    "press_freedom_rank": 118,
+    "corruption_perception": 39
+  },
+  "neighbors": [
+    {
+      "id": "DZA",
+      "name": "Algeria",
+      "relevance": "Western border; gas transit via Transmed pipeline; trade partner"
+    },
+    {
+      "id": "LBY",
+      "name": "Libya",
+      "relevance": "Eastern border; migration corridor; security spillover; trade"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "70% of exports to EU; association agreement; migration management"
+    },
+    {
+      "target": "FRA",
+      "type": "trade",
+      "description": "Largest export partner; historical ties; diaspora; investment"
+    },
+    {
+      "target": "ITA",
+      "type": "trade",
+      "description": "Second-largest export partner; Transmed gas pipeline transit"
+    },
+    {
+      "target": "IMF",
+      "type": "dependency",
+      "description": "Severed IMF ties in 2025; fiscal reform uncertainty"
+    }
+  ],
+  "tags": [
+    "Arab_League",
+    "AU",
+    "Francophone"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "Transparency International",
+    "RSF"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

@@ -1,0 +1,89 @@
+{
+  "id": "LBN",
+  "name": "Lebanon",
+  "iso2": "LB",
+  "region": "Middle East & North Africa",
+  "currency": "LBP",
+  "capital": "Beirut",
+  "population": 5900000,
+  "trade": {
+    "top_exports": ["gold", "jewelry", "chemicals", "food_products", "machinery"],
+    "top_partners": ["ARE", "SAU", "IRQ", "TUR", "SYR"],
+    "major_ports": ["Beirut", "Tripoli"],
+    "chokepoint_exposure": ["suez"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "food_products", "pharmaceuticals"],
+    "energy_mix": {
+      "oil": 0.90,
+      "gas": 0.0,
+      "renewables": 0.05,
+      "hydro": 0.04,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.01
+    },
+    "risk_factors": [
+      "economic_collapse",
+      "sovereign_default",
+      "banking_crisis",
+      "energy_crisis",
+      "political_fragmentation",
+      "sectarian_tensions",
+      "infrastructure_decay"
+    ]
+  },
+  "ratings": {
+    "credit": "SD",
+    "democracy_index": 2.70,
+    "press_freedom_rank": 140,
+    "corruption_perception": 22
+  },
+  "neighbors": [
+    {
+      "id": "SYR",
+      "name": "Syria",
+      "relevance": "Northern and eastern border; 1.5M Syrian refugees; trade reopening post-Assad; Hezbollah link"
+    },
+    {
+      "id": "ISR",
+      "name": "Israel",
+      "relevance": "Southern border; 2006 war legacy; maritime border agreement; Hezbollah conflict"
+    }
+  ],
+  "links": [
+    {
+      "target": "FRA",
+      "type": "alliance",
+      "description": "Historical mandate power; reform pressure; CEDRE aid conference; diaspora"
+    },
+    {
+      "target": "SAU",
+      "type": "trade",
+      "description": "Gulf investment; diaspora employment; political influence; strained relations"
+    },
+    {
+      "target": "IRN",
+      "type": "dependency",
+      "description": "Hezbollah patron; sectarian influence; fuel supply during crisis"
+    },
+    {
+      "target": "IMF",
+      "type": "dependency",
+      "description": "Reform preconditions for Extended Fund Facility; banking restructuring laws passed 2025"
+    }
+  ],
+  "tags": [
+    "Arab_League",
+    "Francophone"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "S&P Global",
+    "Transparency International"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

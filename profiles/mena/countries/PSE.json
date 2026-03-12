@@ -1,0 +1,96 @@
+{
+  "id": "PSE",
+  "name": "Palestine",
+  "iso2": "PS",
+  "region": "Middle East & North Africa",
+  "currency": "ILS",
+  "capital": "Ramallah",
+  "population": 5560000,
+  "trade": {
+    "top_exports": ["building_stone", "scrap_iron", "plastics", "furniture", "food_products"],
+    "top_partners": ["ISR", "JOR", "ARE", "USA", "TUR"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "electricity", "food_products", "vehicles", "cement"],
+    "energy_mix": {
+      "oil": 0.15,
+      "gas": 0.0,
+      "renewables": 0.10,
+      "hydro": 0.0,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.75
+    },
+    "risk_factors": [
+      "israeli_occupation",
+      "economic_dependence_on_israel",
+      "movement_restrictions",
+      "gaza_destruction",
+      "humanitarian_crisis",
+      "territorial_fragmentation",
+      "fiscal_dependence_on_aid",
+      "unemployment"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 0.0,
+    "press_freedom_rank": 157,
+    "corruption_perception": 0
+  },
+  "neighbors": [
+    {
+      "id": "ISR",
+      "name": "Israel",
+      "relevance": "Occupying power; 80% of exports; electricity and fuel supplier; movement control"
+    },
+    {
+      "id": "JOR",
+      "name": "Jordan",
+      "relevance": "West Bank eastern border; trade partner; Palestinian diaspora; political support"
+    },
+    {
+      "id": "EGY",
+      "name": "Egypt",
+      "relevance": "Gaza southern border; Rafah crossing; blockade enforcement"
+    }
+  ],
+  "links": [
+    {
+      "target": "ISR",
+      "type": "dependency",
+      "description": "Economic dependence; customs union; labor market; infrastructure control"
+    },
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Major aid donor; trade preferences; institution building"
+    },
+    {
+      "target": "USA",
+      "type": "dependency",
+      "description": "UNRWA funding; diplomatic engagement; aid conditionality"
+    },
+    {
+      "target": "Arab_League",
+      "type": "alliance",
+      "description": "Political support; recognition; financial pledges"
+    }
+  ],
+  "tags": [
+    "Arab_League",
+    "conflict_zone",
+    "occupied_territory"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "PCBS",
+    "UNCTAD"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

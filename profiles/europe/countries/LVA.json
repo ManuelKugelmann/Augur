@@ -1,0 +1,118 @@
+{
+  "id": "LVA",
+  "name": "Latvia",
+  "iso2": "LV",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Riga",
+  "population": 1840000,
+  "trade": {
+    "top_exports": [
+      "wood",
+      "machinery",
+      "metals",
+      "food_products"
+    ],
+    "top_partners": [
+      "LTU",
+      "EST",
+      "DEU",
+      "SWE",
+      "GBR"
+    ],
+    "major_ports": [
+      "Riga",
+      "Ventspils",
+      "Liepaja"
+    ],
+    "chokepoint_exposure": [
+      "danish_straits"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "natural_gas",
+      "crude_oil",
+      "machinery"
+    ],
+    "energy_mix": {
+      "renewables": 0.18,
+      "gas": 0.25,
+      "coal": 0.01,
+      "nuclear": 0.0,
+      "oil": 0.02,
+      "hydro": 0.42,
+      "other": 0.12
+    },
+    "risk_factors": [
+      "russian_military_proximity",
+      "demographic_decline",
+      "russian_minority_integration",
+      "brain_drain"
+    ]
+  },
+  "ratings": {
+    "credit": "A-",
+    "democracy_index": 7.1,
+    "press_freedom_rank": 22,
+    "corruption_perception": 59
+  },
+  "neighbors": [
+    {
+      "id": "EST",
+      "name": "Estonia",
+      "relevance": "Northern neighbor; Baltic partner; shared defense and grid"
+    },
+    {
+      "id": "LTU",
+      "name": "Lithuania",
+      "relevance": "Southern neighbor; Baltic partner; largest trade partner"
+    },
+    {
+      "id": "BLR",
+      "name": "Belarus",
+      "relevance": "Eastern neighbor; closed border; sanctions"
+    },
+    {
+      "id": "RUS",
+      "name": "Russia",
+      "relevance": "Eastern neighbor; security threat; large Russian-speaking minority"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; eurozone since 2014"
+    },
+    {
+      "target": "NATO",
+      "type": "alliance",
+      "description": "NATO member since 2004; hosts NATO battlegroup"
+    },
+    {
+      "target": "RUS",
+      "type": "rivalry",
+      "description": "Security threat; energy decoupling; Russian minority tensions"
+    },
+    {
+      "target": "LTU",
+      "type": "trade",
+      "description": "Largest trade partner; Baltic economic integration"
+    }
+  ],
+  "tags": [
+    "EU",
+    "NATO",
+    "eurozone",
+    "baltic"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

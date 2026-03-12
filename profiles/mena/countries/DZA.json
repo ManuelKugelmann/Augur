@@ -1,0 +1,109 @@
+{
+  "id": "DZA",
+  "name": "Algeria",
+  "iso2": "DZ",
+  "region": "Middle East & North Africa",
+  "currency": "DZD",
+  "capital": "Algiers",
+  "population": 47400000,
+  "trade": {
+    "top_exports": ["natural_gas", "petroleum", "petrochemicals", "phosphates", "iron_ore"],
+    "top_partners": ["ITA", "FRA", "ESP", "KOR", "USA"],
+    "major_ports": ["Algiers", "Oran", "Skikda", "Arzew"],
+    "chokepoint_exposure": ["gibraltar", "sicily_strait"]
+  },
+  "exposure": {
+    "commodities_import": ["machinery", "vehicles", "cereals", "iron_steel"],
+    "energy_mix": {
+      "gas": 0.92,
+      "oil": 0.06,
+      "renewables": 0.01,
+      "hydro": 0.01,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "other": 0.0
+    },
+    "risk_factors": [
+      "hydrocarbon_dependence",
+      "fiscal_deficit",
+      "youth_unemployment",
+      "water_scarcity",
+      "currency_controls"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 3.55,
+    "press_freedom_rank": 139,
+    "corruption_perception": 34
+  },
+  "neighbors": [
+    {
+      "id": "TUN",
+      "name": "Tunisia",
+      "relevance": "Eastern border; Transmed gas transit; trade partner"
+    },
+    {
+      "id": "LBY",
+      "name": "Libya",
+      "relevance": "Eastern border; security spillover; migration; mediation role"
+    },
+    {
+      "id": "MAR",
+      "name": "Morocco",
+      "relevance": "Western border (closed since 1994); Western Sahara dispute; rivalry"
+    },
+    {
+      "id": "MLI",
+      "name": "Mali",
+      "relevance": "Southern border; Sahel security; Tuareg dynamics"
+    },
+    {
+      "id": "MRT",
+      "name": "Mauritania",
+      "relevance": "Western Sahara buffer; Sahel security cooperation"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "trade",
+      "description": "Third-largest EU gas supplier after Norway and Russia; Medgaz and Transmed pipelines"
+    },
+    {
+      "target": "ITA",
+      "type": "trade",
+      "description": "Largest export partner; Transmed pipeline; ENI operations"
+    },
+    {
+      "target": "MAR",
+      "type": "rivalry",
+      "description": "Western Sahara dispute; closed border since 1994; regional competition"
+    },
+    {
+      "target": "OPEC",
+      "type": "alliance",
+      "description": "OPEC member since 1969; ~900k bpd production under OPEC+ quota"
+    },
+    {
+      "target": "CHN",
+      "type": "trade",
+      "description": "Largest import supplier at 18.6% market share; infrastructure projects"
+    }
+  ],
+  "tags": [
+    "OPEC",
+    "Arab_League",
+    "AU",
+    "Francophone"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "IEA",
+    "Transparency International"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

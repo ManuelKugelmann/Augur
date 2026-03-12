@@ -1,0 +1,124 @@
+{
+  "id": "CYP",
+  "name": "Cyprus",
+  "iso2": "CY",
+  "region": "Europe",
+  "currency": "EUR",
+  "capital": "Nicosia",
+  "population": 1260000,
+  "trade": {
+    "top_exports": [
+      "refined_petroleum",
+      "pharmaceuticals",
+      "shipping_services",
+      "citrus"
+    ],
+    "top_partners": [
+      "GRC",
+      "GBR",
+      "ISR",
+      "DEU",
+      "ITA"
+    ],
+    "major_ports": [
+      "Limassol",
+      "Larnaca"
+    ],
+    "chokepoint_exposure": [
+      "suez"
+    ]
+  },
+  "exposure": {
+    "commodities_import": [
+      "crude_oil",
+      "machinery",
+      "vehicles"
+    ],
+    "energy_mix": {
+      "renewables": 0.12,
+      "gas": 0.0,
+      "coal": 0.0,
+      "nuclear": 0.0,
+      "oil": 0.82,
+      "hydro": 0.0,
+      "other": 0.06
+    },
+    "risk_factors": [
+      "partition_unresolved",
+      "turkish_occupation_north",
+      "oil_import_dependence",
+      "financial_services_risk",
+      "east_med_geopolitics"
+    ]
+  },
+  "ratings": {
+    "credit": "BBB",
+    "democracy_index": 7.3,
+    "press_freedom_rank": 30,
+    "corruption_perception": 52
+  },
+  "neighbors": [
+    {
+      "id": "GRC",
+      "name": "Greece",
+      "relevance": "Cultural and political ally; largest trade partner; shared EU/NATO defense"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey",
+      "relevance": "Northern Cyprus occupation; maritime disputes; EEZ tensions"
+    },
+    {
+      "id": "ISR",
+      "name": "Israel",
+      "relevance": "East Med gas cooperation; trade partner; regional security"
+    },
+    {
+      "id": "EGY",
+      "name": "Egypt",
+      "relevance": "EEZ agreement; gas pipeline discussions"
+    },
+    {
+      "id": "LBN",
+      "name": "Lebanon",
+      "relevance": "Nearest Levant neighbor; historical trade"
+    }
+  ],
+  "links": [
+    {
+      "target": "EU",
+      "type": "alliance",
+      "description": "EU member since 2004; eurozone since 2008; acquis suspended in north"
+    },
+    {
+      "target": "GRC",
+      "type": "alliance",
+      "description": "Closest ally; shared culture; defense cooperation"
+    },
+    {
+      "target": "TUR",
+      "type": "rivalry",
+      "description": "Northern Cyprus occupation since 1974; EEZ/gas disputes; frozen UN talks"
+    },
+    {
+      "target": "ISR",
+      "type": "trade",
+      "description": "East Med gas forum partner; potential EastMed pipeline"
+    }
+  ],
+  "tags": [
+    "EU",
+    "eurozone",
+    "east_mediterranean",
+    "divided",
+    "shipping_hub"
+  ],
+  "_updated": "2026-03-12",
+  "_sources": [
+    "World Bank",
+    "CIA Factbook",
+    "EIU"
+  ],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

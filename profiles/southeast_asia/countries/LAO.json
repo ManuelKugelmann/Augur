@@ -1,0 +1,53 @@
+{
+  "id": "LAO",
+  "name": "Laos",
+  "iso2": "LA",
+  "region": "Southeast Asia",
+  "currency": "LAK",
+  "capital": "Vientiane",
+  "population": 7700000,
+  "trade": {
+    "top_exports": ["electricity", "copper", "gold", "rubber", "wood_products"],
+    "top_partners": ["THA", "CHN", "VNM", "IND", "JPN"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "vehicles", "machinery", "iron_steel", "electronics"],
+    "energy_mix": {
+      "hydro": 0.76, "coal": 0.15, "oil": 0.05, "renewables": 0.02, "gas": 0.0, "nuclear": 0.0, "other": 0.02
+    },
+    "risk_factors": [
+      "debt_crisis",
+      "china_debt_dependence",
+      "currency_depreciation",
+      "landlocked",
+      "mekong_dam_impact",
+      "governance_weakness"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 2.14,
+    "press_freedom_rank": 161,
+    "corruption_perception": 28
+  },
+  "neighbors": [
+    {"id": "CHN", "name": "China", "relevance": "Northern border; BRI rail (Laos-China Railway); largest creditor; growing influence"},
+    {"id": "THA", "name": "Thailand", "relevance": "Mekong River border; largest electricity buyer; Thai investment; cultural ties"},
+    {"id": "VNM", "name": "Vietnam", "relevance": "Eastern border; political ally; trade partner; historical ties"},
+    {"id": "MMR", "name": "Myanmar", "relevance": "Northwestern border; Golden Triangle; cross-border issues"},
+    {"id": "KHM", "name": "Cambodia", "relevance": "Southern border; Mekong cooperation; shared development challenges"}
+  ],
+  "links": [
+    {"target": "CHN", "type": "dependency", "description": "Largest creditor; Laos-China Railway; BRI anchor; debt exceeds 100% of GDP"},
+    {"target": "THA", "type": "trade", "description": "Largest electricity buyer; major investor; cross-border trade; cultural affinity"},
+    {"target": "VNM", "type": "alliance", "description": "Special relationship; political ally; security cooperation; Marxist-Leninist ties"},
+    {"target": "ASEAN", "type": "alliance", "description": "ASEAN member; land-linked strategy; Mekong subregion cooperation"}
+  ],
+  "tags": ["ASEAN", "LDC", "landlocked"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "IEA"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

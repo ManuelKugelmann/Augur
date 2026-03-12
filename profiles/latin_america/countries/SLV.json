@@ -1,0 +1,43 @@
+{
+  "id": "SLV",
+  "name": "El Salvador",
+  "iso2": "SV",
+  "region": "Latin America",
+  "currency": "USD",
+  "capital": "San Salvador",
+  "population": 6300000,
+  "trade": {
+    "top_exports": ["textiles", "coffee", "sugar", "iron_steel", "electronics"],
+    "top_partners": ["USA", "GTM", "HND", "NIC", "CRI"],
+    "major_ports": ["Puerto de Acajutla", "Puerto de La Union"],
+    "chokepoint_exposure": ["panama"]
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "machinery", "vehicles", "food"],
+    "energy_mix": {
+      "oil": 0.25, "hydro": 0.25, "renewables": 0.25, "gas": 0.10, "coal": 0.0, "nuclear": 0.0, "other": 0.15
+    },
+    "risk_factors": ["bitcoin_experiment", "authoritarian_drift", "remittance_dependence", "earthquake_risk", "gang_crackdown"]
+  },
+  "ratings": {
+    "credit": "B-",
+    "democracy_index": 4.61,
+    "press_freedom_rank": 113,
+    "corruption_perception": 30
+  },
+  "neighbors": [
+    {"id": "GTM", "name": "Guatemala", "relevance": "Western border; customs union; deepest trade ties"},
+    {"id": "HND", "name": "Honduras", "relevance": "Eastern border; Northern Triangle partner; trade"}
+  ],
+  "links": [
+    {"target": "USA", "type": "trade", "description": "Top trade partner; CAFTA-DR; remittances (25%+ of GDP); diaspora"},
+    {"target": "GTM", "type": "trade", "description": "Customs union; largest regional trade partner; integration"},
+    {"target": "HND", "type": "trade", "description": "Northern Triangle; trade corridor; security cooperation"},
+    {"target": "CAFTA-DR", "type": "alliance", "description": "CAFTA-DR member; dollarized economy; US market access"}
+  ],
+  "tags": ["OAS", "CAFTA-DR", "SICA"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

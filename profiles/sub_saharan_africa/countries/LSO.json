@@ -1,0 +1,42 @@
+{
+  "id": "LSO",
+  "name": "Lesotho",
+  "iso2": "LS",
+  "region": "Sub-Saharan Africa",
+  "currency": "LSL",
+  "capital": "Maseru",
+  "population": 2300000,
+  "trade": {
+    "top_exports": ["diamonds", "textiles", "water", "wool", "mohair"],
+    "top_partners": ["ZAF", "USA", "BEL", "GBR", "CHN"],
+    "major_ports": [],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["food", "petroleum", "machinery", "vehicles"],
+    "energy_mix": {
+      "renewables": 0.03, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "oil": 0.05, "hydro": 0.90, "other": 0.02
+    },
+    "risk_factors": ["south_africa_dependence", "hiv_prevalence", "political_instability", "poverty", "landlocked"]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 6.14,
+    "press_freedom_rank": 75,
+    "corruption_perception": 40
+  },
+  "neighbors": [
+    {"id": "ZAF", "name": "South Africa", "relevance": "Fully enclosed by ZAF; SACU; Lesotho Highlands Water Project; migration"}
+  ],
+  "links": [
+    {"target": "ZAF", "type": "dependency", "description": "Completely enclosed; SACU revenue; LHWP water exports; labor migration; LSL pegged to ZAR"},
+    {"target": "USA", "type": "trade", "description": "AGOA textiles; MCC compact; PEPFAR"},
+    {"target": "EU", "type": "trade", "description": "Everything But Arms; development aid; textile exports"},
+    {"target": "SACU", "type": "alliance", "description": "SACU member; customs revenue critical to budget"}
+  ],
+  "tags": ["AU", "SADC", "SACU"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}

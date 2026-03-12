@@ -1,0 +1,50 @@
+{
+  "id": "TON",
+  "name": "Tonga",
+  "iso2": "TO",
+  "region": "Oceania",
+  "currency": "TOP",
+  "capital": "Nukualofa",
+  "population": 100000,
+  "trade": {
+    "top_exports": ["squash", "fish", "vanilla", "root_crops", "coconut_products"],
+    "top_partners": ["NZL", "FJI", "USA", "AUS", "JPN"],
+    "major_ports": ["Nukualofa"],
+    "chokepoint_exposure": []
+  },
+  "exposure": {
+    "commodities_import": ["petroleum", "food", "machinery", "vehicles", "building_materials"],
+    "energy_mix": {
+      "oil": 0.7, "renewables": 0.2, "hydro": 0.0, "gas": 0.0, "coal": 0.0, "nuclear": 0.0, "other": 0.1
+    },
+    "risk_factors": [
+      "cyclone_risk",
+      "volcanic_risk",
+      "remittance_dependence",
+      "oil_import_dependence",
+      "tiny_economy",
+      "sea_level_rise"
+    ]
+  },
+  "ratings": {
+    "credit": "NR",
+    "democracy_index": 5.44,
+    "press_freedom_rank": 44,
+    "corruption_perception": 42
+  },
+  "neighbors": [
+    {"id": "FJI", "name": "Fiji", "relevance": "Nearest major neighbor; trade partner; regional hub; Pacific cooperation"},
+    {"id": "WSM", "name": "Samoa", "relevance": "Pacific neighbor; Polynesian ties; regional cooperation"},
+    {"id": "NZL", "name": "New Zealand", "relevance": "Major trade partner; diaspora host; aid donor; labor mobility"}
+  ],
+  "links": [
+    {"target": "NZL", "type": "dependency", "description": "Largest export market (58%); aid donor; Tongan diaspora; seasonal worker scheme"},
+    {"target": "AUS", "type": "trade", "description": "Aid donor; trade partner; Tongan diaspora; Pacific security"},
+    {"target": "CHN", "type": "trade", "description": "Infrastructure loans; palace and buildings construction; Pacific engagement; debt concerns"}
+  ],
+  "tags": ["PIF", "SIDS", "climate_vulnerable", "Polynesian", "monarchy"],
+  "_updated": "2026-03-12",
+  "_sources": ["World Bank", "CIA Factbook", "OEC"],
+  "_placeholder": true,
+  "_note": "Seed data for development. Values are approximate and will be replaced by live MCP data."
+}
