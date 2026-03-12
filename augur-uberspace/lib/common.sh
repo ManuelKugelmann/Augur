@@ -65,7 +65,7 @@ _pip_upgrade() {
     local python="$1" min_ver=22
     log "  → $python -m pip --version"
     local ver _pip_err
-    _pip_err=$(mktemp)
+    _pip_err=$(mktemp -p "$HOME")
     ver=$(timeout 30 "$python" -m pip --version </dev/null 2>"$_pip_err" | awk '{print $2}' | cut -d. -f1)
     local rc=$?
     if [[ -s "$_pip_err" ]]; then warn "pip stderr: $(cat "$_pip_err")"; fi
@@ -88,7 +88,7 @@ _pip_upgrade() {
 _pip_install() {
     local python="$1" req="$2"
     local constraint
-    constraint=$(mktemp)
+    constraint=$(mktemp -p "$HOME")
     if ! _is_u8; then echo 'pandas<3' > "$constraint"; fi
     log "  → $python -m pip install --prefer-binary -c <constraint> -r $req ${*:3}"
     timeout 600 "$python" -m pip install --prefer-binary -c "$constraint" -r "$req" "${@:3}" </dev/null

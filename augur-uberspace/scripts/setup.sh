@@ -178,7 +178,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         # and pip can consume bytes meant for bash or block on the pipe.
         timeout 600 venv/bin/python -m ensurepip </dev/null
         log "Venv created. Checking pip version..."
-        _pip_err=$(mktemp)
+        _pip_err=$(mktemp -p "$HOME")
         _pip_ver=$(timeout 30 venv/bin/python -m pip --version </dev/null 2>"$_pip_err" | awk '{print $2}' | cut -d. -f1)
         if [[ -s "$_pip_err" ]]; then warn "pip stderr: $(cat "$_pip_err")"; fi
         rm -f "$_pip_err"
@@ -190,7 +190,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
             timeout 600 venv/bin/python -m pip install --upgrade pip </dev/null
         fi
         log "Installing Python requirements (this may take a few minutes)..."
-        _pip_constraint=$(mktemp)
+        _pip_constraint=$(mktemp -p "$HOME")
         # U7: cap pandas<3 (no pre-built wheel on glibc 2.17); U8: empty (no-op)
         if ! _is_u8; then echo 'pandas<3' > "$_pip_constraint"; fi
         log "  → venv/bin/python -m pip install --prefer-binary -c <constraint> -r requirements.txt"
