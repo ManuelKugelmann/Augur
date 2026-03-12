@@ -54,6 +54,91 @@ SNAPSHOTS_TTL = 365 * 86400         # 1 year
 _SAFE_ID = re.compile(r'^[A-Za-z0-9_-]+$')
 _SAFE_FIELD = re.compile(r'^[A-Za-z0-9_][A-Za-z0-9_.]*$')
 
+# ── Post-hooks for snapshot and event insertion ──────
+# Lazy-loaded to avoid hard dependency on alerts module in tests.
+
+_hooks_loaded = False
+
+
+def _load_hooks():
+    """Import threshold checker and impact mapper if available."""
+    global _hooks_loaded
+    if _hooks_loaded:
+        return
+    _hooks_loaded = True
+    try:
+        import sys
+        alerts_path = str(Path(__file__).resolve().parent.parent / "alerts")
+        if alerts_path not in sys.path:
+            sys.path.insert(0, alerts_path)
+        from threshold_checker import check_thresholds, get_thresholds_from_profile, max_severity
+        from impact_mapper import propagate_event_impact, should_propagate
+        globals()["_threshold_checker"] = {
+            "check": check_thresholds,
+            "get_thresholds": get_thresholds_from_profile,
+            "max_severity": max_severity,
+        }
+        globals()["_impact_mapper"] = {
+            "propagate": propagate_event_impact,
+            "should_propagate": should_propagate,
+        }
+    except ImportError:
+        pass  # alerts module not available — hooks disabled
+
+
+def _run_snapshot_threshold_hook(kind: str, entity: str, data: dict):
+    """Check entity profile thresholds after snapshot insertion."""
+    _load_hooks()
+    tc = globals().get("_threshold_checker")
+    if not tc:
+        return
+    try:
+        profile = get_profile(kind, entity)
+        if "error" in profile:
+            return
+        thresholds = tc["get_thresholds"](profile)
+        if not thresholds:
+            return
+        breaches = tc["check"](data, thresholds)
+        if not breaches:
+            return
+        severity = tc["max_severity"](breaches)
+        labels = [b["label"] for b in breaches]
+        event(
+            subtype="threshold_breach",
+            summary=f"{entity}: {', '.join(labels)}",
+            data={"entity": entity, "kind": kind, "breaches": breaches},
+            severity=severity,
+            entities=[entity],
+            source="threshold_checker",
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger("augur.store").warning(
+            "threshold hook error %s/%s: %s", kind, entity, e)
+
+
+def _run_event_impact_hook(event_meta: dict, event_summary: str,
+                           event_data: dict, event_id: str):
+    """Propagate impact to exposed profiles after event insertion."""
+    _load_hooks()
+    im = globals().get("_impact_mapper")
+    if not im:
+        return
+    if not im["should_propagate"](event_meta.get("severity", "medium")):
+        return
+    try:
+        im["propagate"](
+            event_meta, event_summary, event_data,
+            search_profiles_fn=search_profiles,
+            snapshot_fn=snapshot,
+            event_id=event_id,
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger("augur.store").warning(
+            "impact hook error: %s", e)
+
 
 # ── User context helper ──────────────────────────
 
@@ -658,7 +743,10 @@ def snapshot(kind: str, entity: str, type: str, data: dict,
              region: str = "", source: str = "", ts: str = "",
              lon: float | None = None, lat: float | None = None) -> dict:
     """Store a timestamped data point. type: indicators, price, fundamentals, etc."""
-    return _insert_snapshot(kind, entity, type, data, region, source, ts, lon, lat)
+    result = _insert_snapshot(kind, entity, type, data, region, source, ts, lon, lat)
+    if result.get("status") == "ok" and source != "threshold_checker":
+        _run_snapshot_threshold_hook(kind, entity, data)
+    return result
 
 
 @mcp.tool()
@@ -693,7 +781,10 @@ def event(subtype: str, summary: str, data: dict,
     if lon is not None and lat is not None:
         doc["location"] = {"type": "Point", "coordinates": [lon, lat]}
     r = _events_col().insert_one(doc)
-    return {"id": str(r.inserted_id), "status": "ok"}
+    result = {"id": str(r.inserted_id), "status": "ok"}
+    if source != "impact_mapper":
+        _run_event_impact_hook(meta, summary, data, str(r.inserted_id))
+    return result
 
 
 @mcp.tool()
