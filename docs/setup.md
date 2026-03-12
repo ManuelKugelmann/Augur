@@ -121,11 +121,11 @@ What happens:
 2. Clones `Augur` repo to `~/augur/`
 3. Creates Python venv, installs `fastmcp`, `httpx`, `pymongo`, `python-dotenv`
 4. Generates `~/augur/.env` from template
-5. Registers supervisord services (`trading`, `charts`)
+5. Registers services (`trading`, `charts`) — systemd on U8, supervisord on U7
 6. Downloads `librechat-build.tar.gz` from the CI prebuilt release (or latest tagged release bundle)
 7. If no CI build exists: clones `danny-avila/LibreChat` and builds locally (~10 min, needs ~2 GB RAM)
 8. Runs `setup.sh` — atomic swap into `~/LibreChat/`, generates `.env` with crypto keys
-9. Registers LibreChat supervisord service, sets up web backend on port 3080
+9. Registers LibreChat service, sets up web backend on port 3080
 10. Installs `augur` CLI to `~/bin/augur`
 
 #### Step 4: Configure environment
@@ -157,7 +157,7 @@ augur yaml
 #### Step 6: Start
 
 ```bash
-supervisorctl start librechat
+augur restart
 augur s    # should show RUNNING + version like "dev-a1b2c3d"
 ```
 
@@ -186,15 +186,6 @@ To update LibreChat itself (new upstream version), re-run:
 ```bash
 augur install dev    # re-downloads CI build or rebuilds from source
 ```
-
-#### Step 9: Git-versioned data (optional)
-
-```bash
-# Create PRIVATE repo on GitHub: ManuelKugelmann/Augur_Data
-bash ~/augur/augur-uberspace/scripts/setup-data-repo.sh
-```
-
-Auto-syncs every 15 min via cron. Stores filesystem files.
 
 ---
 
@@ -225,7 +216,7 @@ augur env    # LibreChat: set MONGO_URI + LLM key
 #### Start
 
 ```bash
-supervisorctl start librechat
+augur restart
 augur s
 ```
 
@@ -257,12 +248,13 @@ All deployment settings live in `deploy.conf` (sourced by all scripts):
 | `UBER_HOST` | `augur.uber.space` | Uberspace hostname |
 | `GH_USER` | `ManuelKugelmann` | GitHub username |
 | `GH_REPO` | `Augur` | Signals stack repo |
-| `GH_REPO_DATA` | `Augur_Data` | Data repo (private) |
 | `STACK_DIR` | `$HOME/augur` | Signals stack path |
 | `APP_DIR` | `$HOME/LibreChat` | LibreChat path |
-| `DATA_DIR` | `$HOME/Augur_Data` | MCP data path |
+| `BACKUP_DIR` | `$HOME/backups/mongo` | Rolling MongoDB backups |
 | `LC_PORT` | `3080` | LibreChat port |
 | `NODE_VERSION` | `22` | Node.js version |
+| `PYTHON_VERSION` | *(auto-detected)* | Python version (scans 3.13-3.10) |
+| `RELEASE_TAG` | *(empty = latest)* | Pin to specific release tag |
 
 Override any value via environment: `UBER_USER=other augur install`
 
@@ -271,19 +263,26 @@ Override any value via environment: `UBER_USER=other augur install`
 ## Day-to-Day Operations
 
 ```bash
-augur help       # all commands
-augur s|status   # service status + version
-augur l|logs     # tail logs
-augur r|restart  # restart LibreChat
-augur v|version  # show version
-augur u|update   # update from latest GitHub release
-augur pull       # quick update via git pull (dev)
-augur install    # re-run full installer (idempotent)
-augur rb|rollback # rollback to previous version
-augur sync       # force git sync of data
-augur env        # edit .env
-augur yaml       # edit librechat.yaml
-augur conf       # edit deploy.conf
+augur help          # all commands
+augur s|status      # service status + version
+augur l|logs        # tail logs
+augur r|restart     # restart LibreChat + trading
+augur testrun       # run LibreChat in foreground (see errors directly)
+augur v|version     # show version
+augur u|update      # update from latest GitHub release
+augur pull          # quick update via git pull (dev)
+augur rb|rollback   # rollback to previous version
+augur backup        # backup MongoDB to ~/backups/mongo/
+augur restore [f]   # restore MongoDB from backup
+augur backups       # list available backups
+augur check         # health check (services, config, connectivity)
+augur check -t      # health check + run test suite
+augur bootstrap     # bootstrap profile data via agent
+augur agents        # seed multi-agent architecture
+augur proxy ...     # CLIProxyAPI management
+augur env           # edit LibreChat .env
+augur yaml          # edit librechat.yaml
+augur conf          # edit deploy.conf
 ```
 
 ### Updates
@@ -310,7 +309,7 @@ augur rb    # restores ~/LibreChat.prev
 
 ### LibreChat won't start
 ```bash
-supervisorctl tail librechat stderr
+augur logs
 # Common: wrong MONGO_URI, missing LLM key, port conflict
 ```
 
