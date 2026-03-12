@@ -106,14 +106,14 @@ mcpServers:
     serverInstructions: "Global news monitoring and event detection via GDELT."
 
   prediction-markets:
-    command: npx
-    args: ["-y", "prediction-markets-mcp"]
+    command: node
+    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/prediction-markets-mcp"]
     chatMenu: false
     serverInstructions: "Polymarket, Metaculus prediction market data."
 
   rss:
     command: node
-    args: ["__HOME__/augur/node_modules/rss-mcp/index.js"]
+    args: ["__HOME__/augur/mcp-nodes/node_modules/rss-mcp/index.js"]
     chatMenu: false
     serverInstructions: "RSS/Atom feed reader for news, SEC filings, blog monitoring."
 
@@ -156,14 +156,14 @@ mcpServers:
   # ── External MCPs (Tier 2 — additive analytics & signals) ──
 
   alphavantage:
-    command: npx
-    args: ["-y", "mcp-remote", "https://mcp.alphavantage.co"]
+    command: node
+    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/mcp-remote", "https://mcp.alphavantage.co"]
     chatMenu: false
     serverInstructions: "Stock/forex/crypto prices, 50+ technical indicators (RSI, MACD, Bollinger, etc.), fundamentals. Free key: 25 calls/day."
 
   hackernews:
-    command: npx
-    args: ["-y", "@devabdultech/hn-mcp-server"]
+    command: node
+    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/hn-mcp-server"]
     chatMenu: false
     serverInstructions: "Hacker News stories, comments, Algolia search. Tech/startup sentiment signal."
 

@@ -119,6 +119,11 @@ case "$CMD" in
         else
             warn "Python venv not found at $STACK/venv — run 'augur install' first"
         fi
+        if [[ -f "$STACK/mcp-nodes/package.json" ]]; then
+            log "Refreshing MCP Node packages..."
+            cd "$STACK/mcp-nodes" && npm install --production && npm dedupe && cd - >/dev/null
+            log "MCP Node packages up to date."
+        fi
         echo "$VER" > "$APP/.version"
         _svc_restart librechat || true
         _svc_restart trading || true
@@ -456,6 +461,7 @@ SVCEOF
         if [[ -f "$APP/librechat.yaml" ]]; then
             grep -q "mcpServers:" "$APP/librechat.yaml" 2>/dev/null && _ok "librechat.yaml with MCP servers" || _warn "librechat.yaml exists but no mcpServers section"
         else _fail "librechat.yaml missing"; fi
+        [[ -d "$STACK/mcp-nodes/node_modules" ]] && _ok "MCP Node servers bundle present" || _warn "MCP Node servers bundle missing (run: augur install)"
         [[ -f "$STACK/.env" ]] && _ok "Signals .env present" || _warn "Signals .env missing (optional)"
 
         echo ""; echo -e "${CYAN}── Services ($(_is_u8 && echo 'systemd' || echo 'supervisord')) ──${NC}"; echo ""

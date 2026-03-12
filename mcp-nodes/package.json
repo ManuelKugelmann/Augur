@@ -1,0 +1,12 @@
+{
+  "name": "augur-mcp-nodes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prebuilt Node.js MCP servers for Augur",
+  "dependencies": {
+    "rss-mcp": "latest",
+    "prediction-markets-mcp": "latest",
+    "@devabdultech/hn-mcp-server": "latest",
+    "mcp-remote": "latest"
+  }
+}

@@ -1,0 +1,121 @@
+# Build prebuilt Node.js MCP servers bundle for Uberspace deployment.
+# Separate from LibreChat bundle — can be updated independently.
+#
+# Trigger: Actions → Build MCP Nodes → Run workflow
+#
+# Creates two releases per build:
+#   - mcp-nodes-v<YYYYMMDD>  — versioned, kept as history
+#   - mcp-nodes-build        — rolling pointer to latest build
+name: Build MCP Nodes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mcp-nodes/package.json'
+      - '.github/workflows/mcp-nodes-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and dedupe MCP packages
+        run: |
+          cd mcp-nodes
+          npm install --production
+          npm dedupe
+          cd ..
+
+      - name: Generate entrypoints manifest
+        run: |
+          cd mcp-nodes
+          node -e '
+          const fs = require("fs");
+          const path = require("path");
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const entries = {};
+          for (const dep of Object.keys(pkg.dependencies || {})) {
+            const depPkg = JSON.parse(
+              fs.readFileSync(path.join("node_modules", dep, "package.json"), "utf8")
+            );
+            // Prefer bin entry, fall back to main
+            if (depPkg.bin) {
+              const bins = typeof depPkg.bin === "string"
+                ? { [dep.replace(/^@.*\//, "")]: depPkg.bin }
+                : depPkg.bin;
+              for (const [name, binPath] of Object.entries(bins)) {
+                entries[name] = "node_modules/" + dep + "/" + binPath;
+              }
+            } else if (depPkg.main) {
+              entries[dep.replace(/^@.*\//, "")] = "node_modules/" + dep + "/" + depPkg.main;
+            } else {
+              entries[dep.replace(/^@.*\//, "")] = "node_modules/" + dep + "/index.js";
+            }
+          }
+          fs.writeFileSync("entrypoints.json", JSON.stringify(entries, null, 2) + "\n");
+          console.log("Entrypoints:");
+          console.log(JSON.stringify(entries, null, 2));
+          '
+          cd ..
+
+      - name: Write version metadata
+        run: |
+          MCP_DATE=$(date -u +%Y%m%d)
+          MCP_TAG="mcp-nodes-v${MCP_DATE}"
+          echo "${MCP_DATE}" > mcp-nodes/.version
+          date -u +%Y-%m-%dT%H:%M:%SZ >> mcp-nodes/.version
+          echo "MCP_DATE=${MCP_DATE}" >> "$GITHUB_ENV"
+          echo "MCP_TAG=${MCP_TAG}" >> "$GITHUB_ENV"
+
+      - name: Create tarball
+        run: |
+          tar czf mcp-nodes-build.tar.gz -C mcp-nodes .
+
+      - name: Create versioned release (mcp-nodes-v<date>)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.MCP_TAG }}
+          name: "MCP Nodes ${{ env.MCP_DATE }}"
+          body: |
+            Prebuilt Node.js MCP servers for Augur.
+
+            **Packages:**
+            - rss-mcp
+            - prediction-markets-mcp
+            - @devabdultech/hn-mcp-server
+            - mcp-remote
+
+            **Built:** ${{ env.MCP_DATE }}
+          files: mcp-nodes-build.tar.gz
+          prerelease: true
+          make_latest: false
+
+      - name: Update rolling release (mcp-nodes-build → latest)
+        run: |
+          # Move the mcp-nodes-build tag to current commit
+          git tag -f mcp-nodes-build
+          git push -f origin mcp-nodes-build
+
+          # Delete existing release if present, then recreate
+          gh release delete mcp-nodes-build --yes 2>/dev/null || true
+          gh release create mcp-nodes-build \
+            --title "MCP Nodes ${{ env.MCP_DATE }} (latest)" \
+            --notes "Rolling pointer to the latest MCP nodes build.
+
+          **Versioned tag**: [\`${{ env.MCP_TAG }}\`](https://github.com/${{ github.repository }}/releases/tag/${{ env.MCP_TAG }})
+
+          Install: \`MCP_NODES_TAG=mcp-nodes-build augur install\`" \
+            --prerelease \
+            mcp-nodes-build.tar.gz
+        env:
+          GH_TOKEN: ${{ github.token }}

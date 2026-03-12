@@ -183,6 +183,62 @@ _resolve_bundle_url() {
     [[ -n "$_BUNDLE_URL" ]] && log "Found bundle: ${_BUNDLE_URL} (tag: ${_BUNDLE_TAG})"
 }
 
+# ── Resolve MCP Nodes bundle URL from GitHub Releases ──
+_resolve_mcp_nodes_url() {
+    _MCP_NODES_URL="" _MCP_NODES_TAG=""
+    local json="" api_url=""
+    local tag="${MCP_NODES_TAG:-mcp-nodes-build}"
+
+    api_url="https://api.github.com/repos/${GH_USER}/${GH_REPO}/releases/tags/${tag}"
+    log "Checking MCP nodes release: ${api_url}"
+    json=$(gh_curl "$api_url" 2>/dev/null) || json=""
+
+    if [[ -n "$json" ]]; then
+        _MCP_NODES_URL=$(echo "$json" | grep -oE '"browser_download_url":\s*"[^"]*mcp-nodes-build\.tar\.gz"' | head -1 | grep -oE '(https?|file)://[^"]+' || true)
+        _MCP_NODES_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
+    fi
+
+    [[ -n "$_MCP_NODES_URL" ]] && log "Found MCP nodes bundle: ${_MCP_NODES_URL} (tag: ${_MCP_NODES_TAG})"
+}
+
+# ── Download, extract, and install/update MCP Nodes bundle ──
+_mcp_nodes_download_and_setup() {
+    local skip_current=false
+    [[ "${1:-}" == "--skip-if-current" ]] && skip_current=true
+
+    _resolve_mcp_nodes_url
+    [[ -z "$_MCP_NODES_URL" ]] && return 1
+
+    local mcp_dir="$STACK/mcp-nodes"
+
+    if [[ "$skip_current" == true && -f "$mcp_dir/.version" ]]; then
+        local installed_ver=""
+        installed_ver=$(head -1 "$mcp_dir/.version")
+        if [[ -n "$installed_ver" && -n "$_MCP_NODES_TAG" ]]; then
+            local tag_ver="${_MCP_NODES_TAG#mcp-nodes-v}"
+            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_MCP_NODES_TAG" ]]; then
+                log "MCP nodes already up-to-date (${installed_ver})"
+                return 0
+            fi
+            log "Updating MCP nodes ${installed_ver} → ${_MCP_NODES_TAG}..."
+        fi
+    fi
+
+    local mcp_tmp
+    mcp_tmp=$(mktemp -d)
+    log "Downloading MCP nodes bundle..."
+    _download "$_MCP_NODES_URL" "$mcp_tmp/mcp-nodes.tar.gz" "MCP nodes bundle${_MCP_NODES_TAG:+ ($_MCP_NODES_TAG)}"
+
+    log "Extracting MCP nodes bundle..."
+    mkdir -p "$mcp_dir"
+    rm -rf "$mcp_dir/node_modules" "$mcp_dir/.bin"
+    tar xzf "$mcp_tmp/mcp-nodes.tar.gz" -C "$mcp_dir"
+    rm -rf "$mcp_tmp"
+
+    log "MCP nodes bundle installed ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo 'unknown'))"
+    return 0
+}
+
 # ── Download, extract, and install/update LibreChat bundle ──
 _lc_download_and_setup() {
     local skip_current=false
