@@ -14,6 +14,9 @@ on:
       - 'tests/test_augur.py'
       - '.github/workflows/augur-tests.yml'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   augur-site-validate:
     name: augur-site Jekyll validation
