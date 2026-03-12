@@ -66,18 +66,20 @@ fi
 
 # ── Stop service before swap ────────────────
 if [[ "$MODE" == "update" ]]; then
+    log "  → stopping librechat service"
     _svc_stop_lc
     sleep 2
 
     # Preserve .env and persistent dirs
-    [[ -f "$APP/.env" ]] && cp "$APP/.env" "$SRC/.env"
-    [[ -f "$APP/librechat.yaml" ]] && cp "$APP/librechat.yaml" "$SRC/librechat.yaml"
+    [[ -f "$APP/.env" ]] && { log "  → cp $APP/.env $SRC/.env"; cp "$APP/.env" "$SRC/.env"; }
+    [[ -f "$APP/librechat.yaml" ]] && { log "  → cp $APP/librechat.yaml $SRC/librechat.yaml"; cp "$APP/librechat.yaml" "$SRC/librechat.yaml"; }
     for d in "${PERSIST[@]}"; do
-        [[ -d "$APP/$d" ]] && { rm -rf "$SRC/$d"; mv "$APP/$d" "$SRC/$d"; }
+        [[ -d "$APP/$d" ]] && { log "  → mv $APP/$d $SRC/$d"; rm -rf "$SRC/$d"; mv "$APP/$d" "$SRC/$d"; }
     done
 fi
 
 # ── Atomic swap ─────────────────────────────
+log "  → atomic swap: $SRC → $APP (backup: $BAK)"
 rm -rf "$BAK"
 [[ -d "$APP" ]] && mv "$APP" "$BAK"
 mv "$SRC" "$APP"
@@ -110,6 +112,7 @@ fi
 # RSS MCP (Node, runs via node_modules)
 if [[ ! -d "$STACK/node_modules/rss-mcp" ]]; then
     log "Installing rss-mcp..."
+    log "  → cd $STACK && npm install rss-mcp"
     cd "$STACK"
     timeout 60 npm install rss-mcp || warn "rss-mcp install failed (RSS feed MCP won't be available)"
     cd - >/dev/null
@@ -123,6 +126,7 @@ if [[ -d "$STACK/venv" ]]; then
     # finance-mcp-server (provides python -m finance_mcp)
     if ! "$STACK/venv/bin/python" -c "import finance_mcp" 2>/dev/null; then
         log "Installing finance-mcp-server..."
+        log "  → ${VPIP[*]} install finance-mcp-server"
         timeout 60 "${VPIP[@]}" install finance-mcp-server || warn "finance-mcp-server install failed"
     fi
 fi
@@ -133,6 +137,7 @@ CFG_DIR="$VENDOR_DIR/crypto-feargreed-mcp"
 if [[ ! -d "$CFG_DIR" ]]; then
     mkdir -p "$VENDOR_DIR"
     log "Cloning crypto-feargreed-mcp..."
+    log "  → git clone --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git $CFG_DIR"
     timeout 30 git clone --depth 1 https://github.com/kukapay/crypto-feargreed-mcp.git "$CFG_DIR" || warn "crypto-feargreed-mcp clone failed"
 else
     log "crypto-feargreed-mcp already installed"
@@ -141,6 +146,7 @@ fi
 # uv/uvx (needed for reddit, arxiv, mcp-mathematics, mcp-ols)
 if ! command -v uvx &>/dev/null; then
     log "Installing uv (Python package runner)..."
+    log "  → curl -LsSf https://astral.sh/uv/install.sh | sh"
     timeout 30 sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' || warn "uv install failed (uvx-based MCPs won't be available)"
 fi
 
@@ -163,8 +169,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
         log "Setting up signals stack Python environment..."
         cd "$STACK"
         log "Creating Python venv with $_PYTHON_BIN..."
-        # Use --without-pip: plain venv creation is instant.
-        # ensurepip (the default) can stall with no output on U8 / Ubuntu.
+        log "  → $_PYTHON_BIN -m venv --without-pip venv"
         "$_PYTHON_BIN" -m venv --without-pip venv
         log "Bootstrapping pip inside venv..."
         log "  → venv/bin/python -m ensurepip"
@@ -260,6 +265,7 @@ if [[ "$MODE" == "install" ]]; then
     fi
 
     # Register librechat service (U7: supervisord, U8: systemd)
+    log "Registering librechat service..."
     if _is_u8; then
         SVC_DIR="$HOME/.config/systemd/user"
         mkdir -p "$SVC_DIR"
@@ -295,6 +301,7 @@ EOF
     fi
 
     # Web backend
+    log "  → web backend / → port $PORT"
     _web_backend / "$PORT" || warn "Failed to set web backend on port $PORT"
 
     # Install ops shortcut (from mcps repo, not the bundle)
@@ -331,6 +338,7 @@ EOF
     echo ""
 else
     # ── Update: restart ─────────────────────
+    log "  → starting librechat service"
     _svc_start_lc
     log "Updated to ${VER} — service restarted"
 fi

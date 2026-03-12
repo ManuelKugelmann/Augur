@@ -219,13 +219,22 @@ _lc_download_and_setup() {
     fi
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
-    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+    log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v 2>&1 | {
+        _n=0
+        while IFS= read -r _; do
+            _n=$((_n + 1))
+            (( _n % 1000 == 0 )) && printf '\r    %d files...' "$_n"
+        done
+        printf '\r    %d files extracted\n' "$_n"
+    }
     log "Extraction complete"
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
     [[ -z "$bundle_ver" ]] && bundle_ver="${_BUNDLE_TAG:-unknown}"
     log "LibreChat version: ${bundle_ver}"
     log "Running setup..."
+    log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
     return 0
 }
@@ -268,6 +277,7 @@ _do_install() {
         current_node="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1)" || true
         if [[ "$current_node" != "$NODE_VERSION" ]]; then
             log "Setting Node.js ${NODE_VERSION} (current: ${current_node:-none})..."
+            log "  → uberspace tools version use node $NODE_VERSION"
             uberspace tools version use node "$NODE_VERSION" || warn "Failed to set Node.js version via uberspace CLI"
         fi
         command -v node &>/dev/null || die "Node.js not available"
@@ -277,12 +287,15 @@ _do_install() {
     # ── 2. Clone or update repo ──
     if [[ -d "$STACK/.git" ]]; then
         log "Repo exists at $STACK, pulling latest..."
+        log "  → git -C $STACK pull --ff-only origin $BRANCH"
         git -C "$STACK" pull --ff-only origin "$BRANCH" 2>/dev/null || \
-            { git -C "$STACK" fetch origin "$BRANCH" && \
+            { log "  → git -C $STACK fetch origin $BRANCH && git reset --hard origin/$BRANCH"
+              git -C "$STACK" fetch origin "$BRANCH" && \
               git -C "$STACK" reset --hard "origin/$BRANCH"; }
         log "Repo updated"
     else
         log "Cloning repo..."
+        log "  → git clone -b $BRANCH https://github.com/${GH_USER}/${GH_REPO}.git $STACK"
         git clone -b "$BRANCH" "https://github.com/${GH_USER}/${GH_REPO}.git" "$STACK"
         log "Cloned → $STACK"
     fi
@@ -323,6 +336,7 @@ _do_install() {
     fi
     if [[ ! -d "$STACK/venv" ]]; then
         log "Creating Python venv..."
+        log "  → $PYTHON_BIN -m venv --without-pip $STACK/venv"
         "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
         log "Bootstrapping pip inside venv..."
         log "  → $STACK/venv/bin/python -m ensurepip"
@@ -495,6 +509,7 @@ SVCEOF
         done
         if [[ "$LC_READY" == true ]]; then
             log "LibreChat is ready, seeding agents..."
+            log "  → $STACK/venv/bin/python $STACK/augur-uberspace/scripts/seed-agents.py --email ... --base-url $LC_URL"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
                 --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
                 --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
@@ -506,6 +521,7 @@ SVCEOF
     # ── 10. Seed profile data ──
     if [[ -x "$STACK/venv/bin/python" ]] && [[ -d "$STACK/profiles" ]]; then
         log "Seeding profiles from disk into MongoDB..."
+        log "  → $STACK/venv/bin/python -c 'from server import seed_profiles; seed_profiles(...)'"
         MONGO_URI_SIGNALS="${MONGO_URI_SIGNALS:-}" \
         "$STACK/venv/bin/python" -c "
 import sys, os
@@ -541,6 +557,7 @@ except Exception as e:
         done
         if [[ "$LC_READY" == true ]]; then
             log "Bootstrapping profile data via agent..."
+            log "  → $STACK/venv/bin/python $STACK/augur-uberspace/scripts/bootstrap-data.py --base-url $LC_URL --timeseries"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
                 --api-key "$AUGUR_AGENTS_API_KEY" \
                 --agent-id "$AUGUR_BOOTSTRAP_AGENT_ID" \

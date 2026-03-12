@@ -219,7 +219,15 @@ _lc_download_and_setup() {
     fi
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
-    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+    log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
+    tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v 2>&1 | {
+        _n=0
+        while IFS= read -r _; do
+            _n=$((_n + 1))
+            (( _n % 1000 == 0 )) && printf '\r    %d files...' "$_n"
+        done
+        printf '\r    %d files extracted\n' "$_n"
+    }
     log "Extraction complete"
 
     local bundle_ver=""
@@ -228,6 +236,7 @@ _lc_download_and_setup() {
 
     log "LibreChat version: ${bundle_ver}"
     log "Running setup..."
+    log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
     return 0
 }
