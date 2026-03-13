@@ -8,8 +8,8 @@ Runs on port 8066 by default (CHARTS_PORT env var).
 Reuses DB and chart logic from server.py.
 
 Example:
-  https://augur.uber.space/charts/countries/DEU/indicators/gdp_growth_pct
-  https://augur.uber.space/charts/stocks/AAPL/price/open,close?periods=60&chart_type=line
+  https://<UBER_HOST>/charts/countries/DEU/indicators/gdp_growth_pct
+  https://<UBER_HOST>/charts/stocks/AAPL/price/open,close?periods=60&chart_type=line
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
