@@ -244,6 +244,42 @@ call blocks the event loop. Should use `async with httpx.AsyncClient`.
 
 ---
 
+#### 42. CRLF Injection in ntfy Headers
+**File:** `src/servers/augur_publish.py:510-516`
+
+User-supplied `title` and `caption` are placed directly into HTTP headers for
+ntfy notifications without escaping. A value containing `\r\n` could inject
+arbitrary headers. Sanitize by stripping control characters.
+
+#### 43. Charts Server Integer Parse Crash
+**File:** `src/store/charts.py:59`
+
+```python
+periods = int(qs.get("periods", ["24"])[0])
+```
+No `try/except` — a non-numeric `?periods=abc` query string crashes the handler
+with `ValueError`. Also no upper bound: `?periods=999999999` causes resource
+exhaustion. Add validation and clamping.
+
+#### 44. No Upper Bound on `limit` Parameters
+**Files:** `src/store/server.py` (multiple tools)
+
+`list_profiles(limit=500)`, `history(limit=100)`, `recent_events(limit=50)`,
+`aggregate()` all accept arbitrary `limit` values with no max cap. A caller
+requesting `limit=10000000` causes memory/query exhaustion.
+Add `limit = min(limit, MAX_LIMIT)` clamping.
+
+#### 45. `seed_profiles` Skips ID Validation
+**File:** `src/store/server.py:337`
+
+```python
+profile_id = fpath.stem  # from filesystem, no _SAFE_ID check
+```
+Unlike `put_profile()` which validates IDs via `_validate_profile_args()`,
+the seed path trusts filesystem filenames. Install-only, low practical risk.
+
+---
+
 ### LOW / STYLE
 
 #### 37. `_parse_yaml_value` Skips Edge Cases
@@ -337,6 +373,6 @@ is not end-to-end tested.
 | Open | 2 | #17 (perf at scale), #23 (low priority) |
 | **Second review** | | |
 | Critical | 4 | #24-27 (mutable default, sequential api_multi, race condition, counter reset) |
-| Warning | 9 | #28-36 (import crash, ticker validation, injection, logging, sync httpx) |
+| Warning | 13 | #28-36, #42-45 (import crash, injections, limits, logging, sync httpx) |
 | Low/Style | 5 | #37-41 (yaml parser, date format, atomicity, iteration, timeout) |
 | Test gaps | 6 | T1-T6 (risk gate, compact, chart, social, api_multi, alert hooks) |
