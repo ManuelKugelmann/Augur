@@ -241,6 +241,15 @@ PYEOF
             fi
         fi
 
+        # Every 6 hours (at :05–:14): price ingestion for watchlisted tickers
+        if [[ "$((10#$HOUR % 6))" -eq 0 ]] && [[ "$((10#$MIN))" -ge 5 ]] && [[ "$((10#$MIN))" -lt 15 ]]; then
+            if [[ -f "$STACK/venv/bin/python" ]] && [[ -f "$STACK/src/ingest/price_ingest.py" ]]; then
+                _cron_log "running price ingestion"
+                STACK="$STACK" "$STACK/venv/bin/python" "$STACK/src/ingest/price_ingest.py" 2>&1 \
+                    | while read -r line; do _cron_log "$line"; done
+            fi
+        fi
+
         # Every 30 min: Claude token health check
         if [[ -f "$HOME/.claude-auth.env" ]] && [[ "$((10#$MIN % 30))" -eq 0 ]]; then
             if [[ -x "$HOME/bin/claude-auth-daemon.sh" ]]; then
@@ -555,6 +564,13 @@ SVCEOF
         ;;
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
+        ;;
+    ingest)
+        [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
+        [[ -f "$STACK/src/ingest/price_ingest.py" ]] || die "price_ingest.py not found"
+        echo -e "${CYAN}Running price ingestion...${NC}"
+        STACK="$STACK" "$STACK/venv/bin/python" "$STACK/src/ingest/price_ingest.py" "${2:-}"
+        echo -e "${GREEN}✓${NC} Ingestion complete"
         ;;
     bootstrap)
         BOOTSTRAP_API_KEY="${AUGUR_AGENTS_API_KEY:-}"

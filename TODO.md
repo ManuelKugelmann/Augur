@@ -32,27 +32,32 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 - [x] **Build periodic ingest scheduler (cron-planner agent)**
       Cron-planner agent invoked every 6 hours via `ta cron` using LibreChat Agents API.
       Agent reads plans/watchlists, delegates to L1 data agents, triggers L2 analysis.
-- [ ] **Wire price ingestion for indicator computation**
-      Indicators server (`ta_*` namespace) is pure math — needs OHLCV input.
-      Options: (a) yahoo-finance MCP → snapshot → feed to indicators, or
-      (b) direct tool chaining in LLM context. Start with (b), add (a) in scheduler.
+- [x] **Wire price ingestion for indicator computation**
+      Decoupled `src/ingest/price_ingest.py`: fetches OHLCV from Yahoo Finance,
+      computes indicators via ta server, stores both as snapshots (price + indicators).
+      Emits signal_change events when composite signal changes.
+      CLI: `augur ingest [kinds]`. Cron: every 6 hours at :05–:14.
 - [ ] **Add Volume-Weighted Average Price (VWAP) indicator**
       Requires volume data. Add once price ingestion is in place.
 - [ ] **Add ATR (Average True Range) indicator**
       Requires high/low/close. Useful for position sizing and stop-loss placement.
-- [ ] **Build periodic ingest scheduler**
-      Cron or lightweight scheduler that calls domain MCP servers → stores snapshots.
-      E.g., weekly: fetch prices for all entity profiles; monthly: fetch macro indicators
-      for all country profiles; continuous: poll disaster/event feeds.
+- [x] **Build periodic ingest scheduler**
+      Price ingestion runs every 6 hours via `augur cron` (Augur.sh).
+      Iterates all profiled stocks/etfs/crypto/indices, fetches OHLCV,
+      stores snapshots, emits events on signal changes.
+      Future: extend to macro indicators for countries, commodity prices.
 - [ ] **Wire up profile ↔ snapshot cross-references**
       When a snapshot is stored for entity "AAPL", auto-link to the profile's risk factors,
       supply chain deps, and country exposures.
-- [ ] **Add event-to-profile impact mapping**
-      When an earthquake event hits country "JPN", auto-tag entities with `exposure.countries`
-      containing "JPN".
-- [ ] **Implement alert/threshold system**
-      Source profiles have `signal.thresholds` — build logic that checks incoming events
-      against thresholds and flags high-severity signals.
+- [x] **Add event-to-profile impact mapping**
+      `src/alerts/impact_mapper.py`: post-event hook in store `event()` for
+      high/critical severity. Queries profiles with `exposure.countries` match,
+      creates impact snapshots cross-referencing the event.
+- [x] **Implement alert/threshold system**
+      `src/alerts/threshold_checker.py`: pure-function threshold evaluator.
+      Supports ops: <, >, <=, >=, ==, !=, absent. Dot-notation nested fields.
+      Hooked into store `snapshot()`: checks entity profile thresholds after
+      each snapshot, emits threshold_breach events on match.
 
 ---
 
@@ -177,3 +182,12 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
       across all 12 domain servers + store. (2026-03-09)
 - [x] **Error handling on all servers** — try/except httpx.HTTPError on all HTTP
       tools. Returns `{"error": ...}` instead of crashing. (2026-03-09)
+- [x] **Price ingestion pipeline** — decoupled `src/ingest/price_ingest.py` bridges
+      ta server (Yahoo OHLCV + indicators) and store (snapshots). Cron-scheduled
+      every 6 hours. CLI: `augur ingest`. 16 tests. (2026-03-12)
+- [x] **Threshold checker** — `src/alerts/threshold_checker.py`: pure-function
+      evaluator for profile `signal.thresholds`. Ops: <, >, <=, >=, ==, !=, absent.
+      Auto-hooked into store `snapshot()`. 22 tests. (2026-03-12)
+- [x] **Event-to-profile impact mapper** — `src/alerts/impact_mapper.py`: post-event
+      hook for high/critical events. Queries `exposure.countries` across 8 profile
+      kinds, creates impact snapshots. 14 tests. (2026-03-12)

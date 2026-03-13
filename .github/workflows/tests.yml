@@ -239,6 +239,9 @@ jobs:
       - name: Run store integration tests
         run: python -m pytest tests/test_integration_store.py -v -m integration --timeout=60
 
+      - name: Run ingest + alerts integration tests
+        run: python -m pytest tests/test_integration_ingest.py -v -m integration --timeout=120
+
   smoke-combined:
     name: Smoke test (combined server + Atlas)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
