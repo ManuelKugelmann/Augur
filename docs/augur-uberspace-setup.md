@@ -247,10 +247,8 @@ augur logs           # tail LibreChat logs
 augur restart        # restart LibreChat + trading
 augur version        # installed version
 
-augur pull           # dev: git pull + restart (no release needed)
-augur update         # prod: download latest release bundle
+augur update         # git pull + deps + LibreChat release + restart
 augur install        # re-run full installer (idempotent)
-augur rollback       # restore previous version
 
 augur sync           # force git sync of data
 augur check          # health check
@@ -261,44 +259,19 @@ augur yaml           # edit librechat.yaml
 augur conf           # edit deploy.conf
 ```
 
-### Dev workflow (quick iteration)
+### Update workflow
 
 On your dev machine:
 
 ```bash
-# Edit code
 git push
 ```
 
 On Uberspace:
 
 ```bash
-augur pull
-# → git pull + pip install + restart LibreChat + restart trading
-```
-
-### Production release workflow
-
-On your dev machine:
-
-```bash
-git tag v0.3.0
-git push --tags
-# → CI builds bundle → GitHub Release
-```
-
-On Uberspace:
-
-```bash
 augur update
-# → downloads release, atomic swap, restart
-```
-
-### Rollback
-
-```bash
-augur rollback
-# Restores ~/LibreChat.prev (kept from last update)
+# → stops services, git pull, pip/npm install, LibreChat release, restart
 ```
 
 ---
