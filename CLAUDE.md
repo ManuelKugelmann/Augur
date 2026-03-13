@@ -82,6 +82,9 @@ curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-ube
 ~560 tests: bats (shell) + pytest (Python).
 
 ```bash
+# Install test dependencies first (pytest-asyncio, mongomock, etc.)
+pip install -r requirements-test.txt
+
 # Fast shell tests
 bats tests/test_bootstrap.bats tests/test_deploy_conf.bats \
      tests/test_setup.bats tests/test_ta_cron.bats \
