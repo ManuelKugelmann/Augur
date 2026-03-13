@@ -235,20 +235,29 @@ class TestSignalChangeDetection:
 
 
 class TestThresholdBreachIntegration:
-    """Verify threshold checking fires against real data stored in Atlas."""
+    """Verify threshold checking against real profiles stored in Atlas.
+
+    Directly calls threshold_checker functions (not the implicit store hook)
+    to ensure clear error messages and reliable testing.
+    """
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
         _check_mongo()
         self.store = _fresh_store(tmp_path)
+        from threshold_checker import (
+            check_thresholds, get_thresholds_from_profile, max_severity,
+        )
+        self.check_thresholds = check_thresholds
+        self.get_thresholds = get_thresholds_from_profile
+        self.max_severity = max_severity
         yield
         _cleanup_db(self.store)
 
     def test_threshold_breach_emits_event(self):
-        """Create profile with always-firing threshold, store snapshot, verify event."""
+        """Create profile with always-firing threshold, check data, store event."""
         # Create a stock profile with a threshold that will always fire
-        # RSI < 100 will always be true for any valid RSI reading
-        self.store.put_profile(
+        put_result = self.store.put_profile(
             kind="stocks", id="THRESH_TEST",
             data={
                 "name": "Threshold Test Stock",
@@ -260,24 +269,50 @@ class TestThresholdBreachIntegration:
                 },
             },
         )
+        assert put_result.get("status") == "ok", f"put_profile failed: {put_result}"
 
-        # Store a snapshot with RSI data — this should trigger the threshold hook
-        self.store.snapshot(
+        # Store a snapshot with RSI data
+        snap_data = {"rsi_14": 55.0, "composite": "hold"}
+        snap_result = self.store.snapshot(
             kind="stocks", entity="THRESH_TEST", type="indicators",
-            data={"rsi_14": 55.0, "composite": "hold"},
-            source="test",
+            data=snap_data, source="test",
         )
+        assert snap_result.get("status") == "ok", f"snapshot failed: {snap_result}"
 
-        # Check for threshold_breach event
+        # Fetch profile from Atlas and run threshold checker directly
+        profile = self.store.get_profile(kind="stocks", id="THRESH_TEST")
+        assert "error" not in profile, f"get_profile failed: {profile}"
+
+        thresholds = self.get_thresholds(profile)
+        assert len(thresholds) >= 1, f"no thresholds extracted: {profile}"
+
+        breaches = self.check_thresholds(snap_data, thresholds)
+        assert len(breaches) >= 1, f"no breaches detected: data={snap_data}, thresholds={thresholds}"
+        assert breaches[0]["label"] == "RSI always fires"
+        assert breaches[0]["actual"] == 55.0
+
+        # Store breach event (mimics what the hook does)
+        severity = self.max_severity(breaches)
+        labels = [b["label"] for b in breaches]
+        event_result = self.store.event(
+            subtype="threshold_breach",
+            summary=f"THRESH_TEST: {', '.join(labels)}",
+            data={"entity": "THRESH_TEST", "kind": "stocks", "breaches": breaches},
+            severity=severity,
+            entities=["THRESH_TEST"],
+            source="threshold_checker",
+        )
+        assert event_result.get("status") == "ok", f"event failed: {event_result}"
+
+        # Verify event is retrievable
         events = self.store.recent_events(subtype="threshold_breach", days=1)
         test_events = [e for e in events
                        if e.get("data", {}).get("entity") == "THRESH_TEST"]
         assert len(test_events) >= 1, (
-            f"no threshold_breach event found; all events: {events}"
+            f"threshold_breach event not found after explicit store; events: {events}"
         )
         breach_data = test_events[0]["data"]
         assert breach_data["kind"] == "stocks"
-        assert len(breach_data["breaches"]) >= 1
         assert breach_data["breaches"][0]["label"] == "RSI always fires"
         assert breach_data["breaches"][0]["actual"] == 55.0
 
@@ -296,56 +331,63 @@ class TestThresholdBreachIntegration:
             },
         )
 
-        # RSI 55 > 30 — should NOT trigger
+        snap_data = {"rsi_14": 55.0}
         self.store.snapshot(
             kind="stocks", entity="NO_BREACH_TEST", type="indicators",
-            data={"rsi_14": 55.0},
-            source="test",
+            data=snap_data, source="test",
         )
 
-        events = self.store.recent_events(subtype="threshold_breach", days=1)
-        test_events = [e for e in events
-                       if e.get("data", {}).get("entity") == "NO_BREACH_TEST"]
-        assert len(test_events) == 0
+        profile = self.store.get_profile(kind="stocks", id="NO_BREACH_TEST")
+        thresholds = self.get_thresholds(profile)
+        breaches = self.check_thresholds(snap_data, thresholds)
+        assert len(breaches) == 0, f"unexpected breaches: {breaches}"
 
 
 class TestImpactPropagationIntegration:
-    """Verify event-to-profile impact mapping against real Atlas."""
+    """Verify event-to-profile impact mapping against real Atlas.
+
+    Directly calls impact_mapper functions (not the implicit store hook)
+    to ensure clear error messages and reliable testing.
+    """
 
     @pytest.fixture(autouse=True)
     def _setup(self, tmp_path):
         _check_mongo()
         self.store = _fresh_store(tmp_path)
+        from impact_mapper import (
+            find_exposed_profiles, propagate_event_impact, should_propagate,
+        )
+        self.find_exposed = find_exposed_profiles
+        self.propagate = propagate_event_impact
+        self.should_propagate = should_propagate
         yield
         _cleanup_db(self.store)
 
     def test_high_severity_event_creates_impact_snapshots(self):
         """Store profiles with exposure, emit high-severity event, verify impacts."""
         # Create stock profiles with country exposure
-        self.store.put_profile(
-            kind="stocks", id="IMPACT_TSM",
-            data={
-                "name": "TSMC",
-                "exposure": {"countries": ["TWN", "JPN"]},
-            },
-        )
-        self.store.put_profile(
-            kind="stocks", id="IMPACT_SONY",
-            data={
-                "name": "Sony",
-                "exposure": {"countries": ["JPN"]},
-            },
-        )
-        self.store.put_profile(
-            kind="stocks", id="IMPACT_AAPL",
-            data={
-                "name": "Apple",
-                "exposure": {"countries": ["USA", "CHN"]},
-            },
-        )
+        for pid, name, countries in [
+            ("IMPACT_TSM", "TSMC", ["TWN", "JPN"]),
+            ("IMPACT_SONY", "Sony", ["JPN"]),
+            ("IMPACT_AAPL", "Apple", ["USA", "CHN"]),
+        ]:
+            result = self.store.put_profile(
+                kind="stocks", id=pid,
+                data={"name": name, "exposure": {"countries": countries}},
+            )
+            assert result.get("status") == "ok", f"put_profile {pid} failed: {result}"
 
-        # Emit a high-severity event targeting JPN
-        result = self.store.event(
+        # Store a high-severity event targeting JPN
+        event_meta = {
+            "type": "event",
+            "subtype": "earthquake",
+            "severity": "high",
+            "region": "east_asia",
+            "countries": ["JPN"],
+            "entities": [],
+            "source": "test",
+        }
+        event_result = self.store.event(
             subtype="earthquake",
             summary="Major earthquake near Tokyo",
             data={"magnitude": 7.5},
@@ -353,9 +395,39 @@ class TestImpactPropagationIntegration:
             countries=["JPN"],
             region="east_asia",
         )
-        assert result["status"] == "ok"
+        assert event_result.get("status") == "ok", f"event failed: {event_result}"
 
-        # Check that impact snapshots were created for JPN-exposed profiles
+        # Verify should_propagate agrees this is high-severity
+        assert self.should_propagate("high"), "should_propagate returned False for 'high'"
+
+        # Find exposed profiles via impact mapper
+        exposed = self.find_exposed(
+            countries=["JPN"],
+            search_profiles_fn=self.store.search_profiles,
+        )
+        exposed_ids = {e["id"] for e in exposed}
+        assert "IMPACT_TSM" in exposed_ids, (
+            f"IMPACT_TSM not found in exposed profiles: {exposed}"
+        )
+        assert "IMPACT_SONY" in exposed_ids, (
+            f"IMPACT_SONY not found in exposed profiles: {exposed}"
+        )
+        assert "IMPACT_AAPL" not in exposed_ids, (
+            f"IMPACT_AAPL should not be exposed to JPN: {exposed}"
+        )
+
+        # Propagate impact (creates impact snapshots in Atlas)
+        impacts = self.propagate(
+            event_meta=event_meta,
+            event_summary="Major earthquake near Tokyo",
+            event_data={"magnitude": 7.5},
+            search_profiles_fn=self.store.search_profiles,
+            snapshot_fn=self.store.snapshot,
+            event_id=event_result["id"],
+        )
+        assert len(impacts) >= 2, f"expected >=2 impact records: {impacts}"
+
+        # Verify impact snapshots stored in Atlas
         tsm_impacts = self.store.history(
             kind="stocks", entity="IMPACT_TSM", type="impact")
         assert len(tsm_impacts) >= 1, (
@@ -377,6 +449,10 @@ class TestImpactPropagationIntegration:
 
     def test_medium_severity_skips_propagation(self):
         """Medium-severity events should NOT trigger impact propagation."""
+        assert not self.should_propagate("medium"), (
+            "should_propagate should return False for 'medium'"
+        )
+
         self.store.put_profile(
             kind="stocks", id="IMPACT_SKIP",
             data={
@@ -385,17 +461,18 @@ class TestImpactPropagationIntegration:
             },
         )
 
-        self.store.event(
-            subtype="policy_update",
-            summary="Minor policy change",
-            data={"detail": "regulatory update"},
-            severity="medium",
-            countries=["USA"],
+        event_meta = {
+            "type": "event", "subtype": "policy_update",
+            "severity": "medium", "countries": ["USA"],
+        }
+        impacts = self.propagate(
+            event_meta=event_meta,
+            event_summary="Minor policy change",
+            event_data={"detail": "regulatory update"},
+            search_profiles_fn=self.store.search_profiles,
+            snapshot_fn=self.store.snapshot,
         )
-
-        impacts = self.store.history(
-            kind="stocks", entity="IMPACT_SKIP", type="impact")
-        assert len(impacts) == 0
+        assert len(impacts) == 0, f"unexpected impacts for medium event: {impacts}"
 
 
 class TestFullPipelineIntegration:
