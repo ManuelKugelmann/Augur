@@ -55,7 +55,7 @@ _web_backend() {
     local path="$1" port="$2"
     # Skip if already configured (avoids httpx timeout on uberspace CLI)
     local existing
-    existing=$(uberspace web backend list 2>&1 || true)
+    existing=$(timeout 30 uberspace web backend list 2>&1 || true)
     if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
         log "Web backend ${path} → port ${port} already set"
         return 0
@@ -63,7 +63,7 @@ _web_backend() {
     local attempt=0 delay=2
     while (( attempt < 3 )); do
         attempt=$((attempt + 1))
-        uberspace web backend add "$path" port "$port" --force && return 0
+        timeout 30 uberspace web backend add "$path" port "$port" --force && return 0
         (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
     done
     return 1
@@ -314,15 +314,15 @@ _do_install() {
     if [[ -d "$STACK/.git" ]]; then
         log "Repo exists at $STACK, pulling latest..."
         log "  → git -C $STACK pull --ff-only origin $BRANCH"
-        git -C "$STACK" pull --ff-only origin "$BRANCH" || \
+        timeout 120 git -C "$STACK" pull --ff-only origin "$BRANCH" </dev/null || \
             { log "  → git -C $STACK fetch origin $BRANCH && git reset --hard origin/$BRANCH"
-              git -C "$STACK" fetch origin "$BRANCH" && \
+              timeout 120 git -C "$STACK" fetch origin "$BRANCH" </dev/null && \
               git -C "$STACK" reset --hard "origin/$BRANCH"; }
         log "Repo updated"
     else
         log "Cloning repo..."
         log "  → git clone -b $BRANCH https://github.com/${GH_USER}/${GH_REPO}.git $STACK"
-        git clone -b "$BRANCH" "https://github.com/${GH_USER}/${GH_REPO}.git" "$STACK"
+        timeout 120 git clone -b "$BRANCH" "https://github.com/${GH_USER}/${GH_REPO}.git" "$STACK" </dev/null
         log "Cloned → $STACK"
     fi
 

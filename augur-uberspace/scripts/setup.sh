@@ -26,7 +26,7 @@ _svc_stop_lc()  { systemctl --user stop librechat || true; }
 _svc_start_lc() { systemctl --user start librechat || true; }
 _web_backend() {
     local path="$1" port="$2"
-    uberspace web backend add "$path" port "$port" --force
+    timeout 30 uberspace web backend add "$path" port "$port" --force
 }
 
 # Dirs that survive updates
