@@ -1,7 +1,9 @@
 --find-links wheels/
-fastmcp>=3.1
-httpx>=0.27
-pymongo>=4.7
-python-dotenv>=1.0
-pandas>=2.0
-ta>=0.10
+--only-binary numpy,pandas,pydantic_core,rpds-py,watchfiles,pymongo,caio
+numpy>=1.26,<3
+fastmcp>=3.1,<4
+httpx>=0.27,<1
+pymongo>=4.7,<5
+python-dotenv>=1.0,<2
+pandas>=2.0,<4
+ta>=0.10,<1
