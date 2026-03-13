@@ -2,8 +2,11 @@
 from fastmcp import FastMCP
 from _http import api_get
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.commodities")
 
 mcp = FastMCP("commodities", instructions="UN trade flows, EIA energy data")
 COMTRADE_KEY = os.environ.get("COMTRADE_API_KEY", "")

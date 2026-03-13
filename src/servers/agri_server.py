@@ -3,8 +3,11 @@ from fastmcp import FastMCP
 from _http import api_get
 import httpx
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.agri")
 
 mcp = FastMCP("agri", instructions="FAO global agriculture + USDA crop data")
 # FAOSTAT migrated from fenixservices to faostatservices (2025).
@@ -39,7 +42,7 @@ async def fao_datasets() -> dict:
         data = r.json().get("data", [])
         return {"datasets": [{"code": d["code"], "label": d["label"]} for d in data]}
     except httpx.HTTPError as e:
-        return {"error": f"FAOSTAT request failed: {e}"}
+        return {"error": f"FAOSTAT request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()
@@ -54,7 +57,7 @@ async def fao_data(domain: str = "QCL", area: str = "5000>",
             "output_type": "objects"})
         return r.json()
     except httpx.HTTPError as e:
-        return {"error": f"FAOSTAT request failed: {e}"}
+        return {"error": f"FAOSTAT request failed: {type(e).__name__}: {e}"}
 
 
 # ── USDA NASS (shared endpoint, different stat category) ──

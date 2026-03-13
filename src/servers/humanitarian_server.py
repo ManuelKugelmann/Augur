@@ -2,8 +2,11 @@
 from fastmcp import FastMCP
 from _http import api_get, api_post, api_multi
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.humanitarian")
 
 mcp = FastMCP("humanitarian", instructions="Refugees, displacement, humanitarian data, crisis reports")
 IDMC_KEY = os.environ.get("IDMC_API_KEY", "")

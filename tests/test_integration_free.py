@@ -47,7 +47,7 @@ def _check_upstream(result, *expected_keys):
         err = result["error"]
     elif isinstance(result, list) and result and isinstance(result[0], dict) and "error" in result[0]:
         err = result[0]["error"]
-    if err and any(code in str(err) for code in ("500", "502", "503", "521", "522", "ReadTimeout", "ConnectTimeout", "SDMX endpoints unavailable")):
+    if err and any(code in str(err) for code in ("500", "502", "503", "521", "522", "ReadTimeout", "ConnectTimeout", "ConnectError", "RemoteProtocolError", "SDMX endpoints unavailable")):
         pytest.skip(f"Upstream API unavailable: {err}")
     # If no transient error, assert expected keys
     target = result[0] if isinstance(result, list) and result else result

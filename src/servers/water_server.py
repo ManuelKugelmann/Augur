@@ -2,6 +2,9 @@
 from fastmcp import FastMCP
 from _http import api_get, api_multi
 from datetime import datetime, timedelta
+import logging
+
+log = logging.getLogger("augur.water")
 
 mcp = FastMCP("water", instructions="Streamflow, groundwater, water quality, drought monitoring")
 

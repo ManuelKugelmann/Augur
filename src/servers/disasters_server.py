@@ -3,6 +3,9 @@ from fastmcp import FastMCP
 from _http import api_get, api_multi
 import httpx
 from datetime import datetime, timedelta, timezone
+import logging
+
+log = logging.getLogger("augur.disasters")
 
 mcp = FastMCP("disasters", instructions="Real-time earthquakes, disasters, natural events")
 
@@ -31,7 +34,7 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
                         "coords": f["geometry"]["coordinates"]}
                         for f in features]}
     except httpx.HTTPError as e:
-        return {"error": f"USGS earthquake request failed: {e}"}
+        return {"error": f"USGS earthquake request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()

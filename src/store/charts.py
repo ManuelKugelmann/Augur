@@ -56,7 +56,10 @@ class ChartHandler(BaseHTTPRequestHandler):
                 entity = parts[1]
                 typ = parts[2]
                 fields = parts[3].split(",")
-                periods = int(qs.get("periods", ["24"])[0])
+                try:
+                    periods = min(max(1, int(qs.get("periods", ["24"])[0])), 10000)
+                except (ValueError, TypeError):
+                    periods = 24
                 chart_type = qs.get("chart_type", ["line"])[0]
                 archive = qs.get("archive", ["false"])[0].lower() == "true"
                 self._serve_chart(kind, entity, typ, fields, periods, chart_type, archive)

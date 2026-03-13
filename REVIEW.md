@@ -1,7 +1,7 @@
 # Code Review — Augur
 
 Full security and quality audit of the entire codebase. Date: 2026-03-06.
-Updated: 2026-03-09 (14 of 19 fixed, all critical security issues resolved).
+Updated: 2026-03-13 (all critical + warning issues fixed across both reviews).
 
 ---
 
@@ -106,11 +106,154 @@ Prevents reproducible builds. Each install fetches latest minor versions.
 
 ---
 
+---
+
+## Second Review — 2026-03-13
+
+Deep review of the entire codebase for code quality gaps, security, test coverage,
+and architectural issues. Builds on the first review; items already fixed above are
+not repeated.
+
+### CRITICAL
+
+#### 24. ~~Mutable Default Argument in `score_prediction`~~ ✅ FIXED
+**File:** `src/servers/augur_score.py` — changed to `evidence: list[dict] | None = None` with `evidence = evidence or []`.
+
+#### 25. ~~`api_multi()` Runs Sequentially Despite Name~~ ✅ FIXED
+**File:** `src/servers/_http.py` — now uses `asyncio.gather()` for concurrent execution with per-key error capture.
+
+#### 26. ~~ACLED Token Race Condition~~ ✅ FIXED
+**File:** `src/servers/conflict_server.py` — added `asyncio.Lock` with double-check pattern to prevent concurrent token refreshes.
+
+#### 27. ~~Risk Gate Daily Counter Never Resets~~ ✅ FIXED
+**File:** `src/store/server.py` — added `_action_count_date` tracking; `_risk_check()` clears counters on date change.
+
+---
+
+### WARNING
+
+#### 28. ~~`indicators_server` Hard-Fails at Import~~ ✅ FIXED
+**File:** `src/servers/indicators_server.py` — `ta`/`pandas` imports wrapped in `try/except`; `_TA_AVAILABLE` flag gates tool execution. Server starts cleanly without these deps.
+
+#### 29. ~~No Ticker Validation in `analyze_full`~~ ✅ FIXED
+**File:** `src/servers/indicators_server.py` — added regex `^[A-Za-z0-9^._-]{1,20}$` validation before Yahoo Finance request.
+
+#### 30. ~~SPARQL Injection via `limit` Parameter~~ ✅ FIXED
+**File:** `src/servers/elections_server.py` — `limit` capped with `min(limit, 200)` in both SPARQL queries.
+
+#### 31. ~~FDA Drug Name Injection~~ ✅ FIXED
+**File:** `src/servers/health_server.py` — embedded quotes stripped from `drug` parameter before interpolation into FDA query.
+
+#### 32. Plotly CDN Pinned to Old Version
+**File:** `src/store/server.py:903`
+
+```html
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+```
+Hardcoded CDN URL. Not a security risk (loaded client-side in chart output),
+but will miss bug fixes. Consider making configurable or documenting the pin.
+
+#### 33. ~~No Logging in Domain Servers~~ ✅ FIXED
+**Files:** All 12 `src/servers/*_server.py` now have `log = logging.getLogger("augur.{name}")`.
+
+#### 34. ~~`OAuthToken` Class Not Used for ACLED~~ ✅ FIXED (via #26)
+ACLED auth now uses `asyncio.Lock` for thread safety. Password grant doesn't fit `OAuthToken` (client_credentials only), but the race condition is resolved.
+
+#### 35. ~~`push_site` Runs Git Commands Without Checking Exit Codes~~ ✅ FIXED
+**File:** `src/servers/augur_publish.py` — `git add` and `git commit` exit codes now checked; returns error dict on failure.
+
+#### 36. ~~`notify()` Uses Synchronous httpx~~ ✅ FIXED
+**File:** `src/store/server.py` — `notify()` is now `async def` using `httpx.AsyncClient`.
+
+---
+
+#### 42. ~~CRLF Injection in ntfy Headers~~ ✅ FIXED
+**Files:** `src/servers/augur_publish.py`, `src/store/server.py` — `_sanitize_header()` strips `\r` and `\n` from all user-supplied ntfy header values.
+
+#### 43. ~~Charts Server Integer Parse Crash~~ ✅ FIXED
+**File:** `src/store/charts.py` — `periods` parsing wrapped in `try/except` with default=24 fallback and clamped to `[1, 10000]`.
+
+#### 44. ~~No Upper Bound on `limit` Parameters~~ ✅ FIXED
+**File:** `src/store/server.py` — `list_profiles` capped at 2000, `history` at 5000, `recent_events` at 1000.
+
+#### 45. ~~`seed_profiles` Skips ID Validation~~ ✅ FIXED
+**File:** `src/store/server.py` — `_SAFE_ID` regex check added before inserting; invalid IDs logged to `_errors`.
+
+---
+
+### LOW / STYLE
+
+#### 37. `_parse_yaml_value` Skips Edge Cases
+**File:** `src/servers/augur_common.py:213-230`
+
+Custom YAML parser doesn't handle multiline strings, anchors, or escaped chars.
+Fine for the limited front-matter use case, but could silently corrupt data
+with unexpected YAML. Consider adding a comment documenting the subset supported.
+
+#### 38. `water_server.py` Non-Portable Date Format
+**File:** `src/servers/water_server.py:76`
+
+`strftime("%-m/%-d/%Y")` — `%-m` (no-padding) is glibc-only. Fails on non-Linux
+systems. Not a real issue (deployed only on Uberspace/Linux), but fragile.
+
+#### 39. `compact()` Not Atomic
+**File:** `src/store/server.py:1054-1062`
+
+Archives snapshots then deletes originals in two separate operations. If the
+process crashes between `insert_many` and `delete_many`, data is duplicated.
+Low risk (idempotent on re-run, TTL cleans snapshots eventually), but worth
+noting.
+
+#### 40. `find_profile` Iterates All Kinds
+**File:** `src/store/server.py:500-538`
+
+Cross-kind search does MongoDB queries across all 12 `profiles_*` collections
+sequentially. With small profile counts this is fine; at scale, consider a
+unified search collection or MongoDB Atlas Search.
+
+#### 41. `eu_parliament_meps` Uses 60s Timeout
+**File:** `src/servers/elections_server.py:138`
+
+While other endpoints use 15-30s, EU Parliament API gets 60s. This is intentionally
+generous (their API is slow), but a hung connection ties up the event loop.
+Consider documenting why.
+
+---
+
+### Test Coverage Gaps
+
+#### T1. ~~Risk Gate Under-Tested~~ ✅ FIXED
+Added tests: daily counter reset on date change, counter persistence same day, invalid `x-risk-daily-limit` header fallback, zero daily limit blocks all actions. See `tests/test_review_fixes.py`.
+
+#### T2. `compact()` Not Tested — COVERED IN `test_store_mongo.py`
+Already tested: `TestCompact` class with 5 tests (reject invalid kind, reject invalid bucket, nothing to compact, compact success, partial insert error). No gap.
+
+#### T3. `chart()` Not Tested — COVERED IN `test_store_mongo.py`
+Already tested: `TestChart` class with 6 tests (reject invalid kind, no data, generates HTML, archive, bar type, scatter type). No gap.
+
+#### T4. Social Posting Partially Tested — OPEN
+Image upload and byte-offset facet logic remain untested. Push_site exit codes now checked (#35).
+
+#### T5. ~~`api_multi` Error Isolation Not Tested~~ ✅ FIXED
+Added `test_api_multi_error_isolation` verifying one failing coroutine returns `{"error": ...}` while others succeed. See `tests/test_review_fixes.py`.
+
+#### T6. Alert Hooks Lightly Tested — OPEN
+End-to-end integration path (snapshot → threshold hook → event → impact) not tested. Unit tests for individual components are solid.
+
+---
+
 ## Summary
 
 | Status | Count | Details |
 |--------|-------|---------|
-| ✅ Fixed | 14 | #1-5, #7-13, #15, #19 |
-| ⚠️ Mitigated | 1 | #6 (regex) |
-| ℹ️ Accepted | 3 | #14, #16, #18 (not applicable) |
-| 🔲 Open | 2 | #17 (perf at scale), #23 (low priority) |
+| **First review** | | |
+| Fixed | 14 | #1-5, #7-13, #15, #19 |
+| Mitigated | 1 | #6 (regex) |
+| Accepted | 3 | #14, #16, #18 (not applicable) |
+| Open | 2 | #17 (perf at scale), #23 (low priority) |
+| **Second review** | | |
+| Fixed | 17 | #24-31, #33-36, #42-45 |
+| Accepted | 1 | #32 (Plotly CDN pin, document only) |
+| Low/Style | 5 | #37-41 (yaml parser, date format, atomicity, iteration, timeout) |
+| Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
+| Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |

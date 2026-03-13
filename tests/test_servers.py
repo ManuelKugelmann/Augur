@@ -204,6 +204,43 @@ class TestDisastersServer:
         assert params["category"] == "wildfires"
         assert params["days"] == 14
 
+    @pytest.mark.asyncio
+    async def test_get_disasters_calls_gdacs(self):
+        resp = _mock_response({"features": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.get_disasters()
+        url = client.get.call_args[0][0]
+        assert "gdacs.org" in url
+
+    @pytest.mark.asyncio
+    async def test_hazard_alerts_earthquake_uses_usgs(self):
+        eq_resp = {"metadata": {"count": 0}, "features": []}
+        resp = _mock_response(eq_resp)
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.hazard_alerts(hazard="earthquake", days=3)
+        assert "usgs_earthquakes" in result
+        assert result["_meta"]["hazard"] == "earthquake"
+
+    @pytest.mark.asyncio
+    async def test_hazard_alerts_empty_uses_all_sources(self):
+        resp = _mock_response({"metadata": {"count": 0}, "features": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.hazard_alerts(hazard="", days=7)
+        assert result["_meta"]["hazard"] == "all"
+        assert len(result["_meta"]["sources"]) >= 1
+
+    @pytest.mark.asyncio
+    async def test_hazard_alerts_non_earthquake_skips_usgs(self):
+        resp = _mock_response({"events": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.hazard_alerts(hazard="flood", days=7)
+        assert "usgs_earthquakes" not in result
+        assert "gdacs_alerts" in result
+
 
 # ── Health Server ─────────────────────────────────
 
@@ -279,6 +316,17 @@ class TestHealthServer:
             await self.mod.disease_tracker(disease="covid")
         url = client.get.call_args[0][0]
         assert url.endswith("/all")
+
+    @pytest.mark.asyncio
+    async def test_disease_outbreaks_calls_who(self):
+        resp = _mock_response({"value": [{"Title": "Outbreak X"}]})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.disease_outbreaks(limit=5)
+        url = client.get.call_args[0][0]
+        assert "who.int" in url
+        params = client.get.call_args[1]["params"]
+        assert params["$top"] == 5
 
 
 # ── Agri Server ───────────────────────────────────
@@ -948,6 +996,17 @@ class TestWaterServer:
         assert params["stateCd"] == "NY"
         assert params["parameterCd"] == "00300"
 
+    @pytest.mark.asyncio
+    async def test_water_alerts_combines_sources(self):
+        resp = _mock_response({"value": {}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.water_alerts(state="TX")
+        assert "_meta" in result
+        assert result["_meta"]["state"] == "TX"
+        assert "USGS" in result["_meta"]["sources"]
+        assert "USDM" in result["_meta"]["sources"]
+
 
 # ── Humanitarian Server ──────────────────────────
 
@@ -1032,6 +1091,53 @@ class TestHumanitarianServer:
         assert params["iso3__in"] == "SYR"
         assert params["start_year"] == 2020
 
+    @pytest.mark.asyncio
+    async def test_hdx_dataset_params(self):
+        resp = _mock_response({"success": True, "result": {"resources": []}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.hdx_dataset(dataset_id="test-dataset-123")
+        params = client.get.call_args[1]["params"]
+        assert params["id"] == "test-dataset-123"
+        url = client.get.call_args[0][0]
+        assert "package_show" in url
+
+    @pytest.mark.asyncio
+    async def test_idmc_disasters_params(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "IDMC_KEY", "test-key")
+        resp = _mock_response({"results": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.idmc_disasters(iso3="TUR", end_year=2024)
+        url = client.get.call_args[0][0]
+        assert "disaster-export" in url
+        params = client.get.call_args[1]["params"]
+        assert params["iso3__in"] == "TUR"
+        assert params["end_year"] == 2024
+
+    @pytest.mark.asyncio
+    async def test_humanitarian_crisis_combines_sources(self):
+        resp = _mock_response({"items": []})
+        old_appname = self.mod.RELIEFWEB_APPNAME
+        self.mod.RELIEFWEB_APPNAME = "test-app"
+        try:
+            patcher, client = _patch_httpx_get(resp)
+            with patcher:
+                result = await self.mod.humanitarian_crisis(
+                    country="Syria", iso3="SYR")
+            assert "_meta" in result
+            assert "UNHCR" in result["_meta"]["sources"]
+            assert "ReliefWeb" in result["_meta"]["sources"]
+        finally:
+            self.mod.RELIEFWEB_APPNAME = old_appname
+
+    @pytest.mark.asyncio
+    async def test_humanitarian_crisis_empty_args(self):
+        result = await self.mod.humanitarian_crisis()
+        assert "_meta" in result
+        # With no country/iso3, no calls made, but meta returned
+        assert result["_meta"]["country"] == ""
+
 
 # ── Infra Server ─────────────────────────────────
 
@@ -1096,6 +1202,63 @@ class TestInfraServer:
         params = client.get.call_args[1]["params"]
         assert params["type"] == "ping"
         assert params["target_cc"] == "DE"
+
+    @pytest.mark.asyncio
+    async def test_attack_summary_missing_key(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "")
+        result = await self.mod.attack_summary(location="US")
+        assert result["error"] == "CF_API_TOKEN not set"
+
+    @pytest.mark.asyncio
+    async def test_attack_summary_params(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "test-token")
+        resp = _mock_response({"success": True, "result": {}})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.attack_summary(location="US", date_range="7d")
+        url = client.get.call_args[0][0]
+        assert "attacks/layer3/summary" in url
+        params = client.get.call_args[1]["params"]
+        assert params["location"] == "US"
+
+    @pytest.mark.asyncio
+    async def test_ioda_alerts_params(self):
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            await self.mod.ioda_alerts(entity_type="country", entity_code="US")
+        url = client.get.call_args[0][0]
+        assert "alerts" in url
+        params = client.get.call_args[1]["params"]
+        assert params["entityType"] == "country"
+        assert params["entityCode"] == "US"
+
+    @pytest.mark.asyncio
+    async def test_internet_health_combines_sources(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "test-token")
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.internet_health(country="DE")
+        assert "_meta" in result
+        assert "Cloudflare Radar" in result["_meta"]["sources"]
+        assert "IODA" in result["_meta"]["sources"]
+        assert "RIPE Atlas" in result["_meta"]["sources"]
+
+    @pytest.mark.asyncio
+    async def test_internet_health_no_cf_token(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "")
+        resp = _mock_response({"data": []})
+        patcher, client = _patch_httpx_get(resp)
+        with patcher:
+            result = await self.mod.internet_health(country="DE")
+        assert "Cloudflare Radar" not in result["_meta"]["sources"]
+
+    @pytest.mark.asyncio
+    async def test_internet_health_no_country(self, monkeypatch):
+        monkeypatch.setattr(self.mod, "CF_TOKEN", "test-token")
+        result = await self.mod.internet_health()
+        assert result["_meta"]["country"] == ""
 
 
 # ── Combined Server ─────────────────────────────

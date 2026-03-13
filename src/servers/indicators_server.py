@@ -16,14 +16,24 @@ combining multiple indicators into an actionable assessment.
 Reference:
   nexustrade.io/blog/i-analyzed-100000-backtests-to-find-the-best-trading-indicator
 """
+import logging
+import re
 from datetime import datetime, timezone
 
-import httpx
-import pandas as pd
-from ta.trend import SMAIndicator, EMAIndicator, MACD as TAmacd
-from ta.momentum import RSIIndicator
-from ta.volatility import BollingerBands
 from fastmcp import FastMCP
+
+log = logging.getLogger("augur.indicators")
+
+try:
+    import httpx
+    import pandas as pd
+    from ta.trend import SMAIndicator, EMAIndicator, MACD as TAmacd
+    from ta.momentum import RSIIndicator
+    from ta.volatility import BollingerBands
+    _TA_AVAILABLE = True
+except ImportError:
+    _TA_AVAILABLE = False
+    log.warning("ta/pandas not installed — indicators namespace disabled")
 
 mcp = FastMCP(
     "indicators",
@@ -39,6 +49,9 @@ mcp = FastMCP(
 
 
 # ── Yahoo Finance price fetching ─────────────────────
+
+
+_SAFE_TICKER = re.compile(r'^[A-Za-z0-9^._-]{1,20}$')
 
 
 async def _fetch_yahoo_ohlcv(
@@ -108,6 +121,10 @@ async def analyze_full(
     ticker: stock/ETF/index/crypto symbol (AAPL, SPY, ^GSPC, BTC-USD).
     period: price history range (default 1y; use 2y for more SMA context).
     """
+    if not _TA_AVAILABLE:
+        return {"error": "ta/pandas libraries not installed — indicators unavailable"}
+    if not re.match(r'^[A-Za-z0-9^._-]{1,20}$', ticker):
+        return {"error": "invalid ticker (letters, digits, ^._- only, max 20 chars)"}
     prices = await _fetch_yahoo_ohlcv(ticker, period)
     if "error" in prices:
         return prices

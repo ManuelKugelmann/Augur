@@ -32,17 +32,24 @@ async def api_post(url: str, *, json: dict | None = None,
 
 
 async def api_multi(calls: dict) -> dict:
-    """Run multiple async callables, capture errors per key.
+    """Run multiple async callables concurrently, capture errors per key.
 
     calls: {"streamflow": coroutine_or_callable, "drought": ...}
     Returns: {"streamflow": result_or_error, "drought": ...}
     """
+    import asyncio
+
+    keys = list(calls.keys())
+    coros = list(calls.values())
+
+    raw = await asyncio.gather(*coros, return_exceptions=True)
+
     results: dict = {}
-    for key, coro in calls.items():
-        try:
-            results[key] = await coro
-        except Exception as e:
-            results[key] = {"error": str(e)}
+    for key, val in zip(keys, raw):
+        if isinstance(val, Exception):
+            results[key] = {"error": str(val)}
+        else:
+            results[key] = val
     return results
 
 

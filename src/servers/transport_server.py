@@ -3,8 +3,11 @@ from fastmcp import FastMCP
 from _http import api_get, OAuthToken
 import httpx
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.transport")
 
 mcp = FastMCP("transport", instructions="Flight tracking, vessel tracking, shipping chokepoints")
 AIS_KEY = os.environ.get("AISSTREAM_API_KEY", "")
@@ -65,7 +68,7 @@ async def flights_in_area(lat_min: float, lat_max: float,
             return {"time": data.get("time"), "count": len(data.get("states") or []),
                     "states": states}
     except httpx.HTTPError as e:
-        return {"error": f"OpenSky request failed: {e}"}
+        return {"error": f"OpenSky request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()
@@ -90,7 +93,7 @@ async def own_states(icao24: str = "", serials: str = "") -> dict:
             return {"time": data.get("time"), "count": len(data.get("states") or []),
                     "states": states}
     except httpx.HTTPError as e:
-        return {"error": f"OpenSky own states request failed: {e}"}
+        return {"error": f"OpenSky own states request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()
@@ -182,7 +185,7 @@ async def flight_track(icao24: str, time_stamp: int = 0) -> dict:
                     "endTime": data.get("endTime"),
                     "waypoints": waypoints}
     except httpx.HTTPError as e:
-        return {"error": f"OpenSky track request failed: {e}"}
+        return {"error": f"OpenSky track request failed: {type(e).__name__}: {e}"}
 
 
 # ── AIS / vessel tracking ────────────────────────
