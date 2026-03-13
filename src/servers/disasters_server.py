@@ -34,7 +34,7 @@ async def get_earthquakes(min_magnitude: float = 4.0, days: int = 7,
                         "coords": f["geometry"]["coordinates"]}
                         for f in features]}
     except httpx.HTTPError as e:
-        return {"error": f"USGS earthquake request failed: {e}"}
+        return {"error": f"USGS earthquake request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()

@@ -52,7 +52,7 @@ async def space_weather() -> dict:
                 "alerts": alerts.json()[:10] if alerts.status_code == 200 else [],
             }
     except httpx.HTTPError as e:
-        return {"error": f"NOAA SWPC request failed: {e}"}
+        return {"error": f"NOAA SWPC request failed: {type(e).__name__}: {e}"}
 
 
 if __name__ == "__main__":

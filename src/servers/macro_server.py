@@ -85,7 +85,7 @@ async def imf_data(database: str = "IFS", frequency: str = "A",
                     continue
             return {"error": f"IMF SDMX endpoints unavailable for {database}/{indicator}"}
     except httpx.HTTPError as e:
-        return {"error": f"IMF SDMX request failed: {e}"}
+        return {"error": f"IMF SDMX request failed: {type(e).__name__}: {e}"}
 
 
 # ── Provider-agnostic routing ──────────────────────────

@@ -83,7 +83,7 @@ async def global_elections(country: str = "", year: str = "",
                  "type": b.get("typeLabel", {}).get("value", "")}
                 for b in bindings]}
     except httpx.HTTPError as e:
-        return {"error": f"Wikidata request failed: {e}"}
+        return {"error": f"Wikidata request failed: {type(e).__name__}: {e}"}
 
 
 @mcp.tool()
@@ -123,7 +123,7 @@ async def heads_of_state(country: str = "", limit: int = 10) -> dict:
                  "end": b.get("end", {}).get("value", "")}
                 for b in bindings]}
     except httpx.HTTPError as e:
-        return {"error": f"Wikidata request failed: {e}"}
+        return {"error": f"Wikidata request failed: {type(e).__name__}: {e}"}
 
 
 # ── EU Parliament (no key) ──────────────────────────────
