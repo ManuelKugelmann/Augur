@@ -29,7 +29,6 @@ teardown() {
     [[ "$output" == *"restart"* ]]
     [[ "$output" == *"update"* ]]
     [[ "$output" == *"install"* ]]
-    [[ "$output" == *"rollback"* ]]
     [[ "$output" == *"cron"* ]]
 }
 
@@ -72,25 +71,6 @@ teardown() {
     run bash "$REPO_ROOT/Augur.sh" restart
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"stubbed systemctl --user restart librechat"* ]]
-}
-
-@test "rollback fails when no .prev directory exists" {
-    rm -rf "${APP_DIR}.prev"
-    run bash "$REPO_ROOT/Augur.sh" rollback
-    [[ "$status" -eq 1 ]]
-    [[ "$output" == *"No previous version"* ]]
-}
-
-@test "rollback succeeds when .prev directory exists" {
-    mkdir -p "${APP_DIR}.prev"
-    echo "v0.4.0" > "${APP_DIR}.prev/.version"
-    run bash "$REPO_ROOT/Augur.sh" rb
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"Rolled back"* ]]
-    [[ "$output" == *"v0.4.0"* ]]
-    # Original APP_DIR should now contain the .prev content
-    [[ -f "$APP_DIR/.version" ]]
-    [[ "$(cat "$APP_DIR/.version")" == "v0.4.0" ]]
 }
 
 @test "Augur.sh passes syntax check" {

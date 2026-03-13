@@ -56,10 +56,23 @@ case "$CMD" in
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
         echo -e "${CYAN}Platform:${NC} U8 (Arch/systemd)"
         ;;
+    start)
+        _svc_start librechat || die "Failed to start librechat"
+        _svc_start trading || true
+        _svc_start charts || true
+        echo -e "${GREEN}✓${NC} Started (librechat + trading + charts)"
+        ;;
+    stop)
+        _svc_stop librechat || true
+        _svc_stop trading || true
+        _svc_stop charts || true
+        echo -e "${GREEN}✓${NC} Stopped (librechat + trading + charts)"
+        ;;
     r|restart)
         _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart trading || true
-        echo -e "${GREEN}✓${NC} Restarted (librechat + trading)"
+        _svc_restart charts || true
+        echo -e "${GREEN}✓${NC} Restarted (librechat + trading + charts)"
         ;;
     l|logs)
         _svc_logs librechat || die "Failed to tail logs (is librechat registered?)"
@@ -92,22 +105,31 @@ case "$CMD" in
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
     u|update)
-        echo -e "${CYAN}Pulling latest release...${NC}"
-        _lc_download_and_setup || die "No prebuilt LibreChat release found."
-        ;;
-    pull)
-        echo -e "${CYAN}Dev update via git pull...${NC}"
+        echo -e "${CYAN}Updating Augur stack...${NC}"
+
+        # Stop all services before updating
+        _svc_stop librechat || true
+        _svc_stop trading || true
+        _svc_stop charts || true
+
+        # Pull latest stack code
         git -C "$STACK" pull --ff-only
         VER="dev-$(git -C "$STACK" rev-parse --short HEAD)"
+
+        # Copy scripts and config to LibreChat
         mkdir -p "$APP/scripts" "$APP/config"
         cp "$STACK/augur-uberspace/scripts/"*.sh "$APP/scripts/" 2>/dev/null || true
         if [[ -f "$STACK/augur-uberspace/config/librechat.yaml" ]] && [[ ! -f "$APP/librechat.yaml" ]]; then
             cp "$STACK/augur-uberspace/config/librechat.yaml" "$APP/librechat.yaml"
             sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
         fi
+
+        # Update augur CLI
         cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
         chmod +x "$HOME/bin/augur" 2>/dev/null || true
         ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+
+        # Update Python dependencies
         if [[ -d "$STACK/venv" ]]; then
             _pip_upgrade "$STACK/venv/bin/python" \
                 || die "pip upgrade failed"
@@ -118,25 +140,35 @@ case "$CMD" in
         else
             warn "Python venv not found at $STACK/venv — run 'augur install' first"
         fi
+
+        # Update MCP Node packages
         if [[ -f "$STACK/mcp-nodes/package.json" ]]; then
-            log "Refreshing MCP Node packages..."
-            cd "$STACK/mcp-nodes" && npm install --production && npm dedupe && cd - >/dev/null
-            log "MCP Node packages up to date."
+            local _pkg_hash _cached_hash=""
+            _pkg_hash=$(sha256sum "$STACK/mcp-nodes/package.json" | cut -d' ' -f1)
+            _cached_hash=$(cat "$STACK/mcp-nodes/.package.json.sha256" 2>/dev/null || true)
+            if [[ "$_pkg_hash" != "$_cached_hash" ]] || [[ ! -d "$STACK/mcp-nodes/node_modules" ]]; then
+                log "Refreshing MCP Node packages..."
+                cd "$STACK/mcp-nodes" \
+                    && npm install --production --loglevel=warn 2>&1 | tail -5 \
+                    && npm dedupe --loglevel=warn 2>&1 | tail -3 \
+                    && cd - >/dev/null
+                echo "$_pkg_hash" > "$STACK/mcp-nodes/.package.json.sha256"
+                log "MCP Node packages up to date."
+            else
+                log "MCP Node packages unchanged — skipping npm install."
+            fi
         fi
+
+        # Update LibreChat release bundle (skip if already current)
+        _lc_download_and_setup --skip-if-current || true
+
         echo "$VER" > "$APP/.version"
-        _svc_restart librechat || true
-        _svc_restart trading || true
-        echo -e "${GREEN}✓${NC} Updated to ${VER} via git pull"
-        ;;
-    rb|rollback)
-        if [[ ! -d "${APP}.prev" ]]; then
-            die "No previous version to rollback to"
-        fi
-        _svc_stop librechat || warn "Could not stop librechat (may not be running)"
-        rm -rf "$APP"
-        mv "${APP}.prev" "$APP"
-        _svc_start librechat || warn "Could not start librechat after rollback"
-        echo -e "${GREEN}✓${NC} Rolled back to $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+
+        # Restart all services
+        _svc_start librechat || true
+        _svc_start trading || true
+        _svc_start charts || true
+        echo -e "${GREEN}✓${NC} Updated to ${VER}"
         ;;
     backup)
         [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
@@ -631,14 +663,14 @@ for kind, info in sorted(result.items()):
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
         echo ""
         echo "  augur s|status     Show service status + version"
-        echo "  augur r|restart    Restart LibreChat"
+        echo "  augur start        Start all services"
+        echo "  augur stop         Stop all services"
+        echo "  augur r|restart    Restart all services"
         echo "  augur l|logs       Tail service logs"
         echo "  augur testrun      Run LibreChat in foreground (see errors directly)"
         echo "  augur v|version    Show installed version"
         echo ""
-        echo "  augur u|update     Update from latest GitHub release"
-        echo "  augur pull         Quick update via git pull (dev)"
-        echo "  augur rb|rollback  Rollback to previous version"
+        echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
         echo ""
         echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"

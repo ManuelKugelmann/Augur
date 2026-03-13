@@ -57,13 +57,8 @@ GitHub (Augur) ──tag──▶ CI builds bundle ──▶ GitHub Release
 ## Dev & Deploy Workflow
 
 ```bash
-# Development: push to main, then on Uberspace:
-augur pull                    # git pull + restart
-
-# Production: tag → CI → release bundle
-git tag v0.2.0 && git push --tags
-augur u                       # downloads release, atomic swap, restarts
-augur rb                      # rollback if needed
+# Update on Uberspace (git pull + deps + LibreChat release):
+augur u                       # stops services, updates everything, restarts
 
 # Fresh install (one-liner):
 curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-uberspace/install.sh?$(date +%s)" | bash
@@ -82,6 +77,9 @@ curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-ube
 ~560 tests: bats (shell) + pytest (Python).
 
 ```bash
+# Install test dependencies first (pytest-asyncio, mongomock, etc.)
+pip install -r requirements-test.txt
+
 # Fast shell tests
 bats tests/test_bootstrap.bats tests/test_deploy_conf.bats \
      tests/test_setup.bats tests/test_ta_cron.bats \

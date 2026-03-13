@@ -5,3 +5,4 @@ markers = [
     "asyncio: mark test as async (pytest-asyncio)",
 ]
 addopts = "-m 'not integration'"
+asyncio_mode = "strict"
