@@ -200,16 +200,27 @@ _mcp_nodes_download_and_setup() {
 
     local mcp_dir="$STACK/mcp-nodes"
 
-    if [[ "$skip_current" == true && -f "$mcp_dir/.version" ]]; then
-        local installed_ver=""
-        installed_ver=$(head -1 "$mcp_dir/.version")
-        if [[ -n "$installed_ver" && -n "$_MCP_NODES_TAG" ]]; then
-            local tag_ver="${_MCP_NODES_TAG#mcp-nodes-v}"
-            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_MCP_NODES_TAG" ]]; then
-                log "MCP nodes already up-to-date (${installed_ver})"
-                return 0
+    if [[ "$skip_current" == true && -n "$_MCP_NODES_TAG" ]]; then
+        # Primary check: .release-tag stores the exact tag used to install
+        local installed_tag=""
+        [[ -f "$mcp_dir/.release-tag" ]] && installed_tag=$(cat "$mcp_dir/.release-tag")
+        if [[ -n "$installed_tag" && "$installed_tag" == "$_MCP_NODES_TAG" ]]; then
+            log "MCP nodes already up-to-date ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo "$installed_tag"))"
+            return 0
+        fi
+        # Fallback: compare .version against tag (for pre-.release-tag installs)
+        if [[ -f "$mcp_dir/.version" ]]; then
+            local installed_ver=""
+            installed_ver=$(head -1 "$mcp_dir/.version")
+            if [[ -n "$installed_ver" ]]; then
+                local tag_ver="${_MCP_NODES_TAG#mcp-nodes-v}"
+                if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_MCP_NODES_TAG" ]]; then
+                    log "MCP nodes already up-to-date (${installed_ver})"
+                    echo "$_MCP_NODES_TAG" > "$mcp_dir/.release-tag"
+                    return 0
+                fi
+                log "Updating MCP nodes ${installed_ver} → ${_MCP_NODES_TAG}..."
             fi
-            log "Updating MCP nodes ${installed_ver} → ${_MCP_NODES_TAG}..."
         fi
     fi
 
@@ -224,6 +235,8 @@ _mcp_nodes_download_and_setup() {
     tar xzf "$mcp_tmp/mcp-nodes.tar.gz" -C "$mcp_dir"
     rm -rf "$mcp_tmp"
 
+    # Record the release tag so --skip-if-current works on re-run
+    [[ -n "${_MCP_NODES_TAG:-}" ]] && echo "$_MCP_NODES_TAG" > "$mcp_dir/.release-tag"
     log "MCP nodes bundle installed ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo 'unknown'))"
     return 0
 }
@@ -233,13 +246,22 @@ _lc_download_and_setup() {
     [[ "${1:-}" == "--skip-if-current" ]] && skip_current=true
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
-    if [[ "$skip_current" == true ]]; then
+    if [[ "$skip_current" == true && -n "$_BUNDLE_TAG" ]]; then
+        # Primary check: .release-tag stores the exact tag used to install
+        local installed_tag=""
+        [[ -f "$APP/.release-tag" ]] && installed_tag=$(cat "$APP/.release-tag")
+        if [[ -n "$installed_tag" && "$installed_tag" == "$_BUNDLE_TAG" ]]; then
+            log "LibreChat already up-to-date ($(cat "$APP/.version" 2>/dev/null || echo "$installed_tag"))"
+            return 0
+        fi
+        # Fallback: compare .version against tag (for pre-.release-tag installs)
         local installed_ver=""
         [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
-        if [[ -n "$installed_ver" && -n "$_BUNDLE_TAG" ]]; then
+        if [[ -n "$installed_ver" ]]; then
             local tag_ver="${_BUNDLE_TAG#v}"
             if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ]]; then
                 log "LibreChat already up-to-date (${installed_ver})"
+                echo "$_BUNDLE_TAG" > "$APP/.release-tag"
                 return 0
             fi
             log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
@@ -274,6 +296,8 @@ _lc_download_and_setup() {
     log "Running setup..."
     log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
+    # Record the release tag so --skip-if-current works on re-run
+    [[ -n "${_BUNDLE_TAG:-}" ]] && echo "$_BUNDLE_TAG" > "$APP/.release-tag"
     return 0
 }
 
@@ -601,8 +625,10 @@ SVCEOF
         fi
     fi
 
-    echo -e "  ${CYAN}Start:${NC}"
-    echo "    systemctl --user start librechat"
+    echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
+    echo "    augur start                   # start all services"
+    echo "    augur stop                    # stop all services"
+    echo "    augur restart                 # restart all services"
     echo ""
     echo -e "  ${CYAN}Access:${NC}"
     echo "    https://${UBER}"
