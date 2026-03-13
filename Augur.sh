@@ -132,9 +132,20 @@ case "$CMD" in
             warn "Python venv not found at $STACK/venv — run 'augur install' first"
         fi
         if [[ -f "$STACK/mcp-nodes/package.json" ]]; then
-            log "Refreshing MCP Node packages..."
-            cd "$STACK/mcp-nodes" && npm install --production && npm dedupe && cd - >/dev/null
-            log "MCP Node packages up to date."
+            local _pkg_hash _cached_hash=""
+            _pkg_hash=$(sha256sum "$STACK/mcp-nodes/package.json" | cut -d' ' -f1)
+            _cached_hash=$(cat "$STACK/mcp-nodes/.package.json.sha256" 2>/dev/null || true)
+            if [[ "$_pkg_hash" != "$_cached_hash" ]] || [[ ! -d "$STACK/mcp-nodes/node_modules" ]]; then
+                log "Refreshing MCP Node packages..."
+                cd "$STACK/mcp-nodes" \
+                    && npm install --production --loglevel=warn 2>&1 | tail -5 \
+                    && npm dedupe --loglevel=warn 2>&1 | tail -3 \
+                    && cd - >/dev/null
+                echo "$_pkg_hash" > "$STACK/mcp-nodes/.package.json.sha256"
+                log "MCP Node packages up to date."
+            else
+                log "MCP Node packages unchanged — skipping npm install."
+            fi
         fi
         echo "$VER" > "$APP/.version"
         _svc_restart librechat || true

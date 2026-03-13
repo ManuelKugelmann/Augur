@@ -262,13 +262,13 @@ _lc_download_and_setup() {
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
     if command -v pigz &>/dev/null; then
-        log "  → tar -I pigz -xf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
-        tar -I pigz -xf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+        tar -I pigz -xf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
     else
-        log "  → tar xzf $lc_tmp/bundle.tar.gz -C $lc_tmp/app"
-        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app" -v
+        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
     fi
-    log "Extraction complete"
+    local _nfiles
+    _nfiles=$(find "$lc_tmp/app" -type f | wc -l)
+    log "Extracted ${_nfiles} files"
 
     local bundle_ver=""
     [[ -f "$lc_tmp/app/.version" ]] && bundle_ver=$(cat "$lc_tmp/app/.version")
