@@ -75,7 +75,8 @@ if __name__ == "__main__":
     transport_mode = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport_mode in ("streamable-http", "http"):
         port = int(os.environ.get("MCP_PORT", "8071"))
-        mcp.run(transport="http", host="127.0.0.1", port=port,
+        # Uberspace web backends require 0.0.0.0 (not 127.0.0.1)
+        mcp.run(transport="http", host="0.0.0.0", port=port,
                 stateless_http=True)
     else:
         mcp.run(transport="stdio")
