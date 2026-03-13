@@ -56,10 +56,23 @@ case "$CMD" in
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
         echo -e "${CYAN}Platform:${NC} U8 (Arch/systemd)"
         ;;
+    start)
+        _svc_start librechat || die "Failed to start librechat"
+        _svc_start trading || true
+        _svc_start charts || true
+        echo -e "${GREEN}✓${NC} Started (librechat + trading + charts)"
+        ;;
+    stop)
+        _svc_stop librechat || true
+        _svc_stop trading || true
+        _svc_stop charts || true
+        echo -e "${GREEN}✓${NC} Stopped (librechat + trading + charts)"
+        ;;
     r|restart)
         _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart trading || true
-        echo -e "${GREEN}✓${NC} Restarted (librechat + trading)"
+        _svc_restart charts || true
+        echo -e "${GREEN}✓${NC} Restarted (librechat + trading + charts)"
         ;;
     l|logs)
         _svc_logs librechat || die "Failed to tail logs (is librechat registered?)"
@@ -615,7 +628,9 @@ for kind, info in sorted(result.items()):
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
         echo ""
         echo "  augur s|status     Show service status + version"
-        echo "  augur r|restart    Restart LibreChat"
+        echo "  augur start        Start all services"
+        echo "  augur stop         Stop all services"
+        echo "  augur r|restart    Restart all services"
         echo "  augur l|logs       Tail service logs"
         echo "  augur testrun      Run LibreChat in foreground (see errors directly)"
         echo "  augur v|version    Show installed version"
