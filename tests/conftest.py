@@ -8,6 +8,14 @@ _FakeCollection fallback. See _USE_MONGOMOCK flag.
 import sys
 from unittest.mock import MagicMock
 
+# Fail fast with a clear message if test dependencies are missing
+try:
+    import pytest_asyncio  # noqa: F401
+except ImportError:
+    raise SystemExit(
+        "pytest-asyncio is not installed. Run: pip install -r requirements-test.txt"
+    )
+
 # Mock dotenv if not installed (only load_dotenv is used at module level)
 if "dotenv" not in sys.modules:
     try:
