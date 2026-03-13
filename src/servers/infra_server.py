@@ -3,8 +3,11 @@ from fastmcp import FastMCP
 from _http import api_get, api_multi
 import os
 import time
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.infra")
 
 mcp = FastMCP("infra", instructions="Internet traffic, network probes, outage detection")
 CF_TOKEN = os.environ.get("CF_API_TOKEN", "")

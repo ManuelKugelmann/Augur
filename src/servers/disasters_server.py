@@ -3,6 +3,9 @@ from fastmcp import FastMCP
 from _http import api_get, api_multi
 import httpx
 from datetime import datetime, timedelta, timezone
+import logging
+
+log = logging.getLogger("augur.disasters")
 
 mcp = FastMCP("disasters", instructions="Real-time earthquakes, disasters, natural events")
 

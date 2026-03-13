@@ -335,6 +335,9 @@ def seed_profiles(profiles_dir: str, clear: bool = False) -> dict:
                 try:
                     data = json.loads(fpath.read_text())
                     profile_id = fpath.stem
+                    if not _SAFE_ID.match(profile_id):
+                        errors.append(f"{fpath.name}: invalid ID '{profile_id}'")
+                        continue
                     doc = {
                         "_id_str": profile_id,
                         "kind": kind,
@@ -486,6 +489,7 @@ def list_profiles(kind: str, region: str = "",
     """List profiles for a kind, optionally filtered by region."""
     if kind not in VALID_KINDS:
         return []
+    limit = min(limit, 2000)
     q: dict = {}
     if region:
         q["region"] = region
@@ -792,7 +796,7 @@ def history(kind: str, entity: str, type: str = "",
             region: str = "", after: str = "", before: str = "",
             limit: int = 100) -> list[dict]:
     """Snapshot history for an entity. Newest first. after/before: ISO dates."""
-    return _query_history(kind, entity, type, region, after, before, limit)
+    return _query_history(kind, entity, type, region, after, before, min(limit, 5000))
 
 
 @mcp.tool()
@@ -800,6 +804,7 @@ def recent_events(subtype: str = "", severity: str = "",
                   region: str = "", countries: list[str] | None = None,
                   days: int = 30, limit: int = 50) -> list[dict]:
     """Recent signal events, filtered by subtype/severity/region."""
+    limit = min(limit, 1000)
     q: dict = {
         "ts": {"$gte": datetime.now(timezone.utc) - timedelta(days=days)},
     }
@@ -1292,6 +1297,7 @@ def _get_user_key(header_name: str) -> str:
 
 
 _user_action_counts: dict[str, int] = defaultdict(int)
+_action_count_date: str = ""  # YYYY-MM-DD — resets counter daily
 _DAILY_ACTION_LIMIT_DEFAULT = int(os.environ.get("RISK_DAILY_LIMIT", "50"))
 
 
@@ -1313,6 +1319,11 @@ def _risk_check(action: str, params: dict,
     """Validate a trading action before execution.
     Returns None if approved, or an error dict if blocked.
     User can override dry_run default via RISK_LIVE_TRADING customUserVar."""
+    global _action_count_date
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if _action_count_date != today:
+        _user_action_counts.clear()
+        _action_count_date = today
     uid = _get_user_id()
     if not uid:
         return {"error": "user not identified — cannot execute trading actions"}
@@ -1368,9 +1379,14 @@ def _get_ntfy_topic() -> str:
     return topic or _NTFY_TOPIC_DEFAULT
 
 
+def _sanitize_header(v: str) -> str:
+    """Strip CRLF to prevent header injection."""
+    return v.replace("\r", "").replace("\n", " ")
+
+
 @mcp.tool()
-def notify(title: str, message: str, priority: str = "default",
-           tags: str = "") -> dict:
+async def notify(title: str, message: str, priority: str = "default",
+                 tags: str = "") -> dict:
     """Send a push notification via ntfy (per-user topic).
 
     priority: min | low | default | high | urgent
@@ -1380,13 +1396,14 @@ def notify(title: str, message: str, priority: str = "default",
     if not topic:
         return {"error": "no ntfy topic configured — set X-Ntfy-Topic in Settings > Plugins or NTFY_TOPIC env var"}
     import httpx
-    headers = {"Title": title, "Priority": priority}
+    headers = {"Title": _sanitize_header(title), "Priority": priority}
     if tags:
-        headers["Tags"] = tags
+        headers["Tags"] = _sanitize_header(tags)
     try:
-        r = httpx.post(f"{_NTFY_BASE}/{topic}", content=message,
-                       headers=headers, timeout=10)
-        r.raise_for_status()
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(f"{_NTFY_BASE}/{topic}", content=message,
+                                  headers=headers)
+            r.raise_for_status()
         return {"status": "sent", "topic": topic}
     except Exception as e:
         return {"error": f"ntfy send failed: {e}"}

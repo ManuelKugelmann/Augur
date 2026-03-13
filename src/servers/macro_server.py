@@ -3,8 +3,11 @@ from fastmcp import FastMCP
 from _http import api_get
 import httpx
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.macro")
 
 mcp = FastMCP("macro", instructions="Macroeconomic indicators: FRED, World Bank, IMF")
 FRED_KEY = os.environ.get("FRED_API_KEY", "")

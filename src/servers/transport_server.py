@@ -3,8 +3,11 @@ from fastmcp import FastMCP
 from _http import api_get, OAuthToken
 import httpx
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.transport")
 
 mcp = FastMCP("transport", instructions="Flight tracking, vessel tracking, shipping chokepoints")
 AIS_KEY = os.environ.get("AISSTREAM_API_KEY", "")

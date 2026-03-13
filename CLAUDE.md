@@ -2,115 +2,77 @@
 
 ## Rules
 
-- **Never circumvent or exclude failing tests.** Always find and fix the root cause. If not possible, discuss the problem with the user before proceeding.
-- **Run tests locally before pushing.** Always run `python -m pytest tests/ -v` (and `bats tests/*.bats` if shell scripts changed) before committing and pushing. Do not push code that fails tests. For long-running test suites (e.g. `bats tests/install/*.bats`), push first to leverage CI, then run locally in parallel.
-- **Prefer battle-tested libraries over custom code.** Use well-established libraries (e.g. `mongomock` for MongoDB mocks) instead of writing custom implementations — but don't explode the dependency tree for marginal gains.
+- **Never circumvent or exclude failing tests.** Find and fix root causes.
+- **Run tests before pushing.** `python -m pytest tests/ -v` (+ `bats tests/*.bats` if shell changed). For slow suites (`bats tests/install/*.bats`), push first to leverage CI.
+- **Prefer battle-tested libraries** over custom code (e.g. `mongomock` for MongoDB mocks).
+- **Keep MCP packages pinned** to `~/bin/` for quick deploy — don't rely on `npx` for production MCPs.
 
 ## Project
 
-**Augur** — An MCP-based trading signals platform deployed via LibreChat on Uberspace. 1 combined trading server (signals store + 12 data domains + technical indicators, 50+ tools, 75+ data sources) via streamable-http + external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit, hackernews, arxiv, math, regression, crypto-sentiment). Single process, multi-user: OSINT data is shared, notes/plans are per-user, trading keys are per-user via `customUserVars`. A risk gate guards all external trading actions.
+**Augur** — MCP-based trading signals platform on LibreChat/Uberspace. Combined trading server (store + 12 domains + indicators, 50+ tools, 75+ sources) via streamable-http + external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit, hackernews, arxiv, math, regression, crypto-sentiment). Single process, multi-user. Risk gate guards all trading actions.
 
-## Key Names & Paths
+## Key Paths
 
-- **Repo**: `ManuelKugelmann/Augur`
-- **Ops CLI**: `Augur.sh` → installed as `~/bin/augur` (symlink `~/bin/Augur`)
-- **Uberspace host**: `augur.uber.space` (`UBER_USER=augur`)
-- **Platform**: U8 (Arch Linux / systemd).
-- **deploy.conf**: Central config sourced by all scripts. Key vars: `GH_USER`, `GH_REPO`, `STACK_DIR=$HOME/augur`, `APP_DIR=$HOME/LibreChat`, `LC_PORT=3080`
-
-| Uberspace Path | Purpose |
+| Path | Purpose |
 |------|---------|
-| `~/augur/` | Clone of this repo (signals stack) |
-| `~/LibreChat/` | LibreChat installation (from CI release bundle) |
+| `Augur.sh` → `~/bin/augur` | Ops CLI (symlink `~/bin/Augur`) |
+| `~/augur/` | This repo clone (signals stack) |
+| `~/LibreChat/` | LibreChat (from CI release bundle) |
 | `~/backups/mongo/` | Rolling MongoDB backups |
+| `deploy.conf` | Central config: `GH_USER`, `GH_REPO`, `STACK_DIR`, `APP_DIR`, `LC_PORT=3080` |
+
+**Host**: `augur.uber.space` (U8, Arch Linux, systemd)
 
 ## Architecture
 
 ```
-GitHub (Augur) ──tag──▶ CI builds bundle ──▶ GitHub Release
-                                                   │
-                                                   ▼
-                         Uberspace (augur.uber.space)
-                         ├─ LibreChat (:3080, Node.js)
-                         │   ├─ MCP: trading ──streamable-http──▶ :8071/mcp
-                         │   ├─ MCP: Tier 1 (finance, gdelt, predictions, rss, reddit)
-                         │   └─ MCP: Tier 2 (hackernews, arxiv, math, regression, crypto-sentiment)
-                         ├─ trading server (:8071, Python, store + 12 domains, 50+ tools)
-                         └─ cron → MongoDB Atlas + 75+ free data APIs
+GitHub ──tag──▶ CI bundle ──▶ Release ──▶ Uberspace
+├─ LibreChat (:3080) → MCP: trading ──streamable-http──▶ :8071/mcp
+│                    → MCP: Tier 1 (finance, gdelt, predictions, rss, reddit)
+│                    → MCP: Tier 2 (hackernews, arxiv, math, regression, crypto-sentiment)
+├─ trading server (:8071, Python, store + 12 domains, 50+ tools)
+└─ cron → MongoDB Atlas + 75+ free data APIs
 ```
 
-### Combined Trading Server (`src/servers/combined_server.py`)
-- Signals store + 12 data domains + technical indicators combined via FastMCP `mount(namespace=)`
-- Transport: streamable-http on `:8071/mcp`, falls back to stdio for dev/testing
-- Tool namespacing: `store_get_profile`, `weather_forecast`, `econ_fred_series`, `ta_analyze_full`, etc.
-- Multi-user: `X-User-ID`/`X-User-Email` headers from LibreChat; notes/plans per-user; broker keys per-user via headers
-- Risk gate: `_risk_check()` enforces dry_run default, daily action limits
+**Trading server** (`src/servers/combined_server.py`): FastMCP `mount(namespace=)`, streamable-http `:8071/mcp`, stdio for dev. Namespaces: `store_*`, `weather_*`, `econ_*`, `ta_*`, etc. Multi-user via `X-User-ID`/`X-User-Email` headers.
 
-### Signals Store (store_* namespace)
-- **Profiles**: MongoDB `profiles_{kind}` collections (text + geo indexes). Kinds: countries, stocks, etfs, crypto, indices, sources, commodities, crops, materials, products, companies
-- **Snapshots**: Per-kind timeseries (`snap_{kind}`, `arch_{kind}`, `events`). Tools: snapshot, history, trend, nearby, event, compact, aggregate, chart
-- **Notes** (per-user): plans, watchlists, journals in `user_notes` collection
-- **Research** (shared): `save_research`, `get_research`, `update_research`, `delete_research`
-- **Regions**: north_america, latin_america, europe, mena, sub_saharan_africa, south_asia, east_asia, southeast_asia, central_asia, oceania, arctic, antarctic, global
-- **ID conventions**: countries=ISO3 (`DEU`), stocks/etfs/crypto/indices=ticker (`AAPL`), others=lowercase slug (`crude_oil`)
+**Store** (`store_*`): MongoDB `profiles_{kind}` (12 kinds), `snap_{kind}`/`arch_{kind}`/`events` timeseries. Notes per-user, research shared. IDs: ISO3 for countries, tickers for stocks, lowercase slugs for others.
 
-## Dev & Deploy Workflow
+## Environment (`~/augur/.env`)
 
-```bash
-# Update on Uberspace (git pull + deps + LibreChat release):
-augur u                       # stops services, updates everything, restarts
-
-# Fresh install (one-liner):
-curl -sL "https://raw.githubusercontent.com/ManuelKugelmann/Augur/main/augur-uberspace/install.sh?$(date +%s)" | bash
-```
-
-## Environment Variables
-
-### Signals Stack (`~/augur/.env`)
-- `MONGO_URI_SIGNALS` — MongoDB Atlas (database: `signals`). **Not** the same as LibreChat's `MONGO_URI`.
-- `MCP_TRANSPORT` — `streamable-http` (prod) or `stdio` (dev, default)
-- `MCP_PORT` — default `8071`
+- `MONGO_URI_SIGNALS` — MongoDB Atlas (`signals` db, not LibreChat's `MONGO_URI`)
+- `MCP_TRANSPORT` — `streamable-http` (prod) / `stdio` (dev)
+- `MCP_PORT` — `8071`
 - Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY` — see `docs/api-keys.md`
 
 ## Testing
 
-~560 tests: bats (shell) + pytest (Python).
+~585 tests: bats (shell) + pytest (Python).
 
 ```bash
-# Install test dependencies first (pytest-asyncio, mongomock, etc.)
-pip install -r requirements-test.txt
-
-# Fast shell tests
-bats tests/test_bootstrap.bats tests/test_deploy_conf.bats \
-     tests/test_setup.bats tests/test_ta_cron.bats \
-     tests/test_ta_dispatch.bats
-
-# All Python tests
-python -m pytest tests/ -v
-
-# Everything
-bats tests/*.bats && python -m pytest tests/ -v
-
-# Syntax check
-bash -n Augur.sh
+pip install -r requirements-test.txt   # test deps
+python -m pytest tests/ -v             # Python tests
+bats tests/*.bats                      # shell tests
+bats tests/*.bats && python -m pytest tests/ -v  # all
+bash -n Augur.sh                       # syntax check
 ```
 
-### Sandbox Workarounds
-- `ta` library: `SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta --no-build-isolation`
-- Missing `ta` or `httpx` → related tests auto-skip
-- Missing `/dev/fd`: `ln -sf /proc/self/fd /dev/fd`
+**Sandbox workarounds**: `SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta --no-build-isolation`; missing `ta`/`httpx` → tests auto-skip; `ln -sf /proc/self/fd /dev/fd` if needed.
 
-### Test Architecture
-- **Bats**: sandboxed `$HOME` via `mktemp -d`, external commands stubbed, git uses local bare repos. `$REAL_GIT` saved before stubbing.
-- **Pytest**: `conftest.py` mocks `pymongo`/`fastmcp` at import time. `profiles_dir` + `store` fixtures.
-- **CI**: `tests.yml` (push/PR: shell + python + shellcheck), `tests-install.yml` (slow install tests, path-filtered)
+**Test arch**: Bats uses sandboxed `$HOME`, stubbed commands, local bare repos. Pytest mocks `pymongo`/`fastmcp` at import via `conftest.py`. CI: `tests.yml` (push/PR), `tests-install.yml` (slow, path-filtered).
 
 ## Conventions
 
-- All shell scripts: `set -euo pipefail`, source `deploy.conf` first
-- Profile IDs: uppercase ISO/tickers for countries/stocks, lowercase slugs for others
-- Git tags: `vMAJOR.MINOR.PATCH` (triggers CI release)
-- Cron logger tag: `augur-cron`
-- `__HOME__` in `librechat.yaml` replaced by `setup.sh` with actual `$HOME`
-- After editing `.sh` files, run `bash -n <file>` — especially `Augur.sh` (must work via `curl | bash`)
-- Use approximate tool counts (e.g. "50+ tools") — exact counts go stale
+- Shell: `set -euo pipefail`, source `deploy.conf` first
+- IDs: uppercase ISO/tickers (countries/stocks), lowercase slugs (others)
+- Tags: `vMAJOR.MINOR.PATCH` triggers CI release
+- `__HOME__` in `librechat.yaml` → replaced by `setup.sh`
+- After editing `.sh` files: `bash -n <file>` (especially `Augur.sh`)
+- Use approximate tool counts (e.g. "50+ tools")
+
+## Deploy
+
+```bash
+augur u                       # update: stop, git pull, deps, restart
+curl -sL ".../install.sh?$(date +%s)" | bash  # fresh install
+```

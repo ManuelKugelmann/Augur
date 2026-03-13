@@ -137,7 +137,7 @@ async def score_prediction(
     article_path: str,
     outcome: str,
     outcome_note: str = "",
-    evidence: list[dict] = [],
+    evidence: list[dict] | None = None,
 ) -> dict:
     """Score (or re-score) a prediction article's outcome.
 
@@ -152,6 +152,7 @@ async def score_prediction(
         outcome_note: Brief explanation of why this outcome was assigned.
         evidence: List of sources backing the verdict, each {url, title?}.
     """
+    evidence = evidence or []
     if outcome not in ("confirmed", "partial", "wrong"):
         return {"error": "outcome must be: confirmed, partial, wrong"}
 

@@ -507,8 +507,11 @@ async def _notify_manual_post(platform: str, brand: str, caption: str,
     title = f"Post to {platform.title()} — {brand_name}"
     body = f"{caption}\n\n{article_url}"
 
+    def _sanitize_header(v: str) -> str:
+        return v.replace("\r", "").replace("\n", " ")
+
     headers = {
-        "Title": title,
+        "Title": _sanitize_header(title),
         "Priority": "default",
         "Tags": f"mega,{platform}",
         "Click": article_url,
@@ -581,14 +584,18 @@ async def push_site(message: str = "") -> dict:
         stdout, stderr = await proc.communicate()
         return proc.returncode or 0, stdout.decode(), stderr.decode()
 
-    await _run(["git", "add", "_posts/", "assets/", "_data/"])
+    rc, _, stderr = await _run(["git", "add", "_posts/", "assets/", "_data/"])
+    if rc != 0:
+        return {"error": f"git add failed: {stderr}"}
 
     rc, status_out, _ = await _run(["git", "status", "--porcelain"])
     if not status_out.strip():
         return {"status": "no changes to push"}
 
     commit_msg = message or f"augur: new predictions {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
-    await _run(["git", "commit", "-m", commit_msg])
+    rc, _, stderr = await _run(["git", "commit", "-m", commit_msg])
+    if rc != 0:
+        return {"error": f"git commit failed: {stderr}"}
 
     for attempt in range(5):
         rc, _, stderr = await _run(["git", "push", "-u", "origin", branch])

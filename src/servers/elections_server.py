@@ -4,8 +4,11 @@ from _http import api_get
 import httpx
 import os
 import re
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.elections")
 
 mcp = FastMCP("elections", instructions="Global elections and democracy data")
 GOOGLE_KEY = os.environ.get("GOOGLE_API_KEY", "")
@@ -65,7 +68,7 @@ async def global_elections(country: str = "", year: str = "",
   OPTIONAL {{ ?election wdt:P31 ?type }}
   {filter_block}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
-}} ORDER BY DESC(?date) LIMIT {limit}"""
+}} ORDER BY DESC(?date) LIMIT {min(limit, 200)}"""
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.get("https://query.wikidata.org/sparql",
@@ -104,7 +107,7 @@ async def heads_of_state(country: str = "", limit: int = 10) -> dict:
   OPTIONAL {{ ?stmt pq:P582 ?end }}
   ?position wdt:P17 ?country .
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
-}} ORDER BY DESC(?start) LIMIT {limit}"""
+}} ORDER BY DESC(?start) LIMIT {min(limit, 200)}"""
     try:
         async with httpx.AsyncClient(timeout=30) as c:
             r = await c.get("https://query.wikidata.org/sparql",

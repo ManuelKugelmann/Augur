@@ -3,8 +3,11 @@ from fastmcp import FastMCP
 from _http import api_get
 import httpx
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+log = logging.getLogger("augur.agri")
 
 mcp = FastMCP("agri", instructions="FAO global agriculture + USDA crop data")
 # FAOSTAT migrated from fenixservices to faostatservices (2025).

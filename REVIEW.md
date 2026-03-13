@@ -1,7 +1,7 @@
 # Code Review — Augur
 
 Full security and quality audit of the entire codebase. Date: 2026-03-06.
-Updated: 2026-03-09 (14 of 19 fixed, all critical security issues resolved).
+Updated: 2026-03-13 (all critical + warning issues fixed across both reviews).
 
 ---
 
@@ -116,87 +116,33 @@ not repeated.
 
 ### CRITICAL
 
-#### 24. Mutable Default Argument in `score_prediction`
-**File:** `src/servers/augur_score.py:140`
+#### 24. ~~Mutable Default Argument in `score_prediction`~~ ✅ FIXED
+**File:** `src/servers/augur_score.py` — changed to `evidence: list[dict] | None = None` with `evidence = evidence or []`.
 
-```python
-async def score_prediction(..., evidence: list[dict] = []) -> dict:
-```
-Classic Python footgun — the same list object is shared across all calls.
-Should be `evidence: list[dict] | None = None` with `evidence = evidence or []`.
+#### 25. ~~`api_multi()` Runs Sequentially Despite Name~~ ✅ FIXED
+**File:** `src/servers/_http.py` — now uses `asyncio.gather()` for concurrent execution with per-key error capture.
 
-#### 25. `api_multi()` Runs Sequentially Despite Name
-**File:** `src/servers/_http.py:34-46`
+#### 26. ~~ACLED Token Race Condition~~ ✅ FIXED
+**File:** `src/servers/conflict_server.py` — added `asyncio.Lock` with double-check pattern to prevent concurrent token refreshes.
 
-```python
-async def api_multi(calls: dict) -> dict:
-    for key, coro in calls.items():
-        results[key] = await coro  # ← sequential, not concurrent
-```
-Used by `water_server`, `disasters_server`, `humanitarian_server`, `infra_server`
-for aggregation tools. Each coroutine is `await`ed one-by-one. Should use
-`asyncio.gather()` for parallel execution (current latency = sum of all calls;
-should be max of all calls).
-
-#### 26. ACLED Token Race Condition (async global state)
-**File:** `src/servers/conflict_server.py:18-41`
-
-Module-level `_acled_token` / `_acled_token_exp` globals modified by async
-`_acled_auth()` without a lock. Two concurrent requests both see expired token,
-both call the OAuth endpoint, waste quota. Fix: use `asyncio.Lock`.
-
-#### 27. Risk Gate Daily Counter Never Resets
-**File:** `src/store/server.py:1294`
-
-```python
-_user_action_counts: dict[str, int] = defaultdict(int)
-```
-In-memory counter resets only on process restart. No daily reset logic.
-If the server runs for days without restart, users hit their daily limit
-permanently. Needs a date-keyed counter or periodic reset.
+#### 27. ~~Risk Gate Daily Counter Never Resets~~ ✅ FIXED
+**File:** `src/store/server.py` — added `_action_count_date` tracking; `_risk_check()` clears counters on date change.
 
 ---
 
 ### WARNING
 
-#### 28. `indicators_server` Hard-Fails at Import
-**File:** `src/servers/indicators_server.py:22-25`
+#### 28. ~~`indicators_server` Hard-Fails at Import~~ ✅ FIXED
+**File:** `src/servers/indicators_server.py` — `ta`/`pandas` imports wrapped in `try/except`; `_TA_AVAILABLE` flag gates tool execution. Server starts cleanly without these deps.
 
-```python
-import pandas as pd
-from ta.trend import SMAIndicator, EMAIndicator, MACD as TAmacd
-```
-Top-level imports with no `try/except`. If `ta` or `pandas` is not installed,
-`combined_server.py` fails to start entirely (all 50+ tools down).
-Tests auto-skip via conftest, but production has no graceful degradation.
-Should wrap in try/except and disable the indicators namespace if unavailable.
+#### 29. ~~No Ticker Validation in `analyze_full`~~ ✅ FIXED
+**File:** `src/servers/indicators_server.py` — added regex `^[A-Za-z0-9^._-]{1,20}$` validation before Yahoo Finance request.
 
-#### 29. No Ticker Validation in `analyze_full`
-**File:** `src/servers/indicators_server.py:94`
+#### 30. ~~SPARQL Injection via `limit` Parameter~~ ✅ FIXED
+**File:** `src/servers/elections_server.py` — `limit` capped with `min(limit, 200)` in both SPARQL queries.
 
-`ticker` parameter is passed directly to Yahoo Finance URL without validation.
-While `httpx` handles URL encoding, malicious input like `../../` or very long
-strings should be rejected early. Add regex: `^[A-Za-z0-9^._-]{1,20}$`.
-
-#### 30. SPARQL Injection via `limit` Parameter
-**File:** `src/servers/elections_server.py:68`
-
-```python
-}} ORDER BY DESC(?date) LIMIT {limit}"""
-```
-`limit` is an `int` parameter, so Python's type system provides some protection,
-but MCP tool parameters arrive as JSON and could be strings. The `year` and
-`country` inputs are validated; `limit` is not.
-
-#### 31. FDA Drug Name Injection
-**File:** `src/servers/health_server.py:65`
-
-```python
-search = f'patient.drug.medicinalproduct:"{drug}"'
-```
-User `drug` parameter interpolated into FDA API query with only double-quote
-wrapping. A `drug` value containing `"` could break the query. Add input
-sanitization or escape quotes.
+#### 31. ~~FDA Drug Name Injection~~ ✅ FIXED
+**File:** `src/servers/health_server.py` — embedded quotes stripped from `drug` parameter before interpolation into FDA query.
 
 #### 32. Plotly CDN Pinned to Old Version
 **File:** `src/store/server.py:903`
@@ -207,76 +153,31 @@ sanitization or escape quotes.
 Hardcoded CDN URL. Not a security risk (loaded client-side in chart output),
 but will miss bug fixes. Consider making configurable or documenting the pin.
 
-#### 33. No Logging in Domain Servers
-**Files:** All 12 `src/servers/*_server.py` (except `augur_publish.py`, `augur_score.py`)
+#### 33. ~~No Logging in Domain Servers~~ ✅ FIXED
+**Files:** All 12 `src/servers/*_server.py` now have `log = logging.getLogger("augur.{name}")`.
 
-None of the domain servers log API calls, errors, or rate limits. Only
-`augur_publish.py` and `augur_score.py` use Python's `logging` module.
-Makes production debugging difficult. Recommend adding `log = logging.getLogger()`
-to each server and logging on API errors.
+#### 34. ~~`OAuthToken` Class Not Used for ACLED~~ ✅ FIXED (via #26)
+ACLED auth now uses `asyncio.Lock` for thread safety. Password grant doesn't fit `OAuthToken` (client_credentials only), but the race condition is resolved.
 
-#### 34. `OAuthToken` Class Not Used for ACLED
-**File:** `src/servers/_http.py:49-80` vs `src/servers/conflict_server.py:22-41`
+#### 35. ~~`push_site` Runs Git Commands Without Checking Exit Codes~~ ✅ FIXED
+**File:** `src/servers/augur_publish.py` — `git add` and `git commit` exit codes now checked; returns error dict on failure.
 
-`_http.py` provides a proper `OAuthToken` class with encapsulated caching, but
-`conflict_server.py` implements its own ad-hoc global-state token caching.
-Should refactor ACLED auth to use `OAuthToken` (fixes #26 race condition too).
-
-#### 35. `push_site` Runs Git Commands Without Checking Exit Codes
-**File:** `src/servers/augur_publish.py:584-591`
-
-```python
-await _run(["git", "add", "_posts/", "assets/", "_data/"])
-# ← exit code not checked
-rc, status_out, _ = await _run(["git", "status", "--porcelain"])
-```
-`git add` and `git commit` exit codes are ignored. A failed `git add` would
-silently proceed to push stale content.
-
-#### 36. `notify()` Uses Synchronous httpx
-**File:** `src/store/server.py:1387`
-
-```python
-r = httpx.post(...)
-```
-All other HTTP calls in the codebase use `httpx.AsyncClient`. This synchronous
-call blocks the event loop. Should use `async with httpx.AsyncClient`.
+#### 36. ~~`notify()` Uses Synchronous httpx~~ ✅ FIXED
+**File:** `src/store/server.py` — `notify()` is now `async def` using `httpx.AsyncClient`.
 
 ---
 
-#### 42. CRLF Injection in ntfy Headers
-**File:** `src/servers/augur_publish.py:510-516`
+#### 42. ~~CRLF Injection in ntfy Headers~~ ✅ FIXED
+**Files:** `src/servers/augur_publish.py`, `src/store/server.py` — `_sanitize_header()` strips `\r` and `\n` from all user-supplied ntfy header values.
 
-User-supplied `title` and `caption` are placed directly into HTTP headers for
-ntfy notifications without escaping. A value containing `\r\n` could inject
-arbitrary headers. Sanitize by stripping control characters.
+#### 43. ~~Charts Server Integer Parse Crash~~ ✅ FIXED
+**File:** `src/store/charts.py` — `periods` parsing wrapped in `try/except` with default=24 fallback and clamped to `[1, 10000]`.
 
-#### 43. Charts Server Integer Parse Crash
-**File:** `src/store/charts.py:59`
+#### 44. ~~No Upper Bound on `limit` Parameters~~ ✅ FIXED
+**File:** `src/store/server.py` — `list_profiles` capped at 2000, `history` at 5000, `recent_events` at 1000.
 
-```python
-periods = int(qs.get("periods", ["24"])[0])
-```
-No `try/except` — a non-numeric `?periods=abc` query string crashes the handler
-with `ValueError`. Also no upper bound: `?periods=999999999` causes resource
-exhaustion. Add validation and clamping.
-
-#### 44. No Upper Bound on `limit` Parameters
-**Files:** `src/store/server.py` (multiple tools)
-
-`list_profiles(limit=500)`, `history(limit=100)`, `recent_events(limit=50)`,
-`aggregate()` all accept arbitrary `limit` values with no max cap. A caller
-requesting `limit=10000000` causes memory/query exhaustion.
-Add `limit = min(limit, MAX_LIMIT)` clamping.
-
-#### 45. `seed_profiles` Skips ID Validation
-**File:** `src/store/server.py:337`
-
-```python
-profile_id = fpath.stem  # from filesystem, no _SAFE_ID check
-```
-Unlike `put_profile()` which validates IDs via `_validate_profile_args()`,
-the seed path trusts filesystem filenames. Install-only, low practical risk.
+#### 45. ~~`seed_profiles` Skips ID Validation~~ ✅ FIXED
+**File:** `src/store/server.py` — `_SAFE_ID` regex check added before inserting; invalid IDs logged to `_errors`.
 
 ---
 
@@ -321,44 +222,23 @@ Consider documenting why.
 
 ### Test Coverage Gaps
 
-#### T1. Risk Gate Under-Tested
-**File:** `src/store/server.py:1311-1331`
+#### T1. ~~Risk Gate Under-Tested~~ ✅ FIXED
+Added tests: daily counter reset on date change, counter persistence same day, invalid `x-risk-daily-limit` header fallback, zero daily limit blocks all actions. See `tests/test_review_fixes.py`.
 
-`_risk_check()` has tests for basic dry_run and user identification, but:
-- Daily counter increment and limit enforcement not tested
-- Counter never-resets bug (#27) not covered
-- `_get_user_risk_settings()` header parsing edge cases untested
+#### T2. `compact()` Not Tested — COVERED IN `test_store_mongo.py`
+Already tested: `TestCompact` class with 5 tests (reject invalid kind, reject invalid bucket, nothing to compact, compact success, partial insert error). No gap.
 
-#### T2. `compact()` Not Tested
-**File:** `src/store/server.py:980-1072`
+#### T3. `chart()` Not Tested — COVERED IN `test_store_mongo.py`
+Already tested: `TestChart` class with 6 tests (reject invalid kind, no data, generates HTML, archive, bar type, scatter type). No gap.
 
-The entire compaction workflow (downsample snapshots to archive, delete originals)
-has no test coverage. Complex aggregation pipeline + delete operation.
+#### T4. Social Posting Partially Tested — OPEN
+Image upload and byte-offset facet logic remain untested. Push_site exit codes now checked (#35).
 
-#### T3. `chart()` Not Tested
-**File:** `src/store/server.py:910-957`
+#### T5. ~~`api_multi` Error Isolation Not Tested~~ ✅ FIXED
+Added `test_api_multi_error_isolation` verifying one failing coroutine returns `{"error": ...}` while others succeed. See `tests/test_review_fixes.py`.
 
-Plotly HTML chart generation has no tests. Could silently break without detection.
-
-#### T4. Social Posting Partially Tested
-**Files:** `src/servers/augur_publish.py:386-563`
-
-Bluesky and Mastodon posting have basic tests, but:
-- Image upload path (blob upload) not tested
-- Facet/link computation byte-offset logic not tested
-- `push_site` git operations not tested
-
-#### T5. `api_multi` Error Isolation Not Tested
-**File:** `src/servers/_http.py:34-46`
-
-No test verifies that one failing coroutine doesn't prevent others from completing.
-
-#### T6. Alert Hooks Lightly Tested
-**Files:** `src/alerts/threshold_checker.py`, `src/alerts/impact_mapper.py`
-
-Threshold checking and impact propagation have unit tests, but the integration
-path (snapshot insert → threshold hook → event creation → impact propagation)
-is not end-to-end tested.
+#### T6. Alert Hooks Lightly Tested — OPEN
+End-to-end integration path (snapshot → threshold hook → event → impact) not tested. Unit tests for individual components are solid.
 
 ---
 
@@ -372,7 +252,8 @@ is not end-to-end tested.
 | Accepted | 3 | #14, #16, #18 (not applicable) |
 | Open | 2 | #17 (perf at scale), #23 (low priority) |
 | **Second review** | | |
-| Critical | 4 | #24-27 (mutable default, sequential api_multi, race condition, counter reset) |
-| Warning | 13 | #28-36, #42-45 (import crash, injections, limits, logging, sync httpx) |
+| Fixed | 17 | #24-31, #33-36, #42-45 |
+| Accepted | 1 | #32 (Plotly CDN pin, document only) |
 | Low/Style | 5 | #37-41 (yaml parser, date format, atomicity, iteration, timeout) |
-| Test gaps | 6 | T1-T6 (risk gate, compact, chart, social, api_multi, alert hooks) |
+| Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
+| Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |

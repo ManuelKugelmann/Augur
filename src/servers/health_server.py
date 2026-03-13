@@ -1,8 +1,11 @@
 """Health — WHO GHO, WHO Outbreaks, disease.sh, OpenFDA."""
+import logging
 from fastmcp import FastMCP
 from _http import api_get
 import httpx
 import re
+
+log = logging.getLogger("augur.health")
 
 mcp = FastMCP("health", instructions="Global health, disease outbreaks, FDA data")
 
@@ -62,7 +65,8 @@ async def fda_adverse_events(drug: str = "", limit: int = 20) -> dict:
     """FDA adverse drug event reports."""
     if drug and not _SAFE_COUNTRY.match(drug):
         return {"error": "invalid drug name (letters, spaces, digits only)"}
-    search = f'patient.drug.medicinalproduct:"{drug}"' if drug else ""
+    safe_drug = drug.replace('"', '') if drug else ""
+    search = f'patient.drug.medicinalproduct:"{safe_drug}"' if safe_drug else ""
     return await api_get("https://api.fda.gov/drug/event.json",
                          params={"search": search, "limit": limit},
                          label="OpenFDA")

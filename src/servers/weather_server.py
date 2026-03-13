@@ -2,6 +2,9 @@
 from fastmcp import FastMCP
 from _http import api_get
 import httpx
+import logging
+
+log = logging.getLogger("augur.weather")
 
 mcp = FastMCP("weather", instructions="Weather forecasts, historical climate, space weather")
 
