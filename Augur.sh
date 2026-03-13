@@ -153,14 +153,7 @@ case "$CMD" in
         echo -e "${GREEN}✓${NC} Updated to ${VER} via git pull"
         ;;
     rb|rollback)
-        if [[ ! -d "${APP}.prev" ]]; then
-            die "No previous version to rollback to"
-        fi
-        _svc_stop librechat || warn "Could not stop librechat (may not be running)"
-        rm -rf "$APP"
-        mv "${APP}.prev" "$APP"
-        _svc_start librechat || warn "Could not start librechat after rollback"
-        echo -e "${GREEN}✓${NC} Rolled back to $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        die "Rollback removed — use 'augur update' to install a specific release or 'augur pull' for dev updates"
         ;;
     backup)
         [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
@@ -648,7 +641,6 @@ for kind, info in sorted(result.items()):
         echo ""
         echo "  augur u|update     Update from latest GitHub release"
         echo "  augur pull         Quick update via git pull (dev)"
-        echo "  augur rb|rollback  Rollback to previous version"
         echo ""
         echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"
