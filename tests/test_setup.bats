@@ -124,9 +124,6 @@ EOF
 
     # Version should be updated
     [[ "$(cat "$APP_DIR/.version")" == "v1.1.0" ]]
-
-    # Previous version should be backed up
-    [[ -d "${APP_DIR}.prev" ]]
 }
 
 @test "setup.sh creates systemd service file on install" {
@@ -285,7 +282,7 @@ fi'
     [[ "$output" == *"crypto-feargreed-mcp already installed"* ]]
 }
 
-@test "setup.sh rolls back on missing app code" {
+@test "setup.sh fails on missing app code" {
     # Create existing APP_DIR
     mkdir -p "$APP_DIR/api/server"
     echo "// working" > "$APP_DIR/api/server/index.js"
@@ -299,8 +296,5 @@ fi'
 
     run bash "$REPO_ROOT/augur-uberspace/scripts/setup.sh" "$src" "v0.4.0-bad" 2>&1
     [ "$status" -ne 0 ]
-
-    # Should have rolled back to previous version
-    [ -f "$APP_DIR/api/server/index.js" ]
-    grep -q "// working" "$APP_DIR/api/server/index.js"
+    [[ "$output" == *"app code missing"* ]]
 }

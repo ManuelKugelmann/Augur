@@ -175,10 +175,8 @@ augur s|status   # status + version + host
 augur l|logs     # tail logs
 augur r|restart  # restart LibreChat
 augur v|version  # show version
-augur u|update   # update from latest GitHub release
-augur pull       # quick update via git pull (dev)
+augur u|update   # update stack (git pull + deps + LibreChat release)
 augur install    # re-run full installer (idempotent)
-augur rb|rollback # rollback to previous version
 augur sync       # force git sync of data
 augur check      # health check
 augur check -t   # health check + test suite

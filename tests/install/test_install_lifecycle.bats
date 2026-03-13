@@ -269,8 +269,6 @@ SVCEOF
     grep -q "v0.2.0-test" "$APP_DIR/.version"
     # .env should be preserved
     grep -q "MONGO_URI=test" "$APP_DIR/.env"
-    # Previous version should be backed up
-    [ -d "${APP_DIR}.prev" ]
 }
 
 @test "setup.sh: preserves uploads directory on update" {
@@ -294,7 +292,7 @@ SVCEOF
     grep -q "important-file" "$APP_DIR/uploads/test.txt"
 }
 
-@test "setup.sh: rolls back on missing app code" {
+@test "setup.sh: fails on missing app code" {
     # Create existing APP_DIR
     mkdir -p "$APP_DIR/api/server"
     echo "// working" > "$APP_DIR/api/server/index.js"
@@ -308,10 +306,7 @@ SVCEOF
 
     run bash "$STACK_DIR/augur-uberspace/scripts/setup.sh" "$SRC" "v0.4.0-bad" 2>&1
     [ "$status" -ne 0 ]
-
-    # Should have rolled back to previous version
-    [ -f "$APP_DIR/api/server/index.js" ]
-    grep -q "// working" "$APP_DIR/api/server/index.js"
+    [[ "$output" == *"app code missing"* ]]
 }
 
 @test "setup.sh: generates crypto keys on fresh install" {
@@ -420,5 +415,4 @@ SVCEOF
     # Verify update state
     grep -q "v1.0.0" "$APP_DIR/.version"
     grep -q "KEEP=yes" "$APP_DIR/.env"
-    [ -d "${APP_DIR}.prev" ]
 }

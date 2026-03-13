@@ -377,9 +377,7 @@ augur l|logs        # tail logs
 augur r|restart     # restart LibreChat + trading
 augur testrun       # run LibreChat in foreground (see errors directly)
 augur v|version     # show version
-augur u|update      # update from latest GitHub release
-augur pull          # quick update via git pull (dev)
-augur rb|rollback   # rollback to previous version
+augur u|update      # update stack (git pull + deps + LibreChat release)
 augur backup        # backup MongoDB to ~/backups/mongo/
 augur restore [f]   # restore MongoDB from backup
 augur backups       # list available backups
@@ -393,44 +391,18 @@ augur yaml          # edit librechat.yaml
 augur conf          # edit deploy.conf
 ```
 
-### Updates — Production
+### Updates
 
-On your dev machine, tag and push:
-
-```bash
-git tag v0.2.0
-```
-
-```bash
-git push --tags
-```
-
-On Uberspace, download and install:
-
-```bash
-augur u
-```
-
-### Updates — Dev
-
-On your dev machine:
+On your dev machine, push changes:
 
 ```bash
 git push
 ```
 
-On Uberspace:
+On Uberspace, update everything (git pull + deps + LibreChat release):
 
 ```bash
-augur pull
-```
-
-### Rollback
-
-Restores `~/LibreChat.prev` from the last update:
-
-```bash
-augur rb
+augur u
 ```
 
 ---

@@ -12,7 +12,6 @@ done
 SRC="${1:?Usage: setup.sh <app-dir> <version>}"
 VER="${2:-unknown}"
 APP="${APP_DIR:-$HOME/LibreChat}"
-BAK="${APP}.prev"
 STACK="${STACK_DIR:-$HOME/augur}"
 PORT="${LC_PORT:-3080}"
 
@@ -61,9 +60,8 @@ if [[ "$MODE" == "update" ]]; then
 fi
 
 # ── Atomic swap ─────────────────────────────
-log "  → atomic swap: $SRC → $APP (backup: $BAK)"
-rm -rf "$BAK"
-[[ -d "$APP" ]] && mv "$APP" "$BAK"
+log "  → atomic swap: $SRC → $APP"
+rm -rf "$APP"
 mv "$SRC" "$APP"
 
 for d in "${PERSIST[@]}"; do mkdir -p "$APP/$d"; done
@@ -71,9 +69,6 @@ for d in "${PERSIST[@]}"; do mkdir -p "$APP/$d"; done
 # ── Verify LibreChat app code is present ────
 # The release bundle must include pre-built LibreChat (built in CI).
 if [[ ! -f "$APP/api/server/index.js" ]]; then
-    # Rollback: restore previous version if it existed
-    rm -rf "$APP"
-    [[ -d "$BAK" ]] && mv "$BAK" "$APP"
     die "LibreChat app code missing from bundle. Use a release built with CI (git tag + push)."
 fi
 
