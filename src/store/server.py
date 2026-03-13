@@ -562,6 +562,10 @@ def search_profiles(kind: str, field: str, value: str,
         # Regex fallback for partial string match
         q[field] = re.compile(re.escape(value), re.IGNORECASE)
         docs = list(col.find(q, {"_id": 0}).limit(100))
+    # Normalize _id_str → id so callers get a consistent shape
+    for d in docs:
+        if "_id_str" in d and "id" not in d:
+            d["id"] = d.pop("_id_str")
     return docs
 
 
