@@ -788,3 +788,112 @@ class TestResearchTools:
     def test_delete_research_not_found(self, store):
         r = store.delete_research("nonexistent")
         assert "error" in r
+
+
+# ── region_links ────────────────────────────────
+
+
+class TestRegionLinks:
+    def test_region_with_id_returns_neighbors_and_links(self, store, profiles_dir):
+        store.put_profile("regions", "europe", {
+            "id": "europe", "name": "Europe",
+            "neighbors": ["asia", "africa"],
+            "links": [
+                {"type": "trade", "target": "asia"},
+                {"type": "alliance", "target": "north_america"},
+            ],
+        })
+        result = store.region_links(id="europe")
+        assert result["id"] == "europe"
+        assert result["name"] == "Europe"
+        assert "asia" in result["neighbors"]
+        assert len(result["links"]) == 2
+
+    def test_region_links_filtered_by_type(self, store, profiles_dir):
+        store.put_profile("regions", "europe", {
+            "id": "europe", "name": "Europe",
+            "neighbors": [],
+            "links": [
+                {"type": "trade", "target": "asia"},
+                {"type": "alliance", "target": "north_america"},
+            ],
+        })
+        result = store.region_links(id="europe", link_type="trade")
+        assert len(result["links"]) == 1
+        assert result["links"][0]["type"] == "trade"
+
+    def test_region_links_no_id_returns_graph_or_error(self, store):
+        result = store.region_links()
+        # No _graph doc exists → returns error
+        assert "error" in result
+
+    def test_region_links_invalid_id(self, store, profiles_dir):
+        result = store.region_links(id="nonexistent")
+        assert "error" in result
+
+
+# ── country_links ───────────────────────────────
+
+
+class TestCountryLinks:
+    def test_country_with_id_returns_neighbors_and_links(self, store, profiles_dir):
+        store.put_profile("countries", "DEU", {
+            "id": "DEU", "name": "Germany",
+            "neighbors": ["FRA", "POL", "AUT"],
+            "links": [
+                {"type": "trade", "target": "CHN"},
+                {"type": "alliance", "target": "USA"},
+            ],
+        }, region="europe")
+        result = store.country_links(id="DEU")
+        assert result["id"] == "DEU"
+        assert result["name"] == "Germany"
+        assert "FRA" in result["neighbors"]
+        assert len(result["links"]) == 2
+
+    def test_country_links_filtered_by_type(self, store, profiles_dir):
+        store.put_profile("countries", "DEU", {
+            "id": "DEU", "name": "Germany",
+            "neighbors": [],
+            "links": [
+                {"type": "trade", "target": "CHN"},
+                {"type": "sanctions", "target": "RUS"},
+            ],
+        }, region="europe")
+        result = store.country_links(id="DEU", link_type="sanctions")
+        assert len(result["links"]) == 1
+        assert result["links"][0]["target"] == "RUS"
+
+    def test_country_links_no_id_returns_all(self, store, profiles_dir):
+        store.put_profile("countries", "DEU", {
+            "id": "DEU", "name": "Germany",
+            "links": [{"type": "trade", "target": "CHN"}],
+        }, region="europe")
+        result = store.country_links()
+        assert "countries_with_links" in result
+
+    def test_country_links_invalid_id(self, store, profiles_dir):
+        result = store.country_links(id="ZZZ")
+        assert "error" in result
+
+
+# ── nearby_profiles ─────────────────────────────
+
+
+class TestNearbyProfiles:
+    def test_invalid_kind_returns_error(self, store):
+        result = store.nearby_profiles(kind="invalid", lon=13.4, lat=52.5)
+        assert result[0]["error"] == "unknown kind: invalid"
+
+    def test_valid_kind_runs_pipeline(self, store, monkeypatch):
+        # Mock _profiles_col to return a collection with aggregate
+        mock_col = MagicMock()
+        mock_col.aggregate.return_value = [
+            {"_id_str": "DEU", "name": "Germany", "_dist_m": 1000},
+        ]
+        monkeypatch.setattr(store, "_profiles_col", lambda kind: mock_col)
+        result = store.nearby_profiles(kind="countries", lon=13.4, lat=52.5, max_km=100)
+        assert len(result) == 1
+        mock_col.aggregate.assert_called_once()
+        pipeline = mock_col.aggregate.call_args[0][0]
+        assert pipeline[0]["$geoNear"]["maxDistance"] == 100_000
