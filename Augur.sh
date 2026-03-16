@@ -61,6 +61,16 @@ case "$CMD" in
         _svc_start trading || true
         _svc_start charts || true
         echo -e "${GREEN}✓${NC} Started (librechat + trading + charts)"
+        # Show recent startup logs so the user can spot errors immediately
+        echo ""
+        for _svc in librechat trading charts; do
+            if systemctl --user is-active "$_svc" &>/dev/null || \
+               [[ -f "$HOME/.config/systemd/user/${_svc}.service" ]]; then
+                echo -e "${CYAN}── $_svc (last 15 lines) ──${NC}"
+                journalctl --user -u "$_svc" --no-pager -n 15 --since "-30s" 2>/dev/null || true
+                echo ""
+            fi
+        done
         ;;
     stop)
         _svc_stop librechat || true
@@ -73,6 +83,16 @@ case "$CMD" in
         _svc_restart trading || true
         _svc_restart charts || true
         echo -e "${GREEN}✓${NC} Restarted (librechat + trading + charts)"
+        # Show recent startup logs so the user can spot errors immediately
+        echo ""
+        for _svc in librechat trading charts; do
+            if systemctl --user is-active "$_svc" &>/dev/null || \
+               [[ -f "$HOME/.config/systemd/user/${_svc}.service" ]]; then
+                echo -e "${CYAN}── $_svc (last 15 lines) ──${NC}"
+                journalctl --user -u "$_svc" --no-pager -n 15 --since "-30s" 2>/dev/null || true
+                echo ""
+            fi
+        done
         ;;
     l|logs)
         _svc_logs librechat || die "Failed to tail logs (is librechat registered?)"
