@@ -31,5 +31,8 @@ logs/
 # MongoDB
 dump/
 
+# Cache (ETag / download cache)
+.cache/
+
 # Node (LibreChat)
 node_modules/

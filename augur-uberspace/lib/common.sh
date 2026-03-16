@@ -86,10 +86,16 @@ gh_curl() {
     curl -sf "$@"
 }
 
-# Robust file download with progress and retries
+# Robust file download with progress, retries, and ETag caching.
+# Returns 0 on success (new download), 0 on 304 (not modified).
+# Sets _DOWNLOAD_SKIPPED=true when the server returns 304.
 _download() {
     local url="$1" out="$2" desc="${3:-file}"
     local retries=4 attempt=0 delay=2 rc=0
+    _DOWNLOAD_SKIPPED=false
+
+    # ETag cache file lives next to the output file
+    local etag_file="${out}.etag"
 
     local size_bytes=""
     size_bytes=$(curl -sfI -L "$url" 2>/dev/null | grep -i '^content-length:' | tail -1 | tr -d '[:space:]' | cut -d: -f2 || true)
@@ -102,26 +108,53 @@ _download() {
     fi
     echo -e "  ${CYAN}  URL:${NC} ${url}"
 
+    # Build ETag header if we have a cached ETag and the cached file exists
+    local etag_header=()
+    if [[ -f "$etag_file" && -s "$out" ]]; then
+        local cached_etag
+        cached_etag=$(cat "$etag_file")
+        if [[ -n "$cached_etag" ]]; then
+            etag_header=(-H "If-None-Match: ${cached_etag}")
+            echo -e "  ${CYAN}  ETag:${NC} ${cached_etag} (checking...)"
+        fi
+    fi
+
     while (( attempt < retries )); do
         attempt=$((attempt + 1))
         rc=0
-        if command -v wget &>/dev/null && [[ "$url" == http://* || "$url" == https://* ]]; then
-            wget -q --timeout=30 --tries=1 \
-                 -O "$out" "$url" \
-                || rc=$?
-        else
-            curl -fL --progress-bar --connect-timeout 15 --max-time 600 \
-                 -o "$out" "$url" \
-                || rc=$?
+
+        # Use curl for ETag support (wget doesn't handle If-None-Match well)
+        local http_code=""
+        local header_tmp
+        header_tmp=$(mktemp)
+        http_code=$(curl -fL --progress-bar --connect-timeout 15 --max-time 600 \
+             -w "%{http_code}" -D "$header_tmp" \
+             "${etag_header[@]}" \
+             -o "$out" "$url" 2>/dev/null) || rc=$?
+
+        # 304 Not Modified — file is already current
+        if [[ "$http_code" == "304" ]]; then
+            echo -e "  ${GREEN}✓${NC} Already up-to-date (304 Not Modified)"
+            rm -f "$header_tmp"
+            _DOWNLOAD_SKIPPED=true
+            return 0
         fi
 
         if [[ $rc -eq 0 && -s "$out" ]]; then
+            # Store ETag from response headers for next time
+            local new_etag=""
+            new_etag=$(grep -i '^etag:' "$header_tmp" | tail -1 | sed 's/^[^:]*:\s*//;s/\r$//' || true)
+            if [[ -n "$new_etag" ]]; then
+                echo "$new_etag" > "$etag_file"
+            fi
+            rm -f "$header_tmp"
             local got_mb
             got_mb=$(awk "BEGIN {printf \"%.1f\", $(stat -c%s "$out" 2>/dev/null || stat -f%z "$out" 2>/dev/null || echo 0) / 1048576}")
             echo -e "  ${GREEN}✓${NC} Downloaded ${got_mb} MB"
             return 0
         fi
 
+        rm -f "$header_tmp"
         if (( attempt < retries )); then
             warn "Download attempt ${attempt}/${retries} failed, retrying in ${delay}s..."
             sleep "$delay"
@@ -197,6 +230,7 @@ _mcp_nodes_download_and_setup() {
 
     local mcp_dir="$STACK/mcp-nodes"
 
+    # Version check (fast path before download)
     if [[ "$skip_current" == true && -f "$mcp_dir/.version" ]]; then
         local installed_ver=""
         installed_ver=$(head -1 "$mcp_dir/.version")
@@ -210,16 +244,24 @@ _mcp_nodes_download_and_setup() {
         fi
     fi
 
-    local mcp_tmp
-    mcp_tmp=$(mktemp -d)
+    # Use a persistent cache path so ETag survives across updates
+    local cache_dir="$STACK/.cache"
+    mkdir -p "$cache_dir"
+    local cached_bundle="$cache_dir/mcp-nodes-build.tar.gz"
+
     log "Downloading MCP nodes bundle..."
-    _download "$_MCP_NODES_URL" "$mcp_tmp/mcp-nodes.tar.gz" "MCP nodes bundle${_MCP_NODES_TAG:+ ($_MCP_NODES_TAG)}"
+    _download "$_MCP_NODES_URL" "$cached_bundle" "MCP nodes bundle${_MCP_NODES_TAG:+ ($_MCP_NODES_TAG)}"
+
+    # ETag matched — server confirmed we already have the latest
+    if [[ "$_DOWNLOAD_SKIPPED" == true ]]; then
+        log "MCP nodes bundle unchanged (ETag match)"
+        return 0
+    fi
 
     log "Extracting MCP nodes bundle..."
     mkdir -p "$mcp_dir"
     rm -rf "$mcp_dir/node_modules" "$mcp_dir/.bin"
-    tar xzf "$mcp_tmp/mcp-nodes.tar.gz" -C "$mcp_dir"
-    rm -rf "$mcp_tmp"
+    tar xzf "$cached_bundle" -C "$mcp_dir"
 
     log "MCP nodes bundle installed ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo 'unknown'))"
     return 0
@@ -233,6 +275,7 @@ _lc_download_and_setup() {
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
 
+    # Version check (fast path before download)
     if [[ "$skip_current" == true ]]; then
         local installed_ver=""
         [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
@@ -246,15 +289,27 @@ _lc_download_and_setup() {
         fi
     fi
 
+    # Use a persistent cache path so ETag survives across updates
+    local cache_dir="$STACK/.cache"
+    mkdir -p "$cache_dir"
+    local cached_bundle="$cache_dir/librechat-bundle.tar.gz"
+
+    log "Downloading LibreChat release..."
+    _download "$_BUNDLE_URL" "$cached_bundle" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
+
+    # ETag matched — server confirmed we already have the latest
+    if [[ "$_DOWNLOAD_SKIPPED" == true ]]; then
+        log "LibreChat bundle unchanged (ETag match)"
+        return 0
+    fi
+
     local lc_tmp
     lc_tmp=$(mktemp -d -p "$HOME" .lc-install.XXXXXX)
     # shellcheck disable=SC2064
     trap "rm -rf '$lc_tmp'" EXIT
 
-    log "Downloading LibreChat release..."
-    _download "$_BUNDLE_URL" "$lc_tmp/bundle.tar.gz" "LibreChat bundle${_BUNDLE_TAG:+ ($_BUNDLE_TAG)}"
     local bundle_size
-    bundle_size=$(stat -c%s "$lc_tmp/bundle.tar.gz" 2>/dev/null || stat -f%z "$lc_tmp/bundle.tar.gz" 2>/dev/null || echo "")
+    bundle_size=$(stat -c%s "$cached_bundle" 2>/dev/null || stat -f%z "$cached_bundle" 2>/dev/null || echo "")
     local size_info=""
     if [[ -n "$bundle_size" && "$bundle_size" -gt 0 ]] 2>/dev/null; then
         size_info=" ($(awk "BEGIN {printf \"%.1f\", $bundle_size / 1048576}") MB)"
@@ -262,9 +317,9 @@ _lc_download_and_setup() {
     mkdir -p "$lc_tmp/app"
     log "Extracting bundle${size_info}..."
     if command -v pigz &>/dev/null; then
-        tar -I pigz -xf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+        tar -I pigz -xf "$cached_bundle" -C "$lc_tmp/app"
     else
-        tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
+        tar xzf "$cached_bundle" -C "$lc_tmp/app"
     fi
     local _nfiles
     _nfiles=$(find "$lc_tmp/app" -type f | wc -l)
