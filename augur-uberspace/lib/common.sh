@@ -241,6 +241,25 @@ _mcp_nodes_download_and_setup() {
     return 0
 }
 
+# ── Web backend with retries (install uses this) ──
+_web_backend_retry() {
+    local path="$1" port="$2"
+    # Skip if already configured
+    local existing
+    existing=$(timeout 30 uberspace web backend list 2>&1 || true)
+    if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
+        log "Web backend ${path} → port ${port} already set"
+        return 0
+    fi
+    local attempt=0 delay=2
+    while (( attempt < 3 )); do
+        attempt=$((attempt + 1))
+        timeout 30 uberspace web backend add "$path" port "$port" --force && return 0
+        (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
+    done
+    return 1
+}
+
 # ── Download, extract, and install/update LibreChat bundle ──
 _lc_download_and_setup() {
     local skip_current=false
@@ -324,4 +343,154 @@ _lc_download_and_setup() {
     [[ -n "$_BUNDLE_TAG" ]]      && echo "$_BUNDLE_TAG"      > "$APP/.release-tag"
 
     return 0
+}
+
+# ═══════════════════════════════════════════════
+#  _update_core — shared logic for install & update
+# ═══════════════════════════════════════════════
+# Usage: _update_core [install|update]
+#   install: clone-or-pull with fallback, create venv if missing/broken
+#   update:  pull --ff-only only, skip venv creation
+_update_core() {
+    local mode="${1:-update}"
+
+    # ── 1. Git pull (or clone on install) ──
+    if [[ -d "$STACK/.git" ]]; then
+        log "Pulling latest code..."
+        if [[ "$mode" == "install" ]]; then
+            timeout 120 git -C "$STACK" pull --ff-only origin "$BRANCH" </dev/null || \
+                { warn "pull --ff-only failed, resetting to origin/$BRANCH"
+                  timeout 120 git -C "$STACK" fetch origin "$BRANCH" </dev/null && \
+                  git -C "$STACK" reset --hard "origin/$BRANCH"; }
+        else
+            git -C "$STACK" pull --ff-only
+        fi
+        log "Repo updated"
+    elif [[ "$mode" == "install" ]]; then
+        log "Cloning repo..."
+        timeout 120 git clone -b "$BRANCH" "https://github.com/${GH_USER}/${GH_REPO}.git" "$STACK" </dev/null
+        log "Cloned → $STACK"
+    else
+        die "Repo not found at $STACK — run install first"
+    fi
+
+    # Re-source config after pull (deploy.conf may have changed)
+    [[ -f "$STACK/deploy.conf" ]] && source "$STACK/deploy.conf"
+
+    _INSTALL_SHA=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    _INSTALL_COMMIT_DATE=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
+    log "Version: ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+
+    # ── 2. Copy augur CLI ──
+    mkdir -p "$HOME/bin"
+    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+
+    # ── 3. Copy scripts to LibreChat ──
+    mkdir -p "$APP/scripts" "$APP/config"
+    cp "$STACK/augur-uberspace/scripts/"*.sh "$APP/scripts/" 2>/dev/null || true
+    if [[ -f "$STACK/augur-uberspace/config/librechat.yaml" ]] && [[ ! -f "$APP/librechat.yaml" ]]; then
+        cp "$STACK/augur-uberspace/config/librechat.yaml" "$APP/librechat.yaml"
+        sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+    fi
+
+    # ── 4. Python venv ──
+    local PYTHON_BIN=""
+    for _py in "python${PYTHON_VERSION:-}" python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
+        [[ -z "$_py" || "$_py" == "python" ]] && continue
+        if command -v "$_py" &>/dev/null && \
+           "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+            PYTHON_BIN="$_py"; break
+        fi
+    done
+
+    if [[ -d "$STACK/venv" ]]; then
+        local _venv_check
+        if ! _venv_check=$(timeout 10 "$STACK/venv/bin/python" -c 'import sys; print(sys.version)' </dev/null 2>&1); then
+            warn "Venv python is broken or stale. Output: $_venv_check"
+            if [[ "$mode" == "install" ]]; then
+                warn "Recreating venv..."
+                rm -rf "$STACK/venv"
+            else
+                warn "Run 'augur install' to recreate venv"
+            fi
+        else
+            log "Python venv OK, checking pip..."
+            if ! _pip_upgrade "$STACK/venv/bin/python"; then
+                if [[ "$mode" == "install" ]]; then
+                    warn "pip check failed, recreating venv..."
+                    rm -rf "$STACK/venv"
+                else
+                    warn "pip check failed — run 'augur install' to recreate venv"
+                fi
+            fi
+        fi
+    fi
+
+    if [[ ! -d "$STACK/venv" ]]; then
+        if [[ "$mode" != "install" ]]; then
+            warn "Python venv not found at $STACK/venv — run 'augur install' first"
+            return 0
+        fi
+        [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. Check: python3 --version"
+        log "Creating Python venv..."
+        "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
+        log "Bootstrapping pip inside venv..."
+        "$STACK/venv/bin/python" -m ensurepip </dev/null || die "ensurepip failed"
+        _pip_upgrade "$STACK/venv/bin/python" || die "pip upgrade failed"
+    fi
+
+    # ── 5. Install Python requirements (skip if unchanged) ──
+    if [[ -d "$STACK/venv" ]]; then
+        local _req_hash _cached_hash=""
+        _req_hash=$(sha256sum "$STACK/requirements.txt" 2>/dev/null | cut -d' ' -f1 || true)
+        [[ -f "$STACK/venv/.req_hash" ]] && _cached_hash=$(cat "$STACK/venv/.req_hash")
+        if [[ -n "$_req_hash" && "$_req_hash" == "$_cached_hash" ]]; then
+            log "Python requirements unchanged, skipping pip install"
+        else
+            log "Installing Python requirements..."
+            _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
+                || die "pip install requirements failed"
+            echo "$_req_hash" > "$STACK/venv/.req_hash"
+        fi
+        log "Python venv ready"
+    fi
+
+    # ── 6. LibreChat bundle ──
+    if ! _lc_download_and_setup --skip-if-current; then
+        if [[ "$mode" == "install" ]]; then
+            die "No prebuilt LibreChat release found. Create one via: Actions → Release LibreChat Bundle → Run workflow"
+        else
+            warn "LibreChat bundle download failed"
+        fi
+    fi
+
+    # ── 7. MCP Node servers ──
+    log "Checking MCP Node servers bundle..."
+    if ! _mcp_nodes_download_and_setup --skip-if-current; then
+        warn "MCP Node servers bundle not found — Node MCPs won't be available"
+    fi
+
+    # ── 8. Auto-patch librechat.yaml for known breaking changes ──
+    local _SAFE_BAK="$APP/librechat.yaml.pre-safe"
+    for _yaml_target in "$APP/librechat.yaml" "$_SAFE_BAK"; do
+        [[ -f "$_yaml_target" ]] || continue
+        if grep -q '"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null \
+           && ! grep -q '"--refresh".*"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null; then
+            cp "$_yaml_target" "${_yaml_target}.bak.$(date +%Y%m%d-%H%M%S)"
+            sed -i 's|\["google-news-trends-mcp@latest"\]|["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+            sed -i 's|\["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"\]|["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+            log "Auto-patched $(basename "$_yaml_target") (pinned fastmcp<3 + --refresh for google-news MCP)"
+        fi
+    done
+
+    # ── 9. Clean up legacy trading.service ──
+    if [[ -f "$HOME/.config/systemd/user/trading.service" ]]; then
+        log "Removing legacy trading.service (renamed to augur)..."
+        systemctl --user stop trading 2>/dev/null || true
+        systemctl --user disable trading 2>/dev/null || true
+        rm -f "$HOME/.config/systemd/user/trading.service"
+        _svc_reload
+    fi
 }
