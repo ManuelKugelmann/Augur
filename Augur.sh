@@ -195,21 +195,41 @@ case "$CMD" in
             log "Removed legacy trading.service (renamed to augur)"
         fi
 
-        # Free disk space: clear package manager caches
-        local _freed=0
-        for _cache_dir in "$HOME/.cache/pip" "$HOME/.cache/uv" "$HOME/.npm/_cacache"; do
-            if [[ -d "$_cache_dir" ]]; then
-                _freed=$(( _freed + $(du -sm "$_cache_dir" 2>/dev/null | cut -f1) ))
-                rm -rf "$_cache_dir"
-            fi
-        done
-        (( _freed > 0 )) && log "Cleared ${_freed} MB of package caches"
-
         # Restart all services
         _svc_start librechat || true
         _svc_start augur || true
         _svc_start charts || true
         echo -e "${GREEN}✓${NC} Updated to ${VER}"
+        ;;
+    clean)
+        echo -e "${CYAN}Clearing caches...${NC}"
+        local _total=0
+        for _cache_dir in \
+            "$HOME/.cache/pip" \
+            "$HOME/.cache/uv" \
+            "$HOME/.cache/ms-playwright" \
+            "$HOME/.npm/_cacache" \
+            "$HOME/.cache/node" \
+            "$HOME/.cache/gem"; do
+            if [[ -d "$_cache_dir" ]]; then
+                local _sz
+                _sz=$(du -sm "$_cache_dir" 2>/dev/null | cut -f1)
+                log "  ${_cache_dir/#$HOME/\~} (${_sz} MB)"
+                rm -rf "$_cache_dir"
+                _total=$(( _total + _sz ))
+            fi
+        done
+        # Stale temp dirs from failed installs
+        for _stale in "$HOME"/.lc-install.*; do
+            if [[ -d "$_stale" ]]; then
+                local _sz
+                _sz=$(du -sm "$_stale" 2>/dev/null | cut -f1)
+                log "  ${_stale/#$HOME/\~} (${_sz} MB)"
+                rm -rf "$_stale"
+                _total=$(( _total + _sz ))
+            fi
+        done
+        echo -e "${GREEN}✓${NC} Freed ${_total} MB"
         ;;
     backup)
         [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
@@ -712,6 +732,7 @@ for kind, info in sorted(result.items()):
         echo "  augur version      Show installed version"
         echo ""
         echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
+        echo "  augur clean        Clear all caches (pip, uv, npm, playwright, temp)"
         echo ""
         echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
         echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"
