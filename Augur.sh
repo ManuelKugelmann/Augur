@@ -455,7 +455,7 @@ SVCEOF
             local LC_READY=false
             _svc_start librechat || true
             for i in $(seq 1 30); do
-                if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                if curl -sf "${LC_URL}/health" >/dev/null 2>&1; then
                     LC_READY=true; break
                 fi
                 sleep 2
@@ -475,7 +475,7 @@ SVCEOF
             local LC_URL="http://localhost:${LC_PORT:-3080}"
             local LC_READY=false
             for i in $(seq 1 15); do
-                if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                if curl -sf "${LC_URL}/health" >/dev/null 2>&1; then
                     LC_READY=true; break
                 fi
                 sleep 2
@@ -966,7 +966,7 @@ SVCEOF
         if [[ "$LC_CODE" == "200" ]] || [[ "$LC_CODE" == "301" ]] || [[ "$LC_CODE" == "302" ]]; then _ok "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"
         elif [[ "$LC_CODE" == "000" ]]; then _fail "LibreChat HTTP: not reachable on port ${LC_PORT:-3080}"
         else _warn "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"; fi
-        LC_API="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/api/health" 2>/dev/null || echo "000")"
+        LC_API="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/health" 2>/dev/null || echo "000")"
         if [[ "$LC_API" == "200" ]]; then _ok "LibreChat API: healthy"
         elif [[ "$LC_API" == "000" ]]; then _fail "LibreChat API: not reachable"
         else _warn "LibreChat API: HTTP ${LC_API}"; fi

@@ -229,7 +229,7 @@ def librechat_server(lc_app_dir, lc_env, lc_yaml, augur_server):
         cwd=str(lc_app_dir), env=env,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    if not _wait_for_http(f"http://127.0.0.1:{LC_PORT}/api/health", timeout=90):
+    if not _wait_for_http(f"http://127.0.0.1:{LC_PORT}/health", timeout=90):
         stdout = proc.stdout.read().decode() if proc.stdout else ""
         stderr = proc.stderr.read().decode() if proc.stderr else ""
         proc.kill()
@@ -333,7 +333,7 @@ class TestHealth:
 
     def test_librechat_health(self, librechat_server):
         """LibreChat health endpoint returns 200."""
-        r = httpx.get(f"http://127.0.0.1:{LC_PORT}/api/health",
+        r = httpx.get(f"http://127.0.0.1:{LC_PORT}/health",
                       timeout=10, follow_redirects=True)
         assert r.status_code == 200
 
