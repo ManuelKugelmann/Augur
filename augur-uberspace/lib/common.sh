@@ -297,6 +297,17 @@ _lc_download_and_setup() {
         fi
     fi
 
+    # Fallback: compare .version against release tag (works when asset_ts unavailable)
+    if [[ "$skip_current" == true && -f "$APP/.version" && -n "$_BUNDLE_TAG" ]]; then
+        local installed_ver=""
+        installed_ver=$(cat "$APP/.version" 2>/dev/null)
+        local tag_ver="${_BUNDLE_TAG#v}"
+        if [[ -n "$installed_ver" && ( "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ) ]]; then
+            log "LibreChat already up-to-date (${installed_ver})"
+            return 0
+        fi
+    fi
+
     # Clean up stale temp dirs from previous failed runs
     local _stale
     for _stale in "$HOME"/.lc-install.*; do
