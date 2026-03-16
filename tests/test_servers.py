@@ -1279,16 +1279,20 @@ class TestCombinedServer:
                      "COMTRADE_API_KEY", "USDA_NASS_API_KEY",
                      "IDMC_API_KEY", "MONGO_URI_SIGNALS"):
             monkeypatch.setenv(key, "test")
-        # Clear cached modules to pick up env changes
+        # Clear cached modules to pick up env changes — include augur_* to
+        # ensure their imports are re-executed (catches broken import paths)
         for mod_name in list(sys.modules):
-            if mod_name.endswith("_server") or mod_name in ("combined_server", "server"):
+            if (mod_name.endswith("_server") or
+                    mod_name in ("combined_server", "server",
+                                 "augur_publish", "augur_score",
+                                 "augur_common")):
                 del sys.modules[mod_name]
         import combined_server
         self.mod = combined_server
 
     def test_combined_server_imports(self):
         assert self.mod.mcp is not None
-        assert self.mod.mcp.name == "trading"
+        assert self.mod.mcp.name == "augur"
 
     @pytest.mark.asyncio
     async def test_combined_server_tool_count(self):
@@ -1302,7 +1306,8 @@ class TestCombinedServer:
         expected_prefixes = [
             "store_", "weather_", "disaster_", "econ_", "agri_", "conflict_",
             "commodity_", "health_", "politics_", "transport_",
-            "water_", "humanitarian_", "infra_"
+            "water_", "humanitarian_", "infra_", "ta_",
+            "augur_", "augur_score_",
         ]
         for prefix in expected_prefixes:
             matching = [n for n in tool_names if n.startswith(prefix)]
@@ -1325,3 +1330,45 @@ class TestCombinedServer:
         ]
         for name in must_have:
             assert name in tool_names, f"Missing tool: {name}"
+
+
+class TestServerImportPaths:
+    """Static check: server files must not use 'from src.' or 'import src.' paths.
+
+    combined_server.py adds src/servers/ and src/store/ to sys.path, so all
+    sibling imports should be bare (e.g. 'from augur_common import ...' not
+    'from src.servers.augur_common import ...').  The latter breaks at runtime
+    when the working directory differs from the repo root.
+    """
+
+    _servers_dir = Path(__file__).resolve().parent.parent / "src" / "servers"
+    _store_dir = Path(__file__).resolve().parent.parent / "src" / "store"
+
+    @staticmethod
+    def _find_bad_imports(directory):
+        """Return list of (file, line_num, line) with 'from src.' or 'import src.' usage."""
+        bad = []
+        for py_file in sorted(directory.glob("*.py")):
+            for i, line in enumerate(py_file.read_text().splitlines(), 1):
+                stripped = line.lstrip()
+                if stripped.startswith("#"):
+                    continue
+                if stripped.startswith(("from src.", "import src.")):
+                    bad.append((py_file.name, i, stripped))
+        return bad
+
+    def test_no_src_imports_in_servers(self):
+        bad = self._find_bad_imports(self._servers_dir)
+        assert not bad, (
+            "Server files must use bare imports, not 'from src.servers.X':\n"
+            + "\n".join(f"  {f}:{n}: {l}" for f, n, l in bad)
+        )
+
+    def test_no_src_imports_in_store(self):
+        if not self._store_dir.is_dir():
+            pytest.skip("src/store/ not found")
+        bad = self._find_bad_imports(self._store_dir)
+        assert not bad, (
+            "Store files must use bare imports, not 'from src.store.X':\n"
+            + "\n".join(f"  {f}:{n}: {l}" for f, n, l in bad)
+        )

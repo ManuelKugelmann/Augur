@@ -115,8 +115,8 @@ teardown() {
 @test "install registers systemd services" {
     run bash "$REPO_ROOT/augur-uberspace/install.sh" 2>&1
     [[ "$status" -eq 0 ]]
-    [[ -f "$HOME/.config/systemd/user/trading.service" ]]
-    run grep "combined_server.py" "$HOME/.config/systemd/user/trading.service"
+    [[ -f "$HOME/.config/systemd/user/augur.service" ]]
+    run grep "combined_server.py" "$HOME/.config/systemd/user/augur.service"
     [[ "$status" -eq 0 ]]
 }
 

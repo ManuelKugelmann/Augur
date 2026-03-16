@@ -418,7 +418,16 @@ _do_install() {
     # ── 5. Register services ──
     log "Registering services..."
     mkdir -p ~/.config/systemd/user ~/logs
-    cat > ~/.config/systemd/user/trading.service << SVCEOF
+
+    # Clean up legacy "trading" service (renamed to "augur")
+    if [[ -f ~/.config/systemd/user/trading.service ]]; then
+        log "Removing legacy trading.service (renamed to augur)..."
+        systemctl --user stop trading 2>/dev/null || true
+        systemctl --user disable trading 2>/dev/null || true
+        rm -f ~/.config/systemd/user/trading.service
+    fi
+
+    cat > ~/.config/systemd/user/augur.service << SVCEOF
 [Install]
 WantedBy=default.target
 
@@ -442,10 +451,10 @@ Restart=always
 RestartSec=60
 SVCEOF
     systemctl --user daemon-reload
-    systemctl --user enable trading || true
+    systemctl --user enable augur || true
     systemctl --user enable charts || true
     _web_backend /charts 8066 || warn "Failed to set /charts web backend"
-    log "Services registered (trading, charts)"
+    log "Services registered (augur, charts)"
 
     # ── 6. LibreChat ──
     local NEED_LC_SETUP=false
@@ -566,7 +575,7 @@ SVCEOF
     echo -e "${CYAN}── Post-install checks ──${NC}"
     echo ""
 
-    for svc in librechat trading charts; do
+    for svc in librechat augur charts; do
         if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
             log "$svc service: registered"
             echo -e "      ${CYAN}verify:${NC} systemctl --user status $svc"
@@ -641,9 +650,9 @@ SVCEOF
     echo ""
     echo -e "  ${CYAN}Troubleshoot:${NC}"
     echo "    augur logs                    # tail LibreChat logs (journalctl)"
-    echo "    journalctl --user -u trading -n 50  # last 50 lines of trading server"
+    echo "    journalctl --user -u augur -n 50    # last 50 lines of augur server"
     echo "    uberspace web backend list    # check web backend routing"
-    echo "    systemctl --user status librechat trading charts  # systemd status"
+    echo "    systemctl --user status librechat augur charts  # systemd status"
     echo ""
     echo -e "  ${CYAN}Access:${NC}"
     echo "    https://${UBER}"

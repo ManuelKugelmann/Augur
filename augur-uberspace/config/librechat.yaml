@@ -1,5 +1,5 @@
 # LibreChat configuration
-# MCP servers: trading signals stack + external data MCPs
+# MCP servers: augur signals stack + external data MCPs
 # Multi-agent architecture: see docs/multi-agent-architecture.md
 version: 1.2.1
 
@@ -16,18 +16,18 @@ interface:
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
-# Trading MCP: signals stack under ~/augur/
+# Augur MCP: signals stack under ~/augur/
 # External MCPs: third-party data sources
 #
 # IMPORTANT: setup.sh replaces __HOME__ with your actual $HOME path.
 # If editing manually, replace __HOME__ with e.g. /home/youruser
 mcpServers:
 
-  # ── Trading Server (signals store + 12 data domains, one process) ──
+  # ── Augur Server (signals store + 12 data domains, one process) ──
   # Runs as streamable-http so LibreChat injects per-user headers.
-  # Env vars + API keys are set in the supervisord service, not here.
+  # Env vars + API keys are set in the systemd service, not here.
 
-  trading:
+  augur:
     type: streamable-http
     url: http://localhost:8071/mcp
     chatMenu: false
@@ -60,7 +60,7 @@ mcpServers:
         title: "Notification Topic"
         description: "Your ntfy.sh topic for push notifications (plan alerts, trade confirmations). Create one at ntfy.sh."
     serverInstructions: |
-      Trading signals server: store_* tools + 12 OSINT data domains + ta_* technical indicators.
+      Augur signals server: store_* tools + 12 OSINT data domains + ta_* technical indicators.
 
       STORE: Profile = what an entity IS (MongoDB). Snapshot = what was MEASURED when (MongoDB timeseries).
         store_chart returns Plotly HTML — output it directly as an artifact.

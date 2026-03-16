@@ -95,7 +95,7 @@ teardown() {
     mkdir -p "$HOME/.config/systemd/user"
 
     # Simulate the service registration from _do_install
-    cat > "$HOME/.config/systemd/user/trading.service" << SVCEOF
+    cat > "$HOME/.config/systemd/user/augur.service" << SVCEOF
 [Install]
 WantedBy=default.target
 
@@ -109,9 +109,9 @@ Restart=always
 RestartSec=10
 SVCEOF
 
-    [ -f "$HOME/.config/systemd/user/trading.service" ]
-    grep -q "MCP_TRANSPORT=http" "$HOME/.config/systemd/user/trading.service"
-    grep -q "combined_server.py" "$HOME/.config/systemd/user/trading.service"
+    [ -f "$HOME/.config/systemd/user/augur.service" ]
+    grep -q "MCP_TRANSPORT=http" "$HOME/.config/systemd/user/augur.service"
+    grep -q "combined_server.py" "$HOME/.config/systemd/user/augur.service"
 }
 
 @test "install: installs augur shortcut" {
@@ -146,13 +146,13 @@ SVCEOF
 
     # Step 5: Services
     mkdir -p "$HOME/.config/systemd/user"
-    cat > "$HOME/.config/systemd/user/trading.service" << SVCEOF
+    cat > "$HOME/.config/systemd/user/augur.service" << SVCEOF
 [Service]
 WorkingDirectory=${STACK_DIR}
 EnvironmentFile=${STACK_DIR}/.env
 ExecStart=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
 SVCEOF
-    [ -f "$HOME/.config/systemd/user/trading.service" ]
+    [ -f "$HOME/.config/systemd/user/augur.service" ]
 
     # Step 8: augur shortcut
     cp "$STACK_DIR/Augur.sh" "$HOME/bin/augur"
@@ -362,7 +362,7 @@ ENVEOF
 
     # Register services
     mkdir -p "$HOME/.config/systemd/user"
-    cat > "$HOME/.config/systemd/user/trading.service" <<SVCEOF
+    cat > "$HOME/.config/systemd/user/augur.service" <<SVCEOF
 [Service]
 WorkingDirectory=${STACK_DIR}
 ExecStart=${STACK_DIR}/venv/bin/python src/servers/combined_server.py
@@ -380,7 +380,7 @@ SVCEOF
     # Verify install state
     [ -x "$STACK_DIR/venv/bin/python" ]
     [ -f "$STACK_DIR/.env" ]
-    [ -f "$HOME/.config/systemd/user/trading.service" ]
+    [ -f "$HOME/.config/systemd/user/augur.service" ]
     [ -x "$HOME/bin/augur" ]
 
     # === PULL ===

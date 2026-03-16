@@ -137,7 +137,7 @@ done
 
 if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
     if [[ -z "$_PYTHON_BIN" ]]; then
-        warn "Python 3.10+ not found — trading MCPs won't be available"
+        warn "Python 3.10+ not found — augur MCPs won't be available"
     else
         log "Setting up signals stack Python environment..."
         cd "$STACK"
@@ -172,7 +172,7 @@ if [[ -d "$STACK/src" ]] && [[ ! -d "$STACK/venv" ]]; then
 elif [[ -d "$STACK/venv" ]]; then
     log "Signals stack already set up"
 else
-    warn "Signals stack not found at $STACK — trading MCPs won't be available"
+    warn "Signals stack not found at $STACK — augur MCPs won't be available"
     warn "Clone with: git clone https://github.com/${GH_USER:-ManuelKugelmann}/${GH_REPO:-Augur}.git $STACK"
 fi
 

@@ -17,9 +17,11 @@ import os
 import sys
 import json
 
-# Ensure we can import from the store module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
-from src.store.server import chart, _snap_col, _arch_col, _db, VALID_KINDS
+# Ensure we can import sibling modules (store dir on sys.path)
+_store_dir = os.path.dirname(os.path.abspath(__file__))
+if _store_dir not in sys.path:
+    sys.path.insert(0, _store_dir)
+from server import chart, _snap_col, _arch_col, _db, VALID_KINDS
 
 PORT = int(os.environ.get("CHARTS_PORT", "8066"))
 

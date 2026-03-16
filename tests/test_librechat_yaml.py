@@ -48,7 +48,7 @@ class TestYAMLSyntax:
 # ── Required MCP servers ─────────────────────
 
 class TestMCPServers:
-    REQUIRED = ["trading"]
+    REQUIRED = ["augur"]
     EXTERNAL = ["finance", "gdelt-cloud", "prediction-markets", "rss", "reddit"]
     REMOVED = ["filesystem"]
 
@@ -77,31 +77,31 @@ class TestMCPServers:
             )
 
 
-# ── Trading MCP config ───────────────────────
+# ── Augur MCP config ─────────────────────────
 
-class TestTradingMCP:
+class TestAugurMCP:
     def test_uses_streamable_http(self, cfg):
-        trading = cfg["mcpServers"]["trading"]
-        assert trading["type"] == "streamable-http"
+        augur = cfg["mcpServers"]["augur"]
+        assert augur["type"] == "streamable-http"
 
     def test_has_user_headers(self, cfg):
-        headers = cfg["mcpServers"]["trading"]["headers"]
+        headers = cfg["mcpServers"]["augur"]["headers"]
         assert "X-User-ID" in headers
         assert "X-User-Email" in headers
 
     def test_has_broker_headers(self, cfg):
-        headers = cfg["mcpServers"]["trading"]["headers"]
+        headers = cfg["mcpServers"]["augur"]["headers"]
         assert "X-Broker-Key" in headers
         assert "X-Broker-Secret" in headers
 
     def test_has_customUserVars(self, cfg):
-        custom = cfg["mcpServers"]["trading"]["customUserVars"]
+        custom = cfg["mcpServers"]["augur"]["customUserVars"]
         for var in ["BROKER_API_KEY", "BROKER_API_SECRET", "BROKER_NAME",
                      "RISK_DAILY_LIMIT", "RISK_LIVE_TRADING", "NTFY_TOPIC"]:
             assert var in custom, f"Missing customUserVar: {var}"
 
     def test_customUserVars_have_title_and_description(self, cfg):
-        custom = cfg["mcpServers"]["trading"]["customUserVars"]
+        custom = cfg["mcpServers"]["augur"]["customUserVars"]
         for var, meta in custom.items():
             assert "title" in meta, f"{var}: missing title"
             assert "description" in meta, f"{var}: missing description"
