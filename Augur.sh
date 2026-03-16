@@ -913,6 +913,7 @@ SVCEOF
         [[ -f "$APP/.version" ]] && _ok "LibreChat installed: $(cat "$APP/.version")" || _fail "LibreChat not installed at $APP"
         if [[ -f "$APP/.env" ]]; then
             grep -q "MONGO_URI=" "$APP/.env" 2>/dev/null && _ok "LibreChat .env with MONGO_URI" || _warn "LibreChat .env exists but MONGO_URI not set"
+            grep -q "^HOST=0\.0\.0\.0" "$APP/.env" 2>/dev/null && _ok "LibreChat HOST=0.0.0.0" || _warn "LibreChat HOST not set to 0.0.0.0 — web backend may 502"
         else _fail "LibreChat .env missing"; fi
         if [[ -f "$APP/librechat.yaml" ]]; then
             grep -q "mcpServers:" "$APP/librechat.yaml" 2>/dev/null && _ok "librechat.yaml with MCP servers" || _warn "librechat.yaml exists but no mcpServers section"

@@ -239,6 +239,13 @@ if [[ "$MODE" == "install" ]]; then
         sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$APP/.env"
         sed -i "s|^JWT_REFRESH_SECRET=.*|JWT_REFRESH_SECRET=$JWT_REFRESH|" "$APP/.env"
 
+        # Bind to 0.0.0.0 so the Uberspace web backend (IPv4 proxy) can reach LibreChat
+        if ! grep -q "^HOST=" "$APP/.env"; then
+            echo "HOST=0.0.0.0" >> "$APP/.env"
+        else
+            sed -i "s|^HOST=.*|HOST=0.0.0.0|" "$APP/.env"
+        fi
+
         # Disable search/meili
         if ! grep -q "^SEARCH=" "$APP/.env"; then
             echo "SEARCH=false" >> "$APP/.env"
@@ -309,6 +316,14 @@ EOF
 
     log "Installed ${VER}"
 else
+    # ── Update: ensure HOST binding ──────────
+    if [[ -f "$APP/.env" ]]; then
+        if ! grep -q "^HOST=" "$APP/.env"; then
+            echo "HOST=0.0.0.0" >> "$APP/.env"
+            log "Added HOST=0.0.0.0 to .env (required for Uberspace web backend)"
+        fi
+    fi
+
     # ── Update: restart ─────────────────────
     log "  → starting librechat service"
     _svc_start_lc
