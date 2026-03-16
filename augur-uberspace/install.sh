@@ -569,13 +569,16 @@ SVCEOF
     for svc in librechat trading charts; do
         if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
             log "$svc service: registered"
+            echo -e "      ${CYAN}verify:${NC} systemctl --user status $svc"
         else
             warn "$svc service: NOT registered"
+            echo -e "      ${YELLOW}fix:${NC} re-run augur install"
         fi
     done
 
     if crontab -l 2>/dev/null | grep -q "augur cron"; then
         log "Cron: augur cron already scheduled"
+        echo -e "      ${CYAN}verify:${NC} crontab -l | grep augur"
     else
         log "Adding augur cron job..."
         log "  → crontab: */15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron"
@@ -626,9 +629,21 @@ SVCEOF
     fi
 
     echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
-    echo "    augur start                   # start all services"
+    echo "    augur start                   # start all services (shows startup logs)"
     echo "    augur stop                    # stop all services"
-    echo "    augur restart                 # restart all services"
+    echo "    augur restart                 # restart all services (shows startup logs)"
+    echo ""
+    echo -e "  ${CYAN}Verify setup:${NC}"
+    echo "    augur check                   # full health check (infra, services, connectivity)"
+    echo "    augur status                  # quick service status overview"
+    echo "    curl -sf http://localhost:${LC_PORT:-3080}/ >/dev/null && echo OK  # LibreChat reachable"
+    echo "    curl -sf https://${UBER} >/dev/null && echo OK             # public URL reachable"
+    echo ""
+    echo -e "  ${CYAN}Troubleshoot:${NC}"
+    echo "    augur logs                    # tail LibreChat logs (journalctl)"
+    echo "    journalctl --user -u trading -n 50  # last 50 lines of trading server"
+    echo "    uberspace web backend list    # check web backend routing"
+    echo "    systemctl --user status librechat trading charts  # systemd status"
     echo ""
     echo -e "  ${CYAN}Access:${NC}"
     echo "    https://${UBER}"
