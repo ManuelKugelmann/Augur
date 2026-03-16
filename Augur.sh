@@ -75,10 +75,12 @@ case "$CMD" in
     stop)
         _svc_stop librechat || true
         _svc_stop augur || true
+        _svc_stop trading 2>/dev/null || true  # legacy name
         _svc_stop charts || true
         echo -e "${GREEN}✓${NC} Stopped (librechat + augur + charts)"
         ;;
     restart)
+        _svc_stop trading 2>/dev/null || true  # legacy name
         _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart augur || true
         _svc_restart charts || true
