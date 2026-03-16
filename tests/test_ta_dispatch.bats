@@ -48,7 +48,7 @@ teardown() {
 
 @test "version command shows unknown when no .version" {
     rm -f "$APP_DIR/.version"
-    run bash "$REPO_ROOT/Augur.sh" v
+    run bash "$REPO_ROOT/Augur.sh" version
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"unknown"* ]]
 }
@@ -60,11 +60,10 @@ teardown() {
     [[ "$output" == *"v0.5.0"* ]]
 }
 
-@test "status short alias 's' works" {
-    echo "v0.5.0" > "$APP_DIR/.version"
-    run bash "$REPO_ROOT/Augur.sh" s
+@test "status command includes host info" {
+    run bash "$REPO_ROOT/Augur.sh" status
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"v0.5.0"* ]]
+    [[ "$output" == *"Host:"* ]]
 }
 
 @test "restart command calls systemctl" {
