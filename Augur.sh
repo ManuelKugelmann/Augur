@@ -258,7 +258,7 @@ SAFEEOF
     version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
-    u|update)
+    update)
         echo -e "${CYAN}Updating Augur stack...${NC}"
 
         # Stop all services before updating
@@ -886,7 +886,7 @@ for kind, info in sorted(result.items()):
         echo "  augur safemode off Restore full MCP config, then: augur restart"
         echo "  augur version      Show installed version"
         echo ""
-        echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
+        echo "  augur update       Update stack (git pull + deps + LibreChat release)"
         echo "  augur clean        Clear all caches (pip, uv, npm, playwright, temp)"
         echo ""
         echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"

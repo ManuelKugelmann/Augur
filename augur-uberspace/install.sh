@@ -665,7 +665,7 @@ SVCEOF
     echo -e "  ${CYAN}Ops:${NC}"
     echo "    augur help                    # all commands"
     echo "    augur pull                    # quick git-pull update (dev)"
-    echo "    augur u                       # release update (prod)"
+    echo "    augur update                  # release update (prod)"
     echo ""
 }
 
