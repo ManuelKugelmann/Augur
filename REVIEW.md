@@ -1,7 +1,7 @@
 # Code Review — Augur
 
 Full security and quality audit of the entire codebase. Date: 2026-03-06.
-Updated: 2026-03-13 (all critical + warning issues fixed across both reviews).
+Updated: 2026-03-16 (third review; all critical + warning issues fixed across first two reviews).
 
 ---
 
@@ -75,10 +75,10 @@ Index creation now happens on-demand in `_snap_col()`, `_arch_col()`, `_events_c
 
 3 sequential requests. Could use `asyncio.gather()` for 3x latency improvement, but current approach has better per-request error isolation.
 
-### 17. `search_profiles` Reads Every File — OPEN
+### 17. ~~`search_profiles` Reads Every File~~ ✅ NOT APPLICABLE
 **File:** `src/store/server.py`
 
-O(n) disk reads per query. Will degrade at scale. `search_profiles()` does field-level scans. Options: in-memory cache with TTL, or MongoDB text search.
+Originally flagged as O(n) disk reads. Since refactored: `search_profiles()` and `find_profile()` now use MongoDB queries (dot-notation, text index, regex fallback). No disk reads involved. See #46 for the remaining scaling concern with `find_profile()`.
 
 ### 18. Domain Server `.env` Not Loaded via LibreChat — NOT APPLICABLE
 **File:** `augur-uberspace/config/librechat.yaml`
@@ -242,18 +242,78 @@ End-to-end integration path (snapshot → threshold hook → event → impact) n
 
 ---
 
+---
+
+## Third Review — 2026-03-16
+
+Fresh codebase review. All previous critical/warning issues remain fixed.
+Focus: new code paths, overlooked patterns, scaling concerns.
+
+### WARNING
+
+#### 46. `OAuthToken.headers()` KeyError on Malformed Response — OPEN
+**File:** `src/servers/_http.py:83`
+
+If OAuth server returns HTTP 200 but response JSON is missing `access_token` key,
+`data["access_token"]` raises `KeyError`. This is not caught by `except httpx.HTTPError`,
+so it propagates and crashes the calling tool. Should catch `(KeyError, httpx.HTTPError)`.
+
+#### 47. `_replace_field()` Regex Replacement Injection — OPEN
+**File:** `src/servers/augur_score.py:182`
+
+`value` is used directly in `re.sub()` replacement string: `pattern.sub(rf'\1 "{value}"', ...)`.
+If `outcome_note` contains backslash sequences (`\1`, `\n`), they are interpreted as regex
+backreferences/escapes, corrupting the front matter. Fix: use a lambda replacement or escape
+the value with `value.replace("\\", "\\\\")`.
+
+#### 48. Image Generation Polling Without Backoff — OPEN (low priority)
+**File:** `src/servers/augur_publish.py:225-231`
+
+Replicate image gen polls 60 times at 1-second intervals. No exponential backoff.
+If the prediction times out, the Replicate job is not cancelled (orphaned, runs to completion
+on their side). Low financial impact but poor practice.
+
+#### 49. `indicator()` Catches Bare `Exception` — ACCEPTED
+**File:** `src/servers/macro_server.py:142-163`
+
+Provider routing (`fred → worldbank → imf`) wraps each call in `except Exception`.
+The inner functions already return error dicts and don't raise, so these clauses only fire
+on truly unexpected errors. Defensive but overly broad — accepted as-is since the routing
+pattern benefits from resilience.
+
+### LOW / STYLE
+
+#### 50. `find_profile()` Does 36 MongoDB Queries Per Call — OPEN
+**File:** `src/store/server.py:503-542`
+
+Cross-kind search iterates 12 kinds × 3 queries each (text search, ID regex, name regex).
+Fine at current scale (424 profiles). At 1000+ profiles, consider a unified search collection
+or MongoDB Atlas Search. Supersedes old #17 as the real scaling concern.
+
+---
+
+### Test Coverage Gaps (continued)
+
+T4 and T6 from second review remain open (social posting image upload, alert hooks e2e).
+
+---
+
 ## Summary
 
 | Status | Count | Details |
 |--------|-------|---------|
 | **First review** | | |
-| Fixed | 14 | #1-5, #7-13, #15, #19 |
+| Fixed | 15 | #1-5, #7-13, #15, #17 (not applicable), #19 |
 | Mitigated | 1 | #6 (regex) |
 | Accepted | 3 | #14, #16, #18 (not applicable) |
-| Open | 2 | #17 (perf at scale), #23 (low priority) |
+| Open | 1 | #23 (low priority) |
 | **Second review** | | |
 | Fixed | 17 | #24-31, #33-36, #42-45 |
 | Accepted | 1 | #32 (Plotly CDN pin, document only) |
 | Low/Style | 5 | #37-41 (yaml parser, date format, atomicity, iteration, timeout) |
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
+| **Third review** | | |
+| Open | 3 | #46 (OAuth KeyError), #47 (regex replacement), #48 (polling backoff) |
+| Accepted | 1 | #49 (bare Exception in indicator routing) |
+| Low/Style | 1 | #50 (find_profile 36 queries, scaling concern) |
