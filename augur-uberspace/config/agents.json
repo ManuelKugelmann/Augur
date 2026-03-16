@@ -8,7 +8,7 @@
     "provider": "anthropic",
     "model": "claude-haiku-4-5-20251001",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_finance",
       "sys__server__sys_mcp_prediction-markets",
       "sys__server__sys_mcp_webresearch",
@@ -26,7 +26,7 @@
     "provider": "anthropic",
     "model": "claude-haiku-4-5-20251001",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_gdelt-cloud",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch",
@@ -43,7 +43,7 @@
     "provider": "anthropic",
     "model": "claude-haiku-4-5-20251001",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_rss",
       "sys__server__sys_mcp_reddit",
       "sys__server__sys_mcp_google-news",
@@ -62,7 +62,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -79,7 +79,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -95,7 +95,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -111,7 +111,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -127,7 +127,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -143,7 +143,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -159,7 +159,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -175,7 +175,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -191,7 +191,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
@@ -207,7 +207,7 @@
     "provider": "anthropic",
     "model": "claude-haiku-4-5-20251001",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
@@ -222,7 +222,7 @@
     "provider": "anthropic",
     "model": "claude-haiku-4-5-20251001",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
@@ -237,7 +237,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
-      "sys__server__sys_mcp_trading",
+      "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"

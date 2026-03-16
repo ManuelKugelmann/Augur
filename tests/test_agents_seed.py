@@ -168,11 +168,11 @@ class TestModels:
 # ── Tool assignments ─────────────────────────
 
 class TestTools:
-    def test_all_agents_have_trading_mcp(self, agents):
+    def test_all_agents_have_augur_mcp(self, agents):
         for a in agents:
-            trading_tools = [t for t in a["tools"] if "trading" in t]
-            assert len(trading_tools) > 0, (
-                f"{a['_name']}: must have trading MCP tools")
+            augur_tools = [t for t in a["tools"] if "augur" in t]
+            assert len(augur_tools) > 0, (
+                f"{a['_name']}: must have augur MCP tools")
 
     def test_l1_market_has_finance(self, agents):
         market = next(a for a in agents if a["_name"] == "market-data")
@@ -197,10 +197,10 @@ class TestCronPlanner:
     """T4 cron-planner must reference per-user (notes/plans) and shared
     (research) store tools in its instructions, and edge to all needed agents."""
 
-    def test_t4_has_trading_mcp(self, agents):
+    def test_t4_has_augur_mcp(self, agents):
         cp = next(a for a in agents if a["_name"] == "cron-planner")
-        assert any("trading" in t for t in cp["tools"]), \
-            "cron-planner needs trading MCP for store_* tools"
+        assert any("augur" in t for t in cp["tools"]), \
+            "cron-planner needs augur MCP for store_* tools"
 
     def test_t4_instructions_reference_plans(self, agents):
         cp = next(a for a in agents if a["_name"] == "cron-planner")
@@ -266,10 +266,10 @@ class TestNewsAgents:
         assert agent["_layer"] == "L4"
 
     @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
-    def test_news_agent_has_trading_mcp(self, agents, name, brand, locale):
+    def test_news_agent_has_augur_mcp(self, agents, name, brand, locale):
         agent = next(a for a in agents if a["_name"] == name)
-        assert any("trading" in t for t in agent["tools"]), \
-            f"{name} needs trading MCP for augur_* tools"
+        assert any("augur" in t for t in agent["tools"]), \
+            f"{name} needs augur MCP for augur_* tools"
 
     @pytest.mark.parametrize("name,brand,locale", NEWS_AGENTS)
     def test_news_agent_references_augur(self, agents, name, brand, locale):

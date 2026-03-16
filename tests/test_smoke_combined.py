@@ -1,4 +1,4 @@
-"""Smoke test — combined trading server starts, mounts all namespaces, and
+"""Smoke test — combined augur server starts, mounts all namespaces, and
 store tools work against a real MongoDB Atlas instance.
 
 Requires MONGO_URI_SIGNALS in environment (GitHub secret).

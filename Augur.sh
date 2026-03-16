@@ -50,7 +50,7 @@ CMD="${1:-help}"
 case "$CMD" in
     status)
         _svc_status librechat || echo "librechat: not registered"
-        _svc_status trading || true
+        _svc_status augur || true
         _svc_status charts || true
         echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
@@ -58,15 +58,15 @@ case "$CMD" in
         ;;
     start)
         _svc_start librechat || die "Failed to start librechat"
-        _svc_start trading || true
+        _svc_start augur || true
         _svc_start charts || true
-        echo -e "${GREEN}✓${NC} Started (librechat + trading + charts)"
+        echo -e "${GREEN}✓${NC} Started (librechat + augur + charts)"
         # Show recent startup logs so the user can spot errors immediately
         echo ""
-        for _svc in librechat trading charts; do
+        for _svc in librechat augur charts; do
             if systemctl --user is-active "$_svc" &>/dev/null || \
                [[ -f "$HOME/.config/systemd/user/${_svc}.service" ]]; then
-                echo -e "${CYAN}── $_svc (last 15 lines) ──${NC}"
+                echo -e "${CYAN}── $_svc (last 15 lines, stdout+stderr) ──${NC}"
                 journalctl --user -u "$_svc" --no-pager -n 15 --since "-30s" 2>/dev/null || true
                 echo ""
             fi
@@ -74,21 +74,21 @@ case "$CMD" in
         ;;
     stop)
         _svc_stop librechat || true
-        _svc_stop trading || true
+        _svc_stop augur || true
         _svc_stop charts || true
-        echo -e "${GREEN}✓${NC} Stopped (librechat + trading + charts)"
+        echo -e "${GREEN}✓${NC} Stopped (librechat + augur + charts)"
         ;;
     restart)
         _svc_restart librechat || die "Failed to restart librechat"
-        _svc_restart trading || true
+        _svc_restart augur || true
         _svc_restart charts || true
-        echo -e "${GREEN}✓${NC} Restarted (librechat + trading + charts)"
+        echo -e "${GREEN}✓${NC} Restarted (librechat + augur + charts)"
         # Show recent startup logs so the user can spot errors immediately
         echo ""
-        for _svc in librechat trading charts; do
+        for _svc in librechat augur charts; do
             if systemctl --user is-active "$_svc" &>/dev/null || \
                [[ -f "$HOME/.config/systemd/user/${_svc}.service" ]]; then
-                echo -e "${CYAN}── $_svc (last 15 lines) ──${NC}"
+                echo -e "${CYAN}── $_svc (last 15 lines, stdout+stderr) ──${NC}"
                 journalctl --user -u "$_svc" --no-pager -n 15 --since "-30s" 2>/dev/null || true
                 echo ""
             fi
@@ -107,17 +107,17 @@ case "$CMD" in
                 cd "$APP"
                 NODE_ENV=production exec node --max-old-space-size=1024 api/server/index.js
                 ;;
-            trading)
-                echo -e "${CYAN}Stopping trading service...${NC}"
-                _svc_stop trading 2>/dev/null || true
-                echo -e "${CYAN}Starting trading server in foreground (Ctrl+C to stop)...${NC}"
+            augur)
+                echo -e "${CYAN}Stopping augur service...${NC}"
+                _svc_stop augur 2>/dev/null || true
+                echo -e "${CYAN}Starting augur server in foreground (Ctrl+C to stop)...${NC}"
                 cd "$STACK"
                 set -a; [[ -f "$STACK/.env" ]] && . "$STACK/.env"; set +a
                 export MCP_TRANSPORT=http MCP_PORT=8071
                 exec "$STACK/venv/bin/python" src/servers/combined_server.py
                 ;;
             *)
-                echo "Usage: augur testrun [librechat|trading]"
+                echo "Usage: augur testrun [librechat|augur]"
                 ;;
         esac
         ;;
@@ -129,7 +129,8 @@ case "$CMD" in
 
         # Stop all services before updating
         _svc_stop librechat || true
-        _svc_stop trading || true
+        _svc_stop augur || true
+        _svc_stop trading 2>/dev/null || true  # legacy name
         _svc_stop charts || true
 
         # Pull latest stack code
@@ -184,9 +185,17 @@ case "$CMD" in
 
         echo "$VER" > "$APP/.version"
 
+        # Clean up legacy trading.service if still present
+        if [[ -f "$HOME/.config/systemd/user/trading.service" ]]; then
+            systemctl --user disable trading 2>/dev/null || true
+            rm -f "$HOME/.config/systemd/user/trading.service"
+            _svc_reload 2>/dev/null || systemctl --user daemon-reload || true
+            log "Removed legacy trading.service (renamed to augur)"
+        fi
+
         # Restart all services
         _svc_start librechat || true
-        _svc_start trading || true
+        _svc_start augur || true
         _svc_start charts || true
         echo -e "${GREEN}✓${NC} Updated to ${VER}"
         ;;
@@ -498,7 +507,7 @@ SVCEOF
         [[ -f "$STACK/.env" ]] && _ok "Signals .env present" || _warn "Signals .env missing (optional)"
 
         echo ""; echo -e "${CYAN}── Services (systemd) ──${NC}"; echo ""
-        for svc in librechat trading charts cliproxyapi; do
+        for svc in librechat augur charts cliproxyapi; do
             if systemctl --user is-active "$svc" &>/dev/null; then _ok "$svc: RUNNING"
             elif systemctl --user is-enabled "$svc" &>/dev/null; then _warn "$svc: STOPPED (enabled)"
             elif [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then _warn "$svc: STOPPED"

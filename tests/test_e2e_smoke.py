@@ -1,4 +1,4 @@
-"""E2E smoke test — start LibreChat + trading server, verify full stack.
+"""E2E smoke test — start LibreChat + augur server, verify full stack.
 
 Downloads the prebuilt release bundle, starts both services, registers
 a test user, seeds agents, and verifies health/MCP/agent endpoints.
@@ -175,8 +175,8 @@ def signals_venv(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def trading_server(signals_venv):
-    """Start the combined trading server on MCP_PORT."""
+def augur_server(signals_venv):
+    """Start the combined augur server on MCP_PORT."""
     if not _port_free(MCP_PORT):
         pytest.skip(f"Port {MCP_PORT} already in use")
 
@@ -199,7 +199,7 @@ def trading_server(signals_venv):
         stdout = proc.stdout.read().decode() if proc.stdout else ""
         stderr = proc.stderr.read().decode() if proc.stderr else ""
         proc.kill()
-        pytest.fail(f"Trading server didn't start on :{MCP_PORT}\n"
+        pytest.fail(f"Augur server didn't start on :{MCP_PORT}\n"
                     f"stdout: {stdout[:500]}\nstderr: {stderr[:500]}")
 
     yield proc
@@ -212,7 +212,7 @@ def trading_server(signals_venv):
 
 
 @pytest.fixture(scope="module")
-def librechat_server(lc_app_dir, lc_env, lc_yaml, trading_server):
+def librechat_server(lc_app_dir, lc_env, lc_yaml, augur_server):
     """Start LibreChat Node.js server on LC_PORT."""
     if not _port_free(LC_PORT):
         pytest.skip(f"Port {LC_PORT} already in use")
@@ -317,8 +317,8 @@ def agents_api_key(api_client):
 class TestHealth:
     """Verify both services are running and responsive."""
 
-    def test_trading_server_responds(self, trading_server):
-        """Trading server MCP endpoint responds."""
+    def test_augur_server_responds(self, augur_server):
+        """Augur server MCP endpoint responds."""
         # streamable-http endpoint — POST with MCP initialize
         r = httpx.post(
             f"http://127.0.0.1:{MCP_PORT}/mcp",
@@ -366,9 +366,9 @@ class TestAuth:
 
 
 class TestMCPTools:
-    """Verify trading MCP server tools are accessible."""
+    """Verify augur MCP server tools are accessible."""
 
-    def test_mcp_tools_list(self, trading_server):
+    def test_mcp_tools_list(self, augur_server):
         """MCP tools/list returns 50+ tools."""
         # Send initialize + tools/list via JSON-RPC
         r = httpx.post(
@@ -396,7 +396,7 @@ class TestMCPTools:
             tools = data.get("result", {}).get("tools", [])
             assert len(tools) >= 50, f"Expected 50+ tools, got {len(tools)}"
 
-    def test_mcp_store_list_regions(self, trading_server):
+    def test_mcp_store_list_regions(self, augur_server):
         """Call store_list_regions tool via MCP."""
         r = httpx.post(
             f"http://127.0.0.1:{MCP_PORT}/mcp",
@@ -407,8 +407,8 @@ class TestMCPTools:
             timeout=15)
         assert r.status_code == 200
 
-    def test_mcp_namespaces_present(self, trading_server):
-        """All 13 namespaces have tools registered."""
+    def test_mcp_namespaces_present(self, augur_server):
+        """All namespaces have tools registered."""
         r = httpx.post(
             f"http://127.0.0.1:{MCP_PORT}/mcp",
             json={"jsonrpc": "2.0", "method": "tools/list", "id": 4,
@@ -640,16 +640,16 @@ class TestStoreViaMCP:
                         return data["result"]
         return r.json().get("result", {})
 
-    def test_list_regions(self, trading_server):
+    def test_list_regions(self, augur_server):
         result = self._call_tool("store_list_regions", {})
         assert result is not None
 
-    def test_list_profiles(self, trading_server):
+    def test_list_profiles(self, augur_server):
         result = self._call_tool("store_list_profiles",
                                  {"kind": "countries"})
         assert result is not None
 
-    def test_snapshot_roundtrip(self, trading_server):
+    def test_snapshot_roundtrip(self, augur_server):
         """Write snapshot via MCP, read it back."""
         self._call_tool("store_snapshot", {
             "kind": "countries", "entity": "TST", "type": "e2e_test",
@@ -660,7 +660,7 @@ class TestStoreViaMCP:
             "kind": "countries", "entity": "TST", "type": "e2e_test"})
         assert result is not None
 
-    def test_event_roundtrip(self, trading_server):
+    def test_event_roundtrip(self, augur_server):
         """Log event via MCP, query it back."""
         self._call_tool("store_event", {
             "subtype": "ci_e2e", "summary": "E2E smoke test event",

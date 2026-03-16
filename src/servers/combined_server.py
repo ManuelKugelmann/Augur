@@ -16,7 +16,7 @@ if _store_dir not in sys.path:
 
 from fastmcp import FastMCP  # noqa: E402
 
-mcp = FastMCP("trading",
+mcp = FastMCP("augur",
     instructions="Trading signals: store (profiles, snapshots, notes, risk gate) + 12 OSINT data domains (75+ sources) + technical indicators (SMA, RSI, Bollinger, MACD)")
 
 # Signals store (profiles, snapshots, charts, archival)

@@ -1292,7 +1292,7 @@ class TestCombinedServer:
 
     def test_combined_server_imports(self):
         assert self.mod.mcp is not None
-        assert self.mod.mcp.name == "trading"
+        assert self.mod.mcp.name == "augur"
 
     @pytest.mark.asyncio
     async def test_combined_server_tool_count(self):
