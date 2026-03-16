@@ -282,6 +282,23 @@ SAFEEOF
             sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
         fi
 
+        # Auto-patch deployed librechat.yaml for known breaking changes
+        if [[ -f "$APP/librechat.yaml" ]]; then
+            _yaml_patched=false
+
+            # Patch: google-news-trends-mcp needs fastmcp<3 (on_duplicate_tools removed in 3.x)
+            if grep -q '"google-news-trends-mcp@latest"' "$APP/librechat.yaml" 2>/dev/null \
+               && ! grep -q '"--with"' "$APP/librechat.yaml" 2>/dev/null; then
+                _yaml_patched=true
+            fi
+
+            if [[ "$_yaml_patched" == true ]]; then
+                cp "$APP/librechat.yaml" "$APP/librechat.yaml.bak.$(date +%Y%m%d-%H%M%S)"
+                sed -i 's|\["google-news-trends-mcp@latest"\]|["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$APP/librechat.yaml"
+                log "Auto-patched librechat.yaml (pinned fastmcp<3 for google-news MCP)"
+            fi
+        fi
+
         # Update augur CLI
         cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
         chmod +x "$HOME/bin/augur" 2>/dev/null || true
