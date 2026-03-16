@@ -129,7 +129,7 @@ python src/servers/macro_server.py
 
 | Mode | Command | LibreChat source | Update command | Use when |
 |------|---------|-----------------|----------------|----------|
-| **Release** | `augur install` | Tagged release bundle from CI | `augur u` | Production — stable, pre-tested |
+| **Release** | `augur install` | Tagged release bundle from CI | `augur update` | Production — stable, pre-tested |
 | **Dev** | `augur install dev` | CI prebuilt artifact or git clone + build | `augur pull` | Development — fast iteration, no tags needed |
 
 Both modes use the same one-liner entry point. The only difference is where LibreChat comes from.
@@ -335,7 +335,7 @@ git push --tags
 On Uberspace:
 
 ```bash
-augur u
+augur update
 ```
 
 #### Rollback
@@ -372,12 +372,14 @@ Override any value via environment: `UBER_USER=other augur install`
 
 ```bash
 augur help          # all commands
-augur s|status      # service status + version
-augur l|logs        # tail logs
-augur r|restart     # restart LibreChat + trading
+augur status        # service status + version
+augur logs          # tail logs
+augur restart       # restart LibreChat + trading
 augur testrun       # run LibreChat in foreground (see errors directly)
-augur v|version     # show version
-augur u|update      # update stack (git pull + deps + LibreChat release)
+augur debugstart    # full diagnostics + foreground run
+augur version       # show version
+augur pull          # quick git-pull update (dev)
+augur update        # update stack (git pull + deps + LibreChat release)
 augur backup        # backup MongoDB to ~/backups/mongo/
 augur restore [f]   # restore MongoDB from backup
 augur backups       # list available backups
@@ -402,7 +404,7 @@ git push
 On Uberspace, update everything (git pull + deps + LibreChat release):
 
 ```bash
-augur u
+augur update
 ```
 
 ---

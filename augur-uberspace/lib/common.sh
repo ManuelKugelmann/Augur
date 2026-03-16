@@ -241,6 +241,25 @@ _mcp_nodes_download_and_setup() {
     return 0
 }
 
+# ── Web backend with retries (install uses this) ──
+_web_backend_retry() {
+    local path="$1" port="$2"
+    # Skip if already configured
+    local existing
+    existing=$(timeout 30 uberspace web backend list 2>&1 || true)
+    if echo "$existing" | grep -qF "$path" && echo "$existing" | grep -q "$port"; then
+        log "Web backend ${path} → port ${port} already set"
+        return 0
+    fi
+    local attempt=0 delay=2
+    while (( attempt < 3 )); do
+        attempt=$((attempt + 1))
+        timeout 30 uberspace web backend add "$path" port "$port" --force && return 0
+        (( attempt < 3 )) && { warn "web backend ${path} attempt ${attempt}/3 timed out, retrying in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
+    done
+    return 1
+}
+
 # ── Download, extract, and install/update LibreChat bundle ──
 _lc_download_and_setup() {
     local skip_current=false
@@ -249,12 +268,42 @@ _lc_download_and_setup() {
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
 
+    # Log current installed state for diagnostics
+    if [[ "$skip_current" == true ]]; then
+        local _cur_ver="" _cur_ts="" _cur_tag=""
+        [[ -f "$APP/.version" ]]     && _cur_ver=$(cat "$APP/.version" 2>/dev/null)
+        [[ -f "$APP/.asset_ts" ]]    && _cur_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+        [[ -f "$APP/.release-tag" ]] && _cur_tag=$(cat "$APP/.release-tag" 2>/dev/null)
+        log "Installed: version=${_cur_ver:-?} tag=${_cur_tag:-?} asset_ts=${_cur_ts:-?}"
+        log "Available: tag=${_BUNDLE_TAG:-?} asset_ts=${_BUNDLE_ASSET_TS:-?}"
+    fi
+
     # Skip if asset hasn't changed (compare asset updated_at timestamp)
-    if [[ "$skip_current" == true && -f "$APP/.asset_ts" ]]; then
+    if [[ "$skip_current" == true && -n "$_BUNDLE_ASSET_TS" ]]; then
         local installed_ts=""
-        installed_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
-        if [[ -n "$installed_ts" && -n "$_BUNDLE_ASSET_TS" && "$installed_ts" == "$_BUNDLE_ASSET_TS" ]]; then
+        [[ -f "$APP/.asset_ts" ]] && installed_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+        if [[ -n "$installed_ts" && "$installed_ts" == "$_BUNDLE_ASSET_TS" ]]; then
             log "LibreChat already up-to-date (asset unchanged since ${installed_ts})"
+            return 0
+        fi
+        # Fallback: check release tag (written by install.sh)
+        local installed_tag=""
+        [[ -f "$APP/.release-tag" ]] && installed_tag=$(cat "$APP/.release-tag" 2>/dev/null)
+        if [[ -n "$installed_tag" && "$installed_tag" == "$_BUNDLE_TAG" ]]; then
+            log "LibreChat already up-to-date (tag ${installed_tag})"
+            # Backfill .asset_ts so future checks are fast
+            echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
+            return 0
+        fi
+    fi
+
+    # Fallback: compare .version against release tag (works when asset_ts unavailable)
+    if [[ "$skip_current" == true && -f "$APP/.version" && -n "$_BUNDLE_TAG" ]]; then
+        local installed_ver=""
+        installed_ver=$(cat "$APP/.version" 2>/dev/null)
+        local tag_ver="${_BUNDLE_TAG#v}"
+        if [[ -n "$installed_ver" && ( "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ) ]]; then
+            log "LibreChat already up-to-date (${installed_ver})"
             return 0
         fi
     fi
@@ -300,10 +349,184 @@ _lc_download_and_setup() {
     log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
 
-    # Store asset timestamp for next skip check
+    # Store tracking files for next skip check (sync with install.sh)
     [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
+    [[ -n "$_BUNDLE_TAG" ]]      && echo "$_BUNDLE_TAG"      > "$APP/.release-tag"
 
     # Explicit cleanup (setup.sh mv'd contents out; remove empty temp dir)
     rm -rf "$lc_tmp"
     return 0
+}
+
+# ═══════════════════════════════════════════════
+#  _update_core — shared logic for install & update
+# ═══════════════════════════════════════════════
+# Usage: _update_core [install|update]
+#   install: clone-or-pull with fallback, create venv if missing/broken
+#   update:  pull --ff-only only, skip venv creation
+_update_core() {
+    local mode="${1:-update}"
+
+    # ── 1. Git pull (or clone on install) ──
+    if [[ -d "$STACK/.git" ]]; then
+        log "Pulling latest code..."
+        if [[ "$mode" == "install" ]]; then
+            timeout 120 git -C "$STACK" pull --ff-only origin "$BRANCH" </dev/null || \
+                { warn "pull --ff-only failed, resetting to origin/$BRANCH"
+                  timeout 120 git -C "$STACK" fetch origin "$BRANCH" </dev/null && \
+                  git -C "$STACK" reset --hard "origin/$BRANCH"; } || \
+                warn "git pull/fetch failed (repo may already be current)"
+        else
+            git -C "$STACK" pull --ff-only
+        fi
+        log "Repo updated"
+    elif [[ "$mode" == "install" ]]; then
+        log "Cloning repo..."
+        timeout 120 git clone -b "$BRANCH" "https://github.com/${GH_USER}/${GH_REPO}.git" "$STACK" </dev/null
+        log "Cloned → $STACK"
+    else
+        die "Repo not found at $STACK — run install first"
+    fi
+
+    # Re-source config after pull (deploy.conf may have changed)
+    [[ -f "$STACK/deploy.conf" ]] && source "$STACK/deploy.conf"
+
+    _INSTALL_SHA=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    _INSTALL_COMMIT_DATE=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
+    log "Version: ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+
+    # ── 2. Copy augur CLI (atomic: temp+mv to avoid overwriting running script) ──
+    mkdir -p "$HOME/bin"
+    cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+        && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
+    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+
+    # ── 3. Copy scripts + merge librechat config ──
+    # Skip if APP doesn't exist yet — fresh installs create APP via LC bundle in step 6,
+    # and setup.sh handles config merge there. This step is for updates/re-installs.
+    if [[ -d "$APP" ]]; then
+        mkdir -p "$APP/scripts" "$APP/config"
+        cp "$STACK/augur-uberspace/scripts/"*.sh "$APP/scripts/" 2>/dev/null || true
+        cp "$STACK/augur-uberspace/scripts/"*.py "$APP/scripts/" 2>/dev/null || true
+        local _SYS_YAML="$STACK/augur-uberspace/config/librechat-system.yaml"
+        local _USR_YAML="$APP/librechat-user.yaml"
+        local _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+        if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+            # Seed user overlay from template if missing
+            if [[ ! -f "$_USR_YAML" ]] && [[ -f "$STACK/augur-uberspace/config/librechat-user.yaml" ]]; then
+                cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$_USR_YAML" 2>/dev/null || true
+            fi
+            local _MERGE_PY=""
+            for _py in "$STACK/venv/bin/python" python3 python; do
+                command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+            done
+            if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
+                if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
+                    log "Merged librechat.yaml (system + user)"
+                else
+                    warn "Config merge failed — using system template"
+                    cp "$_SYS_YAML" "$APP/librechat.yaml"
+                    sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+                fi
+            elif [[ ! -f "$APP/librechat.yaml" ]]; then
+                cp "$_SYS_YAML" "$APP/librechat.yaml"
+                sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+            fi
+        elif [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$STACK/augur-uberspace/config/librechat-system.yaml" ]]; then
+            cp "$STACK/augur-uberspace/config/librechat-system.yaml" "$APP/librechat.yaml"
+            sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+        fi
+    fi
+
+    # ── 4. Python venv ──
+    local PYTHON_BIN=""
+    for _py in "python${PYTHON_VERSION:-}" python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
+        [[ -z "$_py" || "$_py" == "python" ]] && continue
+        if command -v "$_py" &>/dev/null && \
+           "$_py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+            PYTHON_BIN="$_py"; break
+        fi
+    done
+
+    if [[ -d "$STACK/venv" ]]; then
+        local _venv_check
+        if ! _venv_check=$(timeout 10 "$STACK/venv/bin/python" -c 'import sys; print(sys.version)' </dev/null 2>&1); then
+            warn "Venv python is broken or stale. Output: $_venv_check"
+            if [[ "$mode" == "install" ]]; then
+                warn "Recreating venv..."
+                rm -rf "$STACK/venv"
+            else
+                warn "Run 'augur install' to recreate venv"
+            fi
+        else
+            log "Python venv OK, checking pip..."
+            if ! _pip_upgrade "$STACK/venv/bin/python"; then
+                if [[ "$mode" == "install" ]]; then
+                    warn "pip check failed, recreating venv..."
+                    rm -rf "$STACK/venv"
+                else
+                    warn "pip check failed — run 'augur install' to recreate venv"
+                fi
+            fi
+        fi
+    fi
+
+    if [[ ! -d "$STACK/venv" ]]; then
+        if [[ "$mode" != "install" ]]; then
+            warn "Python venv not found at $STACK/venv — run 'augur install' first"
+            return 0
+        fi
+        [[ -z "$PYTHON_BIN" ]] && die "Python 3.10+ not found. Check: python3 --version"
+        log "Creating Python venv..."
+        "$PYTHON_BIN" -m venv --without-pip "$STACK/venv"
+        log "Bootstrapping pip inside venv..."
+        "$STACK/venv/bin/python" -m ensurepip </dev/null || die "ensurepip failed"
+        _pip_upgrade "$STACK/venv/bin/python" || die "pip upgrade failed"
+    fi
+
+    # ── 5. Install Python requirements (skip if unchanged) ──
+    if [[ -d "$STACK/venv" ]]; then
+        local _req_hash _cached_hash=""
+        _req_hash=$(sha256sum "$STACK/requirements.txt" 2>/dev/null | cut -d' ' -f1 || true)
+        [[ -f "$STACK/venv/.req_hash" ]] && _cached_hash=$(cat "$STACK/venv/.req_hash")
+        if [[ -n "$_req_hash" && "$_req_hash" == "$_cached_hash" ]]; then
+            log "Python requirements unchanged, skipping pip install"
+        else
+            log "Installing Python requirements..."
+            _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
+                || die "pip install requirements failed"
+            echo "$_req_hash" > "$STACK/venv/.req_hash"
+        fi
+        log "Python venv ready"
+    fi
+
+    # ── 6. LibreChat bundle ──
+    if ! _lc_download_and_setup --skip-if-current; then
+        if [[ "$mode" == "install" ]]; then
+            die "No prebuilt LibreChat release found. Create one via: Actions → Release LibreChat Bundle → Run workflow"
+        else
+            warn "LibreChat bundle download failed"
+        fi
+    fi
+
+    # ── 7. MCP Node servers ──
+    log "Checking MCP Node servers bundle..."
+    if ! _mcp_nodes_download_and_setup --skip-if-current; then
+        warn "MCP Node servers bundle not found — Node MCPs won't be available"
+    fi
+
+    # ── 8. Clean up stale config backups from old sed patches ──
+    for _bak in "$APP"/librechat.yaml.bak.* "$APP"/librechat.yaml.pre-safe.bak.*; do
+        [[ -f "$_bak" ]] && { rm -f "$_bak"; log "Removed stale backup: $(basename "$_bak")"; }
+    done
+
+    # ── 9. Clean up legacy trading.service ──
+    if [[ -f "$HOME/.config/systemd/user/trading.service" ]]; then
+        log "Removing legacy trading.service (renamed to augur)..."
+        systemctl --user stop trading 2>/dev/null || true
+        systemctl --user disable trading 2>/dev/null || true
+        rm -f "$HOME/.config/systemd/user/trading.service"
+        _svc_reload
+    fi
 }

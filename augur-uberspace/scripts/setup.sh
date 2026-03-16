@@ -29,7 +29,7 @@ _web_backend() {
 }
 
 # Files and dirs that survive updates
-PERSIST_FILES=(.env librechat.yaml .version .asset_ts)
+PERSIST_FILES=(.env librechat.yaml librechat-user.yaml .version .asset_ts)
 PERSIST_DIRS=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
@@ -89,15 +89,38 @@ if [[ ! -f "$APP/api/server/index.js" ]]; then
     die "LibreChat app code missing from bundle. Use a release built with CI (git tag + push)."
 fi
 
-# ── Copy default config from mcps repo if missing ──
-# The LibreChat bundle is vanilla — config lives in the mcps repo.
-_LC_YAML_SRC="$STACK/augur-uberspace/config/librechat.yaml"
-if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$_LC_YAML_SRC" ]]; then
-    cp "$_LC_YAML_SRC" "$APP/librechat.yaml"
-    sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
-    log "Copied default librechat.yaml from mcps repo (paths adjusted to $HOME)"
+# ── Merge system + user config on every start ──
+# System template (MCP servers, version, mcpSettings) always comes from repo.
+# User overlay (LLM endpoints, registration, cache) is preserved across updates.
+_SYS_YAML="$STACK/augur-uberspace/config/librechat-system.yaml"
+_USR_YAML_SRC="$STACK/augur-uberspace/config/librechat-user.yaml"
+_USR_YAML="$APP/librechat-user.yaml"
+_MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+    # Seed user overlay from template if missing
+    if [[ ! -f "$_USR_YAML" ]] && [[ -f "$_USR_YAML_SRC" ]]; then
+        cp "$_USR_YAML_SRC" "$_USR_YAML" && log "Created default librechat-user.yaml"
+    fi
+    # Find a working Python (venv preferred, then system)
+    _MERGE_PY=""
+    for _py in "$STACK/venv/bin/python" python3 python; do
+        command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+    done
+    if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
+        if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
+            log "Merged librechat.yaml (system + user, paths adjusted to $HOME)"
+        else
+            warn "Config merge failed — falling back to system template copy"
+            cp "$_SYS_YAML" "$APP/librechat.yaml"
+            sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+        fi
+    else
+        warn "Python with PyYAML not found — falling back to system template copy"
+        cp "$_SYS_YAML" "$APP/librechat.yaml"
+        sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+    fi
 elif [[ ! -f "$APP/librechat.yaml" ]]; then
-    warn "librechat.yaml not found in mcps repo — configure manually"
+    warn "librechat config not found in mcps repo — configure manually"
 fi
 
 # ── Check prebuilt MCP Node servers ─────────────
@@ -216,11 +239,23 @@ if [[ "$MODE" == "install" ]]; then
         sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$APP/.env"
         sed -i "s|^JWT_REFRESH_SECRET=.*|JWT_REFRESH_SECRET=$JWT_REFRESH|" "$APP/.env"
 
+        # Bind to 0.0.0.0 so the Uberspace web backend (IPv4 proxy) can reach LibreChat
+        if ! grep -q "^HOST=" "$APP/.env"; then
+            echo "HOST=0.0.0.0" >> "$APP/.env"
+        else
+            sed -i "s|^HOST=.*|HOST=0.0.0.0|" "$APP/.env"
+        fi
+
         # Disable search/meili
         if ! grep -q "^SEARCH=" "$APP/.env"; then
             echo "SEARCH=false" >> "$APP/.env"
         else
             sed -i "s|^SEARCH=.*|SEARCH=false|" "$APP/.env"
+        fi
+
+        # Disable RAG API (no Docker/vector DB on Uberspace)
+        if ! grep -q "^RAG_API_URL=" "$APP/.env"; then
+            echo "RAG_API_URL=" >> "$APP/.env"
         fi
 
         log "Generated crypto keys in .env"
@@ -272,14 +307,23 @@ EOF
     log "  → web backend / → port $PORT"
     _web_backend / "$PORT" || warn "Failed to set web backend on port $PORT"
 
-    # Install ops shortcut (from mcps repo, not the bundle)
+    # Install ops shortcut (atomic: temp+mv to avoid overwriting running script)
     mkdir -p "$HOME/bin"
-    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+        && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
     log "Installed ${VER}"
 else
+    # ── Update: ensure HOST binding ──────────
+    if [[ -f "$APP/.env" ]]; then
+        if ! grep -q "^HOST=" "$APP/.env"; then
+            echo "HOST=0.0.0.0" >> "$APP/.env"
+            log "Added HOST=0.0.0.0 to .env (required for Uberspace web backend)"
+        fi
+    fi
+
     # ── Update: restart ─────────────────────
     log "  → starting librechat service"
     _svc_start_lc

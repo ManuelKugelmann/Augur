@@ -20,7 +20,13 @@ setup_sandbox() {
     export UBER_HOST="testuser.uber.space"
     export BRANCH="main"
 
-    mkdir -p "$STACK_DIR" "$APP_DIR" "$HOME/bin" "$HOME/etc/services.d" "$HOME/logs"
+    mkdir -p "$STACK_DIR" "$APP_DIR" "$HOME/bin" "$HOME/etc/services.d" "$HOME/logs" \
+             "$HOME/.config/systemd/user"
+
+    # Create dummy service files so _svc_exists returns true for core services
+    for _svc in librechat augur charts; do
+        touch "$HOME/.config/systemd/user/${_svc}.service"
+    done
 
     # Git config for sandbox (needed for commits)
     git config --global user.email "test@test.com"

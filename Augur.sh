@@ -67,7 +67,7 @@ case "$CMD" in
             if systemctl --user is-active "$_svc" &>/dev/null || \
                [[ -f "$HOME/.config/systemd/user/${_svc}.service" ]]; then
                 echo -e "${CYAN}── $_svc (last 15 lines, stdout+stderr) ──${NC}"
-                journalctl --user -u "$_svc" --no-pager -n 15 --since "-30s" 2>/dev/null || true
+                journalctl --user -u "$_svc" --no-pager -n 15 2>/dev/null || true
                 echo ""
             fi
         done
@@ -80,6 +80,21 @@ case "$CMD" in
         echo -e "${GREEN}✓${NC} Stopped (librechat + augur + charts)"
         ;;
     restart)
+        # Merge system + user config before restarting
+        _SYS_YAML="$STACK/augur-uberspace/config/librechat-system.yaml"
+        _USR_YAML="$APP/librechat-user.yaml"
+        _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+        if [[ -f "$_SYS_YAML" ]] && [[ -f "$_USR_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+            _MERGE_PY=""
+            for _py in "$STACK/venv/bin/python" python3 python; do
+                command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+            done
+            if [[ -n "$_MERGE_PY" ]]; then
+                "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" \
+                    && log "Merged librechat.yaml" \
+                    || warn "Config merge failed — using existing librechat.yaml"
+            fi
+        fi
         _svc_stop trading 2>/dev/null || true  # legacy name
         _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart augur || true
@@ -91,7 +106,7 @@ case "$CMD" in
             if systemctl --user is-active "$_svc" &>/dev/null || \
                [[ -f "$HOME/.config/systemd/user/${_svc}.service" ]]; then
                 echo -e "${CYAN}── $_svc (last 15 lines, stdout+stderr) ──${NC}"
-                journalctl --user -u "$_svc" --no-pager -n 15 --since "-30s" 2>/dev/null || true
+                journalctl --user -u "$_svc" --no-pager -n 15 2>/dev/null || true
                 echo ""
             fi
         done
@@ -123,83 +138,472 @@ case "$CMD" in
                 ;;
         esac
         ;;
+    debugstart)
+        _TARGET="${2:-all}"
+        _SVCS=()
+        case "$_TARGET" in
+            all) _SVCS=(librechat augur charts) ;;
+            librechat|augur|charts) _SVCS=("$_TARGET") ;;
+            *) echo "Usage: augur debugstart [all|librechat|augur|charts]"; exit 1 ;;
+        esac
+
+        # Stop targeted services
+        for _s in "${_SVCS[@]}"; do
+            _svc_stop "$_s" 2>/dev/null || true
+        done
+
+        # Show pre-start diagnostics
+        echo -e "${CYAN}── Service status ──${NC}"
+        for _s in librechat augur charts; do
+            if systemctl --user is-active "$_s" &>/dev/null; then
+                _pid=$(systemctl --user show "$_s" --property=MainPID --value 2>/dev/null || echo "?")
+                _mem=$(ps -o rss= -p "$_pid" 2>/dev/null | awk '{printf "%.0fM", $1/1024}' || echo "?")
+                echo -e "  ${GREEN}●${NC} $_s: running (PID $_pid, ${_mem})"
+            elif _svc_exists "$_s"; then
+                echo -e "  ${RED}●${NC} $_s: stopped"
+            else
+                echo -e "  ${YELLOW}○${NC} $_s: not registered"
+            fi
+        done
+        echo ""
+
+        # Environment & config checks
+        echo -e "${CYAN}── Environment ──${NC}"
+        echo -e "  Stack:     $STACK"
+        echo -e "  App:       $APP"
+        echo -e "  Version:   $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        echo -e "  Node:      $(node -v 2>/dev/null || echo 'not found')"
+        echo -e "  Python:    $("$STACK/venv/bin/python" --version 2>&1 2>/dev/null || echo 'venv missing')"
+        echo -e "  Disk free: $(df -h "$HOME" 2>/dev/null | awk 'NR==2{print $4}' || echo '?')"
+        if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then
+            echo -e "  ${YELLOW}⚠ Safe mode is ON${NC} — MCP servers disabled"
+        fi
+        echo ""
+
+        # Port checks
+        echo -e "${CYAN}── Ports ──${NC}"
+        for _port_info in "3080:LibreChat" "8071:Augur MCP" "8066:Charts"; do
+            _port="${_port_info%%:*}"; _label="${_port_info#*:}"
+            if ss -tlnp 2>/dev/null | grep -q ":${_port} " 2>/dev/null; then
+                echo -e "  ${GREEN}●${NC} :${_port} ${_label}: listening"
+            else
+                echo -e "  ${RED}○${NC} :${_port} ${_label}: not listening"
+            fi
+        done
+        echo ""
+
+        # Config validation
+        echo -e "${CYAN}── Config ──${NC}"
+        if [[ -f "$APP/librechat.yaml" ]]; then
+            if "$STACK/venv/bin/python" -c "import yaml; yaml.safe_load(open('$APP/librechat.yaml'))" 2>/dev/null; then
+                echo -e "  ${GREEN}✓${NC} librechat.yaml: valid YAML"
+            else
+                echo -e "  ${RED}✗${NC} librechat.yaml: YAML parse error"
+            fi
+        else
+            echo -e "  ${RED}✗${NC} librechat.yaml: missing"
+        fi
+        if [[ -f "$APP/.env" ]]; then
+            echo -e "  ${GREEN}✓${NC} LibreChat .env: present"
+        else
+            echo -e "  ${RED}✗${NC} LibreChat .env: missing"
+        fi
+        if [[ -f "$STACK/.env" ]]; then
+            echo -e "  ${GREEN}✓${NC} Signals .env: present"
+        else
+            echo -e "  ${YELLOW}○${NC} Signals .env: missing (optional)"
+        fi
+        echo ""
+
+        # Show recent journal entries (last 50 lines, no time filter)
+        echo -e "${CYAN}── Recent logs (last 50 lines per service) ──${NC}"
+        for _s in "${_SVCS[@]}"; do
+            echo -e "${YELLOW}  ── $_s ──${NC}"
+            journalctl --user -u "$_s" --no-pager -n 50 2>/dev/null || echo "  (no journal entries)"
+            echo ""
+        done
+
+        # Show recent crashes / restarts
+        echo -e "${CYAN}── Recent failures (last 24h) ──${NC}"
+        _has_failures=false
+        for _s in "${_SVCS[@]}"; do
+            _failures=$(journalctl --user -u "$_s" --since "24 hours ago" --no-pager 2>/dev/null \
+                | grep -ciE "error|exception|fatal|segfault|oom|killed" || true)
+            if [[ "$_failures" -gt 0 ]]; then
+                echo -e "  ${RED}●${NC} $_s: ${_failures} error lines in last 24h"
+                _has_failures=true
+            fi
+        done
+        if [[ "$_has_failures" == false ]]; then
+            echo -e "  ${GREEN}✓${NC} No error lines found in last 24h"
+        fi
+        echo ""
+
+        # Start targeted service(s) in foreground
+        if [[ "${#_SVCS[@]}" -eq 1 ]]; then
+            _s="${_SVCS[0]}"
+            echo -e "${CYAN}Starting $_s in foreground (Ctrl+C to stop)...${NC}"
+            case "$_s" in
+                librechat)
+                    cd "$APP"
+                    NODE_ENV=production exec node --max-old-space-size=1024 api/server/index.js
+                    ;;
+                augur)
+                    cd "$STACK"
+                    set -a; [[ -f "$STACK/.env" ]] && . "$STACK/.env"; set +a
+                    export MCP_TRANSPORT=http MCP_PORT=8071
+                    exec "$STACK/venv/bin/python" src/servers/combined_server.py
+                    ;;
+                charts)
+                    cd "$STACK"
+                    exec "$STACK/venv/bin/python" src/store/charts.py
+                    ;;
+            esac
+        else
+            # Multiple services: start via systemd, then tail logs
+            echo -e "${CYAN}Starting services via systemd, then tailing logs...${NC}"
+            for _s in "${_SVCS[@]}"; do
+                _svc_start "$_s" || warn "Failed to start $_s"
+            done
+            sleep 2
+            echo -e "${CYAN}── Live logs (Ctrl+C to stop) ──${NC}"
+            journalctl --user -u librechat -u augur -u charts -f --no-pager
+        fi
+        ;;
+    safemode)
+        _SAFE_BAK="$APP/librechat.yaml.pre-safe"
+        case "${2:-}" in
+            on)
+                if [[ -f "$_SAFE_BAK" ]]; then
+                    echo -e "${YELLOW}⚠${NC} Safe mode already active (backup exists)"
+                    echo -e "  Turn off: ${CYAN}augur safemode off${NC}"
+                    exit 0
+                fi
+                if [[ ! -f "$APP/librechat.yaml" ]]; then
+                    die "librechat.yaml not found at $APP"
+                fi
+
+                # Back up current config
+                cp "$APP/librechat.yaml" "$_SAFE_BAK"
+
+                # Write minimal config without MCP servers
+                cat > "$APP/librechat.yaml" <<'SAFEEOF'
+# LibreChat SAFE MODE — no MCP servers loaded
+# Restore with: augur safemode off
+version: 1.3.6
+cache: true
+registration:
+  socialLogins: []
+interface:
+  endpointsMenu: true
+  agents:
+    use: true
+    create: true
+endpoints:
+  agents:
+    recursionLimit: 25
+    maxRecursionLimit: 50
+    capabilities:
+      - tools
+      - actions
+      - artifacts
+      - chain
+SAFEEOF
+
+                echo -e "${GREEN}✓${NC} Safe mode ON — MCP servers disabled"
+                echo -e "  Config backed up → ${_SAFE_BAK}"
+                echo -e "  Now run: ${CYAN}augur restart${NC}"
+                echo -e "  Restore: ${CYAN}augur safemode off${NC}"
+                ;;
+            off)
+                if [[ -f "$_SAFE_BAK" ]]; then
+                    cp "$_SAFE_BAK" "$APP/librechat.yaml"
+                    rm -f "$_SAFE_BAK"
+                    echo -e "${GREEN}✓${NC} Safe mode OFF — full config restored"
+                    echo -e "  Now run: ${CYAN}augur restart${NC}"
+                else
+                    echo -e "${GREEN}✓${NC} Safe mode is not active"
+                fi
+                ;;
+            *)
+                if [[ -f "$_SAFE_BAK" ]]; then
+                    echo -e "${YELLOW}Safe mode: ON${NC} (MCP servers disabled)"
+                    echo -e "  Turn off: ${CYAN}augur safemode off && augur restart${NC}"
+                else
+                    echo -e "${GREEN}Safe mode: OFF${NC} (full config active)"
+                    echo -e "  Turn on:  ${CYAN}augur safemode on && augur restart${NC}"
+                fi
+                ;;
+        esac
+        ;;
     version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
-    u|update)
+    pull)
+        echo -e "${CYAN}Quick pull (dev)...${NC}"
+        git -C "$STACK" pull --ff-only
+        # Update augur CLI from pulled code (atomic: temp+mv to avoid overwriting running script)
+        cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+            && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
+        chmod +x "$HOME/bin/augur" 2>/dev/null || true
+        ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+        echo -e "${GREEN}✓${NC} Pulled latest ($(git -C "$STACK" rev-parse --short HEAD))"
+        ;;
+    install)
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo -e "${CYAN} Augur + LibreChat → Uberspace ${NC}"
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo ""
+
+        local NEED_STACK_ENV=false
+        local NEED_APP_ENV=false
+
+        # Node.js check
+        command -v node &>/dev/null || die "Node.js not available"
+        log "Node.js $(node -v) (system-provided)"
+
+        # Shared core: pull/clone, venv, pip, LC bundle, MCP nodes, yaml patch, legacy cleanup
+        _update_core install
+
+        # Signals stack .env
+        if [[ ! -f "$STACK/.env" ]]; then
+            cp "$STACK/.env.example" "$STACK/.env"
+            NEED_STACK_ENV=true
+            log "Created $STACK/.env (needs configuration)"
+        else
+            log "Signals .env already exists"
+        fi
+        [[ ! -f "$APP/.env" ]] && NEED_APP_ENV=true
+
+        # Register systemd services
+        log "Registering services..."
+        mkdir -p ~/.config/systemd/user ~/logs
+
+        cat > ~/.config/systemd/user/augur.service << SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${STACK}
+EnvironmentFile=${STACK}/.env
+Environment=MCP_TRANSPORT=http
+Environment=MCP_PORT=8071
+ExecStart=${STACK}/venv/bin/python src/servers/combined_server.py
+Restart=always
+RestartSec=10
+SVCEOF
+        cat > ~/.config/systemd/user/charts.service << SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${STACK}
+ExecStart=${STACK}/venv/bin/python src/store/charts.py
+Restart=always
+RestartSec=60
+SVCEOF
+        _svc_reload
+        systemctl --user enable augur || true
+        systemctl --user enable charts || true
+        _web_backend_retry /charts 8066 || warn "Failed to set /charts web backend"
+        log "Services registered (augur, charts)"
+
+        # LibreChat service (if setup.sh didn't create it)
+        local SVC="$HOME/.config/systemd/user/librechat.service"
+        if [[ ! -f "$SVC" ]]; then
+            cat > "$SVC" <<SVCEOF
+[Install]
+WantedBy=default.target
+
+[Service]
+WorkingDirectory=${APP}
+Environment=NODE_ENV=production
+ExecStart=node --max-old-space-size=1024 api/server/index.js
+Restart=always
+RestartSec=60
+SVCEOF
+            _svc_reload
+            systemctl --user enable librechat || true
+        fi
+        _web_backend_retry / "${LC_PORT}" || warn "Failed to set web backend on port ${LC_PORT}"
+
+        # PATH setup
+        if [[ -f "$HOME/.bashrc" ]] && ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc" 2>/dev/null; then
+            echo '' >> "$HOME/.bashrc"
+            echo '# Added by Augur installer' >> "$HOME/.bashrc"
+            echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+            log "Added ~/bin to PATH in .bashrc"
+        elif [[ ! -f "$HOME/.bashrc" ]]; then
+            echo '# Added by Augur installer' > "$HOME/.bashrc"
+            echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+            log "Created .bashrc with ~/bin in PATH"
+        fi
+
+        # Cron job
+        if crontab -l 2>/dev/null | grep -q "augur cron"; then
+            log "Cron: augur cron already scheduled"
+        else
+            log "Adding augur cron job..."
+            ( crontab -l 2>/dev/null || true; echo "*/15 * * * * ~/bin/augur cron 2>&1 | logger -t augur-cron" ) | crontab - \
+                && log "Cron: augur cron scheduled" \
+                || warn "Failed to add cron job — add manually: crontab -e"
+        fi
+
+        # Auto-seed agents (if env vars set)
+        if [[ -n "${AUGUR_SETUP_EMAIL:-}" ]] && [[ -n "${AUGUR_SETUP_PASSWORD:-}" ]]; then
+            local LC_URL="http://localhost:${LC_PORT:-3080}"
+            local LC_READY=false
+            _svc_start librechat || true
+            for i in $(seq 1 30); do
+                if curl -sf "${LC_URL}/health" >/dev/null 2>&1; then
+                    LC_READY=true; break
+                fi
+                sleep 2
+            done
+            if [[ "$LC_READY" == true ]]; then
+                log "LibreChat is ready, seeding agents..."
+                "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
+                    --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
+                    --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
+            else
+                warn "LibreChat not ready after 60s — seed agents manually: augur agents <email> <password>"
+            fi
+        fi
+
+        # Bootstrap profile data via agent (if env vars set)
+        if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -n "${AUGUR_BOOTSTRAP_AGENT_ID:-}" ]]; then
+            local LC_URL="http://localhost:${LC_PORT:-3080}"
+            local LC_READY=false
+            for i in $(seq 1 15); do
+                if curl -sf "${LC_URL}/health" >/dev/null 2>&1; then
+                    LC_READY=true; break
+                fi
+                sleep 2
+            done
+            if [[ "$LC_READY" == true ]]; then
+                log "Bootstrapping profile data via agent..."
+                "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
+                    --api-key "$AUGUR_AGENTS_API_KEY" \
+                    --agent-id "$AUGUR_BOOTSTRAP_AGENT_ID" \
+                    --base-url "$LC_URL" \
+                    --timeseries 2>&1 | while read -r line; do log "bootstrap: $line"; done \
+                    || warn "Bootstrap failed (run manually: augur bootstrap)"
+            else
+                warn "LibreChat not ready — run bootstrap manually: augur bootstrap"
+            fi
+        fi
+
+        # Post-install checks & guide
+        echo ""
+        echo -e "${CYAN}── Post-install checks ──${NC}"
+        echo ""
+        for svc in librechat augur charts; do
+            if [[ -f "$HOME/.config/systemd/user/${svc}.service" ]]; then
+                log "$svc service: registered"
+            else
+                warn "$svc service: NOT registered"
+            fi
+        done
+
+        local UBER="${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        echo ""
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo -e "${GREEN}✓${NC} Installation complete!"
+        echo -e "  Augur ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo ""
+
+        if [[ "$NEED_STACK_ENV" == true ]] || [[ "$NEED_APP_ENV" == true ]]; then
+            echo -e "${YELLOW}New .env files were created and need your API keys.${NC}"
+            echo ""
+            if [[ -t 0 ]]; then
+                if [[ "$NEED_STACK_ENV" == true ]]; then
+                    echo -e "${CYAN}[1/2]${NC} Signals stack config — set MONGO_URI_SIGNALS"
+                    echo -e "      ${YELLOW}$STACK/.env${NC}"
+                    read -rp "      Open in nano now? [Y/n] " ans
+                    if [[ "${ans:-Y}" =~ ^[Yy]?$ ]]; then nano "$STACK/.env"; fi
+                    echo ""
+                fi
+                if [[ "$NEED_APP_ENV" == true ]]; then
+                    echo -e "${CYAN}[2/2]${NC} LibreChat config — set MONGO_URI + LLM API key(s)"
+                    echo -e "      ${YELLOW}$APP/.env${NC}"
+                    read -rp "      Open in nano now? [Y/n] " ans
+                    if [[ "${ans:-Y}" =~ ^[Yy]?$ ]]; then nano "$APP/.env"; fi
+                    echo ""
+                fi
+            else
+                echo -e "  ${CYAN}Step 1:${NC} Configure signals stack"
+                echo "    nano $STACK/.env"
+                echo ""
+                echo -e "  ${CYAN}Step 2:${NC} Configure LibreChat"
+                echo "    nano $APP/.env"
+                echo ""
+            fi
+        fi
+
+        echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
+        echo "    augur start        # start all services"
+        echo "    augur stop         # stop all services"
+        echo "    augur restart      # restart all services"
+        echo ""
+        echo -e "  ${CYAN}Verify:${NC}"
+        echo "    augur check        # full health check"
+        echo "    augur status       # quick service status"
+        echo ""
+        echo -e "  ${CYAN}Access:${NC}"
+        echo "    https://${UBER}"
+        echo ""
+
+        # First login: prompt to create initial user account
+        if [[ -t 0 ]]; then
+            echo -e "  ${CYAN}First login:${NC}"
+            echo "    Create your admin account to access the web UI."
+            read -rp "    Register a user now? [Y/n] " _reg_ans
+            if [[ "${_reg_ans:-Y}" =~ ^[Yy]?$ ]]; then
+                # Delegate to augur user (interactive mode)
+                "$0" user
+            else
+                echo ""
+                echo "    You can register later with: augur user"
+            fi
+            echo ""
+        else
+            echo -e "  ${CYAN}First login:${NC}"
+            echo "    augur user         # register your admin account"
+            echo ""
+        fi
+        ;;
+    update)
         echo -e "${CYAN}Updating Augur stack...${NC}"
 
         # Stop all services before updating
         _svc_stop librechat || true
         _svc_stop augur || true
-        _svc_stop trading 2>/dev/null || true  # legacy name
         _svc_stop charts || true
 
-        # Pull latest stack code
-        git -C "$STACK" pull --ff-only
-        VER="dev-$(git -C "$STACK" rev-parse --short HEAD)"
+        # Shared core: pull, venv check, pip, LC bundle, MCP nodes, yaml patch, legacy cleanup
+        _update_core update
 
-        # Copy scripts and config to LibreChat
-        mkdir -p "$APP/scripts" "$APP/config"
-        cp "$STACK/augur-uberspace/scripts/"*.sh "$APP/scripts/" 2>/dev/null || true
-        if [[ -f "$STACK/augur-uberspace/config/librechat.yaml" ]] && [[ ! -f "$APP/librechat.yaml" ]]; then
-            cp "$STACK/augur-uberspace/config/librechat.yaml" "$APP/librechat.yaml"
-            sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
-        fi
-
-        # Update augur CLI
-        cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
-        chmod +x "$HOME/bin/augur" 2>/dev/null || true
-        ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
-
-        # Update Python dependencies
-        if [[ -d "$STACK/venv" ]]; then
-            _pip_upgrade "$STACK/venv/bin/python" \
-                || die "pip upgrade failed"
-            log "Installing Python requirements..."
-            _pip_install "$STACK/venv/bin/python" "$STACK/requirements.txt" \
-                || die "pip install requirements failed"
-            log "Python requirements up to date."
-        else
-            warn "Python venv not found at $STACK/venv — run 'augur install' first"
-        fi
-
-        # Update MCP Node packages
-        if [[ -f "$STACK/mcp-nodes/package.json" ]]; then
-            local _pkg_hash _cached_hash=""
-            _pkg_hash=$(sha256sum "$STACK/mcp-nodes/package.json" | cut -d' ' -f1)
-            _cached_hash=$(cat "$STACK/mcp-nodes/.package.json.sha256" 2>/dev/null || true)
-            if [[ "$_pkg_hash" != "$_cached_hash" ]] || [[ ! -d "$STACK/mcp-nodes/node_modules" ]]; then
-                log "Refreshing MCP Node packages..."
-                cd "$STACK/mcp-nodes" \
-                    && npm install --production --loglevel=warn 2>&1 | tail -5 \
-                    && npm dedupe --loglevel=warn 2>&1 | tail -3 \
-                    && cd - >/dev/null
-                echo "$_pkg_hash" > "$STACK/mcp-nodes/.package.json.sha256"
-                log "MCP Node packages up to date."
-            else
-                log "MCP Node packages unchanged — skipping npm install."
-            fi
-        fi
-
-        # Update LibreChat release bundle (skip if already current)
-        _lc_download_and_setup --skip-if-current || true
-
-        echo "$VER" > "$APP/.version"
-
-        # Clean up legacy trading.service if still present
-        if [[ -f "$HOME/.config/systemd/user/trading.service" ]]; then
-            systemctl --user disable trading 2>/dev/null || true
-            rm -f "$HOME/.config/systemd/user/trading.service"
-            _svc_reload 2>/dev/null || systemctl --user daemon-reload || true
-            log "Removed legacy trading.service (renamed to augur)"
-        fi
-
-        # Restart all services
-        _svc_start librechat || true
-        _svc_start augur || true
-        _svc_start charts || true
-        echo -e "${GREEN}✓${NC} Updated to ${VER}"
+        echo ""
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo -e "${GREEN}✓${NC} Updated to ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
+        echo "    augur start        # start all services"
+        echo "    augur stop         # stop all services"
+        echo "    augur restart      # restart all services"
+        echo ""
+        echo -e "  ${CYAN}Verify:${NC}"
+        echo "    augur check        # full health check"
+        echo "    augur status       # quick service status"
+        echo ""
+        echo -e "  ${CYAN}Access:${NC}"
+        echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        echo ""
+        echo -e "  ${CYAN}User management:${NC}"
+        echo "    augur user         # register a new user account"
+        echo ""
         ;;
     clean)
         echo -e "${CYAN}Clearing caches...${NC}"
@@ -531,10 +935,34 @@ SVCEOF
         [[ -f "$APP/.version" ]] && _ok "LibreChat installed: $(cat "$APP/.version")" || _fail "LibreChat not installed at $APP"
         if [[ -f "$APP/.env" ]]; then
             grep -q "MONGO_URI=" "$APP/.env" 2>/dev/null && _ok "LibreChat .env with MONGO_URI" || _warn "LibreChat .env exists but MONGO_URI not set"
+            grep -q "^HOST=0\.0\.0\.0" "$APP/.env" 2>/dev/null && _ok "LibreChat HOST=0.0.0.0" || _warn "LibreChat HOST not set to 0.0.0.0 — web backend may 502"
         else _fail "LibreChat .env missing"; fi
         if [[ -f "$APP/librechat.yaml" ]]; then
             grep -q "mcpServers:" "$APP/librechat.yaml" 2>/dev/null && _ok "librechat.yaml with MCP servers" || _warn "librechat.yaml exists but no mcpServers section"
         else _fail "librechat.yaml missing"; fi
+        if [[ -f "$STACK/augur-uberspace/config/librechat-system.yaml" ]]; then
+            _ok "librechat-system.yaml present"
+        else _fail "librechat-system.yaml missing from repo"; fi
+        if [[ -f "$APP/librechat-user.yaml" ]]; then
+            _ok "librechat-user.yaml present"
+        else _warn "librechat-user.yaml missing (will be created on next restart)"; fi
+        # Validate merge produces valid YAML
+        _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+        if [[ -f "$_MERGE_SCRIPT" ]] && [[ -f "$APP/librechat-user.yaml" ]] && [[ -f "$STACK/augur-uberspace/config/librechat-system.yaml" ]]; then
+            _MERGE_PY=""
+            for _py in "$STACK/venv/bin/python" python3 python; do
+                command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+            done
+            if [[ -n "$_MERGE_PY" ]]; then
+                _merge_tmp=$(mktemp)
+                if "$_MERGE_PY" "$_MERGE_SCRIPT" "$STACK/augur-uberspace/config/librechat-system.yaml" "$APP/librechat-user.yaml" "$_merge_tmp" "$HOME" 2>/dev/null; then
+                    _ok "Config merge: system + user → valid YAML"
+                else
+                    _fail "Config merge: failed (check librechat-user.yaml syntax)"
+                fi
+                rm -f "$_merge_tmp"
+            fi
+        fi
         [[ -d "$STACK/mcp-nodes/node_modules" ]] && _ok "MCP Node servers bundle present" || _warn "MCP Node servers bundle missing (run: augur install)"
         [[ -f "$STACK/.env" ]] && _ok "Signals .env present" || _warn "Signals .env missing (optional)"
 
@@ -557,18 +985,27 @@ SVCEOF
         else _skip "Web backends: uberspace CLI not available"; fi
 
         echo ""; echo -e "${CYAN}── Connectivity ──${NC}"; echo ""
-        LC_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/" 2>/dev/null || echo "000")"
+        # curl may print %{http_code} per attempt (IPv6+IPv4) — keep only last 3 chars
+        _http_code() { local raw; raw="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$1" 2>/dev/null || true)"; echo "${raw: -3}"; }
+        LC_CODE="$(_http_code "http://localhost:${LC_PORT:-3080}/")"
         if [[ "$LC_CODE" == "200" ]] || [[ "$LC_CODE" == "301" ]] || [[ "$LC_CODE" == "302" ]]; then _ok "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"
-        elif [[ "$LC_CODE" == "000" ]]; then _fail "LibreChat HTTP: not reachable on port ${LC_PORT:-3080}"
+        elif [[ "$LC_CODE" == "000" ]] || [[ -z "$LC_CODE" ]]; then _fail "LibreChat HTTP: not reachable on port ${LC_PORT:-3080}"
         else _warn "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"; fi
-        CHARTS_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8066/charts/" 2>/dev/null || echo "000")"
-        [[ "$CHARTS_CODE" != "000" ]] && _ok "Charts HTTP: ${CHARTS_CODE} on port 8066" || _warn "Charts HTTP: not reachable on port 8066"
+        LC_API="$(_http_code "http://localhost:${LC_PORT:-3080}/health")"
+        if [[ "$LC_API" == "200" ]]; then _ok "LibreChat API: healthy"
+        elif [[ "$LC_API" == "000" ]] || [[ -z "$LC_API" ]]; then _fail "LibreChat API: not reachable"
+        else _warn "LibreChat API: HTTP ${LC_API}"; fi
+        if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then _warn "Safe mode active — MCP servers disabled (restore: augur safemode off && augur restart)"; fi
+        CHARTS_CODE="$(_http_code "http://localhost:8066/charts/")"
+        if [[ "$CHARTS_CODE" == "200" ]] || [[ "$CHARTS_CODE" == "301" ]] || [[ "$CHARTS_CODE" == "302" ]]; then _ok "Charts HTTP: ${CHARTS_CODE} on port 8066"
+        elif [[ "$CHARTS_CODE" == "000" ]] || [[ -z "$CHARTS_CODE" ]]; then _warn "Charts HTTP: not reachable on port 8066"
+        else _warn "Charts HTTP: ${CHARTS_CODE} on port 8066"; fi
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
         if [[ -f "$HOME/.claude-auth.env" ]] || [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
-            PROXY_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${PROXY_PORT}/v1/models" 2>/dev/null || echo "000")"
+            PROXY_CODE="$(_http_code "http://localhost:${PROXY_PORT}/v1/models")"
             if [[ "$PROXY_CODE" == "200" ]]; then _ok "CLIProxyAPI: OK on port ${PROXY_PORT}"
             elif [[ "$PROXY_CODE" == "401" ]]; then _fail "CLIProxyAPI: 401 — token expired"
-            elif [[ "$PROXY_CODE" == "000" ]]; then _fail "CLIProxyAPI: not reachable on port ${PROXY_PORT}"
+            elif [[ "$PROXY_CODE" == "000" ]] || [[ -z "$PROXY_CODE" ]]; then _fail "CLIProxyAPI: not reachable on port ${PROXY_PORT}"
             else _warn "CLIProxyAPI: HTTP ${PROXY_CODE} on port ${PROXY_PORT}"; fi
         else _skip "CLIProxyAPI: not configured"; fi
 
@@ -621,7 +1058,11 @@ SVCEOF
         ${EDITOR:-nano} "$APP/.env"
         ;;
     yaml)
-        ${EDITOR:-nano} "$APP/librechat.yaml"
+        echo -e "${CYAN}System config:${NC} $STACK/augur-uberspace/config/librechat-system.yaml (managed by Augur)"
+        echo -e "${CYAN}User config:${NC}   $APP/librechat-user.yaml (your customizations)"
+        echo -e "Opening user config for editing..."
+        ${EDITOR:-nano} "$APP/librechat-user.yaml"
+        echo -e "${YELLOW}⚠${NC} Run ${CYAN}augur restart${NC} to apply changes (merge + restart)"
         ;;
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
@@ -649,6 +1090,80 @@ SVCEOF
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
                 --api-key "$BOOTSTRAP_API_KEY" --agent-id "$BOOTSTRAP_AGENT_ID" --base-url "$LC_URL" "${@:2}"
             echo -e "${GREEN}✓${NC} Bootstrap complete"
+        fi
+        ;;
+    user)
+        # Register a new LibreChat user account
+        LC_URL="http://localhost:${LC_PORT:-3080}"
+        _USER_EMAIL="${2:-}"
+        _USER_PASS="${3:-}"
+        _USER_NAME="${4:-}"
+        if [[ -z "$_USER_EMAIL" ]] && [[ -t 0 ]]; then
+            echo -e "${CYAN}Register a new LibreChat user${NC}"
+            echo ""
+            read -rp "  Email: " _USER_EMAIL
+            if [[ -z "$_USER_EMAIL" ]]; then die "Email is required"; fi
+            read -rsp "  Password: " _USER_PASS; echo ""
+            if [[ -z "$_USER_PASS" ]]; then die "Password is required"; fi
+            read -rsp "  Confirm password: " _USER_PASS_CONFIRM; echo ""
+            if [[ "$_USER_PASS" != "$_USER_PASS_CONFIRM" ]]; then die "Passwords do not match"; fi
+            read -rp "  Display name [${_USER_EMAIL%%@*}]: " _USER_NAME
+            _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
+        elif [[ -z "$_USER_EMAIL" ]]; then
+            echo -e "${YELLOW}Usage: augur user <email> <password> [name]${NC}"
+            echo ""; echo "  augur user admin@example.com MyPass123!"
+            echo "  augur user   # interactive (prompts for email + password)"
+            exit 0
+        fi
+        _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
+        # Temporarily enable registration, register, then restore
+        _LC_ENV="$APP/.env"
+        _HAD_ALLOW_REG=false
+        _OLD_ALLOW_REG=""
+        if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+            _HAD_ALLOW_REG=true
+            _OLD_ALLOW_REG=$(grep '^ALLOW_REGISTRATION=' "$_LC_ENV" | tail -1)
+            sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=true/' "$_LC_ENV"
+        else
+            echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
+        fi
+        # Restart LibreChat to pick up the change
+        _svc_restart librechat >/dev/null 2>&1 || true
+        # Wait for LibreChat to be ready
+        _LC_READY=false
+        for i in $(seq 1 30); do
+            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                _LC_READY=true; break
+            fi
+            sleep 2
+        done
+        if [[ "$_LC_READY" != true ]]; then
+            # Restore .env before aborting
+            if [[ "$_HAD_ALLOW_REG" == true ]]; then
+                sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
+            else
+                sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
+            fi
+            die "LibreChat not ready after 60s — cannot register user"
+        fi
+        # Register via API
+        _REG_RESP=$(curl -sf -X POST "${LC_URL}/api/auth/register" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${_USER_EMAIL}\",\"password\":\"${_USER_PASS}\",\"confirm_password\":\"${_USER_PASS}\",\"name\":\"${_USER_NAME}\"}" 2>&1) \
+            && _REG_OK=true || _REG_OK=false
+        # Restore registration setting
+        if [[ "$_HAD_ALLOW_REG" == true ]]; then
+            sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
+        else
+            sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
+        fi
+        _svc_restart librechat >/dev/null 2>&1 || true
+        if [[ "$_REG_OK" == true ]]; then
+            echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
+            echo -e "  Log in at: https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        else
+            echo -e "${RED}✗${NC} Registration failed: ${_REG_RESP}" >&2
+            exit 1
         fi
         ;;
     agents)
@@ -728,10 +1243,17 @@ for kind, info in sorted(result.items()):
         echo "  augur stop         Stop all services"
         echo "  augur restart      Restart all services"
         echo "  augur logs         Tail service logs"
-        echo "  augur testrun      Run LibreChat in foreground (see errors directly)"
+        echo "  augur testrun      Run single service in foreground (see errors directly)"
+        echo "  augur debugstart   Full diagnostics: status, env, ports, config, logs,"
+        echo "                     recent failures, then foreground run"
+        echo "  augur safemode     Show safe mode status"
+        echo "  augur safemode on  Disable MCPs (fix 502s), then: augur restart"
+        echo "  augur safemode off Restore full MCP config, then: augur restart"
         echo "  augur version      Show installed version"
         echo ""
-        echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
+        echo "  augur pull         Quick git-pull update (dev)"
+        echo "  augur update       Update stack (git pull + deps + LibreChat release)"
+        echo "  augur install      Full install/reinstall (idempotent)"
         echo "  augur clean        Clear all caches (pip, uv, npm, playwright, temp)"
         echo ""
         echo "  augur backup       Backup MongoDB to ~/backups/mongo/ (rolling)"
@@ -739,6 +1261,7 @@ for kind, info in sorted(result.items()):
         echo "  augur backups      List available backups"
         echo "  augur cron         Run cron hook (compact + agent invocation)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
+        echo "  augur user         Register a new LibreChat user account"
         echo "  augur agents       Seed multi-agent architecture (11 agents)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
         echo "  augur reseed       Clear all profiles and re-seed from disk"
@@ -746,7 +1269,7 @@ for kind, info in sorted(result.items()):
         echo "  augur check -t     Health check + run test suite (bats + pytest)"
         echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
         echo "  augur env          Edit .env"
-        echo "  augur yaml         Edit librechat.yaml"
+        echo "  augur yaml         Edit librechat-user.yaml (LLM endpoints, etc.)"
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Install / reinstall (idempotent):"

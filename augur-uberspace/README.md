@@ -171,13 +171,14 @@ One combined Python server exposing 50+ tools via FastMCP 3.1+ `mount()`:
 
 ```bash
 augur help       # show all commands
-augur s|status   # status + version + host
-augur l|logs     # tail logs
-augur r|restart  # restart LibreChat
-augur v|version  # show version
-augur u|update   # update stack (git pull + deps + LibreChat release)
+augur status     # status + version + host
+augur logs       # tail logs
+augur restart    # restart LibreChat
+augur version    # show version
+augur pull       # quick git-pull update (dev)
+augur update     # update stack (git pull + deps + LibreChat release)
+augur debugstart # full diagnostics + foreground run
 augur install    # re-run full installer (idempotent)
-augur sync       # force git sync of data
 augur check      # health check
 augur check -t   # health check + test suite
 augur env        # edit .env
@@ -190,7 +191,7 @@ augur conf       # edit deploy.conf
 | Method | Command | Use when |
 |--------|---------|----------|
 | Git pull | `augur pull` | Dev/staging — fast, no release needed |
-| Release | `augur u` | Production — downloads tagged release bundle |
+| Release | `augur update` | Production — downloads tagged release bundle |
 | Re-install | `augur install` | Full re-setup (idempotent, preserves config) |
 
 ```bash
@@ -200,7 +201,7 @@ augur pull                      # on Uberspace
 
 # Production: tag → release → deploy
 git tag v0.3.0 && git push --tags
-augur u                         # on Uberspace
+augur update                    # on Uberspace
 ```
 
 ## Resource Limits (Uberspace)
