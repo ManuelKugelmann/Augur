@@ -136,7 +136,7 @@ _download() {
 _extract_asset_timestamp() {
     local url="$1" json="$2"
     # Walk through assets: find the block containing our URL, grab its updated_at
-    echo "$json" | grep -B5 "$(printf '%s' "$url" | sed 's/[&/]/\\&/g')" \
+    echo "$json" | grep -F -B5 "$url" \
         | grep -o '"updated_at":[^"]*"[^"]*"' | head -1 | cut -d'"' -f4 || true
 }
 
