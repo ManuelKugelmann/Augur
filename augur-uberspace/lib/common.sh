@@ -249,12 +249,31 @@ _lc_download_and_setup() {
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
 
+    # Log current installed state for diagnostics
+    if [[ "$skip_current" == true ]]; then
+        local _cur_ver="" _cur_ts="" _cur_tag=""
+        [[ -f "$APP/.version" ]]     && _cur_ver=$(cat "$APP/.version" 2>/dev/null)
+        [[ -f "$APP/.asset_ts" ]]    && _cur_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+        [[ -f "$APP/.release-tag" ]] && _cur_tag=$(cat "$APP/.release-tag" 2>/dev/null)
+        log "Installed: version=${_cur_ver:-?} tag=${_cur_tag:-?} asset_ts=${_cur_ts:-?}"
+        log "Available: tag=${_BUNDLE_TAG:-?} asset_ts=${_BUNDLE_ASSET_TS:-?}"
+    fi
+
     # Skip if asset hasn't changed (compare asset updated_at timestamp)
-    if [[ "$skip_current" == true && -f "$APP/.asset_ts" ]]; then
+    if [[ "$skip_current" == true && -n "$_BUNDLE_ASSET_TS" ]]; then
         local installed_ts=""
-        installed_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
-        if [[ -n "$installed_ts" && -n "$_BUNDLE_ASSET_TS" && "$installed_ts" == "$_BUNDLE_ASSET_TS" ]]; then
+        [[ -f "$APP/.asset_ts" ]] && installed_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+        if [[ -n "$installed_ts" && "$installed_ts" == "$_BUNDLE_ASSET_TS" ]]; then
             log "LibreChat already up-to-date (asset unchanged since ${installed_ts})"
+            return 0
+        fi
+        # Fallback: check release tag (written by install.sh)
+        local installed_tag=""
+        [[ -f "$APP/.release-tag" ]] && installed_tag=$(cat "$APP/.release-tag" 2>/dev/null)
+        if [[ -n "$installed_tag" && "$installed_tag" == "$_BUNDLE_TAG" ]]; then
+            log "LibreChat already up-to-date (tag ${installed_tag})"
+            # Backfill .asset_ts so future checks are fast
+            echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
             return 0
         fi
     fi
@@ -300,8 +319,9 @@ _lc_download_and_setup() {
     log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
 
-    # Store asset timestamp for next skip check
+    # Store tracking files for next skip check (sync with install.sh)
     [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
+    [[ -n "$_BUNDLE_TAG" ]]      && echo "$_BUNDLE_TAG"      > "$APP/.release-tag"
 
     return 0
 }

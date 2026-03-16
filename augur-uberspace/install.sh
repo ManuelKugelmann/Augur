@@ -201,11 +201,21 @@ _mcp_nodes_download_and_setup() {
     local mcp_dir="$STACK/mcp-nodes"
 
     if [[ "$skip_current" == true && -n "$_MCP_NODES_TAG" ]]; then
-        # Primary check: .release-tag stores the exact tag used to install
+        # Primary check: asset timestamp (detects re-uploads under same tag)
+        if [[ -n "$_MCP_NODES_ASSET_TS" ]]; then
+            local installed_ts=""
+            [[ -f "$mcp_dir/.asset_ts" ]] && installed_ts=$(cat "$mcp_dir/.asset_ts" 2>/dev/null)
+            if [[ -n "$installed_ts" && "$installed_ts" == "$_MCP_NODES_ASSET_TS" ]]; then
+                log "MCP nodes already up-to-date (asset unchanged since ${installed_ts})"
+                return 0
+            fi
+        fi
+        # Secondary check: .release-tag stores the exact tag used to install
         local installed_tag=""
         [[ -f "$mcp_dir/.release-tag" ]] && installed_tag=$(cat "$mcp_dir/.release-tag")
         if [[ -n "$installed_tag" && "$installed_tag" == "$_MCP_NODES_TAG" ]]; then
             log "MCP nodes already up-to-date ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo "$installed_tag"))"
+            [[ -n "$_MCP_NODES_ASSET_TS" ]] && echo "$_MCP_NODES_ASSET_TS" > "$mcp_dir/.asset_ts"
             return 0
         fi
         # Fallback: compare .version against tag (for pre-.release-tag installs)
@@ -217,6 +227,7 @@ _mcp_nodes_download_and_setup() {
                 if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_MCP_NODES_TAG" ]]; then
                     log "MCP nodes already up-to-date (${installed_ver})"
                     echo "$_MCP_NODES_TAG" > "$mcp_dir/.release-tag"
+                    [[ -n "$_MCP_NODES_ASSET_TS" ]] && echo "$_MCP_NODES_ASSET_TS" > "$mcp_dir/.asset_ts"
                     return 0
                 fi
                 log "Updating MCP nodes ${installed_ver} → ${_MCP_NODES_TAG}..."
@@ -235,8 +246,9 @@ _mcp_nodes_download_and_setup() {
     tar xzf "$mcp_tmp/mcp-nodes.tar.gz" -C "$mcp_dir"
     rm -rf "$mcp_tmp"
 
-    # Record the release tag so --skip-if-current works on re-run
-    [[ -n "${_MCP_NODES_TAG:-}" ]] && echo "$_MCP_NODES_TAG" > "$mcp_dir/.release-tag"
+    # Record tracking files so --skip-if-current works on re-run (sync with common.sh)
+    [[ -n "${_MCP_NODES_TAG:-}" ]]      && echo "$_MCP_NODES_TAG"      > "$mcp_dir/.release-tag"
+    [[ -n "${_MCP_NODES_ASSET_TS:-}" ]] && echo "$_MCP_NODES_ASSET_TS" > "$mcp_dir/.asset_ts"
     log "MCP nodes bundle installed ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo 'unknown'))"
     return 0
 }
@@ -246,12 +258,34 @@ _lc_download_and_setup() {
     [[ "${1:-}" == "--skip-if-current" ]] && skip_current=true
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
+
+    # Log current installed state for diagnostics
+    if [[ "$skip_current" == true ]]; then
+        local _cur_ver="" _cur_ts="" _cur_tag=""
+        [[ -f "$APP/.version" ]]     && _cur_ver=$(cat "$APP/.version" 2>/dev/null)
+        [[ -f "$APP/.asset_ts" ]]    && _cur_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+        [[ -f "$APP/.release-tag" ]] && _cur_tag=$(cat "$APP/.release-tag" 2>/dev/null)
+        log "Installed: version=${_cur_ver:-?} tag=${_cur_tag:-?} asset_ts=${_cur_ts:-?}"
+        log "Available: tag=${_BUNDLE_TAG:-?} asset_ts=${_BUNDLE_ASSET_TS:-?}"
+    fi
+
     if [[ "$skip_current" == true && -n "$_BUNDLE_TAG" ]]; then
-        # Primary check: .release-tag stores the exact tag used to install
+        # Primary check: asset timestamp (detects re-uploads under same tag)
+        if [[ -n "$_BUNDLE_ASSET_TS" ]]; then
+            local installed_ts=""
+            [[ -f "$APP/.asset_ts" ]] && installed_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+            if [[ -n "$installed_ts" && "$installed_ts" == "$_BUNDLE_ASSET_TS" ]]; then
+                log "LibreChat already up-to-date (asset unchanged since ${installed_ts})"
+                return 0
+            fi
+        fi
+        # Secondary check: .release-tag stores the exact tag used to install
         local installed_tag=""
         [[ -f "$APP/.release-tag" ]] && installed_tag=$(cat "$APP/.release-tag")
         if [[ -n "$installed_tag" && "$installed_tag" == "$_BUNDLE_TAG" ]]; then
             log "LibreChat already up-to-date ($(cat "$APP/.version" 2>/dev/null || echo "$installed_tag"))"
+            # Backfill .asset_ts so future checks are fast
+            [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
             return 0
         fi
         # Fallback: compare .version against tag (for pre-.release-tag installs)
@@ -262,6 +296,7 @@ _lc_download_and_setup() {
             if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ]]; then
                 log "LibreChat already up-to-date (${installed_ver})"
                 echo "$_BUNDLE_TAG" > "$APP/.release-tag"
+                [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
                 return 0
             fi
             log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
@@ -296,8 +331,9 @@ _lc_download_and_setup() {
     log "Running setup..."
     log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
-    # Record the release tag so --skip-if-current works on re-run
-    [[ -n "${_BUNDLE_TAG:-}" ]] && echo "$_BUNDLE_TAG" > "$APP/.release-tag"
+    # Record tracking files so --skip-if-current works on re-run (sync with common.sh)
+    [[ -n "${_BUNDLE_TAG:-}" ]]      && echo "$_BUNDLE_TAG"      > "$APP/.release-tag"
+    [[ -n "${_BUNDLE_ASSET_TS:-}" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
     return 0
 }
 
