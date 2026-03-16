@@ -393,9 +393,10 @@ _update_core() {
     _INSTALL_COMMIT_DATE=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
     log "Version: ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
 
-    # ── 2. Copy augur CLI ──
+    # ── 2. Copy augur CLI (atomic: temp+mv to avoid overwriting running script) ──
     mkdir -p "$HOME/bin"
-    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+        && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 

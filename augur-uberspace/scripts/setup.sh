@@ -300,9 +300,10 @@ EOF
     log "  → web backend / → port $PORT"
     _web_backend / "$PORT" || warn "Failed to set web backend on port $PORT"
 
-    # Install ops shortcut (from mcps repo, not the bundle)
+    # Install ops shortcut (atomic: temp+mv to avoid overwriting running script)
     mkdir -p "$HOME/bin"
-    cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+    cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+        && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
     chmod +x "$HOME/bin/augur" 2>/dev/null || true
     ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
 
