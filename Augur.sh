@@ -553,6 +553,25 @@ SVCEOF
         echo -e "  ${CYAN}Access:${NC}"
         echo "    https://${UBER}"
         echo ""
+
+        # First login: prompt to create initial user account
+        if [[ -t 0 ]]; then
+            echo -e "  ${CYAN}First login:${NC}"
+            echo "    Create your admin account to access the web UI."
+            read -rp "    Register a user now? [Y/n] " _reg_ans
+            if [[ "${_reg_ans:-Y}" =~ ^[Yy]?$ ]]; then
+                # Delegate to augur user (interactive mode)
+                "$0" user
+            else
+                echo ""
+                echo "    You can register later with: augur user"
+            fi
+            echo ""
+        else
+            echo -e "  ${CYAN}First login:${NC}"
+            echo "    augur user         # register your admin account"
+            echo ""
+        fi
         ;;
     update)
         echo -e "${CYAN}Updating Augur stack...${NC}"
@@ -581,6 +600,9 @@ SVCEOF
         echo ""
         echo -e "  ${CYAN}Access:${NC}"
         echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        echo ""
+        echo -e "  ${CYAN}User management:${NC}"
+        echo "    augur user         # register a new user account"
         echo ""
         ;;
     clean)
@@ -1065,6 +1087,80 @@ SVCEOF
             echo -e "${GREEN}✓${NC} Bootstrap complete"
         fi
         ;;
+    user)
+        # Register a new LibreChat user account
+        LC_URL="http://localhost:${LC_PORT:-3080}"
+        _USER_EMAIL="${2:-}"
+        _USER_PASS="${3:-}"
+        _USER_NAME="${4:-}"
+        if [[ -z "$_USER_EMAIL" ]] && [[ -t 0 ]]; then
+            echo -e "${CYAN}Register a new LibreChat user${NC}"
+            echo ""
+            read -rp "  Email: " _USER_EMAIL
+            if [[ -z "$_USER_EMAIL" ]]; then die "Email is required"; fi
+            read -rsp "  Password: " _USER_PASS; echo ""
+            if [[ -z "$_USER_PASS" ]]; then die "Password is required"; fi
+            read -rsp "  Confirm password: " _USER_PASS_CONFIRM; echo ""
+            if [[ "$_USER_PASS" != "$_USER_PASS_CONFIRM" ]]; then die "Passwords do not match"; fi
+            read -rp "  Display name [${_USER_EMAIL%%@*}]: " _USER_NAME
+            _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
+        elif [[ -z "$_USER_EMAIL" ]]; then
+            echo -e "${YELLOW}Usage: augur user <email> <password> [name]${NC}"
+            echo ""; echo "  augur user admin@example.com MyPass123!"
+            echo "  augur user   # interactive (prompts for email + password)"
+            exit 0
+        fi
+        _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
+        # Temporarily enable registration, register, then restore
+        _LC_ENV="$APP/.env"
+        _HAD_ALLOW_REG=false
+        _OLD_ALLOW_REG=""
+        if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+            _HAD_ALLOW_REG=true
+            _OLD_ALLOW_REG=$(grep '^ALLOW_REGISTRATION=' "$_LC_ENV" | tail -1)
+            sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=true/' "$_LC_ENV"
+        else
+            echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
+        fi
+        # Restart LibreChat to pick up the change
+        _svc_restart librechat >/dev/null 2>&1 || true
+        # Wait for LibreChat to be ready
+        _LC_READY=false
+        for i in $(seq 1 30); do
+            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                _LC_READY=true; break
+            fi
+            sleep 2
+        done
+        if [[ "$_LC_READY" != true ]]; then
+            # Restore .env before aborting
+            if [[ "$_HAD_ALLOW_REG" == true ]]; then
+                sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
+            else
+                sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
+            fi
+            die "LibreChat not ready after 60s — cannot register user"
+        fi
+        # Register via API
+        _REG_RESP=$(curl -sf -X POST "${LC_URL}/api/auth/register" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${_USER_EMAIL}\",\"password\":\"${_USER_PASS}\",\"confirm_password\":\"${_USER_PASS}\",\"name\":\"${_USER_NAME}\"}" 2>&1) \
+            && _REG_OK=true || _REG_OK=false
+        # Restore registration setting
+        if [[ "$_HAD_ALLOW_REG" == true ]]; then
+            sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
+        else
+            sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
+        fi
+        _svc_restart librechat >/dev/null 2>&1 || true
+        if [[ "$_REG_OK" == true ]]; then
+            echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
+            echo -e "  Log in at: https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        else
+            echo -e "${RED}✗${NC} Registration failed: ${_REG_RESP}" >&2
+            exit 1
+        fi
+        ;;
     agents)
         AGENTS_EMAIL="${2:-${AUGUR_SETUP_EMAIL:-}}"
         AGENTS_PASS="${3:-${AUGUR_SETUP_PASSWORD:-}}"
@@ -1160,6 +1256,7 @@ for kind, info in sorted(result.items()):
         echo "  augur backups      List available backups"
         echo "  augur cron         Run cron hook (compact + agent invocation)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
+        echo "  augur user         Register a new LibreChat user account"
         echo "  augur agents       Seed multi-agent architecture (11 agents)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
         echo "  augur reseed       Clear all profiles and re-seed from disk"
