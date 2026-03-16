@@ -251,14 +251,14 @@ Focus: new code paths, overlooked patterns, scaling concerns.
 
 ### WARNING
 
-#### 46. `OAuthToken.headers()` KeyError on Malformed Response — OPEN
+#### 46. ~~`OAuthToken.headers()` KeyError on Malformed Response~~ ✅ FIXED
 **File:** `src/servers/_http.py:83`
 
 If OAuth server returns HTTP 200 but response JSON is missing `access_token` key,
 `data["access_token"]` raises `KeyError`. This is not caught by `except httpx.HTTPError`,
 so it propagates and crashes the calling tool. Should catch `(KeyError, httpx.HTTPError)`.
 
-#### 47. `_replace_field()` Regex Replacement Injection — OPEN
+#### 47. ~~`_replace_field()` Regex Replacement Injection~~ ✅ FIXED
 **File:** `src/servers/augur_score.py:182`
 
 `value` is used directly in `re.sub()` replacement string: `pattern.sub(rf'\1 "{value}"', ...)`.
@@ -273,7 +273,7 @@ Replicate image gen polls 60 times at 1-second intervals. No exponential backoff
 If the prediction times out, the Replicate job is not cancelled (orphaned, runs to completion
 on their side). Low financial impact but poor practice.
 
-#### 49. `price_ingest.py` Missing None Check for `close` Field — OPEN
+#### 49. ~~`price_ingest.py` Missing None Check for `close` Field~~ ✅ FIXED
 **File:** `src/ingest/price_ingest.py:87`
 
 `close` field uses `round(float(last_bar["close"]), 4)` without a None guard, while
@@ -281,7 +281,7 @@ on their side). Low financial impact but poor practice.
 returns a null close price, `float(None)` raises `TypeError` and crashes the ingest.
 Fix: add the same `if ... is not None else None` pattern as the other fields.
 
-#### 50. Signal Change Detection Order — OPEN (low priority)
+#### 50. ~~Signal Change Detection Order~~ ✅ FIXED
 **File:** `src/ingest/price_ingest.py:111-117`
 
 Signal change detection fetches the previous composite signal *after* storing the new
@@ -330,6 +330,7 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Open | 5 | #46 (OAuth KeyError), #47 (regex replacement), #48 (polling backoff), #49 (close None check), #50 (signal change order) |
+| Fixed | 4 | #46 (OAuth KeyError), #47 (regex replacement), #49 (close None check), #50 (signal change order) |
+| Open | 1 | #48 (polling backoff, low priority) |
 | Accepted | 1 | #51 (bare Exception in indicator routing) |
 | Low/Style | 1 | #52 (find_profile 36 queries, scaling concern) |

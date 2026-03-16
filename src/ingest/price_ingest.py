@@ -84,7 +84,7 @@ async def ingest_ticker(
         "open": round(float(last_bar["open"]), 4) if last_bar["open"] is not None else None,
         "high": round(float(last_bar["high"]), 4) if last_bar["high"] is not None else None,
         "low": round(float(last_bar["low"]), 4) if last_bar["low"] is not None else None,
-        "close": round(float(last_bar["close"]), 4),
+        "close": round(float(last_bar["close"]), 4) if last_bar["close"] is not None else None,
         "volume": int(last_bar["volume"]) if last_bar["volume"] is not None else None,
         "currency": currency,
         "date": df.index[-1].strftime("%Y-%m-%d"),
@@ -100,20 +100,21 @@ async def ingest_ticker(
         return {"entity": entity_id, "kind": kind, "status": "indicators_error",
                 "error": indicator_result["error"]}
 
-    # 4. Store indicators snapshot
+    # 4. Fetch old composite signal BEFORE storing new snapshot
+    old_composite = ""
+    new_composite = indicator_result.get("composite", "")
+    if new_composite:
+        rows = store_mod.history(kind, entity_id, type="indicators", limit=1)
+        if rows and "data" in rows[0]:
+            old_composite = rows[0]["data"].get("composite", "")
+
+    # 5. Store indicators snapshot
     store_mod.snapshot(kind, entity_id, "indicators", indicator_result,
                        source="yahoo_finance")
 
-    # 5. Check for signal change → emit event
+    # 6. Check for signal change → emit event
     signal_change = None
-    new_composite = indicator_result.get("composite", "")
     if new_composite:
-        prev = _latest_snapshot_data(kind, entity_id, "indicators", store_mod)
-        # prev is the one we just stored; get the one before that
-        rows = store_mod.history(kind, entity_id, type="indicators", limit=2)
-        old_composite = ""
-        if len(rows) >= 2 and "data" in rows[1]:
-            old_composite = rows[1]["data"].get("composite", "")
         if old_composite and old_composite != new_composite:
             signal_change = {"from": old_composite, "to": new_composite}
             severity = "high" if new_composite in ("strong_buy", "avoid") else "medium"

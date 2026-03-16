@@ -82,14 +82,14 @@ Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
 - [x] **Add error handling to domain servers**
       All 12 servers now wrap HTTP calls in `try/except httpx.HTTPError` returning
       `{"error": ...}` instead of crashing. (2026-03-09)
-- [ ] **Fix `OAuthToken.headers()` KeyError** (REVIEW.md #46)
-      Missing `access_token` in OAuth response raises uncaught `KeyError`.
-- [ ] **Fix `_replace_field()` regex injection** (REVIEW.md #47)
-      Backslash sequences in `outcome_note` corrupt YAML front matter.
-- [ ] **Fix `price_ingest.py` close field None check** (REVIEW.md #49)
-      `close` field missing None guard — crashes on null Yahoo Finance data.
-- [ ] **Fix signal change detection order** (REVIEW.md #50)
-      Fetch old composite signal before storing new snapshot, not after.
+- [x] **Fix `OAuthToken.headers()` KeyError** (REVIEW.md #46)
+      Catch `KeyError` alongside `httpx.HTTPError` in OAuth token refresh. (2026-03-16)
+- [x] **Fix `_replace_field()` regex injection** (REVIEW.md #47)
+      Escape backslashes in replacement value before `re.sub()`. (2026-03-16)
+- [x] **Fix `price_ingest.py` close field None check** (REVIEW.md #49)
+      Added None guard matching other OHLCV fields. (2026-03-16)
+- [x] **Fix signal change detection order** (REVIEW.md #50)
+      Fetch old composite before storing new snapshot. (2026-03-16)
 - [ ] **Add async support to signals store**
       `server.py` uses sync `pymongo`. Consider `motor` for async MongoDB if needed
       for concurrent snapshot ingestion.

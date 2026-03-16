@@ -83,5 +83,5 @@ class OAuthToken:
                 self._token = data["access_token"]
                 self._exp = time.time() + data.get("expires_in", 1800) - self._margin
                 return {"Authorization": f"Bearer {self._token}"}
-        except httpx.HTTPError:
+        except (httpx.HTTPError, KeyError):
             return {}

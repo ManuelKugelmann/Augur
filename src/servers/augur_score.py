@@ -179,7 +179,8 @@ async def score_prediction(
         rest = content[fm_end:]
         pattern = re.compile(rf"^({re.escape(field)}:).*$", re.MULTILINE)
         if pattern.search(fm_block):
-            fm_block = pattern.sub(rf'\1 "{value}"', fm_block)
+            safe_value = value.replace("\\", "\\\\")
+            fm_block = pattern.sub(rf'\1 "{safe_value}"', fm_block)
         else:
             fm_block += f'{field}: "{value}"\n'
         return fm_block + rest
