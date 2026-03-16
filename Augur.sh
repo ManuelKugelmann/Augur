@@ -342,8 +342,9 @@ SAFEEOF
     pull)
         echo -e "${CYAN}Quick pull (dev)...${NC}"
         git -C "$STACK" pull --ff-only
-        # Update augur CLI from pulled code
-        cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+        # Update augur CLI from pulled code (atomic: temp+mv to avoid overwriting running script)
+        cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+            && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
         chmod +x "$HOME/bin/augur" 2>/dev/null || true
         ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
         echo -e "${GREEN}✓${NC} Pulled latest ($(git -C "$STACK" rev-parse --short HEAD))"
