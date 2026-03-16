@@ -139,7 +139,7 @@ mcpServers:
 
   google-news:
     command: uvx
-    args: ["google-news-trends-mcp@latest"]
+    args: ["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]
     chatMenu: false
     serverInstructions: "Google News + Google Trends. Tools: get_top_news (headlines), get_news_by_keyword (search), get_news_by_topic (BUSINESS/TECHNOLOGY/SCIENCE/HEALTH/SPORTS/ENTERTAINMENT/WORLD/NATION), get_news_by_location (country/region news), get_trending_keywords (Google Trends by location). No API key needed. Best for structured news monitoring and trend detection."
 
