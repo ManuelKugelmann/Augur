@@ -189,32 +189,26 @@ case "$CMD" in
             journalctl --user -u librechat -u augur -u charts -f --no-pager
         fi
         ;;
-    safestart)
+    safemode)
         _SAFE_BAK="$APP/librechat.yaml.pre-safe"
         case "${2:-}" in
-            restore|--restore)
+            on)
                 if [[ -f "$_SAFE_BAK" ]]; then
-                    cp "$_SAFE_BAK" "$APP/librechat.yaml"
-                    rm -f "$_SAFE_BAK"
-                    _svc_restart librechat || die "Failed to restart librechat"
-                    echo -e "${GREEN}✓${NC} Restored full config and restarted librechat"
-                else
-                    die "No safe-mode backup found at $_SAFE_BAK"
+                    echo -e "${YELLOW}⚠${NC} Safe mode already active (backup exists)"
+                    echo -e "  Turn off: ${CYAN}augur safemode off${NC}"
+                    exit 0
                 fi
-                ;;
-            *)
                 if [[ ! -f "$APP/librechat.yaml" ]]; then
                     die "librechat.yaml not found at $APP"
                 fi
 
                 # Back up current config
                 cp "$APP/librechat.yaml" "$_SAFE_BAK"
-                echo -e "${CYAN}Backed up config → ${_SAFE_BAK}${NC}"
 
                 # Write minimal config without MCP servers
                 cat > "$APP/librechat.yaml" <<'SAFEEOF'
 # LibreChat SAFE MODE — no MCP servers loaded
-# Restore with: augur safestart --restore
+# Restore with: augur safemode off
 version: 1.2.1
 cache: true
 registration:
@@ -235,26 +229,29 @@ endpoints:
       - chain
 SAFEEOF
 
-                # Restart librechat with safe config
-                _svc_stop librechat 2>/dev/null || true
-                _svc_start librechat || die "Failed to start librechat in safe mode"
-                sleep 3
-
-                # Connectivity check
-                echo ""
-                echo -e "${CYAN}── Connectivity check ──${NC}"
-                _http_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/" 2>/dev/null || echo "000")
-                _api_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/api/health" 2>/dev/null || echo "000")
-                echo -e "  Frontend (/)       : HTTP ${_http_code}"
-                echo -e "  API (/api/health)  : HTTP ${_api_code}"
-                if [[ "$_http_code" == "200" || "$_http_code" == "301" || "$_http_code" == "302" ]]; then
-                    echo -e "  ${GREEN}✓${NC} LibreChat is up in safe mode (no MCPs)"
+                echo -e "${GREEN}✓${NC} Safe mode ON — MCP servers disabled"
+                echo -e "  Config backed up → ${_SAFE_BAK}"
+                echo -e "  Now run: ${CYAN}augur restart${NC}"
+                echo -e "  Restore: ${CYAN}augur safemode off${NC}"
+                ;;
+            off)
+                if [[ -f "$_SAFE_BAK" ]]; then
+                    cp "$_SAFE_BAK" "$APP/librechat.yaml"
+                    rm -f "$_SAFE_BAK"
+                    echo -e "${GREEN}✓${NC} Safe mode OFF — full config restored"
+                    echo -e "  Now run: ${CYAN}augur restart${NC}"
                 else
-                    echo -e "  ${YELLOW}⚠${NC} LibreChat may still be starting — check: augur logs"
+                    echo -e "${GREEN}✓${NC} Safe mode is not active"
                 fi
-                echo ""
-                echo -e "${GREEN}✓${NC} Safe mode active — MCP servers disabled"
-                echo -e "  Restore full config: ${CYAN}augur safestart --restore${NC}"
+                ;;
+            *)
+                if [[ -f "$_SAFE_BAK" ]]; then
+                    echo -e "${YELLOW}Safe mode: ON${NC} (MCP servers disabled)"
+                    echo -e "  Turn off: ${CYAN}augur safemode off && augur restart${NC}"
+                else
+                    echo -e "${GREEN}Safe mode: OFF${NC} (full config active)"
+                    echo -e "  Turn on:  ${CYAN}augur safemode on && augur restart${NC}"
+                fi
                 ;;
         esac
         ;;
@@ -282,22 +279,19 @@ SAFEEOF
             sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
         fi
 
-        # Auto-patch deployed librechat.yaml for known breaking changes
-        if [[ -f "$APP/librechat.yaml" ]]; then
-            _yaml_patched=false
+        # Auto-patch deployed librechat.yaml (+ safe mode backup) for known breaking changes
+        _SAFE_BAK="$APP/librechat.yaml.pre-safe"
+        for _yaml_target in "$APP/librechat.yaml" "$_SAFE_BAK"; do
+            [[ -f "$_yaml_target" ]] || continue
 
             # Patch: google-news-trends-mcp needs fastmcp<3 (on_duplicate_tools removed in 3.x)
-            if grep -q '"google-news-trends-mcp@latest"' "$APP/librechat.yaml" 2>/dev/null \
-               && ! grep -q '"--with"' "$APP/librechat.yaml" 2>/dev/null; then
-                _yaml_patched=true
+            if grep -q '"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null \
+               && ! grep -q '"--with"' "$_yaml_target" 2>/dev/null; then
+                cp "$_yaml_target" "${_yaml_target}.bak.$(date +%Y%m%d-%H%M%S)"
+                sed -i 's|\["google-news-trends-mcp@latest"\]|["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+                log "Auto-patched $(basename "$_yaml_target") (pinned fastmcp<3 for google-news MCP)"
             fi
-
-            if [[ "$_yaml_patched" == true ]]; then
-                cp "$APP/librechat.yaml" "$APP/librechat.yaml.bak.$(date +%Y%m%d-%H%M%S)"
-                sed -i 's|\["google-news-trends-mcp@latest"\]|["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$APP/librechat.yaml"
-                log "Auto-patched librechat.yaml (pinned fastmcp<3 for google-news MCP)"
-            fi
-        fi
+        done
 
         # Update augur CLI
         cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
@@ -717,7 +711,7 @@ SVCEOF
         if [[ "$LC_API" == "200" ]]; then _ok "LibreChat API: healthy"
         elif [[ "$LC_API" == "000" ]]; then _fail "LibreChat API: not reachable"
         else _warn "LibreChat API: HTTP ${LC_API}"; fi
-        if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then _warn "Safe mode active — MCP servers disabled (restore: augur safestart --restore)"; fi
+        if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then _warn "Safe mode active — MCP servers disabled (restore: augur safemode off && augur restart)"; fi
         CHARTS_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8066/charts/" 2>/dev/null || echo "000")"
         [[ "$CHARTS_CODE" != "000" ]] && _ok "Charts HTTP: ${CHARTS_CODE} on port 8066" || _warn "Charts HTTP: not reachable on port 8066"
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
@@ -887,8 +881,9 @@ for kind, info in sorted(result.items()):
         echo "  augur logs         Tail service logs"
         echo "  augur testrun      Run single service in foreground (see errors directly)"
         echo "  augur debugstart   Debug startup: status + logs + foreground run"
-        echo "  augur safestart    Start LibreChat without MCPs (fix 502s)"
-        echo "  augur safestart --restore   Restore full MCP config"
+        echo "  augur safemode     Show safe mode status"
+        echo "  augur safemode on  Disable MCPs (fix 502s), then: augur restart"
+        echo "  augur safemode off Restore full MCP config, then: augur restart"
         echo "  augur version      Show installed version"
         echo ""
         echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
