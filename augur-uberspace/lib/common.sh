@@ -490,7 +490,12 @@ _update_core() {
         warn "MCP Node servers bundle not found — Node MCPs won't be available"
     fi
 
-    # ── 8. Clean up legacy trading.service ──
+    # ── 8. Clean up stale config backups from old sed patches ──
+    for _bak in "$APP"/librechat.yaml.bak.* "$APP"/librechat.yaml.pre-safe.bak.*; do
+        [[ -f "$_bak" ]] && { rm -f "$_bak"; log "Removed stale backup: $(basename "$_bak")"; }
+    done
+
+    # ── 9. Clean up legacy trading.service ──
     if [[ -f "$HOME/.config/systemd/user/trading.service" ]]; then
         log "Removing legacy trading.service (renamed to augur)..."
         systemctl --user stop trading 2>/dev/null || true

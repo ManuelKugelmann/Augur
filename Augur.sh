@@ -80,6 +80,21 @@ case "$CMD" in
         echo -e "${GREEN}✓${NC} Stopped (librechat + augur + charts)"
         ;;
     restart)
+        # Merge system + user config before restarting
+        _SYS_YAML="$STACK/augur-uberspace/config/librechat-system.yaml"
+        _USR_YAML="$APP/librechat-user.yaml"
+        _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+        if [[ -f "$_SYS_YAML" ]] && [[ -f "$_USR_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+            _MERGE_PY=""
+            for _py in "$STACK/venv/bin/python" python3 python; do
+                command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+            done
+            if [[ -n "$_MERGE_PY" ]]; then
+                "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" \
+                    && log "Merged librechat.yaml" \
+                    || warn "Config merge failed — using existing librechat.yaml"
+            fi
+        fi
         _svc_stop trading 2>/dev/null || true  # legacy name
         _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart augur || true
@@ -889,6 +904,29 @@ SVCEOF
         if [[ -f "$APP/librechat.yaml" ]]; then
             grep -q "mcpServers:" "$APP/librechat.yaml" 2>/dev/null && _ok "librechat.yaml with MCP servers" || _warn "librechat.yaml exists but no mcpServers section"
         else _fail "librechat.yaml missing"; fi
+        if [[ -f "$STACK/augur-uberspace/config/librechat-system.yaml" ]]; then
+            _ok "librechat-system.yaml present"
+        else _fail "librechat-system.yaml missing from repo"; fi
+        if [[ -f "$APP/librechat-user.yaml" ]]; then
+            _ok "librechat-user.yaml present"
+        else _warn "librechat-user.yaml missing (will be created on next restart)"; fi
+        # Validate merge produces valid YAML
+        _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+        if [[ -f "$_MERGE_SCRIPT" ]] && [[ -f "$APP/librechat-user.yaml" ]] && [[ -f "$STACK/augur-uberspace/config/librechat-system.yaml" ]]; then
+            _MERGE_PY=""
+            for _py in "$STACK/venv/bin/python" python3 python; do
+                command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+            done
+            if [[ -n "$_MERGE_PY" ]]; then
+                _merge_tmp=$(mktemp)
+                if "$_MERGE_PY" "$_MERGE_SCRIPT" "$STACK/augur-uberspace/config/librechat-system.yaml" "$APP/librechat-user.yaml" "$_merge_tmp" "$HOME" 2>/dev/null; then
+                    _ok "Config merge: system + user → valid YAML"
+                else
+                    _fail "Config merge: failed (check librechat-user.yaml syntax)"
+                fi
+                rm -f "$_merge_tmp"
+            fi
+        fi
         [[ -d "$STACK/mcp-nodes/node_modules" ]] && _ok "MCP Node servers bundle present" || _warn "MCP Node servers bundle missing (run: augur install)"
         [[ -f "$STACK/.env" ]] && _ok "Signals .env present" || _warn "Signals .env missing (optional)"
 
