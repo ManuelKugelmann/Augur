@@ -12,7 +12,7 @@ from pathlib import Path
 
 from fastmcp import FastMCP
 
-from src.servers.augur_common import (
+from augur_common import (
     HORIZON_DAYS,
     extract_sections,
     find_articles,
