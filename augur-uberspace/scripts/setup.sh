@@ -28,8 +28,9 @@ _web_backend() {
     timeout 30 uberspace web backend add "$path" port "$port" --force
 }
 
-# Dirs that survive updates
-PERSIST=(uploads logs images)
+# Files and dirs that survive updates
+PERSIST_FILES=(.env librechat.yaml .version .asset_ts)
+PERSIST_DIRS=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
 command -v node &>/dev/null || die "Node.js not found (system-provided on Uberspace)."
@@ -53,11 +54,10 @@ if [[ "$MODE" == "update" ]]; then
 
     # Preserve user config and persistent dirs in a small temp dir
     _cfg_tmp=$(mktemp -d)
-    [[ -f "$APP/.env" ]]            && { log "  → preserving .env"; cp "$APP/.env" "$_cfg_tmp/.env"; }
-    [[ -f "$APP/librechat.yaml" ]]  && { log "  → preserving librechat.yaml"; cp "$APP/librechat.yaml" "$_cfg_tmp/librechat.yaml"; }
-    [[ -f "$APP/.version" ]]        && cp "$APP/.version" "$_cfg_tmp/.version"
-    [[ -f "$APP/.asset_ts" ]]       && cp "$APP/.asset_ts" "$_cfg_tmp/.asset_ts"
-    for d in "${PERSIST[@]}"; do
+    for f in "${PERSIST_FILES[@]}"; do
+        [[ -f "$APP/$f" ]] && { log "  → preserving $f"; cp "$APP/$f" "$_cfg_tmp/$f"; }
+    done
+    for d in "${PERSIST_DIRS[@]}"; do
         [[ -d "$APP/$d" ]] && { log "  → preserving $d/"; mv "$APP/$d" "$_cfg_tmp/$d"; }
     done
 
@@ -72,16 +72,16 @@ mv "$SRC" "$APP"
 
 # Restore preserved config and dirs
 if [[ -n "${_cfg_tmp:-}" && -d "${_cfg_tmp:-}" ]]; then
-    for f in .env librechat.yaml .version .asset_ts; do
+    for f in "${PERSIST_FILES[@]}"; do
         [[ -f "$_cfg_tmp/$f" ]] && cp "$_cfg_tmp/$f" "$APP/$f"
     done
-    for d in "${PERSIST[@]}"; do
+    for d in "${PERSIST_DIRS[@]}"; do
         [[ -d "$_cfg_tmp/$d" ]] && { rm -rf "$APP/$d"; mv "$_cfg_tmp/$d" "$APP/$d"; }
     done
     rm -rf "$_cfg_tmp"
 fi
 
-for d in "${PERSIST[@]}"; do mkdir -p "$APP/$d"; done
+for d in "${PERSIST_DIRS[@]}"; do mkdir -p "$APP/$d"; done
 
 # ── Verify LibreChat app code is present ────
 # The release bundle must include pre-built LibreChat (built in CI).

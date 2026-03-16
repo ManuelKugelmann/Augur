@@ -195,6 +195,16 @@ case "$CMD" in
             log "Removed legacy trading.service (renamed to augur)"
         fi
 
+        # Free disk space: clear package manager caches
+        local _freed=0
+        for _cache_dir in "$HOME/.cache/pip" "$HOME/.cache/uv" "$HOME/.npm/_cacache"; do
+            if [[ -d "$_cache_dir" ]]; then
+                _freed=$(( _freed + $(du -sm "$_cache_dir" 2>/dev/null | cut -f1) ))
+                rm -rf "$_cache_dir"
+            fi
+        done
+        (( _freed > 0 )) && log "Cleared ${_freed} MB of package caches"
+
         # Restart all services
         _svc_start librechat || true
         _svc_start augur || true
