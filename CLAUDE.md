@@ -6,6 +6,7 @@
 - **Run tests before pushing.** `python -m pytest tests/ -v` (+ `bats tests/*.bats` if shell changed). For slow suites (`bats tests/install/*.bats`), push first to leverage CI.
 - **Prefer battle-tested libraries** over custom code (e.g. `mongomock` for MongoDB mocks).
 - **Keep MCP packages pinned** to `~/bin/` — don't rely on `npx` for production MCPs.
+- **A pasted log snippet can contain more than one error.** Fix all of them, not just the first.
 
 ## Project
 

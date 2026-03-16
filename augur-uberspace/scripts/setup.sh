@@ -246,6 +246,11 @@ if [[ "$MODE" == "install" ]]; then
             sed -i "s|^SEARCH=.*|SEARCH=false|" "$APP/.env"
         fi
 
+        # Disable RAG API (no Docker/vector DB on Uberspace)
+        if ! grep -q "^RAG_API_URL=" "$APP/.env"; then
+            echo "RAG_API_URL=" >> "$APP/.env"
+        fi
+
         log "Generated crypto keys in .env"
     fi
 

@@ -15,6 +15,8 @@ interface:
 mcpSettings:
   allowedDomains:
     - 'localhost'
+    - 'gdelt-cloud-mcp.fastmcp.app'
+    - 'mcp.tavily.com'
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
@@ -91,7 +93,7 @@ mcpServers:
 
   finance:
     command: __HOME__/augur/venv/bin/python
-    args: ["-m", "finance_mcp"]
+    args: ["-m", "finance_mcp.server"]
     chatMenu: false
     serverInstructions: |
       Stock data + technical analysis via yfinance + ta library.
@@ -109,13 +111,13 @@ mcpServers:
 
   prediction-markets:
     command: node
-    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/prediction-markets-mcp"]
+    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/prediction-markets"]
     chatMenu: false
     serverInstructions: "Polymarket, Metaculus prediction market data."
 
   rss:
     command: node
-    args: ["__HOME__/augur/mcp-nodes/node_modules/rss-mcp/index.js"]
+    args: ["__HOME__/augur/mcp-nodes/node_modules/rss-mcp/dist/index.js"]
     chatMenu: false
     serverInstructions: "RSS/Atom feed reader for news, SEC filings, blog monitoring."
 
@@ -159,7 +161,7 @@ mcpServers:
 
   hackernews:
     command: node
-    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/hn-mcp-server"]
+    args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/hackernews-mcp"]
     chatMenu: false
     serverInstructions: "Hacker News stories, comments, Algolia search. Tech/startup sentiment signal."
 
