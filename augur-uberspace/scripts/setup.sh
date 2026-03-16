@@ -98,15 +98,22 @@ _USR_YAML="$APP/librechat-user.yaml"
 _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
 if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
     # Seed user overlay from template if missing
-    [[ ! -f "$_USR_YAML" ]] && cp "$_USR_YAML_SRC" "$_USR_YAML" && log "Created default librechat-user.yaml"
+    if [[ ! -f "$_USR_YAML" ]] && [[ -f "$_USR_YAML_SRC" ]]; then
+        cp "$_USR_YAML_SRC" "$_USR_YAML" && log "Created default librechat-user.yaml"
+    fi
     # Find a working Python (venv preferred, then system)
     _MERGE_PY=""
     for _py in "$STACK/venv/bin/python" python3 python; do
         command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
     done
-    if [[ -n "$_MERGE_PY" ]]; then
-        "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME"
-        log "Merged librechat.yaml (system + user, paths adjusted to $HOME)"
+    if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
+        if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
+            log "Merged librechat.yaml (system + user, paths adjusted to $HOME)"
+        else
+            warn "Config merge failed — falling back to system template copy"
+            cp "$_SYS_YAML" "$APP/librechat.yaml"
+            sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+        fi
     else
         warn "Python with PyYAML not found — falling back to system template copy"
         cp "$_SYS_YAML" "$APP/librechat.yaml"

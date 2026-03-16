@@ -361,7 +361,8 @@ _update_core() {
             timeout 120 git -C "$STACK" pull --ff-only origin "$BRANCH" </dev/null || \
                 { warn "pull --ff-only failed, resetting to origin/$BRANCH"
                   timeout 120 git -C "$STACK" fetch origin "$BRANCH" </dev/null && \
-                  git -C "$STACK" reset --hard "origin/$BRANCH"; }
+                  git -C "$STACK" reset --hard "origin/$BRANCH"; } || \
+                warn "git pull/fetch failed (repo may already be current)"
         else
             git -C "$STACK" pull --ff-only
         fi
@@ -396,14 +397,21 @@ _update_core() {
     local _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
     if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
         # Seed user overlay from template if missing
-        [[ ! -f "$_USR_YAML" ]] && cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$_USR_YAML" 2>/dev/null || true
+        if [[ ! -f "$_USR_YAML" ]] && [[ -f "$STACK/augur-uberspace/config/librechat-user.yaml" ]]; then
+            cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$_USR_YAML" 2>/dev/null || true
+        fi
         local _MERGE_PY=""
         for _py in "$STACK/venv/bin/python" python3 python; do
             command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
         done
         if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
-            "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME"
-            log "Merged librechat.yaml (system + user)"
+            if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
+                log "Merged librechat.yaml (system + user)"
+            else
+                warn "Config merge failed — using system template"
+                cp "$_SYS_YAML" "$APP/librechat.yaml"
+                sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+            fi
         elif [[ ! -f "$APP/librechat.yaml" ]]; then
             cp "$_SYS_YAML" "$APP/librechat.yaml"
             sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
