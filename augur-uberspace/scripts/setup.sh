@@ -28,8 +28,9 @@ _web_backend() {
     timeout 30 uberspace web backend add "$path" port "$port" --force
 }
 
-# Dirs that survive updates
-PERSIST=(uploads logs images)
+# Files and dirs that survive updates
+PERSIST_FILES=(.env librechat.yaml .version .asset_ts)
+PERSIST_DIRS=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
 command -v node &>/dev/null || die "Node.js not found (system-provided on Uberspace)."
@@ -45,26 +46,42 @@ else
     log "Installing ${VER}..."
 fi
 
-# ── Stop service before swap ────────────────
+# ── Stop service and prepare ────────────────
 if [[ "$MODE" == "update" ]]; then
     log "  → stopping librechat service"
     _svc_stop_lc
     sleep 2
 
-    # Preserve .env and persistent dirs
-    [[ -f "$APP/.env" ]] && { log "  → cp $APP/.env $SRC/.env"; cp "$APP/.env" "$SRC/.env"; }
-    [[ -f "$APP/librechat.yaml" ]] && { log "  → cp $APP/librechat.yaml $SRC/librechat.yaml"; cp "$APP/librechat.yaml" "$SRC/librechat.yaml"; }
-    for d in "${PERSIST[@]}"; do
-        [[ -d "$APP/$d" ]] && { log "  → mv $APP/$d $SRC/$d"; rm -rf "$SRC/$d"; mv "$APP/$d" "$SRC/$d"; }
+    # Preserve user config and persistent dirs in a small temp dir
+    _cfg_tmp=$(mktemp -d)
+    for f in "${PERSIST_FILES[@]}"; do
+        [[ -f "$APP/$f" ]] && { log "  → preserving $f"; cp "$APP/$f" "$_cfg_tmp/$f"; }
     done
+    for d in "${PERSIST_DIRS[@]}"; do
+        [[ -d "$APP/$d" ]] && { log "  → preserving $d/"; mv "$APP/$d" "$_cfg_tmp/$d"; }
+    done
+
+    # Delete old app entirely to free disk space before installing new
+    log "  → removing old app"
+    rm -rf "$APP"
 fi
 
-# ── Atomic swap ─────────────────────────────
-log "  → atomic swap: $SRC → $APP"
-rm -rf "$APP"
+# ── Install new bundle ─────────────────────
+log "  → installing: $SRC → $APP"
 mv "$SRC" "$APP"
 
-for d in "${PERSIST[@]}"; do mkdir -p "$APP/$d"; done
+# Restore preserved config and dirs
+if [[ -n "${_cfg_tmp:-}" && -d "${_cfg_tmp:-}" ]]; then
+    for f in "${PERSIST_FILES[@]}"; do
+        [[ -f "$_cfg_tmp/$f" ]] && cp "$_cfg_tmp/$f" "$APP/$f"
+    done
+    for d in "${PERSIST_DIRS[@]}"; do
+        [[ -d "$_cfg_tmp/$d" ]] && { rm -rf "$APP/$d"; mv "$_cfg_tmp/$d" "$APP/$d"; }
+    done
+    rm -rf "$_cfg_tmp"
+fi
+
+for d in "${PERSIST_DIRS[@]}"; do mkdir -p "$APP/$d"; done
 
 # ── Verify LibreChat app code is present ────
 # The release bundle must include pre-built LibreChat (built in CI).

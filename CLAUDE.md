@@ -5,7 +5,7 @@
 - **Never circumvent or exclude failing tests.** Find and fix root causes.
 - **Run tests before pushing.** `python -m pytest tests/ -v` (+ `bats tests/*.bats` if shell changed). For slow suites (`bats tests/install/*.bats`), push first to leverage CI.
 - **Prefer battle-tested libraries** over custom code (e.g. `mongomock` for MongoDB mocks).
-- **Keep MCP packages pinned** to `~/bin/` for quick deploy — don't rely on `npx` for production MCPs.
+- **Keep MCP packages pinned** to `~/bin/` — don't rely on `npx` for production MCPs.
 
 ## Project
 
@@ -15,11 +15,11 @@
 
 | Path | Purpose |
 |------|---------|
-| `Augur.sh` → `~/bin/augur` | Ops CLI (symlink `~/bin/Augur`) |
-| `~/augur/` | This repo clone (signals stack) |
+| `Augur.sh` → `~/bin/augur` | Ops CLI |
+| `~/augur/` | This repo (signals stack) |
 | `~/LibreChat/` | LibreChat (from CI release bundle) |
 | `~/backups/mongo/` | Rolling MongoDB backups |
-| `deploy.conf` | Central config: `GH_USER`, `GH_REPO`, `STACK_DIR`, `APP_DIR`, `LC_PORT=3080` |
+| `deploy.conf` | Config: `GH_USER`, `GH_REPO`, `STACK_DIR`, `APP_DIR`, `LC_PORT=3080` |
 
 **Host**: `augur.uber.space` (U8, Arch Linux, systemd)
 
@@ -40,21 +40,14 @@ GitHub ──tag──▶ CI bundle ──▶ Release ──▶ Uberspace
 
 ## Environment (`~/augur/.env`)
 
-- `MONGO_URI_SIGNALS` — MongoDB Atlas (`signals` db, not LibreChat's `MONGO_URI`)
-- `MCP_TRANSPORT` — `streamable-http` (prod) / `stdio` (dev)
-- `MCP_PORT` — `8071`
-- Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY` — see `docs/api-keys.md`
+`MONGO_URI_SIGNALS` (Atlas, `signals` db), `MCP_TRANSPORT` (`streamable-http`/`stdio`), `MCP_PORT` (`8071`). Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY` — see `docs/api-keys.md`.
 
 ## Testing
 
-~585 tests: bats (shell) + pytest (Python).
-
 ```bash
-pip install -r requirements-test.txt   # test deps
 python -m pytest tests/ -v             # Python tests
 bats tests/*.bats                      # shell tests
-bats tests/*.bats && python -m pytest tests/ -v  # all
-bash -n Augur.sh                       # syntax check
+bash -n Augur.sh                       # syntax check after .sh edits
 ```
 
 **Sandbox workarounds**: `SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta --no-build-isolation`; missing `ta`/`httpx` → tests auto-skip; `ln -sf /proc/self/fd /dev/fd` if needed.
@@ -67,12 +60,6 @@ bash -n Augur.sh                       # syntax check
 - IDs: uppercase ISO/tickers (countries/stocks), lowercase slugs (others)
 - Tags: `vMAJOR.MINOR.PATCH` triggers CI release
 - `__HOME__` in `librechat.yaml` → replaced by `setup.sh`
-- After editing `.sh` files: `bash -n <file>` (especially `Augur.sh`)
+- After editing `.sh` files: `bash -n <file>`
 - Use approximate tool counts (e.g. "50+ tools")
-
-## Deploy
-
-```bash
-augur u                       # update: stop, git pull, deps, restart
-curl -sL ".../install.sh?$(date +%s)" | bash  # fresh install
-```
+- Deploy: `augur u` (update) or `curl -sL ".../install.sh?$(date +%s)" | bash` (fresh)
