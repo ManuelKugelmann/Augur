@@ -568,7 +568,39 @@ SVCEOF
         _svc_start librechat || true
         _svc_start augur || true
         _svc_start charts || true
+
         echo -e "${GREEN}✓${NC} Updated to ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+        echo ""
+
+        # Wait for services to initialise before showing status
+        sleep 5
+
+        # Post-update service summary
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo -e "${CYAN}  Post-update service status${NC}"
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        for _svc in librechat augur charts; do
+            if _svc_exists "$_svc"; then
+                if systemctl --user is-active "$_svc" &>/dev/null; then
+                    echo -e "  ${GREEN}●${NC} $_svc: running"
+                else
+                    echo -e "  ${RED}●${NC} $_svc: not running"
+                fi
+            fi
+        done
+        echo ""
+        echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo "$_INSTALL_SHA")"
+        echo -e "${CYAN}Host:${NC}    ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
+        echo ""
+
+        # Show recent startup logs so the user can spot errors immediately
+        for _svc in librechat augur charts; do
+            if _svc_exists "$_svc"; then
+                echo -e "${CYAN}── $_svc (last 15 lines) ──${NC}"
+                journalctl --user -u "$_svc" --no-pager -n 15 2>/dev/null || true
+                echo ""
+            fi
+        done
         ;;
     clean)
         echo -e "${CYAN}Clearing caches...${NC}"
