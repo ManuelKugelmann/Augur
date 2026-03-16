@@ -564,11 +564,23 @@ SVCEOF
         # Shared core: pull, venv check, pip, LC bundle, MCP nodes, yaml patch, legacy cleanup
         _update_core update
 
-        # Restart all services
-        _svc_start librechat || true
-        _svc_start augur || true
-        _svc_start charts || true
+        echo ""
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
         echo -e "${GREEN}✓${NC} Updated to ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
+        echo -e "${CYAN}══════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
+        echo "    augur start        # start all services"
+        echo "    augur stop         # stop all services"
+        echo "    augur restart      # restart all services"
+        echo ""
+        echo -e "  ${CYAN}Verify:${NC}"
+        echo "    augur check        # full health check"
+        echo "    augur status       # quick service status"
+        echo ""
+        echo -e "  ${CYAN}Access:${NC}"
+        echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        echo ""
         ;;
     clean)
         echo -e "${CYAN}Clearing caches...${NC}"
