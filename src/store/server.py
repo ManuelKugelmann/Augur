@@ -20,8 +20,11 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 import json
+import logging
 import os
 import re
+
+log = logging.getLogger("augur.store")
 
 try:
     from bson import ObjectId
