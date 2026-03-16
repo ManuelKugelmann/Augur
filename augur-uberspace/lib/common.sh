@@ -33,9 +33,10 @@ warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
 # ── Service management (systemd on U8) ──
-_svc_start()   { systemctl --user start "$1"; }
-_svc_stop()    { systemctl --user stop "$1"; }
-_svc_restart() { systemctl --user restart "$1"; }
+_svc_exists()  { [[ -f "$HOME/.config/systemd/user/${1}.service" ]]; }
+_svc_start()   { _svc_exists "$1" && systemctl --user start "$1"; }
+_svc_stop()    { systemctl --user stop "$1" 2>/dev/null; }
+_svc_restart() { _svc_exists "$1" && systemctl --user restart "$1"; }
 _svc_status()  { systemctl --user status "$1" --no-pager; }
 _svc_logs()    { journalctl --user -u "$1" -f; }
 _svc_reload()  { systemctl --user daemon-reload || true; }
@@ -258,6 +259,12 @@ _lc_download_and_setup() {
         fi
     fi
 
+    # Clean up stale temp dirs from previous failed runs
+    local _stale
+    for _stale in "$HOME"/.lc-install.*; do
+        [[ -d "$_stale" ]] && { log "Cleaning stale temp dir: $_stale"; rm -rf "$_stale"; }
+    done
+
     local lc_tmp
     lc_tmp=$(mktemp -d -p "$HOME" .lc-install.XXXXXX)
     # shellcheck disable=SC2064
@@ -278,6 +285,8 @@ _lc_download_and_setup() {
     else
         tar xzf "$lc_tmp/bundle.tar.gz" -C "$lc_tmp/app"
     fi
+    # Free disk space: tarball no longer needed after extraction
+    rm -f "$lc_tmp/bundle.tar.gz"
     local _nfiles
     _nfiles=$(find "$lc_tmp/app" -type f | wc -l)
     log "Extracted ${_nfiles} files"

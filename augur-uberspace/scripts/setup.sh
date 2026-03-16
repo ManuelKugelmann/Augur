@@ -54,6 +54,8 @@ if [[ "$MODE" == "update" ]]; then
     # Preserve .env and persistent dirs
     [[ -f "$APP/.env" ]] && { log "  → cp $APP/.env $SRC/.env"; cp "$APP/.env" "$SRC/.env"; }
     [[ -f "$APP/librechat.yaml" ]] && { log "  → cp $APP/librechat.yaml $SRC/librechat.yaml"; cp "$APP/librechat.yaml" "$SRC/librechat.yaml"; }
+    # Free disk space: remove bulky dirs before moving persistent data
+    rm -rf "$APP/node_modules" "$APP/client" "$APP/api" "$APP/packages"
     for d in "${PERSIST[@]}"; do
         [[ -d "$APP/$d" ]] && { log "  → mv $APP/$d $SRC/$d"; rm -rf "$SRC/$d"; mv "$APP/$d" "$SRC/$d"; }
     done
