@@ -10,7 +10,7 @@ log = logging.getLogger("augur.health")
 mcp = FastMCP("health", instructions="Global health, disease outbreaks, FDA data")
 
 _SAFE_ODATA = re.compile(r'^[A-Za-z0-9_-]+$')
-_SAFE_COUNTRY = re.compile(r'^[A-Za-z0-9 -]+$')
+_SAFE_TEXT = re.compile(r'^[A-Za-z0-9 -]+$')
 
 
 @mcp.tool()
@@ -49,7 +49,7 @@ async def disease_outbreaks(limit: int = 20) -> dict:
 @mcp.tool()
 async def disease_tracker(disease: str = "covid", country: str = "") -> dict:
     """Real-time disease tracking (disease.sh). disease: covid/influenza."""
-    if country and not _SAFE_COUNTRY.match(country):
+    if country and not _SAFE_TEXT.match(country):
         return {"error": "invalid country name (letters, spaces, digits only)"}
     if disease not in ("covid", "influenza"):
         return {"error": "disease must be 'covid' or 'influenza'"}
@@ -63,7 +63,7 @@ async def disease_tracker(disease: str = "covid", country: str = "") -> dict:
 @mcp.tool()
 async def fda_adverse_events(drug: str = "", limit: int = 20) -> dict:
     """FDA adverse drug event reports."""
-    if drug and not _SAFE_COUNTRY.match(drug):
+    if drug and not _SAFE_TEXT.match(drug):
         return {"error": "invalid drug name (letters, spaces, digits only)"}
     safe_drug = drug.replace('"', '') if drug else ""
     search = f'patient.drug.medicinalproduct:"{safe_drug}"' if safe_drug else ""

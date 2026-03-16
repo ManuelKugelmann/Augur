@@ -390,6 +390,20 @@ concurrent user) this is negligible. If throughput becomes a concern, move to
 boundary validation. A crafted path like `../../etc/passwd` could read arbitrary files
 and upload them. Added `path.resolve().relative_to(site_dir)` check, matching #62 fix.
 
+#### 67. ~~Silent Index Creation Exceptions~~ ✅ FIXED
+**File:** `src/store/server.py:218, 233, 253`
+
+Index creation failures were swallowed with bare `except Exception: pass`. If an index
+fails to create (e.g. Atlas tier limitation, connection error), there was zero visibility.
+Changed to `log.debug()` so failures are visible when debug logging is enabled.
+
+#### 68. ~~Misleading Regex Name in `health_server.py`~~ ✅ FIXED
+**File:** `src/servers/health_server.py:13, 52, 66`
+
+`_SAFE_COUNTRY` regex was reused for drug name validation in `fda_adverse_events()`.
+Semantically misleading — if the pattern were ever changed for country-specific needs,
+drug validation would break silently. Renamed to `_SAFE_TEXT` to reflect broader usage.
+
 ---
 
 ### Test Coverage Gaps (continued)
@@ -414,7 +428,7 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Fixed | 14 | #46-47, #49-50, #53-55, #59-64, #66 |
+| Fixed | 16 | #46-47, #49-50, #53-55, #59-64, #66-68 |
 | Open | 1 | #48 (polling backoff, low priority) |
 | Accepted | 4 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords), #65 (sync I/O) |
 | Low/Style | 1 | #56 (find_profile 36 queries, scaling concern) |
