@@ -303,5 +303,7 @@ _lc_download_and_setup() {
     # Store asset timestamp for next skip check
     [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
 
+    # Explicit cleanup (setup.sh mv'd contents out; remove empty temp dir)
+    rm -rf "$lc_tmp"
     return 0
 }

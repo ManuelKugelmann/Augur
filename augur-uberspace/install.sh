@@ -267,6 +267,12 @@ _lc_download_and_setup() {
             log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
         fi
     fi
+    # Clean up stale temp dirs from previous failed runs
+    local _stale
+    for _stale in "$HOME"/.lc-install.*; do
+        [[ -d "$_stale" ]] && { log "Cleaning stale temp dir: $_stale"; rm -rf "$_stale"; }
+    done
+
     local lc_tmp
     lc_tmp=$(mktemp -d -p "$HOME" .lc-install.XXXXXX)
     # shellcheck disable=SC2064
@@ -298,6 +304,8 @@ _lc_download_and_setup() {
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
     # Record the release tag so --skip-if-current works on re-run
     [[ -n "${_BUNDLE_TAG:-}" ]] && echo "$_BUNDLE_TAG" > "$APP/.release-tag"
+    # Explicit cleanup (setup.sh mv'd contents out; remove empty temp dir)
+    rm -rf "$lc_tmp"
     return 0
 }
 
