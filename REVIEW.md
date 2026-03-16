@@ -78,7 +78,7 @@ Index creation now happens on-demand in `_snap_col()`, `_arch_col()`, `_events_c
 ### 17. ~~`search_profiles` Reads Every File~~ ✅ NOT APPLICABLE
 **File:** `src/store/server.py`
 
-Originally flagged as O(n) disk reads. Since refactored: `search_profiles()` and `find_profile()` now use MongoDB queries (dot-notation, text index, regex fallback). No disk reads involved. See #46 for the remaining scaling concern with `find_profile()`.
+Originally flagged as O(n) disk reads. Since refactored: `search_profiles()` and `find_profile()` now use MongoDB queries (dot-notation, text index, regex fallback). No disk reads involved. See #52 for the remaining scaling concern with `find_profile()`.
 
 ### 18. Domain Server `.env` Not Loaded via LibreChat — NOT APPLICABLE
 **File:** `augur-uberspace/config/librechat.yaml`
@@ -273,7 +273,23 @@ Replicate image gen polls 60 times at 1-second intervals. No exponential backoff
 If the prediction times out, the Replicate job is not cancelled (orphaned, runs to completion
 on their side). Low financial impact but poor practice.
 
-#### 49. `indicator()` Catches Bare `Exception` — ACCEPTED
+#### 49. `price_ingest.py` Missing None Check for `close` Field — OPEN
+**File:** `src/ingest/price_ingest.py:87`
+
+`close` field uses `round(float(last_bar["close"]), 4)` without a None guard, while
+`open`, `high`, `low`, and `volume` all check `is not None` first. If Yahoo Finance
+returns a null close price, `float(None)` raises `TypeError` and crashes the ingest.
+Fix: add the same `if ... is not None else None` pattern as the other fields.
+
+#### 50. Signal Change Detection Order — OPEN (low priority)
+**File:** `src/ingest/price_ingest.py:111-117`
+
+Signal change detection fetches the previous composite signal *after* storing the new
+snapshot. It then reads `history(limit=2)` and assumes `rows[1]` is the old signal.
+In a concurrent scenario, another insert could shift the index. Low risk in current
+single-process cron, but the old signal should be fetched *before* storing the new one.
+
+#### 51. `indicator()` Catches Bare `Exception` — ACCEPTED
 **File:** `src/servers/macro_server.py:142-163`
 
 Provider routing (`fred → worldbank → imf`) wraps each call in `except Exception`.
@@ -283,7 +299,7 @@ pattern benefits from resilience.
 
 ### LOW / STYLE
 
-#### 50. `find_profile()` Does 36 MongoDB Queries Per Call — OPEN
+#### 52. `find_profile()` Does 36 MongoDB Queries Per Call — OPEN
 **File:** `src/store/server.py:503-542`
 
 Cross-kind search iterates 12 kinds × 3 queries each (text search, ID regex, name regex).
@@ -314,6 +330,6 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Open | 3 | #46 (OAuth KeyError), #47 (regex replacement), #48 (polling backoff) |
-| Accepted | 1 | #49 (bare Exception in indicator routing) |
-| Low/Style | 1 | #50 (find_profile 36 queries, scaling concern) |
+| Open | 5 | #46 (OAuth KeyError), #47 (regex replacement), #48 (polling backoff), #49 (close None check), #50 (signal change order) |
+| Accepted | 1 | #51 (bare Exception in indicator routing) |
+| Low/Style | 1 | #52 (find_profile 36 queries, scaling concern) |

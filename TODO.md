@@ -67,7 +67,7 @@ Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
 
 ## P2 — Server Improvements
 
-- [ ] **Optimize `find_profile()` for scale** (REVIEW.md #50)
+- [ ] **Optimize `find_profile()` for scale** (REVIEW.md #52)
       Cross-kind search does 36 MongoDB queries per call (3 × 12 kinds).
       Fine at current scale (424 profiles). At 1000+, consider a unified search
       collection or MongoDB Atlas Search.
@@ -86,6 +86,10 @@ Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
       Missing `access_token` in OAuth response raises uncaught `KeyError`.
 - [ ] **Fix `_replace_field()` regex injection** (REVIEW.md #47)
       Backslash sequences in `outcome_note` corrupt YAML front matter.
+- [ ] **Fix `price_ingest.py` close field None check** (REVIEW.md #49)
+      `close` field missing None guard — crashes on null Yahoo Finance data.
+- [ ] **Fix signal change detection order** (REVIEW.md #50)
+      Fetch old composite signal before storing new snapshot, not after.
 - [ ] **Add async support to signals store**
       `server.py` uses sync `pymongo`. Consider `motor` for async MongoDB if needed
       for concurrent snapshot ingestion.
@@ -211,6 +215,6 @@ Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
       15 indices, 15 commodities, 15 materials, 15 crops, 15 companies, 10 products,
       51 regions, 23 sources. Organized by region. All `_placeholder: true` (seed data,
       enriched by live MCP). (2026-03-16)
-- [x] **Third code review** — fresh security/quality audit (REVIEW.md). 3 new warnings
-      found (#46-48), 1 accepted (#49), 1 low/style (#50). No new critical issues.
+- [x] **Third code review** — fresh security/quality audit (REVIEW.md). 5 new warnings
+      found (#46-50), 1 accepted (#51), 1 low/style (#52). No new critical issues.
       (2026-03-16)
