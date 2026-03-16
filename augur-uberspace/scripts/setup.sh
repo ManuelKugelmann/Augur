@@ -45,26 +45,41 @@ else
     log "Installing ${VER}..."
 fi
 
-# ── Stop service before swap ────────────────
+# ── Stop service and prepare ────────────────
 if [[ "$MODE" == "update" ]]; then
     log "  → stopping librechat service"
     _svc_stop_lc
     sleep 2
 
-    # Preserve .env and persistent dirs
-    [[ -f "$APP/.env" ]] && { log "  → cp $APP/.env $SRC/.env"; cp "$APP/.env" "$SRC/.env"; }
-    [[ -f "$APP/librechat.yaml" ]] && { log "  → cp $APP/librechat.yaml $SRC/librechat.yaml"; cp "$APP/librechat.yaml" "$SRC/librechat.yaml"; }
-    # Free disk space: remove bulky dirs before moving persistent data
-    rm -rf "$APP/node_modules" "$APP/client" "$APP/api" "$APP/packages"
+    # Preserve user config and persistent dirs in a small temp dir
+    _cfg_tmp=$(mktemp -d)
+    [[ -f "$APP/.env" ]]            && { log "  → preserving .env"; cp "$APP/.env" "$_cfg_tmp/.env"; }
+    [[ -f "$APP/librechat.yaml" ]]  && { log "  → preserving librechat.yaml"; cp "$APP/librechat.yaml" "$_cfg_tmp/librechat.yaml"; }
+    [[ -f "$APP/.version" ]]        && cp "$APP/.version" "$_cfg_tmp/.version"
+    [[ -f "$APP/.asset_ts" ]]       && cp "$APP/.asset_ts" "$_cfg_tmp/.asset_ts"
     for d in "${PERSIST[@]}"; do
-        [[ -d "$APP/$d" ]] && { log "  → mv $APP/$d $SRC/$d"; rm -rf "$SRC/$d"; mv "$APP/$d" "$SRC/$d"; }
+        [[ -d "$APP/$d" ]] && { log "  → preserving $d/"; mv "$APP/$d" "$_cfg_tmp/$d"; }
     done
+
+    # Delete old app entirely to free disk space before installing new
+    log "  → removing old app"
+    rm -rf "$APP"
 fi
 
-# ── Atomic swap ─────────────────────────────
-log "  → atomic swap: $SRC → $APP"
-rm -rf "$APP"
+# ── Install new bundle ─────────────────────
+log "  → installing: $SRC → $APP"
 mv "$SRC" "$APP"
+
+# Restore preserved config and dirs
+if [[ -n "${_cfg_tmp:-}" && -d "${_cfg_tmp:-}" ]]; then
+    for f in .env librechat.yaml .version .asset_ts; do
+        [[ -f "$_cfg_tmp/$f" ]] && cp "$_cfg_tmp/$f" "$APP/$f"
+    done
+    for d in "${PERSIST[@]}"; do
+        [[ -d "$_cfg_tmp/$d" ]] && { rm -rf "$APP/$d"; mv "$_cfg_tmp/$d" "$APP/$d"; }
+    done
+    rm -rf "$_cfg_tmp"
+fi
 
 for d in "${PERSIST[@]}"; do mkdir -p "$APP/$d"; done
 
