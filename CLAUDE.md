@@ -62,4 +62,4 @@ bash -n Augur.sh                       # syntax check after .sh edits
 - `__HOME__` in `librechat.yaml` → replaced by `setup.sh`
 - After editing `.sh` files: `bash -n <file>`
 - Use approximate tool counts (e.g. "50+ tools")
-- Deploy: `augur u` (update) or `curl -sL ".../install.sh?$(date +%s)" | bash` (fresh)
+- Deploy: `augur update` or `curl -sL ".../install.sh?$(date +%s)" | bash` (fresh)

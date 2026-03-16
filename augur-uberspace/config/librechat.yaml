@@ -88,7 +88,7 @@ mcpServers:
   # ── External MCPs (Tier 1 — genuinely additive data) ──
 
   finance:
-    command: python
+    command: __HOME__/augur/venv/bin/python
     args: ["-m", "finance_mcp"]
     chatMenu: false
     serverInstructions: |

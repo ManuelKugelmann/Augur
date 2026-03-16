@@ -191,7 +191,7 @@ augur conf       # edit deploy.conf
 | Method | Command | Use when |
 |--------|---------|----------|
 | Git pull | `augur pull` | Dev/staging — fast, no release needed |
-| Release | `augur u` | Production — downloads tagged release bundle |
+| Release | `augur update` | Production — downloads tagged release bundle |
 | Re-install | `augur install` | Full re-setup (idempotent, preserves config) |
 
 ```bash
@@ -201,7 +201,7 @@ augur pull                      # on Uberspace
 
 # Production: tag → release → deploy
 git tag v0.3.0 && git push --tags
-augur u                         # on Uberspace
+augur update                    # on Uberspace
 ```
 
 ## Resource Limits (Uberspace)
