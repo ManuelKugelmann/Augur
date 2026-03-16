@@ -34,7 +34,7 @@ async def _resolve_country_qid(name: str) -> str | None:
                 qid = hit.get("id", "")
                 if _SAFE_QID.match(qid):
                     return qid
-    except httpx.HTTPError:
+    except (httpx.HTTPError, ValueError):
         pass
     return None
 
@@ -82,7 +82,7 @@ async def global_elections(country: str = "", year: str = "",
                  "date": b.get("date", {}).get("value", ""),
                  "type": b.get("typeLabel", {}).get("value", "")}
                 for b in bindings]}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError, KeyError) as e:
         return {"error": f"Wikidata request failed: {type(e).__name__}: {e}"}
 
 
@@ -122,7 +122,7 @@ async def heads_of_state(country: str = "", limit: int = 10) -> dict:
                  "start": b.get("start", {}).get("value", ""),
                  "end": b.get("end", {}).get("value", "")}
                 for b in bindings]}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError, KeyError) as e:
         return {"error": f"Wikidata request failed: {type(e).__name__}: {e}"}
 
 

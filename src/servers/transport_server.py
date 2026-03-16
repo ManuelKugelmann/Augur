@@ -67,7 +67,7 @@ async def flights_in_area(lat_min: float, lat_max: float,
             states = _label_states(data.get("states"))
             return {"time": data.get("time"), "count": len(data.get("states") or []),
                     "states": states}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"OpenSky request failed: {type(e).__name__}: {e}"}
 
 
@@ -92,7 +92,7 @@ async def own_states(icao24: str = "", serials: str = "") -> dict:
             states = _label_states(data.get("states"))
             return {"time": data.get("time"), "count": len(data.get("states") or []),
                     "states": states}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"OpenSky own states request failed: {type(e).__name__}: {e}"}
 
 
@@ -184,7 +184,7 @@ async def flight_track(icao24: str, time_stamp: int = 0) -> dict:
                     "startTime": data.get("startTime"),
                     "endTime": data.get("endTime"),
                     "waypoints": waypoints}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"OpenSky track request failed: {type(e).__name__}: {e}"}
 
 

@@ -161,6 +161,11 @@ async def score_prediction(
     if not path.is_absolute():
         path = Path(site) / path
 
+    try:
+        path.resolve().relative_to(Path(site).resolve())
+    except ValueError:
+        return {"error": "article_path must be within site directory"}
+
     if not path.exists():
         return {"error": f"Article not found: {path}"}
 

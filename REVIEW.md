@@ -353,6 +353,21 @@ Malformed schedules could crash cron. Wrapped in `try/except (ValueError, TypeEr
 `.json()` called on NOAA responses without JSONDecodeError handling. If API returns
 status 200 with non-JSON body, parse crashes. Added `_safe_json()` wrapper with fallback.
 
+#### 62. ~~Path Traversal in `score_prediction()`~~ ✅ FIXED
+**File:** `src/servers/augur_score.py:159-165`
+
+`article_path` parameter accepted without boundary check. User could supply
+`../../etc/passwd` to read/write outside site directory. Added `path.resolve().relative_to()`
+check that rejects paths escaping the site boundary.
+
+#### 63. ~~JSONDecodeError Not Caught in Domain Servers~~ ✅ FIXED
+**Files:** `_http.py`, `agri_server.py`, `disasters_server.py`, `elections_server.py`,
+`macro_server.py`, `transport_server.py`
+
+Multiple servers called `.json()` on HTTP responses but only caught `httpx.HTTPError`.
+`json.JSONDecodeError` (subclass of `ValueError`) was uncaught — if an API returned
+HTTP 200 with non-JSON body, the tool would crash. Added `ValueError` to all catch clauses.
+
 ---
 
 ### Test Coverage Gaps (continued)
@@ -377,7 +392,7 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Fixed | 10 | #46-47, #49-50, #53-55, #59-61 |
+| Fixed | 12 | #46-47, #49-50, #53-55, #59-63 |
 | Open | 1 | #48 (polling backoff, low priority) |
 | Accepted | 3 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords) |
 | Low/Style | 1 | #56 (find_profile 36 queries, scaling concern) |
