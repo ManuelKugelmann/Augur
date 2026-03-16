@@ -182,6 +182,7 @@ mcpServers:
     command: node
     args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/hackernews-mcp"]
     chatMenu: false
+    startup: false
     initTimeout: 300000
     serverInstructions: "Hacker News stories, comments, Algolia search. Tech/startup sentiment signal."
 
@@ -189,6 +190,7 @@ mcpServers:
     command: uv
     args: ["tool", "run", "arxiv-mcp-server"]
     chatMenu: false
+    startup: false
     initTimeout: 300000
     serverInstructions: "arXiv paper search, metadata, download. Research signal for thematic plays (AI, biotech, materials, etc.)."
 
@@ -196,6 +198,7 @@ mcpServers:
     command: uv
     args: ["tool", "run", "mcp-mathematics"]
     chatMenu: false
+    startup: false
     initTimeout: 300000
     serverInstructions: "52 math functions, 158 unit conversions, financial calcs (NPV, IRR, loan amortization). AST-secure eval."
 
@@ -203,6 +206,7 @@ mcpServers:
     command: uvx
     args: ["mcp-ols"]
     chatMenu: false
+    startup: false
     initTimeout: 300000
     serverInstructions: "OLS + logistic regression, residual diagnostics, VIF, Cook's distance. Reads CSV/Excel/JSON/Parquet/SQLite."
 
@@ -210,6 +214,7 @@ mcpServers:
     command: uv
     args: ["--directory", "__HOME__/augur/vendor/crypto-feargreed-mcp", "run", "main.py"]
     chatMenu: false
+    startup: false
     initTimeout: 300000
     serverInstructions: "Real-time + historical Crypto Fear & Greed Index. Sentiment signal for crypto markets."
 
