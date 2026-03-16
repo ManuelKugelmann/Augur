@@ -68,6 +68,7 @@ if [[ "\${1:-}" == "clone" ]] && echo "\$*" | grep -q "Augur\|TestRepo"; then
     # Copy shared venv so install skips slow venv creation
     cp -r "$shared_venv" "\$TARGET/venv"
     "\$REAL_GIT" -C "\$TARGET" init -q 2>/dev/null || true
+    "\$REAL_GIT" -C "\$TARGET" remote remove origin 2>/dev/null || true
     "\$REAL_GIT" -C "\$TARGET" add -A 2>/dev/null || true
     "\$REAL_GIT" -C "\$TARGET" commit -q -m "init" --allow-empty 2>/dev/null || true
     exit 0

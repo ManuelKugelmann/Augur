@@ -9,18 +9,25 @@ At least one LLM provider is required. You can use multiple simultaneously.
 
 ## Quick Setup
 
+**Native providers** (OpenAI, Anthropic): just set the key in `.env` — auto-detected.
+
 1. Sign up at the provider URL
 2. Copy your API key
-3. Add it to `~/LibreChat/.env` (or `augur env`)
-4. Uncomment the matching endpoint in `librechat.yaml` (`augur yaml`) if needed
-5. Restart: `augur restart`
+3. Add it to `~/LibreChat/.env` (via `augur env`)
+4. Restart: `augur restart`
+
+**Custom providers** (Groq, Gemini, Mistral, etc.): need a YAML endpoint block too.
+
+1. Set the key in `.env`
+2. Add the endpoint block to `librechat-user.yaml` (via `augur yaml`)
+3. Restart: `augur restart`
 
 ---
 
 ## Free Tier Providers
 
 All providers below offer free API tiers (rate-limited, no billing required).
-Preconfigured in `librechat.yaml` (commented out) -- uncomment to enable.
+Add the endpoint block to `librechat-user.yaml` (`augur yaml`) to enable.
 
 Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-api-resources)
 
@@ -200,7 +207,7 @@ Use your Claude Pro/Max subscription as a LibreChat endpoint -- no per-token bil
 | **Env var** | `CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...` (in `~/.claude-auth.env`) |
 | **Full guide** | [docs/claude-token-wrapper.md](claude-token-wrapper.md) |
 
-Already preconfigured in `librechat.yaml` (commented out). Uncomment the "Claude Max" endpoint and restart.
+Add the "Claude Max" endpoint block to `librechat-user.yaml` (`augur yaml`) and restart.
 
 ---
 
@@ -247,7 +254,152 @@ GEMINI_API_KEY=AIza...
 ENDPOINTS=openAI,anthropic,custom
 ```
 
-Then uncomment the corresponding endpoint blocks in `librechat.yaml` and restart.
+Then add the corresponding endpoint blocks to `librechat-user.yaml` (`augur yaml`) and restart.
+
+---
+
+## Endpoint YAML Blocks
+
+Custom providers need an endpoint block in `librechat-user.yaml` (`augur yaml`).
+Copy the block(s) you need below. Set the matching key in `.env` first.
+
+**Native providers** (OpenAI, Anthropic) need NO YAML — just the `.env` key.
+
+```yaml
+# Paste into librechat-user.yaml via: augur yaml
+endpoints:
+  custom:
+
+    # ── Groq (free, very fast inference) ──
+    - name: "Groq"
+      apiKey: "${GROQ_API_KEY}"
+      baseURL: "https://api.groq.com/openai/v1"
+      models:
+        default: [llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b-32768, gemma2-9b-it]
+        fetch: true
+      titleConvo: true
+      titleModel: "llama-3.1-8b-instant"
+      modelDisplayLabel: "Groq"
+
+    # ── Google Gemini (free tier, 15 RPM / 1M TPD) ──
+    - name: "Gemini"
+      apiKey: "${GEMINI_API_KEY}"
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
+      models:
+        default: [gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-flash]
+        fetch: false
+      titleConvo: true
+      titleModel: "gemini-2.0-flash-lite"
+      modelDisplayLabel: "Gemini"
+
+    # ── Mistral (free tier: mistral-small, codestral) ──
+    - name: "Mistral"
+      apiKey: "${MISTRAL_API_KEY}"
+      baseURL: "https://api.mistral.ai/v1"
+      models:
+        default: [mistral-small-latest, codestral-latest, mistral-large-latest]
+        fetch: true
+      titleConvo: true
+      titleModel: "mistral-small-latest"
+      modelDisplayLabel: "Mistral"
+
+    # ── Cerebras (free, 30 RPM / 14.4K RPD) ──
+    - name: "Cerebras"
+      apiKey: "${CEREBRAS_API_KEY}"
+      baseURL: "https://api.cerebras.ai/v1"
+      models:
+        default: [llama-3.3-70b, llama-3.1-8b, qwen-3-235b]
+        fetch: true
+      titleConvo: true
+      titleModel: "llama-3.1-8b"
+      modelDisplayLabel: "Cerebras"
+
+    # ── Cohere (free, 20 RPM / 1K req/month) ──
+    - name: "Cohere"
+      apiKey: "${COHERE_API_KEY}"
+      baseURL: "https://api.cohere.com/compatibility/v1"
+      models:
+        default: [command-a-03-2025, command-r-plus-08-2024, command-r-08-2024]
+        fetch: true
+      titleConvo: true
+      titleModel: "command-r-08-2024"
+      modelDisplayLabel: "Cohere"
+
+    # ── SambaNova (free $5 trial credits) ──
+    - name: "SambaNova"
+      apiKey: "${SAMBANOVA_API_KEY}"
+      baseURL: "https://api.sambanova.ai/v1"
+      models:
+        default: [DeepSeek-V3-0324, Meta-Llama-3.3-70B-Instruct, Qwen2.5-72B-Instruct]
+        fetch: true
+      titleConvo: true
+      titleModel: "Meta-Llama-3.3-70B-Instruct"
+      modelDisplayLabel: "SambaNova"
+
+    # ── HuggingFace Inference (free tier) ──
+    - name: "HuggingFace"
+      apiKey: "${HF_API_KEY}"
+      baseURL: "https://router.huggingface.co/v1"
+      models:
+        default: [Qwen/Qwen2.5-72B-Instruct, mistralai/Mistral-7B-Instruct-v0.3, meta-llama/Llama-3.3-70B-Instruct]
+        fetch: false
+      titleConvo: true
+      titleModel: "mistralai/Mistral-7B-Instruct-v0.3"
+      modelDisplayLabel: "HuggingFace"
+
+    # ── GitHub Models (free, uses GitHub PAT) ──
+    - name: "GitHub Models"
+      apiKey: "${GITHUB_MODELS_PAT}"
+      baseURL: "https://models.inference.ai.azure.com"
+      models:
+        default: [gpt-4o-mini, Meta-Llama-3.1-405B-Instruct, Mistral-large-2411, Phi-4]
+        fetch: true
+      titleConvo: true
+      titleModel: "gpt-4o-mini"
+      modelDisplayLabel: "GitHub Models"
+
+    # ── Alibaba Cloud / Qwen (free 1M tokens/month) ──
+    - name: "Qwen"
+      apiKey: "${DASHSCOPE_API_KEY}"
+      baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      models:
+        default: [qwen-plus, qwen-turbo, qwen-max, qwen-long]
+        fetch: true
+      titleConvo: true
+      titleModel: "qwen-turbo"
+      modelDisplayLabel: "Qwen"
+
+    # ── OpenRouter (some free models with :free suffix) ──
+    - name: "OpenRouter"
+      apiKey: "${OPENROUTER_API_KEY}"
+      baseURL: "https://openrouter.ai/api/v1"
+      models:
+        default:
+          - "google/gemini-2.0-flash-exp:free"
+          - "meta-llama/llama-3.3-70b-instruct:free"
+          - "qwen/qwen-2.5-72b-instruct:free"
+          - "mistralai/mistral-small-3.1-24b-instruct:free"
+        fetch: false
+      titleConvo: true
+      titleModel: "meta-llama/llama-3.3-70b-instruct:free"
+      modelDisplayLabel: "OpenRouter"
+
+    # ── Claude Max (subscription via CLIProxyAPI) ──
+    # Requires: augur proxy setup + token
+    # See docs/claude-token-wrapper.md for full guide.
+    - name: "Claude Max"
+      apiKey: "dummy"
+      baseURL: "http://localhost:8317/v1"
+      models:
+        default: [claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5-20251001]
+        fetch: false
+      titleConvo: true
+      titleModel: "claude-sonnet-4-6"
+      directEndpoint: true
+      summarize: false
+```
+
+Only include the providers you have keys for. Delete blocks you don't need.
 
 ---
 

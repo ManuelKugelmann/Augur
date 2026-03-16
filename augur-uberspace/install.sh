@@ -46,7 +46,8 @@ if [[ -d "$STACK/.git" ]]; then
     timeout 120 git -C "$STACK" pull --ff-only origin "$BRANCH" </dev/null || \
         { log "  → pull failed, fetching + resetting..."
           timeout 120 git -C "$STACK" fetch origin "$BRANCH" </dev/null && \
-          git -C "$STACK" reset --hard "origin/$BRANCH"; }
+          git -C "$STACK" reset --hard "origin/$BRANCH"; } || \
+        log "  → pull/fetch failed (repo may already be current)"
     log "Repo updated"
 else
     log "Cloning repo..."
