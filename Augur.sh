@@ -455,7 +455,7 @@ SVCEOF
             local LC_READY=false
             _svc_start librechat || true
             for i in $(seq 1 30); do
-                if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                if curl -sf "${LC_URL}/health" >/dev/null 2>&1; then
                     LC_READY=true; break
                 fi
                 sleep 2
@@ -475,7 +475,7 @@ SVCEOF
             local LC_URL="http://localhost:${LC_PORT:-3080}"
             local LC_READY=false
             for i in $(seq 1 15); do
-                if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
+                if curl -sf "${LC_URL}/health" >/dev/null 2>&1; then
                     LC_READY=true; break
                 fi
                 sleep 2
@@ -935,6 +935,7 @@ SVCEOF
         [[ -f "$APP/.version" ]] && _ok "LibreChat installed: $(cat "$APP/.version")" || _fail "LibreChat not installed at $APP"
         if [[ -f "$APP/.env" ]]; then
             grep -q "MONGO_URI=" "$APP/.env" 2>/dev/null && _ok "LibreChat .env with MONGO_URI" || _warn "LibreChat .env exists but MONGO_URI not set"
+            grep -q "^HOST=0\.0\.0\.0" "$APP/.env" 2>/dev/null && _ok "LibreChat HOST=0.0.0.0" || _warn "LibreChat HOST not set to 0.0.0.0 — web backend may 502"
         else _fail "LibreChat .env missing"; fi
         if [[ -f "$APP/librechat.yaml" ]]; then
             grep -q "mcpServers:" "$APP/librechat.yaml" 2>/dev/null && _ok "librechat.yaml with MCP servers" || _warn "librechat.yaml exists but no mcpServers section"
@@ -984,23 +985,27 @@ SVCEOF
         else _skip "Web backends: uberspace CLI not available"; fi
 
         echo ""; echo -e "${CYAN}── Connectivity ──${NC}"; echo ""
-        LC_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/" 2>/dev/null || echo "000")"
+        # curl may print %{http_code} per attempt (IPv6+IPv4) — keep only last 3 chars
+        _http_code() { local raw; raw="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$1" 2>/dev/null || true)"; echo "${raw: -3}"; }
+        LC_CODE="$(_http_code "http://localhost:${LC_PORT:-3080}/")"
         if [[ "$LC_CODE" == "200" ]] || [[ "$LC_CODE" == "301" ]] || [[ "$LC_CODE" == "302" ]]; then _ok "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"
-        elif [[ "$LC_CODE" == "000" ]]; then _fail "LibreChat HTTP: not reachable on port ${LC_PORT:-3080}"
+        elif [[ "$LC_CODE" == "000" ]] || [[ -z "$LC_CODE" ]]; then _fail "LibreChat HTTP: not reachable on port ${LC_PORT:-3080}"
         else _warn "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"; fi
-        LC_API="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/api/health" 2>/dev/null || echo "000")"
+        LC_API="$(_http_code "http://localhost:${LC_PORT:-3080}/health")"
         if [[ "$LC_API" == "200" ]]; then _ok "LibreChat API: healthy"
-        elif [[ "$LC_API" == "000" ]]; then _fail "LibreChat API: not reachable"
+        elif [[ "$LC_API" == "000" ]] || [[ -z "$LC_API" ]]; then _fail "LibreChat API: not reachable"
         else _warn "LibreChat API: HTTP ${LC_API}"; fi
         if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then _warn "Safe mode active — MCP servers disabled (restore: augur safemode off && augur restart)"; fi
-        CHARTS_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8066/charts/" 2>/dev/null || echo "000")"
-        [[ "$CHARTS_CODE" != "000" ]] && _ok "Charts HTTP: ${CHARTS_CODE} on port 8066" || _warn "Charts HTTP: not reachable on port 8066"
+        CHARTS_CODE="$(_http_code "http://localhost:8066/charts/")"
+        if [[ "$CHARTS_CODE" == "200" ]] || [[ "$CHARTS_CODE" == "301" ]] || [[ "$CHARTS_CODE" == "302" ]]; then _ok "Charts HTTP: ${CHARTS_CODE} on port 8066"
+        elif [[ "$CHARTS_CODE" == "000" ]] || [[ -z "$CHARTS_CODE" ]]; then _warn "Charts HTTP: not reachable on port 8066"
+        else _warn "Charts HTTP: ${CHARTS_CODE} on port 8066"; fi
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
         if [[ -f "$HOME/.claude-auth.env" ]] || [[ -f "$HOME/.config/systemd/user/cliproxyapi.service" ]]; then
-            PROXY_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${PROXY_PORT}/v1/models" 2>/dev/null || echo "000")"
+            PROXY_CODE="$(_http_code "http://localhost:${PROXY_PORT}/v1/models")"
             if [[ "$PROXY_CODE" == "200" ]]; then _ok "CLIProxyAPI: OK on port ${PROXY_PORT}"
             elif [[ "$PROXY_CODE" == "401" ]]; then _fail "CLIProxyAPI: 401 — token expired"
-            elif [[ "$PROXY_CODE" == "000" ]]; then _fail "CLIProxyAPI: not reachable on port ${PROXY_PORT}"
+            elif [[ "$PROXY_CODE" == "000" ]] || [[ -z "$PROXY_CODE" ]]; then _fail "CLIProxyAPI: not reachable on port ${PROXY_PORT}"
             else _warn "CLIProxyAPI: HTTP ${PROXY_CODE} on port ${PROXY_PORT}"; fi
         else _skip "CLIProxyAPI: not configured"; fi
 

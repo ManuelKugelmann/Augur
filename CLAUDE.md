@@ -10,28 +10,15 @@
 
 ## Project
 
-**Augur** — MCP-based trading signals platform on LibreChat/Uberspace. Combined trading server (store + 12 domains + indicators, 50+ tools, 75+ sources) via streamable-http + external MCPs (finance, gdelt-cloud, prediction-markets, rss, reddit, hackernews, arxiv, math, regression, crypto-sentiment). Single process, multi-user. Risk gate guards all trading actions.
-
-## Key Paths
-
-| Path | Purpose |
-|------|---------|
-| `Augur.sh` → `~/bin/augur` | Ops CLI |
-| `~/augur/` | This repo (signals stack) |
-| `~/LibreChat/` | LibreChat (from CI release bundle) |
-| `~/backups/mongo/` | Rolling MongoDB backups |
-| `deploy.conf` | Config: `GH_USER`, `GH_REPO`, `STACK_DIR`, `APP_DIR`, `LC_PORT=3080` |
-
-**Host**: `augur.uber.space` (U8, Arch Linux, systemd)
+**Augur** — MCP-based trading signals platform on LibreChat/Uberspace. Combined trading server (store + 12 domains + indicators, 50+ tools, 75+ sources) via streamable-http + external MCPs. Single process, multi-user. Risk gate guards all trading actions.
 
 ## Architecture
 
 ```
 GitHub ──tag──▶ CI bundle ──▶ Release ──▶ Uberspace
-├─ LibreChat (:3080) → MCP: trading ──streamable-http──▶ :8071/mcp
-│                    → MCP: Tier 1 (finance, gdelt, predictions, rss, reddit)
-│                    → MCP: Tier 2 (hackernews, arxiv, math, regression, crypto-sentiment)
-├─ trading server (:8071, Python, store + 12 domains, 50+ tools)
+├─ LibreChat (:3080) → MCP: trading (:8071), Tier 1 & 2 MCPs
+├─ trading server (:8071, FastMCP, store + 12 domains, 50+ tools)
+├─ CLIProxyAPI (:8317, optional) → Claude Max subscription proxy
 └─ cron → MongoDB Atlas + 75+ free data APIs
 ```
 
@@ -39,9 +26,21 @@ GitHub ──tag──▶ CI bundle ──▶ Release ──▶ Uberspace
 
 **Store** (`store_*`): MongoDB `profiles_{kind}` (12 kinds), `snap_{kind}`/`arch_{kind}`/`events` timeseries. Notes per-user, research shared. IDs: ISO3 for countries, tickers for stocks, lowercase slugs for others.
 
-## Environment (`~/augur/.env`)
+## Key Paths & Config
 
-`MONGO_URI_SIGNALS` (Atlas, `signals` db), `MCP_TRANSPORT` (`streamable-http`/`stdio`), `MCP_PORT` (`8071`). Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY` — see `docs/api-keys.md`.
+| Path | Purpose |
+|------|---------|
+| `Augur.sh` → `~/bin/augur` | Ops CLI |
+| `~/augur/` | This repo (signals stack) |
+| `~/LibreChat/` | LibreChat (from CI release bundle) |
+| `deploy.conf` | Config: `GH_USER`, `GH_REPO`, `STACK_DIR`, `APP_DIR`, `LC_PORT=3080` |
+| `~/augur/.env` | `MONGO_URI_SIGNALS`, `MCP_TRANSPORT`, `MCP_PORT=8071`, API keys (see `docs/api-keys.md`) |
+| `~/.claude-auth.env` | CLIProxyAPI OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`) |
+| `~/.cli-proxy-api/config.yaml` | CLIProxyAPI config (port 8317) |
+
+**Host**: Uberspace U8 (Arch Linux, systemd). Username = subdomain (auto-detected via `$(whoami).uber.space`).
+
+**CLIProxyAPI**: Optional OpenAI-compatible proxy for Claude Pro/Max subscriptions. `augur proxy setup|start|stop|status|test|token`. Docs: `docs/claude-token-wrapper.md`.
 
 ## Testing
 
