@@ -2,7 +2,7 @@
 """Merge librechat-system.yaml + librechat-user.yaml → librechat.yaml.
 
 System template provides: version, mcpSettings, mcpServers, interface,
-fileConfig, endpoints.agents.  These keys always come from the system template.
+endpoints.agents.  These keys always come from the system template.
 
 User overlay provides everything else: cache, registration,
 endpoints.custom (LLM providers), and any other LibreChat settings.
@@ -20,7 +20,7 @@ import yaml
 
 # Keys that are exclusively owned by the system template.
 # User overlay values for these keys are ignored.
-SYSTEM_KEYS = {"version", "mcpSettings", "mcpServers", "interface", "fileConfig"}
+SYSTEM_KEYS = {"version", "mcpSettings", "mcpServers", "interface"}
 
 
 def deep_merge(base, overlay):
