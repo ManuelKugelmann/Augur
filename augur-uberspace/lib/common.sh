@@ -131,9 +131,18 @@ _download() {
     die "Download failed after ${retries} attempts: ${desc}"
 }
 
+# ── Extract asset updated_at from release JSON ──
+# Finds the updated_at timestamp for the asset whose download URL matches $1
+_extract_asset_timestamp() {
+    local url="$1" json="$2"
+    # Walk through assets: find the block containing our URL, grab its updated_at
+    echo "$json" | grep -B5 "$(printf '%s' "$url" | sed 's/[&/]/\\&/g')" \
+        | grep -o '"updated_at":[^"]*"[^"]*"' | head -1 | cut -d'"' -f4 || true
+}
+
 # ── Resolve LibreChat bundle URL from GitHub Releases ──
 _resolve_bundle_url() {
-    _BUNDLE_URL="" _BUNDLE_TAG=""
+    _BUNDLE_URL="" _BUNDLE_TAG="" _BUNDLE_ASSET_TS=""
     local json="" api_url=""
 
     if [[ -z "${RELEASE_TAG:-}" ]]; then
@@ -166,12 +175,15 @@ _resolve_bundle_url() {
         fi
     fi
 
-    [[ -n "$_BUNDLE_URL" ]] && log "Found bundle: ${_BUNDLE_URL} (tag: ${_BUNDLE_TAG})"
+    if [[ -n "$_BUNDLE_URL" ]]; then
+        _BUNDLE_ASSET_TS=$(_extract_asset_timestamp "$_BUNDLE_URL" "$json")
+        log "Found bundle: ${_BUNDLE_URL} (tag: ${_BUNDLE_TAG}, asset updated: ${_BUNDLE_ASSET_TS:-unknown})"
+    fi
 }
 
 # ── Resolve MCP Nodes bundle URL from GitHub Releases ──
 _resolve_mcp_nodes_url() {
-    _MCP_NODES_URL="" _MCP_NODES_TAG=""
+    _MCP_NODES_URL="" _MCP_NODES_TAG="" _MCP_NODES_ASSET_TS=""
     local json="" api_url=""
     local tag="${MCP_NODES_TAG:-mcp-nodes-build}"
 
@@ -184,7 +196,10 @@ _resolve_mcp_nodes_url() {
         _MCP_NODES_TAG=$(echo "$json" | grep -o '"tag_name":[^"]*"[^"]*"' | cut -d'"' -f4 || true)
     fi
 
-    [[ -n "$_MCP_NODES_URL" ]] && log "Found MCP nodes bundle: ${_MCP_NODES_URL} (tag: ${_MCP_NODES_TAG})"
+    if [[ -n "$_MCP_NODES_URL" ]]; then
+        _MCP_NODES_ASSET_TS=$(_extract_asset_timestamp "$_MCP_NODES_URL" "$json")
+        log "Found MCP nodes bundle: ${_MCP_NODES_URL} (tag: ${_MCP_NODES_TAG}, asset updated: ${_MCP_NODES_ASSET_TS:-unknown})"
+    fi
 }
 
 # ── Download, extract, and install/update MCP Nodes bundle ──
@@ -197,17 +212,13 @@ _mcp_nodes_download_and_setup() {
 
     local mcp_dir="$STACK/mcp-nodes"
 
-    # Version check (fast path before download)
-    if [[ "$skip_current" == true && -f "$mcp_dir/.version" ]]; then
-        local installed_ver=""
-        installed_ver=$(head -1 "$mcp_dir/.version")
-        if [[ -n "$installed_ver" && -n "$_MCP_NODES_TAG" ]]; then
-            local tag_ver="${_MCP_NODES_TAG#mcp-nodes-v}"
-            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_MCP_NODES_TAG" ]]; then
-                log "MCP nodes already up-to-date (${installed_ver})"
-                return 0
-            fi
-            log "Updating MCP nodes ${installed_ver} → ${_MCP_NODES_TAG}..."
+    # Skip if asset hasn't changed (compare asset updated_at timestamp)
+    if [[ "$skip_current" == true && -f "$mcp_dir/.asset_ts" ]]; then
+        local installed_ts=""
+        installed_ts=$(cat "$mcp_dir/.asset_ts" 2>/dev/null)
+        if [[ -n "$installed_ts" && -n "$_MCP_NODES_ASSET_TS" && "$installed_ts" == "$_MCP_NODES_ASSET_TS" ]]; then
+            log "MCP nodes already up-to-date (asset unchanged since ${installed_ts})"
+            return 0
         fi
     fi
 
@@ -222,6 +233,9 @@ _mcp_nodes_download_and_setup() {
     tar xzf "$mcp_tmp/mcp-nodes.tar.gz" -C "$mcp_dir"
     rm -rf "$mcp_tmp"
 
+    # Store asset timestamp for next skip check
+    [[ -n "$_MCP_NODES_ASSET_TS" ]] && echo "$_MCP_NODES_ASSET_TS" > "$mcp_dir/.asset_ts"
+
     log "MCP nodes bundle installed ($(head -1 "$mcp_dir/.version" 2>/dev/null || echo 'unknown'))"
     return 0
 }
@@ -234,17 +248,13 @@ _lc_download_and_setup() {
     _resolve_bundle_url
     [[ -z "$_BUNDLE_URL" ]] && return 1
 
-    # Version check (fast path before download)
-    if [[ "$skip_current" == true ]]; then
-        local installed_ver=""
-        [[ -f "$APP/.version" ]] && installed_ver=$(cat "$APP/.version")
-        if [[ -n "$installed_ver" && -n "$_BUNDLE_TAG" ]]; then
-            local tag_ver="${_BUNDLE_TAG#v}"
-            if [[ "$installed_ver" == "$tag_ver" || "$installed_ver" == "$_BUNDLE_TAG" ]]; then
-                log "LibreChat already up-to-date (${installed_ver})"
-                return 0
-            fi
-            log "Updating LibreChat ${installed_ver} → ${_BUNDLE_TAG}..."
+    # Skip if asset hasn't changed (compare asset updated_at timestamp)
+    if [[ "$skip_current" == true && -f "$APP/.asset_ts" ]]; then
+        local installed_ts=""
+        installed_ts=$(cat "$APP/.asset_ts" 2>/dev/null)
+        if [[ -n "$installed_ts" && -n "$_BUNDLE_ASSET_TS" && "$installed_ts" == "$_BUNDLE_ASSET_TS" ]]; then
+            log "LibreChat already up-to-date (asset unchanged since ${installed_ts})"
+            return 0
         fi
     fi
 
@@ -280,5 +290,9 @@ _lc_download_and_setup() {
     log "Running setup..."
     log "  → bash $STACK/augur-uberspace/scripts/setup.sh $lc_tmp/app $bundle_ver"
     bash "$STACK/augur-uberspace/scripts/setup.sh" "$lc_tmp/app" "$bundle_ver"
+
+    # Store asset timestamp for next skip check
+    [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
+
     return 0
 }
