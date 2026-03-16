@@ -372,11 +372,13 @@ Override any value via environment: `UBER_USER=other augur install`
 
 ```bash
 augur help          # all commands
-augur s|status      # service status + version
-augur l|logs        # tail logs
-augur r|restart     # restart LibreChat + trading
+augur status        # service status + version
+augur logs          # tail logs
+augur restart       # restart LibreChat + trading
 augur testrun       # run LibreChat in foreground (see errors directly)
-augur v|version     # show version
+augur debugstart    # full diagnostics + foreground run
+augur version       # show version
+augur pull          # quick git-pull update (dev)
 augur update        # update stack (git pull + deps + LibreChat release)
 augur backup        # backup MongoDB to ~/backups/mongo/
 augur restore [f]   # restore MongoDB from backup

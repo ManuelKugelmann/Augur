@@ -119,6 +119,8 @@ teardown() {
 # ── proxy start/stop/status ──
 
 @test "proxy start calls systemctl start" {
+    # Create service file so _svc_exists returns true
+    touch "$HOME/.config/systemd/user/cliproxyapi.service"
     run bash "$TA" proxy start
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"stubbed systemctl --user start cliproxyapi"* ]]

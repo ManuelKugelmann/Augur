@@ -141,13 +141,63 @@ case "$CMD" in
         echo -e "${CYAN}── Service status ──${NC}"
         for _s in librechat augur charts; do
             if systemctl --user is-active "$_s" &>/dev/null; then
-                echo -e "  ${GREEN}●${NC} $_s: running"
+                _pid=$(systemctl --user show "$_s" --property=MainPID --value 2>/dev/null || echo "?")
+                _mem=$(ps -o rss= -p "$_pid" 2>/dev/null | awk '{printf "%.0fM", $1/1024}' || echo "?")
+                echo -e "  ${GREEN}●${NC} $_s: running (PID $_pid, ${_mem})"
             elif _svc_exists "$_s"; then
                 echo -e "  ${RED}●${NC} $_s: stopped"
             else
                 echo -e "  ${YELLOW}○${NC} $_s: not registered"
             fi
         done
+        echo ""
+
+        # Environment & config checks
+        echo -e "${CYAN}── Environment ──${NC}"
+        echo -e "  Stack:     $STACK"
+        echo -e "  App:       $APP"
+        echo -e "  Version:   $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        echo -e "  Node:      $(node -v 2>/dev/null || echo 'not found')"
+        echo -e "  Python:    $("$STACK/venv/bin/python" --version 2>&1 2>/dev/null || echo 'venv missing')"
+        echo -e "  Disk free: $(df -h "$HOME" 2>/dev/null | awk 'NR==2{print $4}' || echo '?')"
+        if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then
+            echo -e "  ${YELLOW}⚠ Safe mode is ON${NC} — MCP servers disabled"
+        fi
+        echo ""
+
+        # Port checks
+        echo -e "${CYAN}── Ports ──${NC}"
+        for _port_info in "3080:LibreChat" "8071:Augur MCP" "8066:Charts"; do
+            _port="${_port_info%%:*}"; _label="${_port_info#*:}"
+            if ss -tlnp 2>/dev/null | grep -q ":${_port} " 2>/dev/null; then
+                echo -e "  ${GREEN}●${NC} :${_port} ${_label}: listening"
+            else
+                echo -e "  ${RED}○${NC} :${_port} ${_label}: not listening"
+            fi
+        done
+        echo ""
+
+        # Config validation
+        echo -e "${CYAN}── Config ──${NC}"
+        if [[ -f "$APP/librechat.yaml" ]]; then
+            if "$STACK/venv/bin/python" -c "import yaml; yaml.safe_load(open('$APP/librechat.yaml'))" 2>/dev/null; then
+                echo -e "  ${GREEN}✓${NC} librechat.yaml: valid YAML"
+            else
+                echo -e "  ${RED}✗${NC} librechat.yaml: YAML parse error"
+            fi
+        else
+            echo -e "  ${RED}✗${NC} librechat.yaml: missing"
+        fi
+        if [[ -f "$APP/.env" ]]; then
+            echo -e "  ${GREEN}✓${NC} LibreChat .env: present"
+        else
+            echo -e "  ${RED}✗${NC} LibreChat .env: missing"
+        fi
+        if [[ -f "$STACK/.env" ]]; then
+            echo -e "  ${GREEN}✓${NC} Signals .env: present"
+        else
+            echo -e "  ${YELLOW}○${NC} Signals .env: missing (optional)"
+        fi
         echo ""
 
         # Show recent journal entries (last 50 lines, no time filter)
@@ -157,6 +207,22 @@ case "$CMD" in
             journalctl --user -u "$_s" --no-pager -n 50 2>/dev/null || echo "  (no journal entries)"
             echo ""
         done
+
+        # Show recent crashes / restarts
+        echo -e "${CYAN}── Recent failures (last 24h) ──${NC}"
+        _has_failures=false
+        for _s in "${_SVCS[@]}"; do
+            _failures=$(journalctl --user -u "$_s" --since "24 hours ago" --no-pager 2>/dev/null \
+                | grep -ciE "error|exception|fatal|segfault|oom|killed" || true)
+            if [[ "$_failures" -gt 0 ]]; then
+                echo -e "  ${RED}●${NC} $_s: ${_failures} error lines in last 24h"
+                _has_failures=true
+            fi
+        done
+        if [[ "$_has_failures" == false ]]; then
+            echo -e "  ${GREEN}✓${NC} No error lines found in last 24h"
+        fi
+        echo ""
 
         # Start targeted service(s) in foreground
         if [[ "${#_SVCS[@]}" -eq 1 ]]; then
@@ -258,6 +324,15 @@ SAFEEOF
     version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
+    pull)
+        echo -e "${CYAN}Quick pull (dev)...${NC}"
+        git -C "$STACK" pull --ff-only
+        # Update augur CLI from pulled code
+        cp "$STACK/Augur.sh" "$HOME/bin/augur" 2>/dev/null || true
+        chmod +x "$HOME/bin/augur" 2>/dev/null || true
+        ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+        echo -e "${GREEN}✓${NC} Pulled latest ($(git -C "$STACK" rev-parse --short HEAD))"
+        ;;
     update)
         echo -e "${CYAN}Updating Augur stack...${NC}"
 
@@ -285,11 +360,14 @@ SAFEEOF
             [[ -f "$_yaml_target" ]] || continue
 
             # Patch: google-news-trends-mcp needs fastmcp<3 (on_duplicate_tools removed in 3.x)
+            # Also add --refresh to bust stale uvx cache that may have fastmcp 3.x
             if grep -q '"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null \
-               && ! grep -q '"--with"' "$_yaml_target" 2>/dev/null; then
+               && ! grep -q '"--refresh".*"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null; then
                 cp "$_yaml_target" "${_yaml_target}.bak.$(date +%Y%m%d-%H%M%S)"
-                sed -i 's|\["google-news-trends-mcp@latest"\]|["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
-                log "Auto-patched $(basename "$_yaml_target") (pinned fastmcp<3 for google-news MCP)"
+                # Replace any existing args variant with the full fix (--refresh + fastmcp<3 pin)
+                sed -i 's|\["google-news-trends-mcp@latest"\]|["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+                sed -i 's|\["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"\]|["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+                log "Auto-patched $(basename "$_yaml_target") (pinned fastmcp<3 + --refresh for google-news MCP)"
             fi
         done
 
@@ -880,12 +958,14 @@ for kind, info in sorted(result.items()):
         echo "  augur restart      Restart all services"
         echo "  augur logs         Tail service logs"
         echo "  augur testrun      Run single service in foreground (see errors directly)"
-        echo "  augur debugstart   Debug startup: status + logs + foreground run"
+        echo "  augur debugstart   Full diagnostics: status, env, ports, config, logs,"
+        echo "                     recent failures, then foreground run"
         echo "  augur safemode     Show safe mode status"
         echo "  augur safemode on  Disable MCPs (fix 502s), then: augur restart"
         echo "  augur safemode off Restore full MCP config, then: augur restart"
         echo "  augur version      Show installed version"
         echo ""
+        echo "  augur pull         Quick git-pull update (dev)"
         echo "  augur update       Update stack (git pull + deps + LibreChat release)"
         echo "  augur clean        Clear all caches (pip, uv, npm, playwright, temp)"
         echo ""
