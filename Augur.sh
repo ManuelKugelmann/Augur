@@ -593,6 +593,19 @@ SVCEOF
         echo -e "${CYAN}Host:${NC}    ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
         echo ""
 
+        echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
+        echo "    augur start        # start all services"
+        echo "    augur stop         # stop all services"
+        echo "    augur restart      # restart all services"
+        echo ""
+        echo -e "  ${CYAN}Verify:${NC}"
+        echo "    augur check        # full health check"
+        echo "    augur status       # quick service status"
+        echo ""
+        echo -e "  ${CYAN}Access:${NC}"
+        echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        echo ""
+
         # Show recent startup logs so the user can spot errors immediately
         for _svc in librechat augur charts; do
             if _svc_exists "$_svc"; then
