@@ -189,6 +189,75 @@ case "$CMD" in
             journalctl --user -u librechat -u augur -u charts -f --no-pager
         fi
         ;;
+    safestart)
+        _SAFE_BAK="$APP/librechat.yaml.pre-safe"
+        case "${2:-}" in
+            restore|--restore)
+                if [[ -f "$_SAFE_BAK" ]]; then
+                    cp "$_SAFE_BAK" "$APP/librechat.yaml"
+                    rm -f "$_SAFE_BAK"
+                    _svc_restart librechat || die "Failed to restart librechat"
+                    echo -e "${GREEN}✓${NC} Restored full config and restarted librechat"
+                else
+                    die "No safe-mode backup found at $_SAFE_BAK"
+                fi
+                ;;
+            *)
+                if [[ ! -f "$APP/librechat.yaml" ]]; then
+                    die "librechat.yaml not found at $APP"
+                fi
+
+                # Back up current config
+                cp "$APP/librechat.yaml" "$_SAFE_BAK"
+                echo -e "${CYAN}Backed up config → ${_SAFE_BAK}${NC}"
+
+                # Write minimal config without MCP servers
+                cat > "$APP/librechat.yaml" <<'SAFEEOF'
+# LibreChat SAFE MODE — no MCP servers loaded
+# Restore with: augur safestart --restore
+version: 1.2.1
+cache: true
+registration:
+  socialLogins: []
+interface:
+  endpointsMenu: true
+  remoteAgents:
+    use: true
+    create: true
+endpoints:
+  agents:
+    recursionLimit: 25
+    maxRecursionLimit: 50
+    capabilities:
+      - tools
+      - actions
+      - artifacts
+      - chain
+SAFEEOF
+
+                # Restart librechat with safe config
+                _svc_stop librechat 2>/dev/null || true
+                _svc_start librechat || die "Failed to start librechat in safe mode"
+                sleep 3
+
+                # Connectivity check
+                echo ""
+                echo -e "${CYAN}── Connectivity check ──${NC}"
+                _http_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/" 2>/dev/null || echo "000")
+                _api_code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/api/health" 2>/dev/null || echo "000")
+                echo -e "  Frontend (/)       : HTTP ${_http_code}"
+                echo -e "  API (/api/health)  : HTTP ${_api_code}"
+                if [[ "$_http_code" == "200" || "$_http_code" == "301" || "$_http_code" == "302" ]]; then
+                    echo -e "  ${GREEN}✓${NC} LibreChat is up in safe mode (no MCPs)"
+                else
+                    echo -e "  ${YELLOW}⚠${NC} LibreChat may still be starting — check: augur logs"
+                fi
+                echo ""
+                echo -e "${GREEN}✓${NC} Safe mode active — MCP servers disabled"
+                echo -e "  Restore full config: ${CYAN}augur safestart --restore${NC}"
+                ;;
+        esac
+        ;;
     version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
@@ -627,6 +696,11 @@ SVCEOF
         if [[ "$LC_CODE" == "200" ]] || [[ "$LC_CODE" == "301" ]] || [[ "$LC_CODE" == "302" ]]; then _ok "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"
         elif [[ "$LC_CODE" == "000" ]]; then _fail "LibreChat HTTP: not reachable on port ${LC_PORT:-3080}"
         else _warn "LibreChat HTTP: ${LC_CODE} on port ${LC_PORT:-3080}"; fi
+        LC_API="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${LC_PORT:-3080}/api/health" 2>/dev/null || echo "000")"
+        if [[ "$LC_API" == "200" ]]; then _ok "LibreChat API: healthy"
+        elif [[ "$LC_API" == "000" ]]; then _fail "LibreChat API: not reachable"
+        else _warn "LibreChat API: HTTP ${LC_API}"; fi
+        if [[ -f "$APP/librechat.yaml.pre-safe" ]]; then _warn "Safe mode active — MCP servers disabled (restore: augur safestart --restore)"; fi
         CHARTS_CODE="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8066/charts/" 2>/dev/null || echo "000")"
         [[ "$CHARTS_CODE" != "000" ]] && _ok "Charts HTTP: ${CHARTS_CODE} on port 8066" || _warn "Charts HTTP: not reachable on port 8066"
         PROXY_PORT="${CLIPROXY_PORT:-8317}"
@@ -796,6 +870,8 @@ for kind, info in sorted(result.items()):
         echo "  augur logs         Tail service logs"
         echo "  augur testrun      Run single service in foreground (see errors directly)"
         echo "  augur debugstart   Debug startup: status + logs + foreground run"
+        echo "  augur safestart    Start LibreChat without MCPs (fix 502s)"
+        echo "  augur safestart --restore   Restore full MCP config"
         echo "  augur version      Show installed version"
         echo ""
         echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
