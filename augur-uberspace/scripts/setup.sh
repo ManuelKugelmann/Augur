@@ -290,6 +290,10 @@ if [[ "$MODE" == "install" ]]; then
     SVC_DIR="$HOME/.config/systemd/user"
     mkdir -p "$SVC_DIR"
     cat > "$SVC_DIR/librechat.service" <<EOF
+[Unit]
+Description=LibreChat web application
+After=network.target
+
 [Install]
 WantedBy=default.target
 

@@ -297,14 +297,43 @@ The inner functions already return error dicts and don't raise, so these clauses
 on truly unexpected errors. Defensive but overly broad — accepted as-is since the routing
 pattern benefits from resilience.
 
+#### 53. ~~`grep` Without Anchor in Health Check~~ ✅ FIXED
+**File:** `Augur.sh:937`
+
+`grep -q "MONGO_URI="` matched `MONGO_URI_SIGNALS=` too. Added `^` anchor: `grep -q "^MONGO_URI="`.
+
+#### 54. ~~systemd Services Missing `[Unit]` Section~~ ✅ FIXED
+**Files:** `Augur.sh` (augur, charts, librechat, cliproxyapi), `setup.sh` (librechat)
+
+All services lacked `[Unit]` section with `Description` and `After=network.target`.
+Added to all 5 service definitions.
+
+#### 55. ~~`EnvironmentFile` Not Guarded in CLIProxyAPI Service~~ ✅ FIXED
+**File:** `Augur.sh:863`
+
+`EnvironmentFile=${PROXY_AUTH}` fails if file doesn't exist. Changed to `EnvironmentFile=-${PROXY_AUTH}`
+(leading `-` makes missing files non-fatal in systemd).
+
 ### LOW / STYLE
 
-#### 52. `find_profile()` Does 36 MongoDB Queries Per Call — OPEN
+#### 56. `find_profile()` Does 36 MongoDB Queries Per Call — OPEN
 **File:** `src/store/server.py:503-542`
 
 Cross-kind search iterates 12 kinds × 3 queries each (text search, ID regex, name regex).
 Fine at current scale (424 profiles). At 1000+ profiles, consider a unified search collection
 or MongoDB Atlas Search. Supersedes old #17 as the real scaling concern.
+
+#### 57. `curl|bash` Install Pattern — ACCEPTED
+**File:** `augur-uberspace/install.sh`
+
+Standard `curl | bash` bootstrap. Already mitigated: wraps all logic in `_main() { ... }`
+called at EOF (prevents partial execution). No checksums, but acceptable for private repo.
+
+#### 58. Passwords Accepted as CLI Arguments — ACCEPTED (low priority)
+**File:** `Augur.sh:1113-1115`
+
+`augur user email password` exposes password in `ps` output and shell history.
+Interactive mode (`read -sp`) is the primary path; CLI args are for automation.
 
 ---
 
@@ -330,7 +359,7 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Fixed | 4 | #46 (OAuth KeyError), #47 (regex replacement), #49 (close None check), #50 (signal change order) |
+| Fixed | 7 | #46 (OAuth KeyError), #47 (regex replacement), #49 (close None), #50 (signal order), #53 (grep anchor), #54 (systemd Unit), #55 (EnvironmentFile) |
 | Open | 1 | #48 (polling backoff, low priority) |
-| Accepted | 1 | #51 (bare Exception in indicator routing) |
-| Low/Style | 1 | #52 (find_profile 36 queries, scaling concern) |
+| Accepted | 3 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords) |
+| Low/Style | 1 | #56 (find_profile 36 queries, scaling concern) |

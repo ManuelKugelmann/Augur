@@ -67,7 +67,7 @@ Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
 
 ## P2 — Server Improvements
 
-- [ ] **Optimize `find_profile()` for scale** (REVIEW.md #52)
+- [ ] **Optimize `find_profile()` for scale** (REVIEW.md #56)
       Cross-kind search does 36 MongoDB queries per call (3 × 12 kinds).
       Fine at current scale (424 profiles). At 1000+, consider a unified search
       collection or MongoDB Atlas Search.
