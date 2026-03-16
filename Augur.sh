@@ -285,11 +285,14 @@ SAFEEOF
             [[ -f "$_yaml_target" ]] || continue
 
             # Patch: google-news-trends-mcp needs fastmcp<3 (on_duplicate_tools removed in 3.x)
+            # Also add --refresh to bust stale uvx cache that may have fastmcp 3.x
             if grep -q '"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null \
-               && ! grep -q '"--with"' "$_yaml_target" 2>/dev/null; then
+               && ! grep -q '"--refresh".*"google-news-trends-mcp@latest"' "$_yaml_target" 2>/dev/null; then
                 cp "$_yaml_target" "${_yaml_target}.bak.$(date +%Y%m%d-%H%M%S)"
-                sed -i 's|\["google-news-trends-mcp@latest"\]|["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
-                log "Auto-patched $(basename "$_yaml_target") (pinned fastmcp<3 for google-news MCP)"
+                # Replace any existing args variant with the full fix (--refresh + fastmcp<3 pin)
+                sed -i 's|\["google-news-trends-mcp@latest"\]|["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+                sed -i 's|\["--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"\]|["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]|' "$_yaml_target"
+                log "Auto-patched $(basename "$_yaml_target") (pinned fastmcp<3 + --refresh for google-news MCP)"
             fi
         done
 
