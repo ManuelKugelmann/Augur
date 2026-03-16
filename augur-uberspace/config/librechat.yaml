@@ -1,7 +1,7 @@
 # LibreChat configuration
 # MCP servers: augur signals stack + external data MCPs
 # Multi-agent architecture: see docs/multi-agent-architecture.md
-version: 1.2.1
+version: 1.3.6
 
 cache: true
 
@@ -10,9 +10,16 @@ registration:
 
 interface:
   endpointsMenu: true
-  remoteAgents:
+  agents:
     use: true
     create: true
+
+# ── MCP Settings ───────────────────────────
+# Domain allowlist for MCP servers (required since config v1.3.x).
+# Without this, localhost connections are blocked by default SSRF protection.
+mcpSettings:
+  allowedDomains:
+    - 'localhost'
 
 # ── MCP Servers ─────────────────────────────
 # All MCPs use chatMenu: false — accessible only via agents, not general chat.
