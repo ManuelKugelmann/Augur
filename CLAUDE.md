@@ -39,6 +39,24 @@ GitHub ──tag──▶ CI bundle ──▶ Release ──▶ Uberspace
 
 **Store** (`store_*`): MongoDB `profiles_{kind}` (12 kinds), `snap_{kind}`/`arch_{kind}`/`events` timeseries. Notes per-user, research shared. IDs: ISO3 for countries, tickers for stocks, lowercase slugs for others.
 
+## CLIProxyAPI (Claude Max subscription proxy)
+
+Optional OpenAI-compatible proxy that routes LibreChat through a Claude Pro/Max subscription instead of API key billing. Docs: `docs/claude-token-wrapper.md`.
+
+```
+LibreChat → CLIProxyAPI (:8317) → claude CLI (OAuth token) → Anthropic
+```
+
+| Item | Detail |
+|------|--------|
+| Port | `8317` (env `CLIPROXY_PORT`) |
+| Token | `~/.claude-auth.env` (`CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...`) |
+| Config | `~/.cli-proxy-api/config.yaml` |
+| Service | `~/.config/systemd/user/cliproxyapi.service` |
+| Commands | `augur proxy setup\|start\|stop\|status\|test\|token` |
+
+Setup: `claude setup-token` → store in `~/.claude-auth.env` → `augur proxy setup` → `augur proxy start` → uncomment "Claude Max" endpoint in `librechat.yaml` → `augur restart`.
+
 ## Environment (`~/augur/.env`)
 
 `MONGO_URI_SIGNALS` (Atlas, `signals` db), `MCP_TRANSPORT` (`streamable-http`/`stdio`), `MCP_PORT` (`8071`). Optional API keys: `FRED_API_KEY`, `ACLED_API_KEY`, `EIA_API_KEY`, `COMTRADE_API_KEY`, `GOOGLE_API_KEY`, `AISSTREAM_API_KEY`, `CF_API_TOKEN`, `USDA_NASS_API_KEY`, `IDMC_API_KEY` — see `docs/api-keys.md`.
