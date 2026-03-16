@@ -107,6 +107,7 @@ mcpServers:
     command: __HOME__/augur/venv/bin/python
     args: ["-m", "finance_mcp.server"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: |
       Stock data + technical analysis via yfinance + ta library.
       Key tools: get_technical_analysis (SMA, EMA, RSI, MACD, Bollinger, support/resistance),
@@ -125,18 +126,21 @@ mcpServers:
     command: node
     args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/prediction-markets"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Polymarket, Metaculus prediction market data."
 
   rss:
     command: node
     args: ["__HOME__/augur/mcp-nodes/node_modules/rss-mcp/dist/index.js"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "RSS/Atom feed reader for news, SEC filings, blog monitoring."
 
   reddit:
     command: uvx
     args: ["mcp-server-reddit"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Reddit post/comment search for sentiment and signal detection."
 
   # ── External MCPs (Tier 1.5 — general web access) ──
@@ -145,18 +149,21 @@ mcpServers:
     command: uvx
     args: ["mcp-server-fetch"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Fetch any URL and extract contents as markdown. Use for reading web pages, SEC filings, press releases, API docs, or any public URL. No API key needed."
 
   webresearch:
     command: npx
     args: ["-y", "@mzxrai/mcp-webresearch@latest"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Google web search + page scraping. Use search_google for queries, visit_page to read/extract content, take_screenshot for visual capture. No API key needed. Best for real-time news, company research, regulatory updates, and any question requiring current web data."
 
   google-news:
     command: uvx
     args: ["--refresh", "--with", "fastmcp>=2.9.2,<3", "google-news-trends-mcp@latest"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Google News + Google Trends. Tools: get_top_news (headlines), get_news_by_keyword (search), get_news_by_topic (BUSINESS/TECHNOLOGY/SCIENCE/HEALTH/SPORTS/ENTERTAINMENT/WORLD/NATION), get_news_by_location (country/region news), get_trending_keywords (Google Trends by location). No API key needed. Best for structured news monitoring and trend detection."
 
   tavily:
@@ -175,30 +182,35 @@ mcpServers:
     command: node
     args: ["__HOME__/augur/mcp-nodes/node_modules/.bin/hackernews-mcp"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Hacker News stories, comments, Algolia search. Tech/startup sentiment signal."
 
   arxiv:
     command: uv
     args: ["tool", "run", "arxiv-mcp-server"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "arXiv paper search, metadata, download. Research signal for thematic plays (AI, biotech, materials, etc.)."
 
   math:
     command: uv
     args: ["tool", "run", "mcp-mathematics"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "52 math functions, 158 unit conversions, financial calcs (NPV, IRR, loan amortization). AST-secure eval."
 
   regression:
     command: uvx
     args: ["mcp-ols"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "OLS + logistic regression, residual diagnostics, VIF, Cook's distance. Reads CSV/Excel/JSON/Parquet/SQLite."
 
   crypto-sentiment:
     command: uv
     args: ["--directory", "__HOME__/augur/vendor/crypto-feargreed-mcp", "run", "main.py"]
     chatMenu: false
+    initTimeout: 120000
     serverInstructions: "Real-time + historical Crypto Fear & Greed Index. Sentiment signal for crypto markets."
 
 # ── Agents Endpoint ─────────────────────────
