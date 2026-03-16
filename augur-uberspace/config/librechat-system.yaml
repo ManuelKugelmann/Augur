@@ -9,6 +9,18 @@ interface:
     use: true
     create: true
 
+# ── File Uploads ──────────────────────────
+# Disabled — no RAG backend (no Meilisearch/vector DB).
+# Prevents "RAG API is not running" warnings in the UI.
+fileConfig:
+  endpoints:
+    agents:
+      disabled: true
+    assistants:
+      disabled: true
+    default:
+      disabled: true
+
 # ── MCP Settings ───────────────────────────
 # Domain allowlist for MCP servers (required since config v1.3.x).
 # Without this, localhost connections are blocked by default SSRF protection.
