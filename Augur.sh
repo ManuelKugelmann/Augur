@@ -275,13 +275,13 @@ case "$CMD" in
                 cat > "$APP/librechat.yaml" <<'SAFEEOF'
 # LibreChat SAFE MODE — no MCP servers loaded
 # Restore with: augur safemode off
-version: 1.2.1
+version: 1.3.6
 cache: true
 registration:
   socialLogins: []
 interface:
   endpointsMenu: true
-  remoteAgents:
+  agents:
     use: true
     create: true
 endpoints:
@@ -980,7 +980,11 @@ SVCEOF
         ${EDITOR:-nano} "$APP/.env"
         ;;
     yaml)
-        ${EDITOR:-nano} "$APP/librechat.yaml"
+        echo -e "${CYAN}System config:${NC} $STACK/augur-uberspace/config/librechat-system.yaml (managed by Augur)"
+        echo -e "${CYAN}User config:${NC}   $APP/librechat-user.yaml (your customizations)"
+        echo -e "Opening user config for editing..."
+        ${EDITOR:-nano} "$APP/librechat-user.yaml"
+        echo -e "${YELLOW}⚠${NC} Run ${CYAN}augur restart${NC} to apply changes (merge + restart)"
         ;;
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
@@ -1112,7 +1116,7 @@ for kind, info in sorted(result.items()):
         echo "  augur check -t     Health check + run test suite (bats + pytest)"
         echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
         echo "  augur env          Edit .env"
-        echo "  augur yaml         Edit librechat.yaml"
+        echo "  augur yaml         Edit librechat-user.yaml (LLM endpoints, etc.)"
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Install / reinstall (idempotent):"

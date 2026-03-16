@@ -146,11 +146,22 @@ EOF
     [[ "$status" -eq 0 ]]
 }
 
-@test "setup.sh copies librechat.yaml and replaces __HOME__" {
+@test "setup.sh merges system+user yaml and replaces __HOME__" {
     local src="$TEST_SANDBOX/src_app"
     create_src_app "$src"
-    # Place librechat.yaml where setup.sh looks for it (mcps repo config)
-    echo "path: __HOME__/data" > "$STACK_DIR/augur-uberspace/config/librechat.yaml"
+    # Place system + user yaml where setup.sh looks for them
+    cat > "$STACK_DIR/augur-uberspace/config/librechat-system.yaml" <<'SYSEOF'
+version: 1.3.6
+mcpServers:
+  finance:
+    command: __HOME__/augur/venv/bin/python
+SYSEOF
+    cat > "$STACK_DIR/augur-uberspace/config/librechat-user.yaml" <<'USREOF'
+cache: true
+USREOF
+    # Copy merge script
+    cp "$REPO_ROOT/augur-uberspace/scripts/merge-librechat-yaml.py" \
+       "$STACK_DIR/augur-uberspace/scripts/merge-librechat-yaml.py"
     cat > "$STACK_DIR/augur-uberspace/config/.env.example" <<'EOF'
 CREDS_KEY=placeholder
 CREDS_IV=placeholder

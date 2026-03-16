@@ -29,7 +29,7 @@ _web_backend() {
 }
 
 # Files and dirs that survive updates
-PERSIST_FILES=(.env librechat.yaml .version .asset_ts)
+PERSIST_FILES=(.env librechat.yaml librechat-user.yaml .version .asset_ts)
 PERSIST_DIRS=(uploads logs images)
 
 # ── Pre-flight ──────────────────────────────
@@ -89,15 +89,31 @@ if [[ ! -f "$APP/api/server/index.js" ]]; then
     die "LibreChat app code missing from bundle. Use a release built with CI (git tag + push)."
 fi
 
-# ── Copy default config from mcps repo if missing ──
-# The LibreChat bundle is vanilla — config lives in the mcps repo.
-_LC_YAML_SRC="$STACK/augur-uberspace/config/librechat.yaml"
-if [[ ! -f "$APP/librechat.yaml" ]] && [[ -f "$_LC_YAML_SRC" ]]; then
-    cp "$_LC_YAML_SRC" "$APP/librechat.yaml"
-    sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
-    log "Copied default librechat.yaml from mcps repo (paths adjusted to $HOME)"
+# ── Merge system + user config on every start ──
+# System template (MCP servers, version, mcpSettings) always comes from repo.
+# User overlay (LLM endpoints, registration, cache) is preserved across updates.
+_SYS_YAML="$STACK/augur-uberspace/config/librechat-system.yaml"
+_USR_YAML_SRC="$STACK/augur-uberspace/config/librechat-user.yaml"
+_USR_YAML="$APP/librechat-user.yaml"
+_MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
+if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+    # Seed user overlay from template if missing
+    [[ ! -f "$_USR_YAML" ]] && cp "$_USR_YAML_SRC" "$_USR_YAML" && log "Created default librechat-user.yaml"
+    # Find a working Python (venv preferred, then system)
+    _MERGE_PY=""
+    for _py in "$STACK/venv/bin/python" python3 python; do
+        command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
+    done
+    if [[ -n "$_MERGE_PY" ]]; then
+        "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME"
+        log "Merged librechat.yaml (system + user, paths adjusted to $HOME)"
+    else
+        warn "Python with PyYAML not found — falling back to system template copy"
+        cp "$_SYS_YAML" "$APP/librechat.yaml"
+        sed -i "s|__HOME__|$HOME|g" "$APP/librechat.yaml"
+    fi
 elif [[ ! -f "$APP/librechat.yaml" ]]; then
-    warn "librechat.yaml not found in mcps repo — configure manually"
+    warn "librechat config not found in mcps repo — configure manually"
 fi
 
 # ── Check prebuilt MCP Node servers ─────────────

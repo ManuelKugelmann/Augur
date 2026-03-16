@@ -1,0 +1,13 @@
+# LibreChat user overrides — your customizations go here.
+# Preserved across updates. Edit with: augur yaml
+#
+# System settings (MCP servers, version, mcpSettings) come from
+# librechat-system.yaml and are managed by Augur — not editable here.
+#
+# Add your LLM endpoints, registration settings, or other LibreChat
+# options below. See docs/librechat-endpoints.md for examples.
+
+cache: true
+
+registration:
+  socialLogins: []
