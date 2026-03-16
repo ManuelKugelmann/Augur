@@ -227,6 +227,7 @@ async def generate_article_image(
                     break
                 await asyncio.sleep(1)
                 r = await client.get(poll_url, headers=auth_headers)
+                r.raise_for_status()
                 prediction = r.json()
 
             if prediction["status"] == "failed":

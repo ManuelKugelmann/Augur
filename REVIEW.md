@@ -335,6 +335,24 @@ called at EOF (prevents partial execution). No checksums, but acceptable for pri
 `augur user email password` exposes password in `ps` output and shell history.
 Interactive mode (`read -sp`) is the primary path; CLI args are for automation.
 
+#### 59. ~~Missing `raise_for_status()` in Replicate Polling~~ ✅ FIXED
+**File:** `src/servers/augur_publish.py:229`
+
+Polling loop called `.json()` on Replicate poll response without `raise_for_status()`.
+HTTP errors would cause `JSONDecodeError` instead of clean error handling. Added check.
+
+#### 60. ~~Unsafe Schedule Parsing in `is_due()`~~ ✅ FIXED
+**File:** `src/servers/augur_common.py:126-142`
+
+`schedule.split("/")` assumed exactly 2 parts; `int(h)` had no error handling.
+Malformed schedules could crash cron. Wrapped in `try/except (ValueError, TypeError)`.
+
+#### 61. ~~Missing JSONDecodeError Handling in `space_weather()`~~ ✅ FIXED
+**File:** `src/servers/weather_server.py:46-52`
+
+`.json()` called on NOAA responses without JSONDecodeError handling. If API returns
+status 200 with non-JSON body, parse crashes. Added `_safe_json()` wrapper with fallback.
+
 ---
 
 ### Test Coverage Gaps (continued)
@@ -359,7 +377,7 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Fixed | 7 | #46 (OAuth KeyError), #47 (regex replacement), #49 (close None), #50 (signal order), #53 (grep anchor), #54 (systemd Unit), #55 (EnvironmentFile) |
+| Fixed | 10 | #46-47, #49-50, #53-55, #59-61 |
 | Open | 1 | #48 (polling backoff, low priority) |
 | Accepted | 3 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords) |
 | Low/Style | 1 | #56 (find_profile 36 queries, scaling concern) |
