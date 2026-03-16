@@ -48,7 +48,7 @@ fi
 CMD="${1:-help}"
 
 case "$CMD" in
-    s|status)
+    status)
         _svc_status librechat || echo "librechat: not registered"
         _svc_status trading || true
         _svc_status charts || true
@@ -78,7 +78,7 @@ case "$CMD" in
         _svc_stop charts || true
         echo -e "${GREEN}✓${NC} Stopped (librechat + trading + charts)"
         ;;
-    r|restart)
+    restart)
         _svc_restart librechat || die "Failed to restart librechat"
         _svc_restart trading || true
         _svc_restart charts || true
@@ -94,7 +94,7 @@ case "$CMD" in
             fi
         done
         ;;
-    l|logs)
+    logs)
         _svc_logs librechat || die "Failed to tail logs (is librechat registered?)"
         ;;
     testrun)
@@ -121,7 +121,7 @@ case "$CMD" in
                 ;;
         esac
         ;;
-    v|version)
+    version)
         cat "$APP/.version" 2>/dev/null || echo "unknown"
         ;;
     u|update)
@@ -682,13 +682,13 @@ for kind, info in sorted(result.items()):
         echo -e "${CYAN}Augur — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
         echo ""
-        echo "  augur s|status     Show service status + version"
+        echo "  augur status       Show service status + version"
         echo "  augur start        Start all services"
         echo "  augur stop         Stop all services"
-        echo "  augur r|restart    Restart all services"
-        echo "  augur l|logs       Tail service logs"
+        echo "  augur restart      Restart all services"
+        echo "  augur logs         Tail service logs"
         echo "  augur testrun      Run LibreChat in foreground (see errors directly)"
-        echo "  augur v|version    Show installed version"
+        echo "  augur version      Show installed version"
         echo ""
         echo "  augur u|update     Update stack (git pull + deps + LibreChat release)"
         echo ""
