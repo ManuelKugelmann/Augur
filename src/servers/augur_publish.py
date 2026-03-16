@@ -559,6 +559,12 @@ async def post_social(
     if platform not in all_platforms:
         return {"error": f"Unknown platform: {platform}. Use: {', '.join(sorted(all_platforms))}"}
 
+    if image_path:
+        try:
+            Path(image_path).resolve().relative_to(Path(site_dir()).resolve())
+        except ValueError:
+            return {"error": "image_path must be within site directory"}
+
     if platform == "bluesky":
         return await _post_bluesky(caption, article_url, image_path)
     elif platform == "mastodon":

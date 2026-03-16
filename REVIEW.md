@@ -368,6 +368,28 @@ Multiple servers called `.json()` on HTTP responses but only caught `httpx.HTTPE
 `json.JSONDecodeError` (subclass of `ValueError`) was uncaught — if an API returned
 HTTP 200 with non-JSON body, the tool would crash. Added `ValueError` to all catch clauses.
 
+#### 64. ~~sed Metacharacter Injection in MongoDB URI~~ ✅ FIXED
+**File:** `augur-uberspace/scripts/setup.sh`
+
+MongoDB connection strings can contain `&` and `\` characters which are sed
+metacharacters. `sed -i "s|...|$DERIVED|"` would corrupt the URI. Fixed by
+escaping `&` and `\` before substitution: `printf '%s' "$DERIVED" | sed 's|[&\\]|\\&|g'`.
+
+#### 65. Sync File I/O in Async Functions — ACCEPTED
+**Files:** `augur_publish.py`, `augur_score.py`
+
+`Path.read_bytes()`, `Path.read_text()`, `Path.write_text()` are synchronous
+blocking calls inside async functions. At current scale (small files, single
+concurrent user) this is negligible. If throughput becomes a concern, move to
+`aiofiles` or `asyncio.to_thread()`.
+
+#### 66. ~~Path Traversal in Social Posting~~ ✅ FIXED
+**File:** `src/servers/augur_publish.py:557-561`
+
+`post_social()` passed `image_path` to `_post_bluesky()`/`_post_mastodon()` without
+boundary validation. A crafted path like `../../etc/passwd` could read arbitrary files
+and upload them. Added `path.resolve().relative_to(site_dir)` check, matching #62 fix.
+
 ---
 
 ### Test Coverage Gaps (continued)
@@ -392,7 +414,7 @@ T4 and T6 from second review remain open (social posting image upload, alert hoo
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
 | **Third review** | | |
-| Fixed | 12 | #46-47, #49-50, #53-55, #59-63 |
+| Fixed | 14 | #46-47, #49-50, #53-55, #59-64, #66 |
 | Open | 1 | #48 (polling backoff, low priority) |
-| Accepted | 3 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords) |
+| Accepted | 4 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords), #65 (sync I/O) |
 | Low/Style | 1 | #56 (find_profile 36 queries, scaling concern) |

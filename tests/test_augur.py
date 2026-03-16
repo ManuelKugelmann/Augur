@@ -971,12 +971,20 @@ class TestGenerateSocialCards:
 
 @pytest.mark.skipif(not _can_import("httpx"), reason=_httpx_reason)
 class TestPostSocialImage:
-    def test_post_social_accepts_image_path(self, augur, monkeypatch):
+    def test_post_social_accepts_image_path(self, augur, site_dir, monkeypatch):
         monkeypatch.delenv("BLUESKY_HANDLE", raising=False)
+        img = site_dir / "card.webp"
+        img.write_bytes(b"fake")
         result = _run(augur.post_social(
             "the", "bluesky", "test", "https://example.com",
-            image_path="/tmp/card.webp"))
+            image_path=str(img)))
         assert "BLUESKY" in result.get("error", "")
+
+    def test_post_social_rejects_path_traversal(self, augur, site_dir, monkeypatch):
+        result = _run(augur.post_social(
+            "the", "bluesky", "test", "https://example.com",
+            image_path="/etc/passwd"))
+        assert "image_path must be within site directory" in result.get("error", "")
 
 
 # ---------------------------------------------------------------------------
