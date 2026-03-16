@@ -14,6 +14,24 @@ cache: true
 registration:
   socialLogins: []
 
+# ── Web Search ────────────────────────────
+# Adds inline search results in chat (no agent needed).
+# Pick ONE provider: SearXNG (free) or Serper (2,500 free/mo).
+# Set the matching env var in .env (augur env), then uncomment.
+
+# Option A: SearXNG (free, public instance or self-hosted)
+# Public instances: https://searx.space — pick one with good uptime.
+# Self-hosted: pip install searxng (or Docker)
+#
+# webSearch:
+#   searxngInstanceUrl: "${SEARXNG_INSTANCE_URL}"
+
+# Option B: Serper (2,500 free searches/month, Google results)
+# Key: https://serper.dev
+#
+# webSearch:
+#   serperApiKey: "${SERPER_API_KEY}"
+
 # ── LLM Endpoints ──────────────────────────
 # Set the API key in .env (augur env), then uncomment the block below.
 # Only include providers you have keys for.
