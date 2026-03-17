@@ -738,11 +738,15 @@ PYEOF
         if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -f "$STACK/venv/bin/python" ]]; then
             sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
             LC_URL="http://localhost:${LC_PORT:-3080}"
-            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$HOUR" "$MIN" <<'PYEOF' 2>&1 \
+            mkdir -p "$HOME/logs/agents"
+            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$HOUR" "$MIN" "$HOME/logs/agents" <<'PYEOF' 2>&1 \
                 | while read -r line; do _cron_log "agents: $line"; done
-import httpx, json, sys
+import httpx, json, sys, os
+from datetime import datetime, timezone
 
-lc_url, api_key, hour, minute = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+lc_url, api_key = sys.argv[1], sys.argv[2]
+hour, minute = int(sys.argv[3]), int(sys.argv[4])
+log_dir = sys.argv[5]
 headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
 # ── Dispatch table: (name_match, due_check, message, timeout) ──
@@ -777,12 +781,58 @@ try:
 except Exception as e:
     print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
 
-# Build name→id lookup (match by substring in id or name)
+# Build name->id lookup (match by substring in id or name)
 def find_agent(name_match):
     for aid, m in agents.items():
         if name_match in aid.lower() or name_match in m.get("name", "").lower():
             return aid
     return None
+
+def stream_agent(agent_id, message, timeout, name_match):
+    """Invoke agent with streaming, write worklog to file, return content."""
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    log_file = os.path.join(log_dir, f"{name_match}_{ts}.log")
+    content_parts = []
+    try:
+        with httpx.stream("POST", f"{lc_url}/api/agents/v1/chat/completions",
+                          headers=headers,
+                          json={"model": agent_id,
+                                "messages": [{"role": "user", "content": message}],
+                                "stream": True},
+                          timeout=timeout) as resp:
+            if resp.status_code != 200:
+                err = f"ERROR {name_match}: {resp.status_code}"
+                with open(log_file, "w") as f:
+                    f.write(f"[{ts}] {err}\n")
+                return err
+            with open(log_file, "w") as f:
+                f.write(f"[{ts}] agent={name_match} id={agent_id}\n")
+                f.write(f"[{ts}] prompt: {message}\n")
+                f.write(f"{'='*60}\n")
+                for line in resp.iter_lines():
+                    if not line or not line.startswith("data: "):
+                        continue
+                    data_str = line[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data_str)
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                        text = delta.get("content", "")
+                        if text:
+                            content_parts.append(text)
+                            f.write(text)
+                            f.flush()
+                    except json.JSONDecodeError:
+                        pass
+                f.write(f"\n{'='*60}\n")
+                f.write(f"[{ts}] done\n")
+    except Exception as e:
+        with open(log_file, "a") as f:
+            f.write(f"\n[ERROR] {e}\n")
+        return f"ERROR {name_match}: {e}"
+    content = "".join(content_parts)
+    return f"OK {name_match}: {content[:200]}"
 
 # Invoke due agents
 invoked = 0
@@ -794,21 +844,19 @@ for name_match, due_check, message, timeout in DISPATCH:
         print(f"SKIP {name_match}: agent not found")
         continue
     print(f"invoking {name_match} ({agent_id})")
-    try:
-        r = httpx.post(f"{lc_url}/api/agents/v1/chat/completions",
-                       headers=headers,
-                       json={"model": agent_id,
-                             "messages": [{"role": "user", "content": message}],
-                             "stream": False},
-                       timeout=timeout)
-        if r.status_code == 200:
-            content = r.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-            print(f"OK {name_match}: {content[:200]}")
-        else:
-            print(f"ERROR {name_match}: {r.status_code} {r.text[:200]}", file=sys.stderr)
-    except Exception as e:
-        print(f"ERROR {name_match}: {e}", file=sys.stderr)
+    result = stream_agent(agent_id, message, timeout, name_match)
+    print(result)
     invoked += 1
+
+# Clean up old logs (keep last 7 days)
+import glob, time
+cutoff = time.time() - 7 * 86400
+for old_log in glob.glob(os.path.join(log_dir, "*.log")):
+    try:
+        if os.path.getmtime(old_log) < cutoff:
+            os.remove(old_log)
+    except OSError:
+        pass
 
 print(f"done: {invoked} agents invoked")
 PYEOF
@@ -1250,6 +1298,216 @@ for kind, info in sorted(result.items()):
 "
         echo -e "${GREEN}✓${NC} Reseed complete"
         ;;
+    trigger)
+        # Invoke an agent interactively with streaming output to terminal
+        AGENT_NAME="${2:-}"
+        AGENT_MSG="${3:-}"
+        if [[ -z "$AGENT_NAME" ]]; then
+            echo -e "${YELLOW}Usage: augur trigger <agent-name> [message]${NC}"
+            echo ""
+            echo "  Agents: cron-planner, market-data, osint-data, signals-data,"
+            echo "          market-analyst, osint-analyst, signals-analyst, synthesizer,"
+            echo "          news-the-augur, news-der-augur, news-financial-augur,"
+            echo "          news-finanz-augur, trader, charter, live-chat"
+            echo ""
+            echo "  augur trigger cron-planner                   # default cron prompt"
+            echo "  augur trigger market-data 'Refresh US techs' # custom prompt"
+            echo ""
+            echo "  Output streams to terminal AND saves to ~/logs/agents/"
+        else
+            [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] || die "AUGUR_AGENTS_API_KEY not set in .env"
+            [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
+            LC_URL="http://localhost:${LC_PORT:-3080}"
+            mkdir -p "$HOME/logs/agents"
+            echo -e "${CYAN}Triggering agent: ${AGENT_NAME}${NC}"
+            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$AGENT_NAME" "$HOME/logs/agents" "$AGENT_MSG" <<'PYEOF'
+import httpx, json, sys, os
+from datetime import datetime, timezone
+
+lc_url, api_key, agent_name, log_dir = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+custom_msg = sys.argv[5] if len(sys.argv) > 5 and sys.argv[5] else ""
+headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+# Default prompts per agent (same as cron dispatch)
+DEFAULT_PROMPTS = {
+    "cron-planner": (
+        "Execute your periodic routine: "
+        "1) Read plans (store_get_notes kind=plan). "
+        "2) Check risk status. "
+        "3) For watched entities, refresh data via data agents. "
+        "4) Run analysis if data is stale. "
+        "5) Update plans with results. "
+        "6) Log summary as event."
+    ),
+    "news-the-augur": "Check augur_due_now() and produce any due articles.",
+    "news-der-augur": "Check augur_due_now() and produce any due articles.",
+    "news-financial-augur": "Check augur_due_now() and produce any due articles.",
+    "news-finanz-augur": "Check augur_due_now() and produce any due articles.",
+    "market-data": "Scrape latest market data for all watched entities and store snapshots.",
+    "osint-data": "Scrape latest OSINT data: disasters, conflicts, weather, health, elections.",
+    "signals-data": "Scrape latest signals: RSS feeds, Reddit, HN, crypto sentiment.",
+    "market-analyst": "Analyze latest market data trends. Read your previous notes first.",
+    "osint-analyst": "Analyze latest OSINT data: threat assessment, country risk, supply chain exposure.",
+    "signals-analyst": "Analyze latest signals: sentiment, narratives, filing significance.",
+    "synthesizer": "Read all analyst notes and produce a cross-domain briefing.",
+}
+message = custom_msg or DEFAULT_PROMPTS.get(agent_name, f"Run your primary task.")
+
+# Fetch agent list
+try:
+    r = httpx.get(f"{lc_url}/api/agents/v1/models", headers=headers, timeout=10)
+    if r.status_code != 200:
+        print(f"ERROR: agent list {r.status_code}", file=sys.stderr); sys.exit(1)
+    agents = {m["id"]: m for m in r.json().get("data", [])}
+except Exception as e:
+    print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
+
+# Find agent
+agent_id = None
+for aid, m in agents.items():
+    if agent_name in aid.lower() or agent_name in m.get("name", "").lower():
+        agent_id = aid; break
+if not agent_id:
+    print(f"ERROR: agent '{agent_name}' not found. Available:")
+    for aid, m in agents.items():
+        print(f"  {m.get('name', aid)}")
+    sys.exit(1)
+
+ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+log_file = os.path.join(log_dir, f"{agent_name}_{ts}.log")
+print(f"Agent: {agent_name} ({agent_id})")
+print(f"Prompt: {message}")
+print(f"Log: {log_file}")
+print("=" * 60)
+
+try:
+    with httpx.stream("POST", f"{lc_url}/api/agents/v1/chat/completions",
+                      headers=headers,
+                      json={"model": agent_id,
+                            "messages": [{"role": "user", "content": message}],
+                            "stream": True},
+                      timeout=600) as resp:
+        if resp.status_code != 200:
+            print(f"ERROR: {resp.status_code} {resp.read().decode()[:500]}", file=sys.stderr)
+            sys.exit(1)
+        with open(log_file, "w") as f:
+            f.write(f"[{ts}] agent={agent_name} id={agent_id}\n")
+            f.write(f"[{ts}] prompt: {message}\n")
+            f.write(f"{'='*60}\n")
+            for line in resp.iter_lines():
+                if not line or not line.startswith("data: "):
+                    continue
+                data_str = line[6:]
+                if data_str.strip() == "[DONE]":
+                    break
+                try:
+                    chunk = json.loads(data_str)
+                    delta = chunk.get("choices", [{}])[0].get("delta", {})
+                    text = delta.get("content", "")
+                    if text:
+                        sys.stdout.write(text)
+                        sys.stdout.flush()
+                        f.write(text)
+                        f.flush()
+                except json.JSONDecodeError:
+                    pass
+            f.write(f"\n{'='*60}\n[{ts}] done\n")
+except Exception as e:
+    print(f"\nERROR: {e}", file=sys.stderr)
+    sys.exit(1)
+print(f"\n{'='*60}")
+print(f"Done. Log saved to {log_file}")
+PYEOF
+        fi
+        ;;
+    worklog)
+        # View agent worklogs (file logs + MongoDB journal notes)
+        LOG_DIR="$HOME/logs/agents"
+        SUB="${2:-}"
+        case "$SUB" in
+            tail|"")
+                # Tail the most recent log file, or follow new ones
+                if [[ -d "$LOG_DIR" ]] && ls "$LOG_DIR"/*.log &>/dev/null; then
+                    LATEST=$(ls -t "$LOG_DIR"/*.log 2>/dev/null | head -1)
+                    echo -e "${CYAN}Latest worklog: ${LATEST}${NC}"
+                    cat "$LATEST"
+                else
+                    echo -e "${YELLOW}No worklogs yet. Run: augur trigger <agent> or wait for cron.${NC}"
+                fi
+                ;;
+            list)
+                # List recent worklogs
+                if [[ -d "$LOG_DIR" ]] && ls "$LOG_DIR"/*.log &>/dev/null; then
+                    echo -e "${CYAN}Recent agent worklogs:${NC}"
+                    ls -lt "$LOG_DIR"/*.log 2>/dev/null | head -20 | while read -r line; do
+                        echo "  $line"
+                    done
+                else
+                    echo -e "${YELLOW}No worklogs found in ${LOG_DIR}${NC}"
+                fi
+                ;;
+            follow)
+                # Follow worklogs as they appear (watch mode)
+                echo -e "${CYAN}Watching for new worklogs in ${LOG_DIR}/ (Ctrl-C to stop)${NC}"
+                mkdir -p "$LOG_DIR"
+                LAST_FILE=""
+                while true; do
+                    NEWEST=$(ls -t "$LOG_DIR"/*.log 2>/dev/null | head -1)
+                    if [[ -n "$NEWEST" ]] && [[ "$NEWEST" != "$LAST_FILE" ]]; then
+                        LAST_FILE="$NEWEST"
+                        echo -e "\n${CYAN}──── $(basename "$NEWEST") ────${NC}"
+                        tail -f "$NEWEST" &
+                        TAIL_PID=$!
+                    fi
+                    sleep 5
+                done
+                ;;
+            journal)
+                # Query journal notes from MongoDB (what agents write internally)
+                [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
+                AGENT_TAG="${3:-cron}"
+                LIMIT="${4:-10}"
+                echo -e "${CYAN}Agent journal notes (tag=${AGENT_TAG}, limit=${LIMIT}):${NC}"
+                "$STACK/venv/bin/python" - <<PYEOF
+import os, sys, json
+sys.path.insert(0, os.path.join("$STACK", "src", "store"))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join("$STACK", ".env"))
+except ImportError:
+    pass
+from server import _notes_col
+
+col = _notes_col()
+query = {"kind": "journal", "tags": "$AGENT_TAG"}
+results = list(col.find(query).sort("updated_at", -1).limit(int("$LIMIT")))
+if not results:
+    print("  No journal entries found.")
+else:
+    for note in results:
+        ts = note.get("updated_at", note.get("created_at", "?"))
+        title = note.get("title", "(untitled)")
+        tags = ", ".join(note.get("tags", []))
+        print(f"\n  [{ts}] {title}  ({tags})")
+        content = note.get("content", "")
+        # Show first 500 chars of content
+        preview = content[:500] + ("..." if len(content) > 500 else "")
+        for line in preview.split("\n"):
+            print(f"    {line}")
+PYEOF
+                ;;
+            *)
+                echo -e "${YELLOW}Usage: augur worklog [tail|list|follow|journal]${NC}"
+                echo ""
+                echo "  augur worklog          Show latest agent worklog"
+                echo "  augur worklog list     List recent worklogs"
+                echo "  augur worklog follow   Watch for new worklogs in real-time"
+                echo "  augur worklog journal [tag] [limit]"
+                echo "                         Query agent journal notes from MongoDB"
+                echo "                         Tags: cron, log, news-the, news-der, etc."
+                ;;
+        esac
+        ;;
     *)
         echo -e "${CYAN}Augur — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
@@ -1276,6 +1534,8 @@ for kind, info in sorted(result.items()):
         echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"
         echo "  augur backups      List available backups"
         echo "  augur cron         Run cron hook (compact + agent invocation)"
+        echo "  augur trigger <a>  Invoke an agent with streaming output"
+        echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  augur user         Register a new LibreChat user account"
         echo "  augur agents       Seed multi-agent architecture (11 agents)"

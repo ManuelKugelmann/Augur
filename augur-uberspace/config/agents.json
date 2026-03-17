@@ -15,6 +15,11 @@
       "sys__server__sys_mcp_fetch",
       "sys__server__sys_mcp_filesystem"
     ],
+    "conversation_starters": [
+      "Scrape latest market data for all watched entities and store snapshots",
+      "Refresh price + indicator data for US tech stocks (AAPL, MSFT, GOOG, NVDA, TSLA)",
+      "What's the latest commodity price data? (oil, gold, copper)"
+    ],
     "edges": []
   },
   {
@@ -31,6 +36,11 @@
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch",
       "sys__server__sys_mcp_filesystem"
+    ],
+    "conversation_starters": [
+      "Scrape latest OSINT data: disasters, conflicts, weather, health, elections worldwide",
+      "What are the latest earthquake and volcanic events?",
+      "Check conflict data for MENA region and store any new events"
     ],
     "edges": []
   },
@@ -51,6 +61,11 @@
       "sys__server__sys_mcp_fetch",
       "sys__server__sys_mcp_filesystem"
     ],
+    "conversation_starters": [
+      "Scrape latest signals: RSS feeds, Reddit, HN, crypto sentiment",
+      "What are the top trending tickers on Reddit and HN right now?",
+      "Check crypto sentiment for BTC, ETH, SOL and store snapshots"
+    ],
     "edges": []
   },
   {
@@ -68,6 +83,11 @@
       "sys__server__sys_mcp_fetch"
     ],
     "_tool_filter_note": "Only note tools: store_save_note, store_get_notes, store_update_note, store_delete_note",
+    "conversation_starters": [
+      "Analyze latest market data trends. Read your previous notes first, then get fresh data.",
+      "What sector rotation patterns do you see in the current market data?",
+      "Review recent signal changes and write analysis notes"
+    ],
     "edges": ["market-data"]
   },
   {
@@ -83,6 +103,11 @@
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "Analyze latest OSINT data: threat assessment, country risk, supply chain exposure",
+      "What are the highest-risk geopolitical developments right now?",
+      "Review recent disaster and conflict events and write risk analysis notes"
     ],
     "edges": ["osint-data"]
   },
@@ -100,6 +125,11 @@
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
+    "conversation_starters": [
+      "Analyze latest signals: sentiment, narratives, filing significance",
+      "What narratives are emerging across RSS, Reddit, and HN?",
+      "Review recent signal data and write sentiment analysis notes"
+    ],
     "edges": ["signals-data"]
   },
   {
@@ -115,6 +145,11 @@
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "Read all analyst notes and produce a cross-domain briefing with composite risk scores",
+      "What cross-domain patterns do you see? (market + geopolitical + signals)",
+      "Correlate recent disaster/conflict events with market impact. Write a prediction."
     ],
     "edges": ["market-data", "osint-data", "signals-data"]
   },
@@ -132,6 +167,11 @@
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
+    "conversation_starters": [
+      "Execute your periodic routine: 1) Read plans (store_get_notes kind=plan). 2) Check risk status. 3) For watched entities, refresh data via data agents. 4) Run analysis if data is stale. 5) Update plans with results. 6) Log summary as event.",
+      "Show me your current plans and watchlists (store_get_notes kind=plan)",
+      "Read your recent execution logs (store_get_notes kind=journal tag=cron) and summarize coverage gaps"
+    ],
     "edges": ["market-data", "osint-data", "signals-data", "market-analyst", "osint-analyst", "signals-analyst", "synthesizer", "trader", "charter"]
   },
   {
@@ -147,6 +187,11 @@
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "Check augur_due_now() and produce any due articles.",
+      "What articles are due for The Augur? Show the schedule.",
+      "Write a Tomorrow article about the most significant current event"
     ],
     "edges": ["osint-data", "signals-data", "osint-analyst", "signals-analyst", "synthesizer"]
   },
@@ -164,6 +209,11 @@
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
+    "conversation_starters": [
+      "Prüfe augur_due_now() und produziere fällige Artikel.",
+      "Welche Artikel sind für Der Augur fällig? Zeige den Zeitplan.",
+      "Schreibe einen Morgen-Artikel über das bedeutendste aktuelle Ereignis"
+    ],
     "edges": ["osint-data", "signals-data", "osint-analyst", "signals-analyst", "synthesizer"]
   },
   {
@@ -179,6 +229,11 @@
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "Check augur_due_now() and produce any due articles.",
+      "What articles are due for Financial Augur? Show the schedule.",
+      "Write a Tomorrow article about the most significant market development"
     ],
     "edges": ["market-data", "signals-data", "market-analyst", "osint-analyst", "synthesizer"]
   },
@@ -196,6 +251,11 @@
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
+    "conversation_starters": [
+      "Prüfe augur_due_now() und produziere fällige Artikel.",
+      "Welche Artikel sind für Finanz Augur fällig? Zeige den Zeitplan.",
+      "Schreibe einen Morgen-Artikel über die bedeutendste Marktentwicklung"
+    ],
     "edges": ["market-data", "signals-data", "market-analyst", "osint-analyst", "synthesizer"]
   },
   {
@@ -210,6 +270,10 @@
       "sys__server__sys_mcp_augur",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "Check risk status and show current portfolio positions",
+      "What is the current daily action budget remaining?"
     ],
     "edges": []
   },
@@ -226,6 +290,11 @@
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
+    "conversation_starters": [
+      "Chart the last 30 days of AAPL price + RSI indicators",
+      "Show me a comparison chart of BTC vs ETH price trends",
+      "Chart recent events by severity (bar chart)"
+    ],
     "edges": []
   },
   {
@@ -241,6 +310,12 @@
       "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "What's happening in markets and the world right now? Give me a full briefing.",
+      "Run a full data refresh: scrape all domains, analyze, and synthesize a report.",
+      "Show me recent analyst notes and any active predictions.",
+      "What are the highest-risk entities in my watchlist right now?"
     ],
     "edges": ["market-data", "osint-data", "signals-data", "market-analyst", "osint-analyst", "signals-analyst", "synthesizer", "cron-planner", "news-the-augur", "news-der-augur", "news-financial-augur", "news-finanz-augur", "trader", "charter"]
   }
