@@ -13,29 +13,19 @@ body {
   flex: 1;
 }
 
-// Masthead — sticky, CSS-only scale via scroll-driven animation
-// Uses transform (GPU-composited) to avoid layout reflow jitter.
-// A sentinel element's view-timeline triggers the shrink so
-// position:sticky and animation-timeline don't conflict.
+// Masthead — sticky, CSS-only scale via scroll-driven animation.
+// Only .masthead__brand scales (via animation-timeline: scroll()
+// on a non-sticky child) — the nav stays full-size.
+// transform: scale() is GPU-composited so no layout reflow jitter.
 
-@keyframes masthead-scale {
-  0%   { transform: scale(1); }
-  100% { transform: scale(0.7); }
+@keyframes brand-scale {
+  from { transform: scale(1); }
+  to   { transform: scale(0.7); }
 }
 
 @keyframes subtitle-hide {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-// Sentinel sits above the masthead and spans its full height.
-// While it's in view the animation stays at 0%; as it exits
-// the viewport the masthead scales down.
-.masthead-sentinel {
-  height: 150px;
-  margin-bottom: -150px;      // overlap: doesn't push content down
-  pointer-events: none;
-  view-timeline: --masthead-shrink block;
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 .masthead {
@@ -47,13 +37,16 @@ body {
   z-index: 100;
   background: var(--bg);
 
+  // Brand block (title + subtitle) scales down on scroll.
+  // animation-timeline: scroll() is safe here because this div
+  // is NOT position:sticky — no feedback loop.
   &__brand {
+    padding: 1rem 0 0;
     transform-origin: top center;
     will-change: transform;
-    animation: masthead-scale linear both;
-    animation-timeline: --masthead-shrink;
-    animation-range: exit 0% exit 100%;
-    padding: 1rem 0 0;
+    animation: brand-scale linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 150px;
   }
 
   &__title {
@@ -79,8 +72,8 @@ body {
     font-size: 0.95rem;
     color: var(--meta);
     animation: subtitle-hide linear both;
-    animation-timeline: --masthead-shrink;
-    animation-range: exit 0% exit 60%;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 100px;
   }
 
   &__nav {

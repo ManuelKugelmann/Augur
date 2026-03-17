@@ -1,6 +1,5 @@
 {% assign brand_key = page.brand | default: "the" %}
 {% assign brand = site.data.brands[brand_key] %}
-<div class="masthead-sentinel" aria-hidden="true"></div>
 <header class="masthead">
   <div class="masthead__brand">
     <a href="{{ '/' | relative_url }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
