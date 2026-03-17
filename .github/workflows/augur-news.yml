@@ -12,8 +12,6 @@ on:
     paths:
       - 'augur-site/**'
       - '.github/workflows/augur-news.yml'
-  pull_request_target:
-    types: [closed]
   workflow_dispatch:
 
 permissions:
@@ -182,24 +180,3 @@ jobs:
                 body,
               });
             }
-
-  # --- Cleanup preview/ when PR closes ---
-  cleanup-preview:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Remove preview from gh-pages
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          git clone --branch gh-pages --single-branch --depth=1 \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            _gh-pages 2>/dev/null || exit 0
-
-          cd _gh-pages
-          if [ -d preview ]; then
-            git rm -rf preview
-            git commit -m "Remove preview (PR #${{ github.event.pull_request.number }} closed)"
-            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
-          fi
