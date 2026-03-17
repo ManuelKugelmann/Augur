@@ -32,7 +32,7 @@ class TestSiteDir:
     def test_default_dir(self, monkeypatch):
         monkeypatch.delenv("AUGUR_SITE_DIR", raising=False)
         result = ac.site_dir()
-        assert result.endswith("augur-site")
+        assert result.endswith("augur.news")
 
     def test_custom_dir(self, monkeypatch):
         monkeypatch.setenv("AUGUR_SITE_DIR", "/tmp/my-site")

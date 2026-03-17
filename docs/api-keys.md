@@ -73,7 +73,7 @@ Site configuration (not API keys, but needed for publishing):
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AUGUR_SITE_DIR` | `~/augur-site` | Local checkout of GitHub Pages site |
+| `AUGUR_SITE_DIR` | `~/augur.news` | Local checkout of GitHub Pages site |
 | `AUGUR_SITE_URL` | `https://github.com/ManuelKugelmann/Augur` | Public URL of the site |
 | `AUGUR_SITE_BRANCH` | `augur_news` | Git branch for publishing |
 

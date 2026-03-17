@@ -81,7 +81,7 @@ _ITW_HEADERS = re.compile(r"^##\s+(?:In The Works|In Arbeit)\s*$", re.MULTILINE)
 
 
 def site_dir() -> str:
-    return os.environ.get("AUGUR_SITE_DIR", os.path.expanduser("~/augur-site"))
+    return os.environ.get("AUGUR_SITE_DIR", os.path.expanduser("~/augur.news"))
 
 
 def site_base_url() -> str:
