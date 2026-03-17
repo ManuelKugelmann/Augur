@@ -2,7 +2,6 @@
 {% assign brand = site.data.brands[brand_key] %}
 {% assign locale = brand.locale | default: "en" %}
 <footer class="page-footer">
-  <p>{{ brand.name | default: site.title }}</p>
   <p>
     {% if locale == "de" %}
     <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
