@@ -22,7 +22,7 @@
 // Theme switcher UI
 .theme-switcher {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
 
   &__btn {

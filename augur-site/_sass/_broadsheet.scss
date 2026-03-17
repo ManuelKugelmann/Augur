@@ -244,14 +244,8 @@ hr,
   border-top: 1px solid var(--meta);
   font-size: 0.75rem;
   color: var(--meta);
-
-  &__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 720px;
-    margin: 0 auto;
-  }
+  text-align: center;
+  position: relative;
 
   &__legal {
     margin: 0;

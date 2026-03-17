@@ -60,7 +60,7 @@ layout: default
     <summary class="dev-links__toggle">Card Inspectors</summary>
     <ul class="dev-links__list">
       <li><a href="https://opengraph.xyz/url/{{ page_url | url_encode }}" target="_blank" rel="noopener">OpenGraph.xyz</a></li>
-      <li><a href="https://cards-dev.twitter.com/validator" target="_blank" rel="noopener">X / Twitter Card Validator</a></li>
+      <li><a href="https://cards-dev.twitter.com/validator?url={{ page_url | url_encode }}" target="_blank" rel="noopener">X / Twitter Card Validator</a></li>
       <li><a href="https://developers.facebook.com/tools/debug/?q={{ page_url | url_encode }}" target="_blank" rel="noopener">Facebook Debugger</a></li>
       <li><a href="https://www.linkedin.com/post-inspector/inspect/{{ page_url | url_encode }}" target="_blank" rel="noopener">LinkedIn Post Inspector</a></li>
     </ul>
