@@ -266,8 +266,8 @@ hr,
     &[data-edition="financial"],
     &[data-edition="finanz"] {
       --card-bg: oklch(97% 0.009 255);
-      --card-accent: oklch(40% 0.100 252);
-      --card-meta: oklch(48% 0.022 248);
+      --card-accent: oklch(40% 0.164 252);
+      --card-meta: oklch(48% 0.028 248);
     }
 
     // Dark mode edition palettes (oklch)
@@ -279,9 +279,9 @@ hr,
     }
     [data-theme="dark"] &[data-edition="financial"],
     [data-theme="dark"] &[data-edition="finanz"] {
-      --card-bg: oklch(25% 0.013 255);
-      --card-accent: oklch(57% 0.109 248);
-      --card-meta: oklch(61% 0.021 248);
+      --card-bg: oklch(25% 0.008 255);
+      --card-accent: oklch(57% 0.162 248);
+      --card-meta: oklch(61% 0.017 248);
     }
 
     &:hover {
