@@ -4,13 +4,15 @@
   {% include head.html %}
 </head>
 <body data-brand="{{ page.brand | default: 'the' }}">
+  {% include masthead.html %}
   <div class="page-wrapper">
-    {% include masthead.html %}
     <main>
       {{ content }}
     </main>
   </div>
-  {% include footer.html %}
-  {% include disclaimer.html %}
+  <div class="page-bottom">
+    {% include footer.html %}
+    {% include disclaimer.html %}
+  </div>
 </body>
 </html>

@@ -13,12 +13,37 @@ body {
   flex: 1;
 }
 
-// Masthead
+// Masthead — sticky, scales down on scroll
 .masthead {
   text-align: center;
-  padding: 1.5rem 0 1rem;
+  padding: 1.5rem 1rem 1rem;
   border-bottom: 4px double var(--ink);
-  margin-bottom: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  transition: padding 0.25s ease, transform 0.25s ease;
+
+  &--compact {
+    padding: 0.4rem 1rem 0.3rem;
+
+    .masthead__title {
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 0;
+    }
+
+    .masthead__subtitle {
+      display: none;
+    }
+
+    .masthead__nav {
+      margin-top: 0.3rem;
+      padding-top: 0.3rem;
+      gap: 1rem;
+      font-size: 0.7rem;
+    }
+  }
 
   &__title {
     display: block;
@@ -30,6 +55,7 @@ body {
     color: var(--ink);
     text-decoration: none;
     margin-bottom: 0.1em;
+    transition: font-size 0.25s ease;
 
     &:hover {
       color: var(--ink);
@@ -42,6 +68,7 @@ body {
     font-style: italic;
     font-size: 0.95rem;
     color: var(--meta);
+    transition: opacity 0.2s ease;
   }
 
   &__nav {
@@ -51,6 +78,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 1.5rem;
+    transition: margin 0.25s ease, padding 0.25s ease, gap 0.25s ease;
   }
 
   &__link {
@@ -237,15 +265,24 @@ hr,
   }
 }
 
+// Sticky bottom group
+.page-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+}
+
 // Footer
 .page-footer {
-  margin-top: auto;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 1rem;
   border-top: 1px solid var(--meta);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--meta);
-  text-align: center;
-  position: relative;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 100%;
 
   &__legal {
     margin: 0;

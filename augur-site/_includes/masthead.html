@@ -36,5 +36,16 @@
     b.classList.toggle('theme-switcher__btn--active',
       b.getAttribute('data-set-theme') === t);
   });
+
+  // Compact masthead on scroll
+  var mast = document.querySelector('.masthead');
+  if (mast) {
+    var threshold = 60;
+    var onScroll = function() {
+      mast.classList.toggle('masthead--compact', window.scrollY > threshold);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 })();
 </script>
