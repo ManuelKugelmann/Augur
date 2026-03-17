@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       timestamp: ${{ steps.push.outputs.timestamp }}
+      pushed_at: ${{ steps.push.outputs.pushed_at }}
     steps:
       - name: Checkout augur_news (or create orphan)
         run: |
@@ -30,6 +31,7 @@ jobs:
           }
 
       - name: Create/update sentinel article
+        id: push
         run: |
           cd data
           DATE_KEY=$(date -u +%Y-%m-%d)
@@ -83,6 +85,7 @@ jobs:
           git push -u origin augur_news
 
           echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+          echo "pushed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
           echo "### Sentinel pushed" >> "$GITHUB_STEP_SUMMARY"
           echo "- File: \`$ARTICLE_FILE\`" >> "$GITHUB_STEP_SUMMARY"
@@ -95,14 +98,17 @@ jobs:
     steps:
       - name: Wait for augur-news.yml to complete
         uses: actions/github-script@v8
+        env:
+          PUSHED_AT: ${{ needs.push-sentinel.outputs.pushed_at }}
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const pushedAt = new Date(process.env.PUSHED_AT);
             const maxWait = 600;
             const poll = 15;
 
-            console.log('Waiting for Deploy Augur News to Pages...');
+            console.log(`Waiting for deploy triggered after ${pushedAt.toISOString()}...`);
 
             // Give it a moment to trigger
             await new Promise(r => setTimeout(r, 10000));
@@ -113,11 +119,13 @@ jobs:
                 owner, repo,
                 workflow_id: 'augur-news.yml',
                 branch: 'augur_news',
-                per_page: 1,
+                per_page: 5,
               });
 
-              if (runs.workflow_runs.length > 0) {
-                const run = runs.workflow_runs[0];
+              // Find a run created after our push
+              const run = runs.workflow_runs.find(r => new Date(r.created_at) >= pushedAt);
+
+              if (run) {
                 console.log(`Run #${run.id}: ${run.status} (${run.conclusion || 'pending'})`);
 
                 if (run.status === 'completed') {
@@ -132,6 +140,8 @@ jobs:
                     return;
                   }
                 }
+              } else {
+                console.log('No matching run found yet...');
               }
 
               await new Promise(r => setTimeout(r, poll * 1000));
