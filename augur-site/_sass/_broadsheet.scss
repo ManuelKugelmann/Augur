@@ -473,6 +473,13 @@ hr,
     margin: 0;
   }
 
+  &__splash {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
   a {
     color: var(--meta);
 
