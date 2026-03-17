@@ -263,13 +263,10 @@ hr,
     --card-accent: #8b0000;
     --card-meta: #6b5b4f;
 
-    &[data-edition="der"] {
-      --card-accent: #1a3a5c;
-    }
     &[data-edition="financial"],
     &[data-edition="finanz"] {
       --card-bg: #f0f2f4;
-      --card-accent: #0a6e3a;
+      --card-accent: #1a3a5c;
       --card-meta: #5a6570;
     }
 
@@ -280,13 +277,10 @@ hr,
       --card-accent: #c4473a;
       --card-meta: #8a8078;
     }
-    [data-theme="dark"] &[data-edition="der"] {
-      --card-accent: #5b9bd5;
-    }
     [data-theme="dark"] &[data-edition="financial"],
     [data-theme="dark"] &[data-edition="finanz"] {
       --card-bg: #1e2228;
-      --card-accent: #2ecc71;
+      --card-accent: #5b9bd5;
       --card-meta: #7a8590;
     }
 
