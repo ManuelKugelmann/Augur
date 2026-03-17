@@ -252,13 +252,46 @@ hr,
     text-decoration: none;
     padding: 1.5rem 1rem;
     min-height: 220px;
-    border: 2px solid var(--card-ink, var(--ink));
-    background: var(--card-bg, var(--bg));
-    color: var(--card-ink, var(--ink));
+    border: 2px solid var(--card-ink);
+    background: var(--card-bg);
+    color: var(--card-ink);
     transition: border-color 0.2s, box-shadow 0.2s;
 
+    // Light mode edition palettes
+    --card-bg: #f4f0e8;
+    --card-ink: #1a1a1a;
+    --card-accent: #8b0000;
+    --card-meta: #6b5b4f;
+
+    &[data-edition="der"] {
+      --card-accent: #1a3a5c;
+    }
+    &[data-edition="financial"],
+    &[data-edition="finanz"] {
+      --card-bg: #f0f2f4;
+      --card-accent: #0a6e3a;
+      --card-meta: #5a6570;
+    }
+
+    // Dark mode edition palettes
+    [data-theme="dark"] & {
+      --card-bg: #222226;
+      --card-ink: #e8e4dc;
+      --card-accent: #c4473a;
+      --card-meta: #8a8078;
+    }
+    [data-theme="dark"] &[data-edition="der"] {
+      --card-accent: #5b9bd5;
+    }
+    [data-theme="dark"] &[data-edition="financial"],
+    [data-theme="dark"] &[data-edition="finanz"] {
+      --card-bg: #1e2228;
+      --card-accent: #2ecc71;
+      --card-meta: #7a8590;
+    }
+
     &:hover {
-      border-color: var(--card-accent, var(--accent));
+      border-color: var(--card-accent);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     }
   }
@@ -277,14 +310,14 @@ hr,
     width: 100%;
     height: 0;
     margin: 0.5rem 0;
-    border-top: 3px double var(--card-ink, var(--ink));
+    border-top: 3px double var(--card-ink);
   }
 
   &__tagline {
     font-family: 'Lora', Georgia, serif;
     font-style: italic;
     font-size: 0.7rem;
-    color: var(--card-meta, var(--meta));
+    color: var(--card-meta);
     margin-bottom: 0.4rem;
   }
 
@@ -293,7 +326,7 @@ hr,
     width: 60%;
     height: 0;
     margin: 0.3rem 0;
-    border-top: 1px solid var(--card-meta, var(--meta));
+    border-top: 1px solid var(--card-meta);
   }
 
   &__headline {
@@ -310,7 +343,7 @@ hr,
 
     &--placeholder {
       font-style: italic;
-      color: var(--card-meta, var(--meta));
+      color: var(--card-meta);
     }
   }
 
@@ -319,7 +352,7 @@ hr,
     font-size: 0.55rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--card-meta, var(--meta));
+    color: var(--card-meta);
     margin-top: 0.3rem;
   }
 

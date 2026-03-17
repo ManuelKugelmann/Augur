@@ -4,11 +4,10 @@ splash: true
 ---
 <div class="splash">
   <div class="splash__row">
-
     <div class="splash__pair">
       {% assign the_brand = site.data.brands["the"] %}
       {% assign the_latest = site.posts | where: "brand", "the" | first %}
-      <a href="{{ '/' | append: the_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ the_brand.palette.accent }}; --card-bg: {{ the_brand.palette.bg }}; --card-ink: {{ the_brand.palette.ink }}; --card-meta: {{ the_brand.palette.meta }};">
+      <a href="{{ '/' | append: the_brand.slug | append: '/' | relative_url }}" class="splash__card" data-edition="the">
         <span class="splash__nameplate">{{ the_brand.masthead }}</span>
         <span class="splash__rule-double"></span>
         <span class="splash__tagline">{{ the_brand.subtitle }}</span>
@@ -22,7 +21,7 @@ splash: true
       </a>
       {% assign fin_brand = site.data.brands["financial"] %}
       {% assign fin_latest = site.posts | where: "brand", "financial" | first %}
-      <a href="{{ '/' | append: fin_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ fin_brand.palette.accent }}; --card-bg: {{ fin_brand.palette.bg }}; --card-ink: {{ fin_brand.palette.ink }}; --card-meta: {{ fin_brand.palette.meta }};">
+      <a href="{{ '/' | append: fin_brand.slug | append: '/' | relative_url }}" class="splash__card" data-edition="financial">
         <span class="splash__nameplate">{{ fin_brand.masthead }}</span>
         <span class="splash__rule-double"></span>
         <span class="splash__tagline">{{ fin_brand.subtitle }}</span>
@@ -38,11 +37,10 @@ splash: true
   </div>
 
   <div class="splash__row">
-
     <div class="splash__pair">
       {% assign der_brand = site.data.brands["der"] %}
       {% assign der_latest = site.posts | where: "brand", "der" | first %}
-      <a href="{{ '/' | append: der_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ der_brand.palette.accent }}; --card-bg: {{ der_brand.palette.bg }}; --card-ink: {{ der_brand.palette.ink }}; --card-meta: {{ der_brand.palette.meta }};">
+      <a href="{{ '/' | append: der_brand.slug | append: '/' | relative_url }}" class="splash__card" data-edition="der">
         <span class="splash__nameplate">{{ der_brand.masthead }}</span>
         <span class="splash__rule-double"></span>
         <span class="splash__tagline">{{ der_brand.subtitle }}</span>
@@ -56,7 +54,7 @@ splash: true
       </a>
       {% assign finz_brand = site.data.brands["finanz"] %}
       {% assign finz_latest = site.posts | where: "brand", "finanz" | first %}
-      <a href="{{ '/' | append: finz_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ finz_brand.palette.accent }}; --card-bg: {{ finz_brand.palette.bg }}; --card-ink: {{ finz_brand.palette.ink }}; --card-meta: {{ finz_brand.palette.meta }};">
+      <a href="{{ '/' | append: finz_brand.slug | append: '/' | relative_url }}" class="splash__card" data-edition="finanz">
         <span class="splash__nameplate">{{ finz_brand.masthead }}</span>
         <span class="splash__rule-double"></span>
         <span class="splash__tagline">{{ finz_brand.subtitle }}</span>
