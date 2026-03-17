@@ -133,10 +133,10 @@ hr,
 // Footer
 .page-footer {
   margin-top: auto;
-  padding-top: 1rem;
-  border-top: 4px double var(--ink);
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--meta);
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--meta);
 
   a {
@@ -150,14 +150,11 @@ hr,
 
 .disclaimer-banner {
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 1rem;
   background: #fff3cd;
   color: #664d03;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   text-align: center;
   letter-spacing: 0.05em;
-  position: sticky;
-  bottom: 0;
-  z-index: 100;
 }
