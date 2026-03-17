@@ -153,6 +153,11 @@ hr,
   padding: 0.5rem 1rem;
   background: #fff3cd;
   color: #664d03;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
   text-align: center;
-  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
 }
