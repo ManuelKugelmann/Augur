@@ -1,15 +1,15 @@
-name: Deploy Jekyll site to Pages
+name: Deploy Augur News to Pages
 
 on:
   push:
     branches: [main, augur]
     paths:
       - 'augur-site/**'
-      - '.github/workflows/jekyll-deploy.yml'
+      - '.github/workflows/augur-news.yml'
   pull_request:
     paths:
       - 'augur-site/**'
-      - '.github/workflows/jekyll-deploy.yml'
+      - '.github/workflows/augur-news.yml'
   pull_request_target:
     types: [closed]
   workflow_dispatch:
@@ -66,9 +66,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Preserve existing preview/ from gh-pages
-          if git fetch origin gh-pages --depth=1 2>/dev/null; then
-            git checkout gh-pages -- preview/ 2>/dev/null || true
+          # Preserve existing preview/ from augur_news
+          if git fetch origin augur_news --depth=1 2>/dev/null; then
+            git checkout augur_news -- preview/ 2>/dev/null || true
             if [ -d preview ]; then
               cp -r preview augur-site/_site/preview
             fi
@@ -79,12 +79,12 @@ jobs:
           echo "augur.news" > CNAME
 
           git init
-          git checkout -b gh-pages
+          git checkout -b augur_news
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Deploy site ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
-          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" augur_news
 
       # --- Preview: replace preview/, preserve root ---
       - name: Deploy preview
@@ -94,26 +94,26 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git clone --branch gh-pages --single-branch --depth=1 \
+          git clone --branch augur_news --single-branch --depth=1 \
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            _gh-pages 2>/dev/null || {
-              mkdir _gh-pages && cd _gh-pages && git init && git checkout -b gh-pages
+            _deploy 2>/dev/null || {
+              mkdir _deploy && cd _deploy && git init && git checkout -b augur_news
               touch .nojekyll
               echo "augur.news" > CNAME
               cd ..
             }
 
-          rm -rf _gh-pages/preview
-          mkdir -p _gh-pages/preview
-          cp -r augur-site/_site/* _gh-pages/preview/
+          rm -rf _deploy/preview
+          mkdir -p _deploy/preview
+          cp -r augur-site/_site/* _deploy/preview/
 
-          cd _gh-pages
+          cd _deploy
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "Deploy preview (PR #${{ github.event.pull_request.number }})"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" augur_news
 
       - name: Comment preview URL on PR
         if: steps.config.outputs.is_preview == 'true'
@@ -148,18 +148,18 @@ jobs:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
-      - name: Remove preview from gh-pages
+      - name: Remove preview from augur_news
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git clone --branch gh-pages --single-branch --depth=1 \
+          git clone --branch augur_news --single-branch --depth=1 \
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            _gh-pages 2>/dev/null || exit 0
+            _deploy 2>/dev/null || exit 0
 
-          cd _gh-pages
+          cd _deploy
           if [ -d preview ]; then
             git rm -rf preview
             git commit -m "Remove preview (PR #${{ github.event.pull_request.number }} closed)"
-            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" augur_news
           fi
