@@ -159,6 +159,14 @@ defaults:
       horizon: decades
       categories: finanz.augur/jahrzehnte
 
+  # preview (CI smoke tests)
+  - scope:
+      path: "_posts/preview"
+    values:
+      layout: article
+      brand: preview
+      categories: preview
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag

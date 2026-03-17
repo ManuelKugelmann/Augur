@@ -37,7 +37,7 @@ jobs:
           DATE_KEY=$(date -u +%Y-%m-%d)
           TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          ARTICLE_DIR="_posts/the.augur/days"
+          ARTICLE_DIR="_posts/preview"
           ARTICLE_FILE="${ARTICLE_DIR}/${DATE_KEY}-ci-sentinel.md"
 
           mkdir -p "$ARTICLE_DIR"
@@ -45,9 +45,8 @@ jobs:
           cat > "$ARTICLE_FILE" <<EOF
           ---
           layout: article
-          brand: the
-          horizon: days
-          categories: the.augur/days
+          brand: preview
+          categories: preview
           date: ${DATE_KEY}
           headline: "CI Sentinel — Pipeline Validation"
           fictive_date: "${DATE_KEY}"
@@ -181,7 +180,7 @@ jobs:
           EXPECTED_TS: ${{ needs.push-sentinel.outputs.timestamp }}
         run: |
           SITE_URL="${{ steps.url.outputs.site_url }}"
-          SENTINEL_URL="${SITE_URL}/the.augur/days/ci-sentinel-pipeline-validation/"
+          SENTINEL_URL="${SITE_URL}/preview/ci-sentinel-pipeline-validation/"
           sleep 10
 
           # Check site root
