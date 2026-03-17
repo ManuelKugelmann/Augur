@@ -12,6 +12,15 @@
     <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}">{{ b.name }}</a>
     {% endif %}
     {% endfor %}
+    <span class="page-footer__sep">&middot;</span>
+    {% for brand_entry in site.data.brands %}
+    {% assign bkey = brand_entry[0] %}
+    {% assign b = brand_entry[1] %}
+    {% if b.locale == other_locale and b.module == brand.module %}
+    <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}">{{ other_locale | upcase }}</a>
+    {% break %}
+    {% endif %}
+    {% endfor %}
   </nav>
   <span class="page-footer__sep">&middot;</span>
   <p class="page-footer__legal">
@@ -24,17 +33,6 @@
     {% endif %}
     <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
   </p>
-  <span class="page-footer__sep">&middot;</span>
-  <nav class="page-footer__lang">
-    {% for brand_entry in site.data.brands %}
-    {% assign bkey = brand_entry[0] %}
-    {% assign b = brand_entry[1] %}
-    {% if b.locale == other_locale and b.module == brand.module %}
-    <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}">{{ other_locale | upcase }}</a>
-    {% break %}
-    {% endif %}
-    {% endfor %}
-  </nav>
   <span class="page-footer__sep">&middot;</span>
   <div class="theme-switcher">
     <button class="theme-switcher__btn" data-set-theme="">Classic</button>
