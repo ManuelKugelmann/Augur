@@ -45,7 +45,7 @@ class TestAgentsFile:
         assert isinstance(agents, list)
 
     def test_expected_count(self, agents):
-        assert len(agents) == 15, f"Expected 15 agents, got {len(agents)}"
+        assert len(agents) == 16, f"Expected 16 agents, got {len(agents)}"
 
 
 # ── Required fields ──────────────────────────
@@ -95,9 +95,10 @@ class TestLayers:
 
     def test_l4_agents(self, agents):
         l4 = [a for a in agents if a["_layer"] == "L4"]
-        assert len(l4) == 5
+        assert len(l4) == 6
         names = {a["_name"] for a in l4}
         assert "cron-planner" in names
+        assert "trading-cron" in names
         assert "news-the-augur" in names
         assert "news-der-augur" in names
         assert "news-financial-augur" in names
@@ -136,7 +137,7 @@ class TestGroups:
     def test_trading_agents(self, agents):
         trading = [a for a in agents if a["_group"] == "trading"]
         names = {a["_name"] for a in trading}
-        assert names == {"trader"}
+        assert names == {"trader", "trading-cron"}
 
     def test_news_agents(self, agents):
         news = [a for a in agents if a["_group"] == "news"]
@@ -265,8 +266,8 @@ class TestCronPlanner:
                 f"cron-planner should edge to {analyst}"
         # Must reach synthesizer (for cross-domain)
         assert "synthesizer" in edges
-        # Must reach trader (for execution)
-        assert "trader" in edges
+        # Cron-planner is research-only; trader is in trading-cron
+        assert "trader" not in edges
 
     def test_t4_edges_do_not_include_self(self, agents):
         cp = next(a for a in agents if a["_name"] == "cron-planner")
@@ -276,6 +277,46 @@ class TestCronPlanner:
         """L5 live-chat must be able to hand off to T4 cron-planner."""
         lc = next(a for a in agents if a["_name"] == "live-chat")
         assert "cron-planner" in lc["edges"]
+
+
+# ── Trading cron validation ─────────────────
+
+class TestTradingCron:
+    """Trading-cron is the autonomous trade executor in the trading group."""
+
+    def test_exists_in_trading_group(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert tc["_group"] == "trading"
+        assert tc["_layer"] == "L4"
+
+    def test_edges_to_trader(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert "trader" in tc["edges"]
+
+    def test_edges_to_market_data_and_analyst(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert "market-data" in tc["edges"]
+        assert "market-analyst" in tc["edges"]
+
+    def test_edges_to_synthesizer(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert "synthesizer" in tc["edges"]
+
+    def test_no_self_edge(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert "trading-cron" not in tc["edges"]
+
+    def test_l5_edges_include_trading_cron(self, agents):
+        lc = next(a for a in agents if a["_name"] == "live-chat")
+        assert "trading-cron" in lc["edges"]
+
+    def test_instructions_reference_risk(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert "risk" in tc["instructions"].lower()
+
+    def test_instructions_reference_trade_plans(self, agents):
+        tc = next(a for a in agents if a["_name"] == "trading-cron")
+        assert "trade plan" in tc["instructions"].lower()
 
 
 # ── L4 news agents validation ──────────────
@@ -415,7 +456,7 @@ class TestEdgeResolution:
         result = mod.filter_by_groups(agents, {"core", "trading"})
         groups = {a["_group"] for a in result}
         assert groups == {"core", "trading"}
-        assert len(result) == 11
+        assert len(result) == 12
 
     def test_filter_by_groups_all(self, agents):
         mod = self._load_module()

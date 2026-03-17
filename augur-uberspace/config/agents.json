@@ -175,7 +175,7 @@
     "_layer": "L4",
     "_group": "core",
     "name": "Cron Planner",
-    "description": "Autonomous research organizer and plan executor. Schedules scraping, triggers analysis, executes trades via trader.",
+    "description": "Autonomous research organizer. Schedules scraping, triggers analysis, ensures data freshness and coverage.",
     "instructions": "See prompts/cron-planner.md",
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
@@ -186,7 +186,7 @@
       "sys__server__sys_mcp_fetch"
     ],
     "conversation_starters": [
-      "Execute your periodic routine: 1) Read plans (store_get_notes kind=plan). 2) Check risk status. 3) For watched entities, refresh data via data agents. 4) Run analysis if data is stale. 5) Update plans with results. 6) Log summary as event.",
+      "Execute your periodic routine: 1) Read plans (store_get_notes kind=plan). 2) For watched entities, refresh data via data agents. 3) Run analysis if data is stale. 4) Update plans with results. 5) Log summary.",
       "Show me your current plans and watchlists (store_get_notes kind=plan)",
       "Read your recent execution logs (store_get_notes kind=journal tag=cron) and summarize coverage gaps"
     ],
@@ -198,7 +198,6 @@
       "osint-analyst",
       "signals-analyst",
       "synthesizer",
-      "trader",
       "charter"
     ]
   },
@@ -335,6 +334,34 @@
     "edges": []
   },
   {
+    "_name": "trading-cron",
+    "_layer": "L4",
+    "_group": "trading",
+    "name": "Trading Cron",
+    "description": "Autonomous trading executor. Reads trade plans, checks risk, executes entries/exits via trader, monitors positions.",
+    "instructions": "See prompts/trading-cron.md",
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "tools": [
+      "sys__server__sys_mcp_augur",
+      "sys__server__sys_mcp_google-news",
+      "sys__server__sys_mcp_webresearch",
+      "sys__server__sys_mcp_fetch"
+    ],
+    "conversation_starters": [
+      "Execute trading routine: 1) Read trade plans. 2) Check risk status. 3) Get latest prices. 4) Evaluate signals. 5) Execute trades if conditions met. 6) Log results.",
+      "Show current trade plans (store_get_notes kind=plan tags=trading)",
+      "Read recent trading logs (store_get_notes kind=journal tag=trading-cron) and summarize P&L"
+    ],
+    "edges": [
+      "market-data",
+      "market-analyst",
+      "synthesizer",
+      "trader",
+      "charter"
+    ]
+  },
+  {
     "_name": "charter",
     "_layer": "utility",
     "_group": "core",
@@ -390,6 +417,7 @@
       "news-financial-augur",
       "news-finanz-augur",
       "trader",
+      "trading-cron",
       "charter"
     ]
   }
