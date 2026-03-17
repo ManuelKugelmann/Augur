@@ -5,7 +5,6 @@ layout: default
 
 <div class="listing">
   <div class="listing__header" style="text-align: center;">
-    <p class="listing__tagline">{{ brand.subtitle }}</p>
     <hr class="rule--double">
   </div>
 
@@ -23,7 +22,4 @@ layout: default
   {% if site.posts | where: "brand", page.brand | size == 0 %}
   <p class="listing__empty">No predictions yet — first edition coming soon.</p>
   {% endif %}
-
-  <hr class="rule--double">
-  {% include editions.html current=page.brand %}
 </div>

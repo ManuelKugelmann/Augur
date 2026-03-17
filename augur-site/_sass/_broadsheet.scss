@@ -13,25 +13,26 @@ body {
   flex: 1;
 }
 
-// Masthead — sticky, CSS-only scale-down via scroll-driven animation
-@keyframes masthead-shrink {
-  0%   { padding: 1.5rem 1rem 1rem; }
-  100% { padding: 0.4rem 1rem 0.3rem; }
+// Masthead — sticky, CSS-only scale via scroll-driven animation
+// Uses transform (GPU-composited) to avoid layout reflow jitter.
+// A sentinel element's view-timeline triggers the shrink so
+// position:sticky and animation-timeline don't conflict.
+
+@keyframes masthead-scale {
+  0%   { transform: scale(1); }
+  100% { transform: scale(0.55); }
 }
 
-@keyframes title-shrink {
-  0%   { font-size: 2.8rem; letter-spacing: 0.15em; }
-  100% { font-size: 1.3rem; letter-spacing: 0.1em; }
+@keyframes subtitle-hide {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 
-@keyframes subtitle-fade {
-  0%   { opacity: 1; max-height: 2em; margin-bottom: 0; }
-  100% { opacity: 0; max-height: 0; margin-bottom: 0; overflow: hidden; }
-}
-
-@keyframes nav-shrink {
-  0%   { margin-top: 0.8rem; padding-top: 0.6rem; gap: 1.5rem; }
-  100% { margin-top: 0.3rem; padding-top: 0.3rem; gap: 1rem; }
+// Sentinel sits above the masthead; as it scrolls out of view
+// it drives the masthead animation via view-timeline.
+.masthead-sentinel {
+  height: 1px;
+  view-timeline: --masthead-shrink block;
 }
 
 .masthead {
@@ -42,9 +43,12 @@ body {
   top: 0;
   z-index: 100;
   background: var(--bg);
-  animation: masthead-shrink linear both;
-  animation-timeline: scroll();
-  animation-range: 0px 80px;
+  transform-origin: top center;
+  will-change: transform;
+  contain: layout style;
+  animation: masthead-scale linear both;
+  animation-timeline: --masthead-shrink;
+  animation-range: exit 0% exit 100%;
 
   &__title {
     display: block;
@@ -56,9 +60,6 @@ body {
     color: var(--ink);
     text-decoration: none;
     margin-bottom: 0.1em;
-    animation: title-shrink linear both;
-    animation-timeline: scroll();
-    animation-range: 0px 80px;
 
     &:hover {
       color: var(--ink);
@@ -71,9 +72,9 @@ body {
     font-style: italic;
     font-size: 0.95rem;
     color: var(--meta);
-    animation: subtitle-fade linear both;
-    animation-timeline: scroll();
-    animation-range: 0px 60px;
+    animation: subtitle-hide linear both;
+    animation-timeline: --masthead-shrink;
+    animation-range: exit 0% exit 60%;
   }
 
   &__nav {
@@ -83,9 +84,6 @@ body {
     display: flex;
     justify-content: center;
     gap: 1.5rem;
-    animation: nav-shrink linear both;
-    animation-timeline: scroll();
-    animation-range: 0px 80px;
   }
 
   &__link {
@@ -279,31 +277,29 @@ hr,
   z-index: 100;
 }
 
-// Footer
+// Footer — single slim row
 .page-footer {
   border-top: 1px solid var(--meta);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--meta);
   background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+  padding: 0.3rem 1rem;
 
   &__editions {
     display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.2rem 0.8rem;
-    padding: 0.3rem 1rem;
+    gap: 0 0.5rem;
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
   }
 
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.25rem 1rem;
-    border-top: 1px solid color-mix(in srgb, var(--meta) 30%, transparent);
+  &__sep {
+    opacity: 0.4;
   }
 
   &__legal {

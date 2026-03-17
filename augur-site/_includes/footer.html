@@ -10,20 +10,20 @@
     <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}">{{ b.name }}</a>
     {% endfor %}
   </nav>
-  <div class="page-footer__row">
-    <p class="page-footer__legal">
-      {% if locale == "de" %}
-      <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
-      <a href="{{ '/datenschutz/' | relative_url }}">Datenschutz</a> &middot;
-      {% else %}
-      <a href="{{ '/impressum/' | relative_url }}">Legal Notice</a> &middot;
-      <a href="{{ '/datenschutz/' | relative_url }}">Privacy Policy</a> &middot;
-      {% endif %}
-      <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
-    </p>
-    <div class="theme-switcher">
-      <button class="theme-switcher__btn" data-set-theme="">Classic</button>
-      <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
-    </div>
+  <span class="page-footer__sep">&middot;</span>
+  <p class="page-footer__legal">
+    {% if locale == "de" %}
+    <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
+    <a href="{{ '/datenschutz/' | relative_url }}">Datenschutz</a> &middot;
+    {% else %}
+    <a href="{{ '/impressum/' | relative_url }}">Legal Notice</a> &middot;
+    <a href="{{ '/datenschutz/' | relative_url }}">Privacy Policy</a> &middot;
+    {% endif %}
+    <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
+  </p>
+  <span class="page-footer__sep">&middot;</span>
+  <div class="theme-switcher">
+    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
+    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
   </div>
 </footer>

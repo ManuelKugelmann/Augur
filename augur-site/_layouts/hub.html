@@ -5,13 +5,8 @@ layout: default
 
 <div class="listing">
   <div class="listing__header" style="text-align: center;">
-    <p class="listing__tagline">{{ brand.subtitle }}</p>
     <hr class="rule--double">
   </div>
-
-  {% include editions.html current=page.brand %}
-
-  <hr class="rule--double">
 
   <ul class="listing__items">
     {% for h in brand.horizons %}
