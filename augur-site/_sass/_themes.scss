@@ -42,19 +42,6 @@
   --accent: #0a6e3a;
 }
 
-[data-theme="terminal"] {
-  --bg: #0a0a0a;
-  --ink: #00ff41;
-  --accent: #ff6600;
-  --meta: #00aa2a;
-
-  body, h1, h2, h3, h4, h5, h6,
-  .masthead__title, .masthead__subtitle,
-  .dateline, code, .meta {
-    font-family: 'JetBrains Mono', 'Courier New', monospace !important;
-  }
-}
-
 // Theme switcher UI
 .theme-switcher {
   display: flex;
