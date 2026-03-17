@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
   pull-requests: write
@@ -24,8 +24,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 concurrency:
-  group: "pages-deploy-${{ github.event.pull_request.number || 'prod' }}"
-  cancel-in-progress: true
+  group: "pages-deploy"
+  cancel-in-progress: false
 
 jobs:
   # --- Production deploy (push to main/augur/augur_news) ---
@@ -76,6 +76,16 @@ jobs:
         env:
           JEKYLL_ENV: production
 
+      # Build preview from the same source (keeps preview in sync with main)
+      - name: Build preview
+        working-directory: site
+        run: |
+          bundle exec jekyll build --baseurl "/preview" -d _preview
+          mkdir -p _site/preview
+          cp -r _preview/* _site/preview/
+        env:
+          JEKYLL_ENV: production
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -85,15 +95,25 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # --- PR preview (deploy to gh-pages/preview/) ---
+  # --- PR preview (deploy preview/ from PR branch, root from main) ---
   preview:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}preview/
     steps:
-      - name: Checkout PR branch (Jekyll source)
+      # Checkout both main (for root) and PR branch (for preview)
+      - name: Checkout main (for root build)
         uses: actions/checkout@v6
         with:
-          path: main
+          ref: main
+          path: main-src
+
+      - name: Checkout PR branch (for preview build)
+        uses: actions/checkout@v6
+        with:
+          path: pr-src
 
       - name: Checkout augur_news (data branch)
         uses: actions/checkout@v6
@@ -102,18 +122,19 @@ jobs:
           path: data
         continue-on-error: true
 
-      - name: Merge source + data
+      # Build root from main
+      - name: Prepare root site from main
         run: |
-          cp -r main/augur-site site
+          cp -r main-src/augur-site root-site
 
           if [ -d data/_posts ]; then
-            cp -r data/_posts/* site/_posts/ 2>/dev/null || true
+            cp -r data/_posts/* root-site/_posts/ 2>/dev/null || true
           fi
           if [ -d data/_data ]; then
-            cp -r data/_data/* site/_data/ 2>/dev/null || true
+            cp -r data/_data/* root-site/_data/ 2>/dev/null || true
           fi
           if [ -d data/assets ]; then
-            cp -r data/assets/* site/assets/ 2>/dev/null || true
+            cp -r data/assets/* root-site/assets/ 2>/dev/null || true
           fi
 
       - name: Setup Ruby
@@ -121,37 +142,50 @@ jobs:
         with:
           ruby-version: '3.1'
           bundler-cache: true
-          working-directory: site
+          working-directory: root-site
 
-      - name: Build with Jekyll (preview baseurl)
-        working-directory: site
+      - name: Build root from main
+        working-directory: root-site
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+
+      # Build preview from PR branch
+      - name: Prepare preview site from PR
+        run: |
+          cp -r pr-src/augur-site preview-site
+
+          if [ -d data/_posts ]; then
+            cp -r data/_posts/* preview-site/_posts/ 2>/dev/null || true
+          fi
+          if [ -d data/_data ]; then
+            cp -r data/_data/* preview-site/_data/ 2>/dev/null || true
+          fi
+          if [ -d data/assets ]; then
+            cp -r data/assets/* preview-site/assets/ 2>/dev/null || true
+          fi
+
+      - name: Build preview from PR branch
+        working-directory: preview-site
         run: bundle exec jekyll build --baseurl "/preview"
         env:
           JEKYLL_ENV: production
 
-      - name: Deploy preview to gh-pages/preview/
+      # Assemble: root + preview/
+      - name: Assemble deploy artifact
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          cp -r root-site/_site deploy
+          mkdir -p deploy/preview
+          cp -r preview-site/_site/* deploy/preview/
 
-          git clone --branch gh-pages --single-branch --depth=1 \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-            _gh-pages 2>/dev/null || {
-              mkdir _gh-pages && cd _gh-pages && git init && git checkout -b gh-pages
-              touch .nojekyll
-              echo "augur.news" > CNAME
-              cd ..
-            }
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
 
-          rm -rf _gh-pages/preview
-          mkdir -p _gh-pages/preview
-          cp -r site/_site/* _gh-pages/preview/
-
-          cd _gh-pages
-          git add -A
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "Deploy preview (PR #${{ github.event.pull_request.number }})"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Comment preview URL on PR
         uses: actions/github-script@v8
