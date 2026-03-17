@@ -19,29 +19,6 @@
   --meta: #7a8590;
 }
 
-[data-theme="sepia"] {
-  --bg: #f5e6c8;
-  --ink: #2c1810;
-  --accent: #6b2c0f;
-  --meta: #7a6552;
-}
-
-[data-theme="modern"] {
-  --bg: #ffffff;
-  --ink: #111111;
-  --accent: #0066cc;
-  --meta: #666666;
-}
-
-[data-theme="modern"][data-brand="der"] {
-  --accent: #1a3a5c;
-}
-
-[data-theme="modern"][data-brand="financial"],
-[data-theme="modern"][data-brand="finanz"] {
-  --accent: #0a6e3a;
-}
-
 // Theme switcher UI
 .theme-switcher {
   display: flex;
