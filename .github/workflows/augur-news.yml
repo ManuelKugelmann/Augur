@@ -76,10 +76,11 @@ jobs:
         env:
           JEKYLL_ENV: production
 
-      # Build preview from the same source (keeps preview in sync with main)
-      - name: Build preview
+      # Copy root build as preview baseline, then rebuild root on top
+      - name: Assemble root + preview
         working-directory: site
         run: |
+          cp -r _site _preview
           bundle exec jekyll build --baseurl "/preview" -d _preview
           mkdir -p _site/preview
           cp -r _preview/* _site/preview/
@@ -103,7 +104,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}preview/
     steps:
-      # Checkout both main (for root) and PR branch (for preview)
       - name: Checkout main (for root build)
         uses: actions/checkout@v6
         with:
@@ -122,61 +122,45 @@ jobs:
           path: data
         continue-on-error: true
 
-      # Build root from main
-      - name: Prepare root site from main
-        run: |
-          cp -r main-src/augur-site root-site
-
-          if [ -d data/_posts ]; then
-            cp -r data/_posts/* root-site/_posts/ 2>/dev/null || true
-          fi
-          if [ -d data/_data ]; then
-            cp -r data/_data/* root-site/_data/ 2>/dev/null || true
-          fi
-          if [ -d data/assets ]; then
-            cp -r data/assets/* root-site/assets/ 2>/dev/null || true
-          fi
-
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.1'
           bundler-cache: true
-          working-directory: root-site
+          working-directory: main-src/augur-site
 
+      - name: Merge data into both sources
+        run: |
+          for dir in main-src/augur-site pr-src/augur-site; do
+            if [ -d data/_posts ]; then
+              cp -r data/_posts/* "$dir/_posts/" 2>/dev/null || true
+            fi
+            if [ -d data/_data ]; then
+              cp -r data/_data/* "$dir/_data/" 2>/dev/null || true
+            fi
+            if [ -d data/assets ]; then
+              cp -r data/assets/* "$dir/assets/" 2>/dev/null || true
+            fi
+          done
+
+      # Build root from main, then copy it and rebuild as preview from PR
       - name: Build root from main
-        working-directory: root-site
+        working-directory: main-src/augur-site
         run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
 
-      # Build preview from PR branch
-      - name: Prepare preview site from PR
-        run: |
-          cp -r pr-src/augur-site preview-site
-
-          if [ -d data/_posts ]; then
-            cp -r data/_posts/* preview-site/_posts/ 2>/dev/null || true
-          fi
-          if [ -d data/_data ]; then
-            cp -r data/_data/* preview-site/_data/ 2>/dev/null || true
-          fi
-          if [ -d data/assets ]; then
-            cp -r data/assets/* preview-site/assets/ 2>/dev/null || true
-          fi
-
       - name: Build preview from PR branch
-        working-directory: preview-site
+        working-directory: pr-src/augur-site
         run: bundle exec jekyll build --baseurl "/preview"
         env:
           JEKYLL_ENV: production
 
-      # Assemble: root + preview/
-      - name: Assemble deploy artifact
+      - name: Assemble root + preview
         run: |
-          cp -r root-site/_site deploy
+          cp -r main-src/augur-site/_site deploy
           mkdir -p deploy/preview
-          cp -r preview-site/_site/* deploy/preview/
+          cp -r pr-src/augur-site/_site/* deploy/preview/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
