@@ -3,6 +3,7 @@
 {% assign locale = brand.locale | default: "en" %}
 {% if locale == "de" %}{% assign other_locale = "en" %}{% else %}{% assign other_locale = "de" %}{% endif %}
 <footer class="page-footer">
+  {% unless page.splash %}
   <nav class="page-footer__editions">
     {% for brand_entry in site.data.brands %}
     {% assign bkey = brand_entry[0] %}
@@ -23,6 +24,7 @@
     {% endfor %}
   </nav>
   <span class="page-footer__sep">&middot;</span>
+  {% endunless %}
   <p class="page-footer__legal">
     {% if locale == "de" %}
     <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
