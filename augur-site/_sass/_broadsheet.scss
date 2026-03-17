@@ -13,7 +13,27 @@ body {
   flex: 1;
 }
 
-// Masthead — sticky, scales down on scroll
+// Masthead — sticky, CSS-only scale-down via scroll-driven animation
+@keyframes masthead-shrink {
+  0%   { padding: 1.5rem 1rem 1rem; }
+  100% { padding: 0.4rem 1rem 0.3rem; }
+}
+
+@keyframes title-shrink {
+  0%   { font-size: 2.8rem; letter-spacing: 0.15em; }
+  100% { font-size: 1.3rem; letter-spacing: 0.1em; }
+}
+
+@keyframes subtitle-fade {
+  0%   { opacity: 1; max-height: 2em; margin-bottom: 0; }
+  100% { opacity: 0; max-height: 0; margin-bottom: 0; overflow: hidden; }
+}
+
+@keyframes nav-shrink {
+  0%   { margin-top: 0.8rem; padding-top: 0.6rem; gap: 1.5rem; }
+  100% { margin-top: 0.3rem; padding-top: 0.3rem; gap: 1rem; }
+}
+
 .masthead {
   text-align: center;
   padding: 1.5rem 1rem 1rem;
@@ -22,28 +42,9 @@ body {
   top: 0;
   z-index: 100;
   background: var(--bg);
-  transition: padding 0.25s ease, transform 0.25s ease;
-
-  &--compact {
-    padding: 0.4rem 1rem 0.3rem;
-
-    .masthead__title {
-      font-size: 1.3rem;
-      letter-spacing: 0.1em;
-      margin-bottom: 0;
-    }
-
-    .masthead__subtitle {
-      display: none;
-    }
-
-    .masthead__nav {
-      margin-top: 0.3rem;
-      padding-top: 0.3rem;
-      gap: 1rem;
-      font-size: 0.7rem;
-    }
-  }
+  animation: masthead-shrink linear both;
+  animation-timeline: scroll();
+  animation-range: 0px 80px;
 
   &__title {
     display: block;
@@ -55,7 +56,9 @@ body {
     color: var(--ink);
     text-decoration: none;
     margin-bottom: 0.1em;
-    transition: font-size 0.25s ease;
+    animation: title-shrink linear both;
+    animation-timeline: scroll();
+    animation-range: 0px 80px;
 
     &:hover {
       color: var(--ink);
@@ -68,7 +71,9 @@ body {
     font-style: italic;
     font-size: 0.95rem;
     color: var(--meta);
-    transition: opacity 0.2s ease;
+    animation: subtitle-fade linear both;
+    animation-timeline: scroll();
+    animation-range: 0px 60px;
   }
 
   &__nav {
@@ -78,7 +83,9 @@ body {
     display: flex;
     justify-content: center;
     gap: 1.5rem;
-    transition: margin 0.25s ease, padding 0.25s ease, gap 0.25s ease;
+    animation: nav-shrink linear both;
+    animation-timeline: scroll();
+    animation-range: 0px 80px;
   }
 
   &__link {
