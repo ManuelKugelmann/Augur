@@ -11,6 +11,7 @@ import pytest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 AGENTS_FILE = REPO_ROOT / "augur-uberspace" / "config" / "agents.json"
+PROMPTS_DIR = REPO_ROOT / "augur-uberspace" / "config" / "prompts"
 
 # Import seed-agents.py functions for testing edge resolution
 sys.path.insert(0, str(REPO_ROOT / "augur-uberspace" / "scripts"))
@@ -19,8 +20,13 @@ _seed_module_path = REPO_ROOT / "augur-uberspace" / "scripts" / "seed-agents.py"
 
 @pytest.fixture(scope="module")
 def agents():
-    """Load agent definitions."""
-    return json.loads(AGENTS_FILE.read_text())
+    """Load agent definitions with prompt .md overlay (mirrors seed-agents.py)."""
+    defs = json.loads(AGENTS_FILE.read_text())
+    for a in defs:
+        md_path = PROMPTS_DIR / f"{a['_name']}.md"
+        if md_path.is_file():
+            a["instructions"] = md_path.read_text(encoding="utf-8").strip()
+    return defs
 
 
 @pytest.fixture(scope="module")

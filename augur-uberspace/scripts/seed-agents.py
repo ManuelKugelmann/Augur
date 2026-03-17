@@ -28,8 +28,18 @@ except ImportError:
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "config")
 AGENTS_FILE = os.path.join(CONFIG_DIR, "agents.json")
+PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 
 DEFAULT_BASE_URL = "http://localhost:3080"
+
+
+def load_prompt(agent_name: str) -> str | None:
+    """Load agent instructions from prompts/<name>.md if it exists."""
+    path = os.path.join(PROMPTS_DIR, f"{agent_name}.md")
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
+            return f.read().strip()
+    return None
 
 
 def login(client: httpx.Client, email: str, password: str) -> str:
@@ -134,7 +144,17 @@ def main():
     with open(args.agents_file) as f:
         agent_defs = json.load(f)
 
+    # Overlay instructions from prompts/*.md (takes precedence over agents.json)
+    prompt_count = 0
+    for agent_def in agent_defs:
+        prompt = load_prompt(agent_def["_name"])
+        if prompt:
+            agent_def["instructions"] = prompt
+            prompt_count += 1
+
     print(f"Loaded {len(agent_defs)} agent definitions from {args.agents_file}")
+    if prompt_count:
+        print(f"  ({prompt_count} instructions loaded from {PROMPTS_DIR}/)")
 
     if args.dry_run:
         print("\n[DRY RUN] Would create/update these agents:")
