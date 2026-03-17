@@ -514,12 +514,36 @@ _update_core() {
         warn "MCP Node servers bundle not found — Node MCPs won't be available"
     fi
 
-    # ── 8. Clean up stale config backups from old sed patches ──
+    # ── 8. Augur News site repo ──
+    local _NEWS_DIR="${AUGUR_SITE_DIR:-$HOME/augur.news}"
+    local _NEWS_BRANCH="${AUGUR_SITE_BRANCH:-augur_news}"
+    local _NEWS_REMOTE="https://github.com/${GH_USER}/${GH_REPO}.git"
+    if [[ -d "$_NEWS_DIR/.git" ]]; then
+        log "Pulling Augur News site (${_NEWS_BRANCH})..."
+        timeout 120 git -C "$_NEWS_DIR" pull --ff-only origin "$_NEWS_BRANCH" </dev/null 2>/dev/null \
+            || warn "News site pull failed (may already be current)"
+    else
+        log "Cloning Augur News site → $_NEWS_DIR (branch: ${_NEWS_BRANCH})..."
+        if timeout 120 git clone -b "$_NEWS_BRANCH" "$_NEWS_REMOTE" "$_NEWS_DIR" </dev/null 2>/dev/null; then
+            log "News site cloned"
+        else
+            # Branch may not exist yet — create an orphan checkout
+            log "Branch '$_NEWS_BRANCH' not found, creating orphan checkout..."
+            mkdir -p "$_NEWS_DIR"
+            git -C "$_NEWS_DIR" init </dev/null
+            git -C "$_NEWS_DIR" remote add origin "$_NEWS_REMOTE" 2>/dev/null || true
+            git -C "$_NEWS_DIR" checkout --orphan "$_NEWS_BRANCH" </dev/null
+            mkdir -p "$_NEWS_DIR/_posts" "$_NEWS_DIR/assets/images" "$_NEWS_DIR/_data"
+            log "News site initialized (orphan branch: $_NEWS_BRANCH)"
+        fi
+    fi
+
+    # ── 9. Clean up stale config backups ──
     for _bak in "$APP"/librechat.yaml.bak.* "$APP"/librechat.yaml.pre-safe.bak.*; do
         [[ -f "$_bak" ]] && { rm -f "$_bak"; log "Removed stale backup: $(basename "$_bak")"; }
     done
 
-    # ── 9. Clean up legacy trading.service ──
+    # ── 10. Clean up legacy trading.service ──
     if [[ -f "$HOME/.config/systemd/user/trading.service" ]]; then
         log "Removing legacy trading.service (renamed to augur)..."
         systemctl --user stop trading 2>/dev/null || true
