@@ -44,6 +44,29 @@ else
     die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 fi
 
+# Wait for LibreChat to become healthy (up to ~90s, with progress)
+_wait_lc() {
+    local _lc_url="http://localhost:${LC_PORT:-3080}"
+    local _max_attempts=45  # 45 x 2s = 90s
+    local _ready=false
+    for i in $(seq 1 $_max_attempts); do
+        if curl -sf "${_lc_url}/api/health" >/dev/null 2>&1; then
+            _ready=true; break
+        fi
+        if [[ "$((i % 5))" -eq 0 ]]; then
+            echo -e "        waiting for LibreChat... (${i}/${_max_attempts}, $((i * 2))s elapsed)"
+        fi
+        sleep 2
+    done
+    if [[ "$_ready" == true ]]; then
+        echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/api/health)"
+        return 0
+    else
+        echo -e "        ${RED}✗${NC} LibreChat not ready after $((${_max_attempts} * 2))s"
+        return 1
+    fi
+}
+
 # ── Command dispatch ──
 CMD="${1:-help}"
 
@@ -1220,22 +1243,14 @@ SVCEOF
         # Restart LibreChat to pick up the change
         log "  [2/5] Restarting LibreChat..."
         _svc_restart librechat >/dev/null 2>&1 || true
-        # Wait for LibreChat to be ready
-        _LC_READY=false
-        for i in $(seq 1 30); do
-            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
-                _LC_READY=true; break
-            fi
-            sleep 2
-        done
-        if [[ "$_LC_READY" != true ]]; then
+        if ! _wait_lc; then
             # Restore .env before aborting
             if [[ "$_HAD_ALLOW_REG" == true ]]; then
                 sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
             else
                 sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
             fi
-            die "LibreChat not ready after 60s — cannot register user"
+            die "LibreChat not ready — cannot register user. Check: augur logs"
         fi
         log "  [3/5] POST ${LC_URL}/api/auth/register (email=${_USER_EMAIL}, name=${_USER_NAME})"
         # Register via API
@@ -1253,6 +1268,7 @@ SVCEOF
         fi
         log "  [5/5] Restarting LibreChat..."
         _svc_restart librechat >/dev/null 2>&1 || true
+        _wait_lc || warn "LibreChat slow to restart — it may still be starting up"
         if [[ "$_REG_OK" == true ]]; then
             echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
             echo -e "  Log in at: https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
@@ -1275,6 +1291,7 @@ SVCEOF
                 log "Set ALLOW_REGISTRATION=true in $_LC_ENV"
                 log "Restarting LibreChat to apply..."
                 _svc_restart librechat >/dev/null 2>&1 || true
+                _wait_lc || warn "LibreChat slow to restart — check: augur logs"
                 echo -e "${GREEN}✓${NC} Public signup enabled"
                 echo -e "  ${YELLOW}Warning:${NC} Anyone can now register at https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
                 echo -e "  Run ${CYAN}augur signup off${NC} when done"
@@ -1288,6 +1305,7 @@ SVCEOF
                 log "Set ALLOW_REGISTRATION=false in $_LC_ENV"
                 log "Restarting LibreChat to apply..."
                 _svc_restart librechat >/dev/null 2>&1 || true
+                _wait_lc || warn "LibreChat slow to restart — check: augur logs"
                 echo -e "${GREEN}✓${NC} Public signup disabled"
                 ;;
             status|"")
