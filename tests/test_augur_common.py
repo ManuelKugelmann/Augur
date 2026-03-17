@@ -18,7 +18,7 @@ import augur_common as ac
 class TestSiteBaseUrl:
     def test_default_url(self, monkeypatch):
         monkeypatch.delenv("AUGUR_SITE_URL", raising=False)
-        assert ac.site_base_url() == "https://augur.example.com"
+        assert ac.site_base_url() == "https://github.com/ManuelKugelmann/Augur"
 
     def test_custom_url(self, monkeypatch):
         monkeypatch.setenv("AUGUR_SITE_URL", "https://custom.example.com")

@@ -85,7 +85,7 @@ def site_dir() -> str:
 
 
 def site_base_url() -> str:
-    return os.environ.get("AUGUR_SITE_URL", "https://augur.example.com")
+    return os.environ.get("AUGUR_SITE_URL", "https://github.com/ManuelKugelmann/Augur")
 
 
 def slugify(text: str, max_len: int = 60) -> str:

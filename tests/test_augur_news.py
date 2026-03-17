@@ -117,7 +117,7 @@ class TestArticleUrl:
     def test_default_base(self):
         from src.servers.augur_common import article_url
         url = article_url("the", "tomorrow", "2026-03-14")
-        assert url == "https://augur.example.com/the/tomorrow/2026-03-14"
+        assert url == "https://github.com/ManuelKugelmann/Augur/the/tomorrow/2026-03-14"
 
     def test_custom_base(self):
         from src.servers.augur_common import article_url
