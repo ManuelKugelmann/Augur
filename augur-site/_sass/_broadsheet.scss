@@ -273,7 +273,7 @@ hr,
     // Dark mode edition palettes (oklch)
     [data-theme="dark"] & {
       --card-bg: oklch(25% 0.008 286);
-      --card-ink: oklch(92% 0.012 85);
+      --card-ink: oklch(92% 0 0);
       --card-accent: oklch(57% 0.162 29);
       --card-meta: oklch(61% 0.017 61);
     }
