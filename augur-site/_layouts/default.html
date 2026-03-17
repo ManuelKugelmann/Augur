@@ -3,8 +3,12 @@
 <head>
   {% include head.html %}
 </head>
-<body data-brand="{{ page.brand | default: 'the' }}">
-  {% include masthead.html %}
+<body data-brand="{{ page.brand | default: 'the' }}"{% if page.splash %} class="page--splash"{% endif %}>
+  {% if page.splash %}
+    {% include masthead-splash.html %}
+  {% else %}
+    {% include masthead.html %}
+  {% endif %}
   <div class="page-wrapper">
     <main>
       {{ content }}

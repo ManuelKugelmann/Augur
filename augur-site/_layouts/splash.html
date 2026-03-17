@@ -1,24 +1,73 @@
 ---
 layout: default
+splash: true
 ---
 <div class="splash">
-  <div class="splash__grid">
-    {% for brand_entry in site.data.brands %}
-    {% assign bkey = brand_entry[0] %}
-    {% assign b = brand_entry[1] %}
-    {% assign latest = site.posts | where: "brand", bkey | first %}
-    <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ b.palette.accent }}; --card-bg: {{ b.palette.bg }}; --card-ink: {{ b.palette.ink }}; --card-meta: {{ b.palette.meta }};">
-      <span class="splash__nameplate">{{ b.masthead }}</span>
-      <span class="splash__rule-double"></span>
-      <span class="splash__tagline">{{ b.subtitle }}</span>
-      <span class="splash__rule-thin"></span>
-      {% if latest %}
-      <span class="splash__headline">{{ latest.headline | default: latest.title }}</span>
-      <span class="splash__dateline">{{ latest.date | date: "%B %d, %Y" }}</span>
-      {% else %}
-      <span class="splash__headline splash__headline--placeholder">{{ b.horizons[0].subtitle }}</span>
-      {% endif %}
-    </a>
-    {% endfor %}
+  <div class="splash__row">
+    <h2 class="splash__group-label">English</h2>
+    <div class="splash__pair">
+      {% assign the_brand = site.data.brands["the"] %}
+      {% assign the_latest = site.posts | where: "brand", "the" | first %}
+      <a href="{{ '/' | append: the_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ the_brand.palette.accent }}; --card-bg: {{ the_brand.palette.bg }}; --card-ink: {{ the_brand.palette.ink }}; --card-meta: {{ the_brand.palette.meta }};">
+        <span class="splash__nameplate">{{ the_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ the_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if the_latest %}
+        <span class="splash__headline">{{ the_latest.headline | default: the_latest.title }}</span>
+        <span class="splash__dateline">{{ the_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ the_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+      {% assign fin_brand = site.data.brands["financial"] %}
+      {% assign fin_latest = site.posts | where: "brand", "financial" | first %}
+      <a href="{{ '/' | append: fin_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ fin_brand.palette.accent }}; --card-bg: {{ fin_brand.palette.bg }}; --card-ink: {{ fin_brand.palette.ink }}; --card-meta: {{ fin_brand.palette.meta }};">
+        <span class="splash__nameplate">{{ fin_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ fin_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if fin_latest %}
+        <span class="splash__headline">{{ fin_latest.headline | default: fin_latest.title }}</span>
+        <span class="splash__dateline">{{ fin_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ fin_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="splash__row">
+    <h2 class="splash__group-label">Deutsch</h2>
+    <div class="splash__pair">
+      {% assign der_brand = site.data.brands["der"] %}
+      {% assign der_latest = site.posts | where: "brand", "der" | first %}
+      <a href="{{ '/' | append: der_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ der_brand.palette.accent }}; --card-bg: {{ der_brand.palette.bg }}; --card-ink: {{ der_brand.palette.ink }}; --card-meta: {{ der_brand.palette.meta }};">
+        <span class="splash__nameplate">{{ der_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ der_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if der_latest %}
+        <span class="splash__headline">{{ der_latest.headline | default: der_latest.title }}</span>
+        <span class="splash__dateline">{{ der_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ der_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+      {% assign finz_brand = site.data.brands["finanz"] %}
+      {% assign finz_latest = site.posts | where: "brand", "finanz" | first %}
+      <a href="{{ '/' | append: finz_brand.slug | append: '/' | relative_url }}" class="splash__card" style="--card-accent: {{ finz_brand.palette.accent }}; --card-bg: {{ finz_brand.palette.bg }}; --card-ink: {{ finz_brand.palette.ink }}; --card-meta: {{ finz_brand.palette.meta }};">
+        <span class="splash__nameplate">{{ finz_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ finz_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if finz_latest %}
+        <span class="splash__headline">{{ finz_latest.headline | default: finz_latest.title }}</span>
+        <span class="splash__dateline">{{ finz_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ finz_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+    </div>
   </div>
 </div>
