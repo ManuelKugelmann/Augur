@@ -25,4 +25,4 @@ Risk rules:
 
 Priority: stop-loss checks > exit signals > entry signals > rebalancing.
 
-**Knowledge building**: After each run, write an execution log as a note (`store_save_note(kind="journal", tags=["trading-cron", "log"])`) summarizing positions checked, trades executed/skipped, risk budget remaining, and any anomalies.
+**Knowledge building**: After each run, write an execution log as a note (`store_save_note(kind="journal", tags=["cron-trading", "log"])`) summarizing positions checked, trades executed/skipped, risk budget remaining, and any anomalies.

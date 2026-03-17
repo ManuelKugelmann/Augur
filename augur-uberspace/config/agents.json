@@ -334,12 +334,12 @@
     "edges": []
   },
   {
-    "_name": "trading-cron",
+    "_name": "cron-trading",
     "_layer": "L4",
     "_group": "trading",
     "name": "Trading Cron",
     "description": "Autonomous trading executor. Reads trade plans, checks risk, executes entries/exits via trader, monitors positions.",
-    "instructions": "See prompts/trading-cron.md",
+    "instructions": "See prompts/cron-trading.md",
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
@@ -351,7 +351,7 @@
     "conversation_starters": [
       "Execute trading routine: 1) Read trade plans. 2) Check risk status. 3) Get latest prices. 4) Evaluate signals. 5) Execute trades if conditions met. 6) Log results.",
       "Show current trade plans (store_get_notes kind=plan tags=trading)",
-      "Read recent trading logs (store_get_notes kind=journal tag=trading-cron) and summarize P&L"
+      "Read recent trading logs (store_get_notes kind=journal tag=cron-trading) and summarize P&L"
     ],
     "edges": [
       "market-data",
@@ -417,7 +417,7 @@
       "news-financial-augur",
       "news-finanz-augur",
       "trader",
-      "trading-cron",
+      "cron-trading",
       "charter"
     ]
   }
