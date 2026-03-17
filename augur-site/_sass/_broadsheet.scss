@@ -20,7 +20,7 @@ body {
 
 @keyframes masthead-scale {
   0%   { transform: scale(1); }
-  100% { transform: scale(0.55); }
+  100% { transform: scale(0.7); }
 }
 
 @keyframes subtitle-hide {
@@ -28,27 +28,33 @@ body {
   100% { opacity: 0; }
 }
 
-// Sentinel sits above the masthead; as it scrolls out of view
-// it drives the masthead animation via view-timeline.
+// Sentinel sits above the masthead and spans its full height.
+// While it's in view the animation stays at 0%; as it exits
+// the viewport the masthead scales down.
 .masthead-sentinel {
-  height: 1px;
+  height: 150px;
+  margin-bottom: -150px;      // overlap: doesn't push content down
+  pointer-events: none;
   view-timeline: --masthead-shrink block;
 }
 
 .masthead {
   text-align: center;
-  padding: 1.5rem 1rem 1rem;
+  padding: 0.5rem 1rem;
   border-bottom: 4px double var(--ink);
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--bg);
-  transform-origin: top center;
-  will-change: transform;
-  contain: layout style;
-  animation: masthead-scale linear both;
-  animation-timeline: --masthead-shrink;
-  animation-range: exit 0% exit 100%;
+
+  &__brand {
+    transform-origin: top center;
+    will-change: transform;
+    animation: masthead-scale linear both;
+    animation-timeline: --masthead-shrink;
+    animation-range: exit 0% exit 100%;
+    padding: 1rem 0 0;
+  }
 
   &__title {
     display: block;
@@ -78,7 +84,7 @@ body {
   }
 
   &__nav {
-    margin-top: 0.8rem;
+    margin-top: 0.5rem;
     padding-top: 0.6rem;
     border-top: 1px solid var(--meta);
     display: flex;

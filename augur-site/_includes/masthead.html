@@ -2,8 +2,10 @@
 {% assign brand = site.data.brands[brand_key] %}
 <div class="masthead-sentinel" aria-hidden="true"></div>
 <header class="masthead">
-  <a href="{{ '/' | relative_url }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
-  <div class="masthead__subtitle">{{ brand.subtitle | default: "Foresight from the signal noise" }}</div>
+  <div class="masthead__brand">
+    <a href="{{ '/' | relative_url }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
+    <div class="masthead__subtitle">{{ brand.subtitle | default: "Foresight from the signal noise" }}</div>
+  </div>
   <nav class="masthead__nav">
     {% for h in brand.horizons %}
     <a class="masthead__link{% if page.horizon == h.key %} masthead__link--active{% endif %}"

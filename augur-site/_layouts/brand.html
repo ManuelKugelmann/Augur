@@ -18,8 +18,4 @@ layout: default
     {% endfor %}
     {% endfor %}
   </ul>
-
-  {% if site.posts | where: "brand", page.brand | size == 0 %}
-  <p class="listing__empty">No predictions yet — first edition coming soon.</p>
-  {% endif %}
 </div>
