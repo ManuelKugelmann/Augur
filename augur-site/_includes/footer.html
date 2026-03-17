@@ -31,7 +31,7 @@
     <a href="{{ '/legal-notice/' | relative_url }}">Legal Notice</a> &middot;
     <a href="{{ '/privacy-policy/' | relative_url }}">Privacy Policy</a> &middot;
     {% endif %}
-    <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
+    <a href="{{ '/' | append: brand.slug | append: '/feed.xml' | relative_url }}">RSS</a>
   </p>
   <span class="page-footer__sep">&middot;</span>
   <div class="theme-switcher">

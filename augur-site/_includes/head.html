@@ -3,6 +3,9 @@
 <meta name="robots" content="noai, noimageai">
 {% seo %}
 <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+{% assign brand_key = page.brand | default: "the" %}
+{% assign head_brand = site.data.brands[brand_key] %}
+<link rel="alternate" type="application/rss+xml" title="{{ head_brand.name }}" href="{{ '/' | append: head_brand.slug | append: '/feed.xml' | relative_url }}">
 {% if page.image_paths %}
 <meta property="og:image" content="{{ page.image_paths[0] | relative_url }}">
 {% endif %}

@@ -1,0 +1,8 @@
+---
+layout: feed.xml
+feed_brand: finanz
+feed_brand_slug: finanz.augur
+feed_title: "Finanz Augur"
+feed_description: "KI-generierte Einschätzung — keine Finanzberatung."
+feed_locale: de
+---

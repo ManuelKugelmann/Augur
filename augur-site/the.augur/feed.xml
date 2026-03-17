@@ -1,0 +1,8 @@
+---
+layout: feed.xml
+feed_brand: the
+feed_brand_slug: the.augur
+feed_title: "The Augur"
+feed_description: "AI-generated speculative predictions — not news. Not financial advice."
+feed_locale: en
+---
