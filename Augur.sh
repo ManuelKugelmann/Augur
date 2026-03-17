@@ -1165,6 +1165,13 @@ SVCEOF
         if [[ -z "$_USER_EMAIL" ]] && [[ -t 0 ]]; then
             echo -e "${CYAN}Register a new LibreChat user${NC}"
             echo ""
+            echo "  This will:"
+            echo "    1. Temporarily enable ALLOW_REGISTRATION in LibreChat .env"
+            echo "    2. Restart LibreChat to apply"
+            echo "    3. POST /api/auth/register with your credentials"
+            echo "    4. Restore original registration setting"
+            echo "    5. Restart LibreChat again"
+            echo ""
             read -rp "  Email: " _USER_EMAIL
             if [[ -z "$_USER_EMAIL" ]]; then die "Email is required"; fi
             read -rsp "  Password: " _USER_PASS; echo ""
@@ -1174,12 +1181,30 @@ SVCEOF
             read -rp "  Display name [${_USER_EMAIL%%@*}]: " _USER_NAME
             _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
         elif [[ -z "$_USER_EMAIL" ]]; then
-            echo -e "${YELLOW}Usage: augur user <email> <password> [name]${NC}"
-            echo ""; echo "  augur user admin@example.com MyPass123!"
-            echo "  augur user   # interactive (prompts for email + password)"
+            echo -e "${YELLOW}Usage: augur user <email> <password> [display-name]${NC}"
+            echo ""
+            echo "  Register a new LibreChat user account."
+            echo ""
+            echo "  Parameters:"
+            echo "    email          User email address (required)"
+            echo "    password       Account password (required)"
+            echo "    display-name   Display name (optional, defaults to email prefix)"
+            echo ""
+            echo "  Examples:"
+            echo "    augur user admin@example.com MyPass123!"
+            echo "    augur user admin@example.com MyPass123! 'Admin User'"
+            echo "    augur user   # interactive mode (prompts for each field)"
+            echo ""
+            echo "  What happens:"
+            echo "    1. Temporarily sets ALLOW_REGISTRATION=true in LibreChat .env"
+            echo "    2. Restarts LibreChat to apply the change"
+            echo "    3. Calls POST ${LC_URL}/api/auth/register"
+            echo "    4. Restores original ALLOW_REGISTRATION setting"
+            echo "    5. Restarts LibreChat again to lock registration"
             exit 0
         fi
         _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
+        echo -e "${CYAN}Registering user: ${_USER_EMAIL} (name: ${_USER_NAME})${NC}"
         # Temporarily enable registration, register, then restore
         _LC_ENV="$APP/.env"
         _HAD_ALLOW_REG=false
@@ -1191,7 +1216,9 @@ SVCEOF
         else
             echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
         fi
+        log "  [1/5] Set ALLOW_REGISTRATION=true in $_LC_ENV"
         # Restart LibreChat to pick up the change
+        log "  [2/5] Restarting LibreChat..."
         _svc_restart librechat >/dev/null 2>&1 || true
         # Wait for LibreChat to be ready
         _LC_READY=false
@@ -1210,6 +1237,7 @@ SVCEOF
             fi
             die "LibreChat not ready after 60s — cannot register user"
         fi
+        log "  [3/5] POST ${LC_URL}/api/auth/register (email=${_USER_EMAIL}, name=${_USER_NAME})"
         # Register via API
         _REG_RESP=$(curl -sf -X POST "${LC_URL}/api/auth/register" \
             -H "Content-Type: application/json" \
@@ -1218,9 +1246,12 @@ SVCEOF
         # Restore registration setting
         if [[ "$_HAD_ALLOW_REG" == true ]]; then
             sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
+            log "  [4/5] Restored ${_OLD_ALLOW_REG} in $_LC_ENV"
         else
             sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
+            log "  [4/5] Removed ALLOW_REGISTRATION from $_LC_ENV"
         fi
+        log "  [5/5] Restarting LibreChat..."
         _svc_restart librechat >/dev/null 2>&1 || true
         if [[ "$_REG_OK" == true ]]; then
             echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
