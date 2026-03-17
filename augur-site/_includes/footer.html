@@ -2,6 +2,12 @@
 {% assign brand = site.data.brands[brand_key] %}
 {% assign locale = brand.locale | default: "en" %}
 <footer class="page-footer">
+  <div class="theme-switcher">
+    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
+    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
+    <button class="theme-switcher__btn" data-set-theme="sepia">Sepia</button>
+    <button class="theme-switcher__btn" data-set-theme="modern">Modern</button>
+  </div>
   <p>
     {% if locale == "de" %}
     <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
@@ -12,10 +18,4 @@
     {% endif %}
     <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
   </p>
-  <div class="theme-switcher">
-    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
-    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
-    <button class="theme-switcher__btn" data-set-theme="sepia">Sepia</button>
-    <button class="theme-switcher__btn" data-set-theme="modern">Modern</button>
-  </div>
 </footer>
