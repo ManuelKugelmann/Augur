@@ -51,7 +51,7 @@ class TestAgentsFile:
 # ── Required fields ──────────────────────────
 
 class TestAgentFields:
-    REQUIRED = ["_name", "_layer", "name", "description", "instructions",
+    REQUIRED = ["_name", "_layer", "_group", "name", "description", "instructions",
                 "provider", "model", "tools", "edges"]
 
     def test_all_agents_have_required_fields(self, agents):
@@ -113,6 +113,36 @@ class TestLayers:
         assert len(util) == 2
         names = {a["_name"] for a in util}
         assert names == {"trader", "charter"}
+
+
+# ── Group structure ──────────────────────────
+
+class TestGroups:
+    VALID_GROUPS = {"core", "trading", "news"}
+
+    def test_all_agents_have_valid_group(self, agents):
+        for a in agents:
+            assert a["_group"] in self.VALID_GROUPS, (
+                f"{a['_name']}: invalid _group '{a['_group']}'")
+
+    def test_core_agents(self, agents):
+        core = [a for a in agents if a["_group"] == "core"]
+        names = {a["_name"] for a in core}
+        expected = {"market-data", "osint-data", "signals-data",
+                    "market-analyst", "osint-analyst", "signals-analyst",
+                    "synthesizer", "cron-planner", "charter", "live-chat"}
+        assert names == expected
+
+    def test_trading_agents(self, agents):
+        trading = [a for a in agents if a["_group"] == "trading"]
+        names = {a["_name"] for a in trading}
+        assert names == {"trader"}
+
+    def test_news_agents(self, agents):
+        news = [a for a in agents if a["_group"] == "news"]
+        names = {a["_name"] for a in news}
+        assert names == {"news-the-augur", "news-der-augur",
+                         "news-financial-augur", "news-finanz-augur"}
 
 
 # ── Edge consistency ─────────────────────────
@@ -321,14 +351,17 @@ class TestNewsAgents:
 class TestEdgeResolution:
     """Test that resolve_edges produces correct GraphEdge objects."""
 
-    def _load_resolve_edges(self):
-        """Import resolve_edges from seed-agents.py (requires httpx)."""
+    def _load_module(self):
+        """Import seed-agents.py module (requires httpx)."""
         pytest.importorskip("httpx", reason="httpx required for seed-agents import")
         import importlib.util
         spec = importlib.util.spec_from_file_location("seed_agents", _seed_module_path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        return mod.resolve_edges
+        return mod
+
+    def _load_resolve_edges(self):
+        return self._load_module().resolve_edges
 
     def test_resolve_edges_format(self, agents):
         resolve_edges = self._load_resolve_edges()
@@ -370,3 +403,21 @@ class TestEdgeResolution:
         # market-analyst edges to market-data, but market-data is missing
         ma_edges = resolved["market-analyst"]
         assert len(ma_edges) == 0  # should skip missing target
+
+    def test_filter_by_groups_core_only(self, agents):
+        mod = self._load_module()
+        core = mod.filter_by_groups(agents, {"core"})
+        assert all(a["_group"] == "core" for a in core)
+        assert len(core) == 10
+
+    def test_filter_by_groups_core_plus_trading(self, agents):
+        mod = self._load_module()
+        result = mod.filter_by_groups(agents, {"core", "trading"})
+        groups = {a["_group"] for a in result}
+        assert groups == {"core", "trading"}
+        assert len(result) == 11
+
+    def test_filter_by_groups_all(self, agents):
+        mod = self._load_module()
+        result = mod.filter_by_groups(agents, {"core", "trading", "news"})
+        assert len(result) == len(agents)

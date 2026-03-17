@@ -496,10 +496,10 @@ SVCEOF
                 sleep 2
             done
             if [[ "$LC_READY" == true ]]; then
-                log "LibreChat is ready, seeding agents..."
+                log "LibreChat is ready, seeding all agents..."
                 "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
                     --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
-                    --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
+                    --base-url "$LC_URL" --all 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
             else
                 warn "LibreChat not ready after 60s — seed agents manually: augur agents <email> <password>"
             fi
@@ -1272,6 +1272,15 @@ SVCEOF
         if [[ "$_REG_OK" == true ]]; then
             echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
             echo -e "  Log in at: https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+            # Auto-seed core agents for the new user
+            if [[ -x "$STACK/venv/bin/python" ]]; then
+                echo -e "${CYAN}Seeding core agents for ${_USER_EMAIL}...${NC}"
+                "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
+                    --email "$_USER_EMAIL" --password "$_USER_PASS" \
+                    --base-url "$LC_URL" 2>&1 \
+                    && echo -e "${GREEN}✓${NC} Core agents seeded" \
+                    || warn "Agent seeding failed (seed manually: augur agents ${_USER_EMAIL} <password>)"
+            fi
         else
             echo -e "${RED}✗${NC} Registration failed: ${_REG_RESP}" >&2
             exit 1
@@ -1328,20 +1337,54 @@ SVCEOF
         esac
         ;;
     agents)
-        AGENTS_EMAIL="${2:-${AUGUR_SETUP_EMAIL:-}}"
-        AGENTS_PASS="${3:-${AUGUR_SETUP_PASSWORD:-}}"
-        if [[ "${2:-}" == "--dry-run" ]]; then
+        # Parse: augur agents [--dry-run] [--group GROUP...] [--all] <email> <password>
+        _AGENTS_ARGS=()
+        _AGENTS_EMAIL=""
+        _AGENTS_PASS=""
+        shift  # consume "agents"
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --dry-run) _AGENTS_ARGS+=("--dry-run"); shift ;;
+                --all) _AGENTS_ARGS+=("--all"); shift ;;
+                --group) _AGENTS_ARGS+=("--group" "$2"); shift 2 ;;
+                --group=*) _AGENTS_ARGS+=("--group" "${1#*=}"); shift ;;
+                -*) echo "Unknown flag: $1" >&2; exit 1 ;;
+                *)
+                    if [[ -z "$_AGENTS_EMAIL" ]]; then _AGENTS_EMAIL="$1"
+                    elif [[ -z "$_AGENTS_PASS" ]]; then _AGENTS_PASS="$1"
+                    fi
+                    shift ;;
+            esac
+        done
+        _AGENTS_EMAIL="${_AGENTS_EMAIL:-${AUGUR_SETUP_EMAIL:-}}"
+        _AGENTS_PASS="${_AGENTS_PASS:-${AUGUR_SETUP_PASSWORD:-}}"
+        if [[ " ${_AGENTS_ARGS[*]} " == *" --dry-run "* ]]; then
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
-                --email "dummy@example.com" --password "dummy" --dry-run
-        elif [[ -z "$AGENTS_EMAIL" || -z "$AGENTS_PASS" ]]; then
-            echo -e "${YELLOW}Usage: augur agents <email> <password>${NC}"
-            echo ""; echo "  augur agents admin@example.com mypassword"
-            echo "  augur agents --dry-run  # preview only"
+                --email "dummy@example.com" --password "dummy" "${_AGENTS_ARGS[@]}"
+        elif [[ -z "$_AGENTS_EMAIL" || -z "$_AGENTS_PASS" ]]; then
+            echo -e "${YELLOW}Usage: augur agents [options] <email> <password>${NC}"
+            echo ""
+            echo "  Groups (core is always included):"
+            echo "    (default)       Core agents only (data + analysis + planning)"
+            echo "    --group trading Add trading agents (broker)"
+            echo "    --group news    Add news agents (4 brands)"
+            echo "    --all           All groups"
+            echo ""
+            echo "  Options:"
+            echo "    --dry-run       Preview only"
+            echo ""
+            echo "  Examples:"
+            echo "    augur agents admin@example.com mypassword"
+            echo "    augur agents --group trading admin@example.com mypassword"
+            echo "    augur agents --group trading --group news admin@example.com mypassword"
+            echo "    augur agents --all admin@example.com mypassword"
+            echo "    augur agents --dry-run"
         else
             LC_URL="http://localhost:${LC_PORT:-3080}"
-            echo -e "${CYAN}Seeding agents at ${LC_URL} for ${AGENTS_EMAIL}...${NC}"
+            echo -e "${CYAN}Seeding agents at ${LC_URL} for ${_AGENTS_EMAIL}...${NC}"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
-                --email "$AGENTS_EMAIL" --password "$AGENTS_PASS" --base-url "$LC_URL"
+                --email "$_AGENTS_EMAIL" --password "$_AGENTS_PASS" \
+                --base-url "$LC_URL" "${_AGENTS_ARGS[@]}"
             echo -e "${GREEN}✓${NC} Agent seeding complete"
         fi
         ;;
@@ -1636,7 +1679,7 @@ PYEOF
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  augur user         Register a new LibreChat user account"
         echo "  augur signup       Enable/disable public self-registration"
-        echo "  augur agents       Seed multi-agent architecture (11 agents)"
+        echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
         echo "  augur reseed       Clear all profiles and re-seed from disk"
         echo "  augur check        Health check (services, config, connectivity)"

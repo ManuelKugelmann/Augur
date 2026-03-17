@@ -2,6 +2,7 @@
   {
     "_name": "market-data",
     "_layer": "L1",
+    "_group": "core",
     "name": "Market Data",
     "description": "Scrapes market data (prices, indicators, commodities), manages profiles/snapshots/events, reads from storage on request.",
     "instructions": "See prompts/market-data.md",
@@ -25,6 +26,7 @@
   {
     "_name": "osint-data",
     "_layer": "L1",
+    "_group": "core",
     "name": "OSINT Data",
     "description": "Scrapes OSINT data (disasters, conflicts, weather, health, elections, transport, agriculture), manages profiles/snapshots/events.",
     "instructions": "See prompts/osint-data.md",
@@ -47,6 +49,7 @@
   {
     "_name": "signals-data",
     "_layer": "L1",
+    "_group": "core",
     "name": "Signals Data",
     "description": "Scrapes signal data (RSS, Reddit, HN, crypto sentiment), manages profiles/snapshots/events.",
     "instructions": "See prompts/signals-data.md",
@@ -71,6 +74,7 @@
   {
     "_name": "market-analyst",
     "_layer": "L2",
+    "_group": "core",
     "name": "Market Analyst",
     "description": "Analyzes market data, identifies trends and patterns, writes analysis notes. Hands off to market-data for reads.",
     "instructions": "See prompts/market-analyst.md",
@@ -95,6 +99,7 @@
   {
     "_name": "osint-analyst",
     "_layer": "L2",
+    "_group": "core",
     "name": "OSINT Analyst",
     "description": "Analyzes OSINT data, threat assessment, country risk, supply chain exposure. Hands off to osint-data for reads.",
     "instructions": "See prompts/osint-analyst.md",
@@ -118,6 +123,7 @@
   {
     "_name": "signals-analyst",
     "_layer": "L2",
+    "_group": "core",
     "name": "Signals Analyst",
     "description": "Analyzes signal data, sentiment aggregation, narrative detection, filing significance. Hands off to signals-data for reads.",
     "instructions": "See prompts/signals-analyst.md",
@@ -141,6 +147,7 @@
   {
     "_name": "synthesizer",
     "_layer": "L3",
+    "_group": "core",
     "name": "Market Synthesizer",
     "description": "Cross-domain analysis: correlates disasters, markets, signals. Reads all analyst notes and raw data via data agents.",
     "instructions": "See prompts/synthesizer.md",
@@ -166,6 +173,7 @@
   {
     "_name": "cron-planner",
     "_layer": "L4",
+    "_group": "core",
     "name": "Cron Planner",
     "description": "Autonomous research organizer and plan executor. Schedules scraping, triggers analysis, executes trades via trader.",
     "instructions": "See prompts/cron-planner.md",
@@ -197,6 +205,7 @@
   {
     "_name": "news-the-augur",
     "_layer": "L4",
+    "_group": "news",
     "name": "News: The Augur",
     "description": "Produces EN general prediction articles for The Augur. Researches geopolitical, environmental, humanitarian signals.",
     "instructions": "See prompts/news-the-augur.md",
@@ -224,6 +233,7 @@
   {
     "_name": "news-der-augur",
     "_layer": "L4",
+    "_group": "news",
     "name": "News: Der Augur",
     "description": "Produces DE general prediction articles for Der Augur. German language, geopolitical/environmental focus.",
     "instructions": "See prompts/news-der-augur.md",
@@ -251,6 +261,7 @@
   {
     "_name": "news-financial-augur",
     "_layer": "L4",
+    "_group": "news",
     "name": "News: Financial Augur",
     "description": "Produces EN market prediction articles for Financial Augur. Macro, sector rotation, commodities focus.",
     "instructions": "See prompts/news-financial-augur.md",
@@ -278,6 +289,7 @@
   {
     "_name": "news-finanz-augur",
     "_layer": "L4",
+    "_group": "news",
     "name": "News: Finanz Augur",
     "description": "Produces DE market prediction articles for Finanz Augur. German language, macro/sector focus.",
     "instructions": "See prompts/news-finanz-augur.md",
@@ -305,6 +317,7 @@
   {
     "_name": "trader",
     "_layer": "utility",
+    "_group": "trading",
     "name": "Trader",
     "description": "Stateless broker agent: executes trades, checks portfolio, positions, P&L, fills. Risk-gated.",
     "instructions": "See prompts/trader.md",
@@ -324,6 +337,7 @@
   {
     "_name": "charter",
     "_layer": "utility",
+    "_group": "core",
     "name": "Charter",
     "description": "Stateless chart agent: generates Plotly charts and visualizations from store data.",
     "instructions": "See prompts/charter.md",
@@ -344,6 +358,7 @@
   {
     "_name": "live-chat",
     "_layer": "L5",
+    "_group": "core",
     "name": "Trading Assistant",
     "description": "Your AI trading assistant. Manages plans, delegates to specialist agents, executes trades, watches portfolio.",
     "instructions": "See prompts/live-chat.md",
