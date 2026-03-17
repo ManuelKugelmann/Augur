@@ -4,7 +4,7 @@ splash: true
 ---
 <div class="splash">
   <div class="splash__row">
-    <h2 class="splash__group-label">English</h2>
+
     <div class="splash__pair">
       {% assign the_brand = site.data.brands["the"] %}
       {% assign the_latest = site.posts | where: "brand", "the" | first %}
@@ -38,7 +38,7 @@ splash: true
   </div>
 
   <div class="splash__row">
-    <h2 class="splash__group-label">Deutsch</h2>
+
     <div class="splash__pair">
       {% assign der_brand = site.data.brands["der"] %}
       {% assign der_latest = site.posts | where: "brand", "der" | first %}
