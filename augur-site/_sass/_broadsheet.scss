@@ -208,11 +208,22 @@ hr,
 // Footer
 .page-footer {
   margin-top: auto;
-  padding: 0.8rem 1rem;
+  padding: 0.5rem 1rem;
   border-top: 1px solid var(--meta);
-  text-align: center;
   font-size: 0.75rem;
   color: var(--meta);
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  &__legal {
+    margin: 0;
+  }
 
   a {
     color: var(--meta);
