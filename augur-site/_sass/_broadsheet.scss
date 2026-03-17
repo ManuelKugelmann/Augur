@@ -484,14 +484,20 @@ hr,
     padding: 0;
     line-height: 1;
 
+    // CSS-only symbol swap via data-theme on body
+    &::after {
+      content: "☾";
+    }
+    [data-theme="dark"] &::after {
+      content: "☼";
+    }
+
     &:hover {
       color: var(--accent);
     }
   }
 
   &__build {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.5rem;
     opacity: 0.5;
   }
 
@@ -510,8 +516,8 @@ hr,
   background: #fff3cd;
   color: #664d03;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-style: italic;
   text-align: center;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }

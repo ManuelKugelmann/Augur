@@ -16,18 +16,8 @@
 </header>
 <script>
 (function() {
-  var SUN = '\u263C', MOON = '\u263E';
   var t = localStorage.getItem('augur-theme') || '';
   if (t) document.body.setAttribute('data-theme', t);
-
-  function updateToggle() {
-    var btn = document.getElementById('theme-toggle');
-    if (!btn) return;
-    var dark = document.body.getAttribute('data-theme') === 'dark';
-    btn.textContent = dark ? SUN : MOON;
-    btn.title = dark ? 'Light mode' : 'Dark mode';
-  }
-
   document.addEventListener('click', function(e) {
     if (!e.target.closest('#theme-toggle')) return;
     var dark = document.body.getAttribute('data-theme') === 'dark';
@@ -38,9 +28,6 @@
       document.body.setAttribute('data-theme', 'dark');
       localStorage.setItem('augur-theme', 'dark');
     }
-    updateToggle();
   });
-
-  updateToggle();
 })();
 </script>
