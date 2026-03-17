@@ -1261,6 +1261,54 @@ SVCEOF
             exit 1
         fi
         ;;
+    signup)
+        # Enable or disable public self-registration (requires LibreChat restart)
+        _LC_ENV="$APP/.env"
+        SUB="${2:-}"
+        case "$SUB" in
+            on)
+                if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+                    sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=true/' "$_LC_ENV"
+                else
+                    echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
+                fi
+                log "Set ALLOW_REGISTRATION=true in $_LC_ENV"
+                log "Restarting LibreChat to apply..."
+                _svc_restart librechat >/dev/null 2>&1 || true
+                echo -e "${GREEN}✓${NC} Public signup enabled"
+                echo -e "  ${YELLOW}Warning:${NC} Anyone can now register at https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+                echo -e "  Run ${CYAN}augur signup off${NC} when done"
+                ;;
+            off)
+                if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+                    sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=false/' "$_LC_ENV"
+                else
+                    echo "ALLOW_REGISTRATION=false" >> "$_LC_ENV"
+                fi
+                log "Set ALLOW_REGISTRATION=false in $_LC_ENV"
+                log "Restarting LibreChat to apply..."
+                _svc_restart librechat >/dev/null 2>&1 || true
+                echo -e "${GREEN}✓${NC} Public signup disabled"
+                ;;
+            status|"")
+                _CURRENT="(not set)"
+                if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+                    _CURRENT=$(grep '^ALLOW_REGISTRATION=' "$_LC_ENV" | tail -1 | cut -d= -f2)
+                fi
+                echo -e "${CYAN}Public signup:${NC} ALLOW_REGISTRATION=${_CURRENT} (in $APP/.env)"
+                echo ""
+                echo "  augur signup on      Enable public self-registration (+ restart LibreChat)"
+                echo "  augur signup off     Disable public self-registration (+ restart LibreChat)"
+                echo "  augur signup status  Show current setting"
+                echo ""
+                echo "  Note: LibreChat must restart for changes to take effect."
+                echo "  Use ${CYAN}augur user${NC} to register a single user without leaving signup open."
+                ;;
+            *)
+                echo -e "${YELLOW}Usage: augur signup [on|off|status]${NC}"
+                ;;
+        esac
+        ;;
     agents)
         AGENTS_EMAIL="${2:-${AUGUR_SETUP_EMAIL:-}}"
         AGENTS_PASS="${3:-${AUGUR_SETUP_PASSWORD:-}}"
@@ -1569,6 +1617,7 @@ PYEOF
         echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  augur user         Register a new LibreChat user account"
+        echo "  augur signup       Enable/disable public self-registration"
         echo "  augur agents       Seed multi-agent architecture (11 agents)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
         echo "  augur reseed       Clear all profiles and re-seed from disk"
