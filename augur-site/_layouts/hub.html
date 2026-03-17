@@ -1,33 +1,30 @@
 ---
 layout: default
 ---
+{% assign brand = site.data.brands[page.brand] %}
+
 <div class="listing">
   <div class="listing__header" style="text-align: center;">
-    <p class="listing__tagline">AI-generated speculative predictions from open-source intelligence.</p>
+    <p class="listing__tagline">{{ brand.subtitle }}</p>
     <hr class="rule--double">
   </div>
 
-  {% include editions.html current="" %}
+  {% include editions.html current=page.brand %}
 
-  {% assign all_posts = site.posts | sort: "date" | reverse %}
-  {% if all_posts.size > 0 %}
   <hr class="rule--double">
-  <h3 style="text-align: center; font-family: 'Playfair Display', Georgia, serif; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem; color: var(--meta);">Latest</h3>
+
   <ul class="listing__items">
-    {% for post in all_posts limit: 5 %}
+    {% for h in brand.horizons %}
+    {% assign filtered = site.posts | where: "brand", page.brand | where: "horizon", h.key %}
+    {% for post in filtered limit: 1 %}
     <li class="listing__item">
       {% include article-card.html post=post %}
     </li>
     {% endfor %}
+    {% endfor %}
   </ul>
-  {% endif %}
 
-  <div style="text-align: center; margin-top: 2rem;">
-    <p style="font-size: 0.85rem; max-width: 500px; margin: 0.5rem auto; color: var(--meta);">
-      Augur collects real-world open-source intelligence signals and uses AI
-      to extrapolate plausible near-future scenarios. Every prediction is permanently
-      archived and tracked for accuracy. This is not news — it is speculation,
-      clearly labeled and accountable.
-    </p>
-  </div>
+  {% if site.posts | where: "brand", page.brand | size == 0 %}
+  <p class="listing__empty">No predictions yet — first edition coming soon.</p>
+  {% endif %}
 </div>

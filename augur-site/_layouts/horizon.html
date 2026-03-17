@@ -12,9 +12,9 @@ layout: default
 {% endfor %}
 
 <div class="listing">
-  <div class="listing__header">
-    {% if horizon_subtitle %}<p class="listing__subtitle">{{ horizon_subtitle }}</p>{% endif %}
-    <hr class="rule">
+  <div class="listing__header" style="text-align: center;">
+    {% if horizon_subtitle %}<p class="listing__tagline">{{ horizon_subtitle }}</p>{% endif %}
+    <hr class="rule--double">
   </div>
 
   <ul class="listing__items">
@@ -27,6 +27,9 @@ layout: default
   </ul>
 
   {% if filtered.size == 0 %}
-  <p style="color: var(--meta); font-style: italic;">No predictions yet for this horizon.</p>
+  <p class="listing__empty">No predictions yet for this horizon.</p>
   {% endif %}
+
+  <hr class="rule--double">
+  {% include editions.html current=page.brand %}
 </div>
