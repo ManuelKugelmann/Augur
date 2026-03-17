@@ -2,18 +2,28 @@
 {% assign brand = site.data.brands[brand_key] %}
 {% assign locale = brand.locale | default: "en" %}
 <footer class="page-footer">
-  <p class="page-footer__legal">
-    {% if locale == "de" %}
-    <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
-    <a href="{{ '/datenschutz/' | relative_url }}">Datenschutz</a> &middot;
-    {% else %}
-    <a href="{{ '/impressum/' | relative_url }}">Legal Notice</a> &middot;
-    <a href="{{ '/datenschutz/' | relative_url }}">Privacy Policy</a> &middot;
-    {% endif %}
-    <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
-  </p>
-  <div class="theme-switcher">
-    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
-    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
+  <nav class="page-footer__editions">
+    {% for brand_entry in site.data.brands %}
+    {% assign bkey = brand_entry[0] %}
+    {% assign b = brand_entry[1] %}
+    {% if bkey == brand_key %}{% continue %}{% endif %}
+    <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}">{{ b.name }}</a>
+    {% endfor %}
+  </nav>
+  <div class="page-footer__row">
+    <p class="page-footer__legal">
+      {% if locale == "de" %}
+      <a href="{{ '/impressum/' | relative_url }}">Impressum</a> &middot;
+      <a href="{{ '/datenschutz/' | relative_url }}">Datenschutz</a> &middot;
+      {% else %}
+      <a href="{{ '/impressum/' | relative_url }}">Legal Notice</a> &middot;
+      <a href="{{ '/datenschutz/' | relative_url }}">Privacy Policy</a> &middot;
+      {% endif %}
+      <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
+    </p>
+    <div class="theme-switcher">
+      <button class="theme-switcher__btn" data-set-theme="">Classic</button>
+      <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
+    </div>
   </div>
 </footer>
