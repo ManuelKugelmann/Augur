@@ -7,27 +7,32 @@ on:
   # main/augur pushes also rebuild — acceptable cost for a small Jekyll site.
   push:
     branches: [main, augur, augur_news]
-  # PR preview for theme changes
+  # PR preview for theme/layout changes
   pull_request:
     paths:
       - 'augur-site/**'
       - '.github/workflows/augur-news.yml'
+  pull_request_target:
+    types: [closed]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
+  pull-requests: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 concurrency:
-  group: "pages-deploy"
-  cancel-in-progress: false
+  group: "pages-deploy-${{ github.event.pull_request.number || 'prod' }}"
+  cancel-in-progress: true
 
 jobs:
+  # --- Production deploy (push to main/augur/augur_news) ---
   build-and-deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -36,7 +41,7 @@ jobs:
       - name: Checkout main (Jekyll source)
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'push' && contains(github.ref, 'augur_news') && 'main' || github.ref }}
+          ref: ${{ contains(github.ref, 'augur_news') && 'main' || github.ref }}
           path: main
 
       - name: Checkout augur_news (data branch)
@@ -48,10 +53,8 @@ jobs:
 
       - name: Merge source + data
         run: |
-          # Start with Jekyll source from main
           cp -r main/augur-site site
 
-          # Overlay data from augur_news branch (articles, assets, data)
           if [ -d data/_posts ]; then
             cp -r data/_posts/* site/_posts/ 2>/dev/null || true
           fi
@@ -76,12 +79,127 @@ jobs:
           JEKYLL_ENV: production
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/_site
 
       - name: Deploy to GitHub Pages
-        if: github.event_name != 'pull_request'
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # --- PR preview (deploy to gh-pages/preview/) ---
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch (Jekyll source)
+        uses: actions/checkout@v6
+        with:
+          path: main
+
+      - name: Checkout augur_news (data branch)
+        uses: actions/checkout@v6
+        with:
+          ref: augur_news
+          path: data
+        continue-on-error: true
+
+      - name: Merge source + data
+        run: |
+          cp -r main/augur-site site
+
+          if [ -d data/_posts ]; then
+            cp -r data/_posts/* site/_posts/ 2>/dev/null || true
+          fi
+          if [ -d data/_data ]; then
+            cp -r data/_data/* site/_data/ 2>/dev/null || true
+          fi
+          if [ -d data/assets ]; then
+            cp -r data/assets/* site/assets/ 2>/dev/null || true
+          fi
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          working-directory: site
+
+      - name: Build with Jekyll (preview baseurl)
+        working-directory: site
+        run: bundle exec jekyll build --baseurl "/preview"
+        env:
+          JEKYLL_ENV: production
+
+      - name: Deploy preview to gh-pages/preview/
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git clone --branch gh-pages --single-branch --depth=1 \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            _gh-pages 2>/dev/null || {
+              mkdir _gh-pages && cd _gh-pages && git init && git checkout -b gh-pages
+              touch .nojekyll
+              echo "augur.news" > CNAME
+              cd ..
+            }
+
+          rm -rf _gh-pages/preview
+          mkdir -p _gh-pages/preview
+          cp -r site/_site/* _gh-pages/preview/
+
+          cd _gh-pages
+          git add -A
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Deploy preview (PR #${{ github.event.pull_request.number }})"
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const url = 'https://augur.news/preview/';
+            const body = `**Jekyll preview deployed**\n\n${url}\n\n_Updated for commit ${context.sha.slice(0, 7)}_`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes('Jekyll preview'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  # --- Cleanup preview/ when PR closes ---
+  cleanup-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove preview from gh-pages
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git clone --branch gh-pages --single-branch --depth=1 \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            _gh-pages 2>/dev/null || exit 0
+
+          cd _gh-pages
+          if [ -d preview ]; then
+            git rm -rf preview
+            git commit -m "Remove preview (PR #${{ github.event.pull_request.number }} closed)"
+            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+          fi
