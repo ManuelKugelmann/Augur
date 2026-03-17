@@ -137,6 +137,74 @@ hr,
   letter-spacing: 0.08em;
 }
 
+// Listing helpers
+.listing__tagline {
+  font-family: 'Lora', Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--meta);
+  margin: 0.2rem 0 0;
+}
+
+.listing__empty {
+  font-style: italic;
+  color: var(--meta);
+  margin-bottom: 1.5rem;
+}
+
+// Editions cross-links
+.editions {
+  text-align: center;
+  margin: 1rem 0 1.5rem;
+
+  &__heading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--meta);
+    margin-bottom: 0.8rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+  }
+
+  &__card {
+    display: block;
+    padding: 0.8rem;
+    border: 1px solid var(--meta);
+    text-decoration: none;
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: var(--accent);
+    }
+  }
+
+  &__name {
+    display: block;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  &__sub {
+    display: block;
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 0.75rem;
+    color: var(--meta);
+    margin-top: 0.2rem;
+  }
+}
+
 // Footer
 .page-footer {
   margin-top: auto;

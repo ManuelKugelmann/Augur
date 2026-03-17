@@ -3,42 +3,28 @@ layout: default
 ---
 <div class="listing">
   <div class="listing__header" style="text-align: center;">
-    <h1 style="font-size: 2rem;">{{ site.title }}</h1>
-    <p style="font-style: italic; color: var(--meta);">AI-generated speculative predictions from open-source intelligence.</p>
+    <p class="listing__tagline">AI-generated speculative predictions from open-source intelligence.</p>
     <hr class="rule--double">
   </div>
 
-  {% for brand_entry in site.data.brands %}
-  {% assign bkey = brand_entry[0] %}
-  {% assign brand = brand_entry[1] %}
+  {% include editions.html current="" %}
 
-  <h2>
-    <a href="{{ '/' | append: brand.slug | append: '/' | relative_url }}" style="color: var(--ink);">
-      {{ brand.name }}
-    </a>
-  </h2>
-  <p style="font-size: 0.85rem; color: var(--meta); margin-bottom: 0.8rem;">{{ brand.subtitle }}</p>
-
+  {% assign all_posts = site.posts | sort: "date" | reverse %}
+  {% if all_posts.size > 0 %}
+  <hr class="rule--double">
+  <h3 style="text-align: center; font-family: 'Playfair Display', Georgia, serif; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem; color: var(--meta);">Latest</h3>
   <ul class="listing__items">
-    {% assign brand_posts = site.posts | where: "brand", bkey %}
-    {% for post in brand_posts limit: 3 %}
+    {% for post in all_posts limit: 5 %}
     <li class="listing__item">
       {% include article-card.html post=post %}
     </li>
     {% endfor %}
   </ul>
-
-  {% if brand_posts.size == 0 %}
-  <p style="color: var(--meta); font-style: italic; margin-bottom: 1.5rem;">No predictions yet.</p>
   {% endif %}
 
-  <hr class="rule">
-  {% endfor %}
-
   <div style="text-align: center; margin-top: 2rem;">
-    <h3>About The Augur</h3>
-    <p style="font-size: 0.9rem; max-width: 500px; margin: 0.5rem auto; color: var(--meta);">
-      The Augur collects real-world open-source intelligence signals and uses AI
+    <p style="font-size: 0.85rem; max-width: 500px; margin: 0.5rem auto; color: var(--meta);">
+      Augur collects real-world open-source intelligence signals and uses AI
       to extrapolate plausible near-future scenarios. Every prediction is permanently
       archived and tracked for accuracy. This is not news — it is speculation,
       clearly labeled and accountable.
