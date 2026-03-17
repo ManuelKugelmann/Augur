@@ -1,0 +1,14 @@
+<section class="editions">
+  <h3 class="editions__heading">Editions</h3>
+  <div class="editions__grid">
+    {% for brand_entry in site.data.brands %}
+    {% assign bkey = brand_entry[0] %}
+    {% assign b = brand_entry[1] %}
+    {% if bkey == include.current %}{% continue %}{% endif %}
+    <a href="{{ '/' | append: b.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="editions__card">
+      <span class="editions__name">{{ b.name }}</span>
+      <span class="editions__sub">{{ b.subtitle }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>

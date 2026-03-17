@@ -280,7 +280,9 @@ if [[ "$MODE" == "install" ]]; then
                     DERIVED="${LC_MONGO}/signals"
                 fi
             fi
-            sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$DERIVED|" "$STACK/.env"
+            # Escape sed metacharacters in URI (& → \&, \ → \\)
+            _SED_SAFE=$(printf '%s' "$DERIVED" | sed 's|[&\\]|\\&|g')
+            sed -i "s|^MONGO_URI_SIGNALS=.*|MONGO_URI_SIGNALS=$_SED_SAFE|" "$STACK/.env"
             log "Auto-derived MONGO_URI_SIGNALS from MONGO_URI (database: signals)"
         fi
     fi
@@ -290,6 +292,10 @@ if [[ "$MODE" == "install" ]]; then
     SVC_DIR="$HOME/.config/systemd/user"
     mkdir -p "$SVC_DIR"
     cat > "$SVC_DIR/librechat.service" <<EOF
+[Unit]
+Description=LibreChat web application
+After=network.target
+
 [Install]
 WantedBy=default.target
 

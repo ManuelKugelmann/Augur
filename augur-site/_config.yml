@@ -14,6 +14,14 @@ exclude:
   - LICENSE
 
 defaults:
+  # Fallback: any post without a brand-specific path gets the.augur styling
+  - scope:
+      path: "_posts"
+      type: posts
+    values:
+      layout: article
+      brand: the
+      horizon: days
   # the.augur (EN general)
   - scope:
       path: "_posts/the.augur/days"
@@ -158,6 +166,14 @@ defaults:
       brand: finanz
       horizon: decades
       categories: finanz.augur/jahrzehnte
+
+  # preview (CI smoke tests)
+  - scope:
+      path: "_posts/preview"
+    values:
+      layout: article
+      brand: preview
+      categories: preview
 
 plugins:
   - jekyll-feed

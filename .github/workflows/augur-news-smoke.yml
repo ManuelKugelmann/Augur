@@ -1,0 +1,212 @@
+name: Augur News Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  actions: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  push-sentinel:
+    name: Push sentinel article to augur_news
+    runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ steps.push.outputs.timestamp }}
+      pushed_at: ${{ steps.push.outputs.pushed_at }}
+    steps:
+      - name: Checkout augur_news (or create orphan)
+        run: |
+          git clone --single-branch --branch augur_news \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            data 2>/dev/null || {
+            mkdir data && cd data && git init
+            git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            git checkout --orphan augur_news
+          }
+
+      - name: Create/update sentinel article
+        id: push
+        run: |
+          cd data
+          DATE_KEY=$(date -u +%Y-%m-%d)
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ARTICLE_DIR="_posts/preview"
+          ARTICLE_FILE="${ARTICLE_DIR}/${DATE_KEY}-ci-sentinel.md"
+
+          mkdir -p "$ARTICLE_DIR"
+
+          cat > "$ARTICLE_FILE" <<EOF
+          ---
+          layout: article
+          brand: preview
+          categories: preview
+          date: ${DATE_KEY}
+          headline: "CI Sentinel — Pipeline Validation"
+          fictive_date: "${DATE_KEY}"
+          created_at: "${TIMESTAMP}"
+          tags: [ci, sentinel]
+          sources: []
+          model: ci-smoke-test
+          confidence: high
+          ---
+
+          ## The Signal
+
+          Automated sentinel article pushed by CI at **${TIMESTAMP}**.
+          This verifies the full augur_news deployment pipeline works end-to-end.
+
+          CI run: [#${{ github.run_number }}](${RUN_URL})
+
+          ## The Extrapolation
+
+          If this article renders on GitHub Pages, the full flow works:
+          \`push_site()\` → augur_news branch → CI merge → Jekyll build → GitHub Pages.
+
+          ## In The Works
+
+          This sentinel is updated on each smoke-test run with a fresh timestamp.
+          EOF
+
+          # Strip leading whitespace from heredoc
+          sed -i 's/^          //' "$ARTICLE_FILE"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add _posts/
+          git commit -m "sentinel: ${TIMESTAMP} (run #${{ github.run_number }})"
+          git push -u origin augur_news
+
+          echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+          echo "pushed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+          echo "### Sentinel pushed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- File: \`$ARTICLE_FILE\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Timestamp: ${TIMESTAMP}" >> "$GITHUB_STEP_SUMMARY"
+
+  wait-for-deploy:
+    name: Wait for deploy workflow
+    needs: push-sentinel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for augur-news.yml to complete
+        uses: actions/github-script@v8
+        env:
+          PUSHED_AT: ${{ needs.push-sentinel.outputs.pushed_at }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pushedAt = new Date(process.env.PUSHED_AT);
+            const maxWait = 600;
+            const poll = 15;
+
+            console.log(`Waiting for deploy triggered after ${pushedAt.toISOString()}...`);
+
+            // Give it a moment to trigger
+            await new Promise(r => setTimeout(r, 10000));
+
+            let elapsed = 10;
+            while (elapsed < maxWait) {
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner, repo,
+                workflow_id: 'augur-news.yml',
+                branch: 'augur_news',
+                per_page: 5,
+              });
+
+              // Find a run created after our push
+              const run = runs.workflow_runs.find(r => new Date(r.created_at) >= pushedAt);
+
+              if (run) {
+                console.log(`Run #${run.id}: ${run.status} (${run.conclusion || 'pending'})`);
+
+                if (run.status === 'completed') {
+                  if (run.conclusion === 'success') {
+                    console.log('Deploy succeeded!');
+                    core.summary.addHeading('Deploy verified', 3);
+                    core.summary.addRaw(`[Run #${run.run_number}](${run.html_url}) completed successfully.`);
+                    await core.summary.write();
+                    return;
+                  } else {
+                    core.setFailed(`Deploy failed: ${run.conclusion} — ${run.html_url}`);
+                    return;
+                  }
+                }
+              } else {
+                console.log('No matching run found yet...');
+              }
+
+              await new Promise(r => setTimeout(r, poll * 1000));
+              elapsed += poll;
+            }
+
+            core.setFailed(`Timed out after ${maxWait}s waiting for deploy`);
+
+  verify-site:
+    name: Verify deployed site
+    needs: [push-sentinel, wait-for-deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve Pages URL
+        id: url
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // Get the GitHub Pages URL from the API
+            try {
+              const { data: pages } = await github.rest.repos.getPages({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              const url = pages.html_url.replace(/\/$/, '');
+              core.setOutput('site_url', url);
+              console.log(`Pages URL: ${url}`);
+            } catch (e) {
+              // Fallback to convention
+              const url = `https://${context.repo.owner}.github.io/${context.repo.repo}`;
+              core.setOutput('site_url', url);
+              console.log(`Pages API unavailable, using fallback: ${url}`);
+            }
+
+      - name: Verify sentinel article with timestamp
+        env:
+          EXPECTED_TS: ${{ needs.push-sentinel.outputs.timestamp }}
+        run: |
+          SITE_URL="${{ steps.url.outputs.site_url }}"
+          SENTINEL_URL="${SITE_URL}/preview/ci-sentinel-pipeline-validation/"
+          sleep 10
+
+          # Check site root
+          STATUS=$(curl -sL -o /dev/null -w '%{http_code}' "$SITE_URL" || echo "000")
+          echo "Site root: $SITE_URL → HTTP $STATUS"
+
+          # Fetch sentinel article and check for timestamp
+          BODY=$(curl -sL "$SENTINEL_URL")
+          ART_STATUS=$(curl -sL -o /dev/null -w '%{http_code}' "$SENTINEL_URL")
+          echo "Sentinel: $SENTINEL_URL → HTTP $ART_STATUS"
+
+          echo "### Site verification" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Site root: HTTP $STATUS" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Sentinel article: HTTP $ART_STATUS" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$ART_STATUS" != "200" ]; then
+            echo "::error::Sentinel article not found (HTTP $ART_STATUS)"
+            echo "- **FAIL**: sentinel article not found" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if echo "$BODY" | grep -q "$EXPECTED_TS"; then
+            echo "Sentinel contains expected timestamp: $EXPECTED_TS"
+            echo "- **PASS**: timestamp \`$EXPECTED_TS\` found in deployed article" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Sentinel article missing expected timestamp $EXPECTED_TS"
+            echo "- **FAIL**: timestamp \`$EXPECTED_TS\` not found in deployed article" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

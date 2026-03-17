@@ -41,7 +41,7 @@ async def fao_datasets() -> dict:
         r = await _fao_get("definitions/domain")
         data = r.json().get("data", [])
         return {"datasets": [{"code": d["code"], "label": d["label"]} for d in data]}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"FAOSTAT request failed: {type(e).__name__}: {e}"}
 
 
@@ -56,7 +56,7 @@ async def fao_data(domain: str = "QCL", area: str = "5000>",
             "area": area, "item": item, "element": element, "year": year,
             "output_type": "objects"})
         return r.json()
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"FAOSTAT request failed: {type(e).__name__}: {e}"}
 
 

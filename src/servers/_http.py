@@ -12,7 +12,7 @@ async def api_get(url: str, *, params: dict | None = None,
             r = await c.get(url, params=params, headers=headers)
             r.raise_for_status()
             return r.json()
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"{label} request failed: {type(e).__name__}: {e}"}
 
 
@@ -27,7 +27,7 @@ async def api_post(url: str, *, json: dict | None = None,
                              headers=headers)
             r.raise_for_status()
             return r.json()
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"{label} request failed: {type(e).__name__}: {e}"}
 
 
@@ -83,5 +83,5 @@ class OAuthToken:
                 self._token = data["access_token"]
                 self._exp = time.time() + data.get("expires_in", 1800) - self._margin
                 return {"Authorization": f"Bearer {self._token}"}
-        except httpx.HTTPError:
+        except (httpx.HTTPError, KeyError):
             return {}

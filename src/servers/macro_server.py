@@ -81,10 +81,10 @@ async def imf_data(database: str = "IFS", frequency: str = "A",
                                     headers={"Accept": "application/json"})
                     r.raise_for_status()
                     return r.json()
-                except httpx.HTTPError:
+                except (httpx.HTTPError, ValueError):
                     continue
             return {"error": f"IMF SDMX endpoints unavailable for {database}/{indicator}"}
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         return {"error": f"IMF SDMX request failed: {type(e).__name__}: {e}"}
 
 

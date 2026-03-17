@@ -1,0 +1,250 @@
+name: Deploy Augur News to Pages
+
+on:
+  # Theme/layout changes on main + new articles on augur_news data branch
+  # Note: path filters can't differ per branch in a single push trigger.
+  # augur_news pushes always rebuild (data-only branch, every push matters).
+  # main/augur pushes also rebuild — acceptable cost for a small Jekyll site.
+  push:
+    branches: [main, augur, augur_news]
+  # PR preview for theme/layout changes
+  pull_request:
+    paths:
+      - 'augur-site/**'
+      - '.github/workflows/augur-news.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: "pages-deploy"
+  cancel-in-progress: false
+
+jobs:
+  # --- Production deploy (push to main/augur/augur_news) ---
+  build-and-deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout main (Jekyll source)
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ contains(github.ref, 'augur_news') && 'main' || github.ref }}
+          path: main
+
+      - name: Checkout augur_news (data branch)
+        uses: actions/checkout@v6
+        with:
+          ref: augur_news
+          path: data
+        continue-on-error: true
+
+      - name: Merge source + data
+        run: |
+          cp -r main/augur-site site
+
+          if [ -d data/_posts ]; then
+            cp -r data/_posts/* site/_posts/ 2>/dev/null || true
+          fi
+          if [ -d data/_data ]; then
+            cp -r data/_data/* site/_data/ 2>/dev/null || true
+          fi
+          if [ -d data/assets ]; then
+            cp -r data/assets/* site/assets/ 2>/dev/null || true
+          fi
+
+      - name: Ensure at least one article exists
+        run: bash main/augur-site/scripts/ensure-placeholder.sh site
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          working-directory: site
+
+      - name: Detect baseurl
+        id: baseurl
+        run: |
+          # GitHub Pages for project repos serves at /<repo-name>/
+          REPO_NAME="${{ github.event.repository.name }}"
+          echo "root=/${REPO_NAME}" >> "$GITHUB_OUTPUT"
+          echo "preview=/${REPO_NAME}/preview" >> "$GITHUB_OUTPUT"
+
+      - name: Build root
+        working-directory: site
+        run: bundle exec jekyll build --baseurl "${{ steps.baseurl.outputs.root }}"
+        env:
+          JEKYLL_ENV: production
+
+      # Cache root build for preview jobs to reuse
+      - name: Save root to cache
+        uses: actions/cache/save@v4
+        with:
+          path: site/_site
+          key: pages-root-${{ github.sha }}
+
+      # Restore cached preview (from last PR preview deploy)
+      - name: Restore preview from cache
+        id: preview-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: cached-preview
+          key: pages-preview-placeholder
+          restore-keys: pages-preview-
+
+      - name: Assemble root + preview
+        run: |
+          if [ -d cached-preview ]; then
+            mkdir -p site/_site/preview
+            cp -r cached-preview/* site/_site/preview/
+            echo "Preview restored from cache"
+          else
+            echo "No cached preview — deploying root only"
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/_site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # --- PR preview (build preview from PR, restore root from cache) ---
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v6
+        with:
+          path: pr-src
+
+      - name: Checkout augur_news (data branch)
+        uses: actions/checkout@v6
+        with:
+          ref: augur_news
+          path: data
+        continue-on-error: true
+
+      - name: Merge source + data
+        run: |
+          cp -r pr-src/augur-site site
+
+          if [ -d data/_posts ]; then
+            cp -r data/_posts/* site/_posts/ 2>/dev/null || true
+          fi
+          if [ -d data/_data ]; then
+            cp -r data/_data/* site/_data/ 2>/dev/null || true
+          fi
+          if [ -d data/assets ]; then
+            cp -r data/assets/* site/assets/ 2>/dev/null || true
+          fi
+
+      - name: Ensure at least one article exists
+        run: bash pr-src/augur-site/scripts/ensure-placeholder.sh site preview
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          working-directory: site
+
+      - name: Detect baseurl
+        id: baseurl
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          echo "preview=/${REPO_NAME}/preview" >> "$GITHUB_OUTPUT"
+
+      - name: Build preview
+        working-directory: site
+        run: bundle exec jekyll build --baseurl "${{ steps.baseurl.outputs.preview }}"
+        env:
+          JEKYLL_ENV: production
+
+      # Cache preview build for production jobs to reuse
+      - name: Save preview to cache
+        uses: actions/cache/save@v4
+        with:
+          path: site/_site
+          key: pages-preview-${{ github.event.pull_request.head.sha }}
+
+      # Restore cached root (from last production deploy)
+      - name: Restore root from cache
+        id: root-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: cached-root
+          key: pages-root-placeholder
+          restore-keys: pages-root-
+
+      - name: Assemble root + preview
+        run: |
+          if [ -d cached-root ]; then
+            # Start with cached root, add preview on top
+            cp -r cached-root deploy
+            mkdir -p deploy/preview
+            cp -r site/_site/* deploy/preview/
+            echo "Root restored from cache"
+          else
+            # No cached root — deploy preview only with a placeholder root
+            mkdir -p deploy/preview
+            cp -r site/_site/* deploy/preview/
+            echo '<meta http-equiv="refresh" content="0;url=/preview/">' > deploy/index.html
+            echo "No cached root, deploying preview with redirect"
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pageUrl = '${{ steps.deployment.outputs.page_url }}'.replace(/\/$/, '');
+            const cacheBust = Date.now();
+            const url = `${pageUrl}/preview/?${cacheBust}`;
+            const body = `**Jekyll preview deployed**\n\n${url}\n\n_Updated for commit ${context.sha.slice(0, 7)}_`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes('Jekyll preview'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

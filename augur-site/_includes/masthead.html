@@ -1,47 +1,33 @@
 {% assign brand_key = page.brand | default: "the" %}
 {% assign brand = site.data.brands[brand_key] %}
 <header class="masthead">
-  <div class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</div>
-  <div class="masthead__subtitle">{{ brand.subtitle | default: "Foresight from the signal noise" }}</div>
+  <div class="masthead__brand">
+    <a href="{{ '/' | append: brand.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
+    <div class="masthead__subtitle">{{ brand.subtitle | default: "Foresight from the signal noise" }}</div>
+  </div>
   <nav class="masthead__nav">
     {% for h in brand.horizons %}
     <a class="masthead__link{% if page.horizon == h.key %} masthead__link--active{% endif %}"
-       href="{{ '/' | append: brand.slug | append: '/' | append: h.slug | append: '/' | relative_url }}">
+       href="{{ '/' | append: brand.slug | append: '/' | append: h.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}">
       {{ h.label }}
     </a>
     {% endfor %}
   </nav>
-  <div class="theme-switcher">
-    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
-    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
-    <button class="theme-switcher__btn" data-set-theme="sepia">Sepia</button>
-    <button class="theme-switcher__btn" data-set-theme="modern">Modern</button>
-    <button class="theme-switcher__btn" data-set-theme="terminal">Terminal</button>
-  </div>
 </header>
 <script>
 (function() {
   var t = localStorage.getItem('augur-theme') || '';
   if (t) document.body.setAttribute('data-theme', t);
   document.addEventListener('click', function(e) {
-    var btn = e.target.closest('[data-set-theme]');
-    if (!btn) return;
-    var theme = btn.getAttribute('data-set-theme');
-    if (theme) {
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('augur-theme', theme);
-    } else {
+    if (!e.target.closest('#theme-toggle')) return;
+    var dark = document.body.getAttribute('data-theme') === 'dark';
+    if (dark) {
       document.body.removeAttribute('data-theme');
       localStorage.removeItem('augur-theme');
+    } else {
+      document.body.setAttribute('data-theme', 'dark');
+      localStorage.setItem('augur-theme', 'dark');
     }
-    document.querySelectorAll('.theme-switcher__btn').forEach(function(b) {
-      b.classList.toggle('theme-switcher__btn--active',
-        b.getAttribute('data-set-theme') === theme);
-    });
-  });
-  document.querySelectorAll('.theme-switcher__btn').forEach(function(b) {
-    b.classList.toggle('theme-switcher__btn--active',
-      b.getAttribute('data-set-theme') === t);
   });
 })();
 </script>

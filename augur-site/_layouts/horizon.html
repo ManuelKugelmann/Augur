@@ -3,17 +3,18 @@ layout: default
 ---
 {% assign brand = site.data.brands[page.brand] %}
 {% assign horizon_label = "" %}
+{% assign horizon_subtitle = "" %}
 {% for h in brand.horizons %}
   {% if h.key == page.horizon %}
     {% assign horizon_label = h.label %}
+    {% assign horizon_subtitle = h.subtitle %}
   {% endif %}
 {% endfor %}
 
 <div class="listing">
-  <div class="listing__header">
-    <h1>{{ horizon_label }}</h1>
-    <div class="dateline">{{ brand.name }}</div>
-    <hr class="rule">
+  <div class="listing__header" style="text-align: center;">
+    {% if horizon_subtitle %}<p class="listing__tagline">{{ horizon_subtitle }}</p>{% endif %}
+    <hr class="rule--double">
   </div>
 
   <ul class="listing__items">
@@ -24,8 +25,4 @@ layout: default
     </li>
     {% endfor %}
   </ul>
-
-  {% if filtered.size == 0 %}
-  <p style="color: var(--meta); font-style: italic;">No predictions yet for this horizon.</p>
-  {% endif %}
 </div>

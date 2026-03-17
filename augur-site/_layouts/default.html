@@ -3,14 +3,20 @@
 <head>
   {% include head.html %}
 </head>
-<body data-brand="{{ page.brand | default: 'the' }}">
-  {% include disclaimer.html %}
-  <div class="page-wrapper">
+<body data-brand="{{ page.brand | default: 'the' }}"{% if page.splash %} class="page--splash"{% endif %}>
+  {% if page.splash %}
+    {% include masthead-splash.html %}
+  {% else %}
     {% include masthead.html %}
+  {% endif %}
+  <div class="page-wrapper">
     <main>
       {{ content }}
     </main>
+  </div>
+  <div class="page-bottom">
     {% include footer.html %}
+    {% include disclaimer.html %}
   </div>
 </body>
 </html>

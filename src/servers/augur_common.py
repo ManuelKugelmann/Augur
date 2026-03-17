@@ -81,11 +81,11 @@ _ITW_HEADERS = re.compile(r"^##\s+(?:In The Works|In Arbeit)\s*$", re.MULTILINE)
 
 
 def site_dir() -> str:
-    return os.environ.get("AUGUR_SITE_DIR", os.path.expanduser("~/augur-site"))
+    return os.environ.get("AUGUR_SITE_DIR", os.path.expanduser("~/augur.news"))
 
 
 def site_base_url() -> str:
-    return os.environ.get("AUGUR_SITE_URL", "https://augur.example.com")
+    return os.environ.get("AUGUR_SITE_URL", "https://github.com/ManuelKugelmann/Augur")
 
 
 def slugify(text: str, max_len: int = 60) -> str:
@@ -132,14 +132,20 @@ def is_due(schedule: str, now: datetime) -> bool:
     if minute >= 15:
         return False
 
-    if "/" in schedule:
-        h, day = schedule.split("/")
-        if day == "mon" and dow != 0:
-            return False
-        return hour == int(h)
+    try:
+        if "/" in schedule:
+            parts = schedule.split("/", 1)
+            if len(parts) != 2:
+                return False
+            h, day = parts
+            if day == "mon" and dow != 0:
+                return False
+            return hour == int(h)
 
-    hours = [int(h) for h in schedule.split(",")]
-    return hour in hours
+        hours = [int(h) for h in schedule.split(",")]
+        return hour in hours
+    except (ValueError, TypeError):
+        return False
 
 
 def extract_sections(body: str) -> dict:

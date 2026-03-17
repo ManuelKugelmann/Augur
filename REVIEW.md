@@ -1,7 +1,7 @@
 # Code Review — Augur
 
 Full security and quality audit of the entire codebase. Date: 2026-03-06.
-Updated: 2026-03-13 (all critical + warning issues fixed across both reviews).
+Updated: 2026-03-16 (third review; all critical + warning issues fixed across first two reviews).
 
 ---
 
@@ -75,10 +75,10 @@ Index creation now happens on-demand in `_snap_col()`, `_arch_col()`, `_events_c
 
 3 sequential requests. Could use `asyncio.gather()` for 3x latency improvement, but current approach has better per-request error isolation.
 
-### 17. `search_profiles` Reads Every File — OPEN
+### 17. ~~`search_profiles` Reads Every File~~ ✅ NOT APPLICABLE
 **File:** `src/store/server.py`
 
-O(n) disk reads per query. Will degrade at scale. `search_profiles()` does field-level scans. Options: in-memory cache with TTL, or MongoDB text search.
+Originally flagged as O(n) disk reads. Since refactored: `search_profiles()` and `find_profile()` now use MongoDB queries (dot-notation, text index, regex fallback). No disk reads involved. See #52 for the remaining scaling concern with `find_profile()`.
 
 ### 18. Domain Server `.env` Not Loaded via LibreChat — NOT APPLICABLE
 **File:** `augur-uberspace/config/librechat.yaml`
@@ -242,18 +242,193 @@ End-to-end integration path (snapshot → threshold hook → event → impact) n
 
 ---
 
+---
+
+## Third Review — 2026-03-16
+
+Fresh codebase review. All previous critical/warning issues remain fixed.
+Focus: new code paths, overlooked patterns, scaling concerns.
+
+### WARNING
+
+#### 46. ~~`OAuthToken.headers()` KeyError on Malformed Response~~ ✅ FIXED
+**File:** `src/servers/_http.py:83`
+
+If OAuth server returns HTTP 200 but response JSON is missing `access_token` key,
+`data["access_token"]` raises `KeyError`. This is not caught by `except httpx.HTTPError`,
+so it propagates and crashes the calling tool. Should catch `(KeyError, httpx.HTTPError)`.
+
+#### 47. ~~`_replace_field()` Regex Replacement Injection~~ ✅ FIXED
+**File:** `src/servers/augur_score.py:182`
+
+`value` is used directly in `re.sub()` replacement string: `pattern.sub(rf'\1 "{value}"', ...)`.
+If `outcome_note` contains backslash sequences (`\1`, `\n`), they are interpreted as regex
+backreferences/escapes, corrupting the front matter. Fix: use a lambda replacement or escape
+the value with `value.replace("\\", "\\\\")`.
+
+#### 48. Image Generation Polling Without Backoff — OPEN (low priority)
+**File:** `src/servers/augur_publish.py:225-231`
+
+Replicate image gen polls 60 times at 1-second intervals. No exponential backoff.
+If the prediction times out, the Replicate job is not cancelled (orphaned, runs to completion
+on their side). Low financial impact but poor practice.
+
+#### 49. ~~`price_ingest.py` Missing None Check for `close` Field~~ ✅ FIXED
+**File:** `src/ingest/price_ingest.py:87`
+
+`close` field uses `round(float(last_bar["close"]), 4)` without a None guard, while
+`open`, `high`, `low`, and `volume` all check `is not None` first. If Yahoo Finance
+returns a null close price, `float(None)` raises `TypeError` and crashes the ingest.
+Fix: add the same `if ... is not None else None` pattern as the other fields.
+
+#### 50. ~~Signal Change Detection Order~~ ✅ FIXED
+**File:** `src/ingest/price_ingest.py:111-117`
+
+Signal change detection fetches the previous composite signal *after* storing the new
+snapshot. It then reads `history(limit=2)` and assumes `rows[1]` is the old signal.
+In a concurrent scenario, another insert could shift the index. Low risk in current
+single-process cron, but the old signal should be fetched *before* storing the new one.
+
+#### 51. `indicator()` Catches Bare `Exception` — ACCEPTED
+**File:** `src/servers/macro_server.py:142-163`
+
+Provider routing (`fred → worldbank → imf`) wraps each call in `except Exception`.
+The inner functions already return error dicts and don't raise, so these clauses only fire
+on truly unexpected errors. Defensive but overly broad — accepted as-is since the routing
+pattern benefits from resilience.
+
+#### 53. ~~`grep` Without Anchor in Health Check~~ ✅ FIXED
+**File:** `Augur.sh:937`
+
+`grep -q "MONGO_URI="` matched `MONGO_URI_SIGNALS=` too. Added `^` anchor: `grep -q "^MONGO_URI="`.
+
+#### 54. ~~systemd Services Missing `[Unit]` Section~~ ✅ FIXED
+**Files:** `Augur.sh` (augur, charts, librechat, cliproxyapi), `setup.sh` (librechat)
+
+All services lacked `[Unit]` section with `Description` and `After=network.target`.
+Added to all 5 service definitions.
+
+#### 55. ~~`EnvironmentFile` Not Guarded in CLIProxyAPI Service~~ ✅ FIXED
+**File:** `Augur.sh:863`
+
+`EnvironmentFile=${PROXY_AUTH}` fails if file doesn't exist. Changed to `EnvironmentFile=-${PROXY_AUTH}`
+(leading `-` makes missing files non-fatal in systemd).
+
+### LOW / STYLE
+
+#### 56. `find_profile()` Does 36 MongoDB Queries Per Call — OPEN
+**File:** `src/store/server.py:503-542`
+
+Cross-kind search iterates 12 kinds × 3 queries each (text search, ID regex, name regex).
+Fine at current scale (424 profiles). At 1000+ profiles, consider a unified search collection
+or MongoDB Atlas Search. Supersedes old #17 as the real scaling concern.
+
+#### 57. `curl|bash` Install Pattern — ACCEPTED
+**File:** `augur-uberspace/install.sh`
+
+Standard `curl | bash` bootstrap. Already mitigated: wraps all logic in `_main() { ... }`
+called at EOF (prevents partial execution). No checksums, but acceptable for private repo.
+
+#### 58. Passwords Accepted as CLI Arguments — ACCEPTED (low priority)
+**File:** `Augur.sh:1113-1115`
+
+`augur user email password` exposes password in `ps` output and shell history.
+Interactive mode (`read -sp`) is the primary path; CLI args are for automation.
+
+#### 59. ~~Missing `raise_for_status()` in Replicate Polling~~ ✅ FIXED
+**File:** `src/servers/augur_publish.py:229`
+
+Polling loop called `.json()` on Replicate poll response without `raise_for_status()`.
+HTTP errors would cause `JSONDecodeError` instead of clean error handling. Added check.
+
+#### 60. ~~Unsafe Schedule Parsing in `is_due()`~~ ✅ FIXED
+**File:** `src/servers/augur_common.py:126-142`
+
+`schedule.split("/")` assumed exactly 2 parts; `int(h)` had no error handling.
+Malformed schedules could crash cron. Wrapped in `try/except (ValueError, TypeError)`.
+
+#### 61. ~~Missing JSONDecodeError Handling in `space_weather()`~~ ✅ FIXED
+**File:** `src/servers/weather_server.py:46-52`
+
+`.json()` called on NOAA responses without JSONDecodeError handling. If API returns
+status 200 with non-JSON body, parse crashes. Added `_safe_json()` wrapper with fallback.
+
+#### 62. ~~Path Traversal in `score_prediction()`~~ ✅ FIXED
+**File:** `src/servers/augur_score.py:159-165`
+
+`article_path` parameter accepted without boundary check. User could supply
+`../../etc/passwd` to read/write outside site directory. Added `path.resolve().relative_to()`
+check that rejects paths escaping the site boundary.
+
+#### 63. ~~JSONDecodeError Not Caught in Domain Servers~~ ✅ FIXED
+**Files:** `_http.py`, `agri_server.py`, `disasters_server.py`, `elections_server.py`,
+`macro_server.py`, `transport_server.py`
+
+Multiple servers called `.json()` on HTTP responses but only caught `httpx.HTTPError`.
+`json.JSONDecodeError` (subclass of `ValueError`) was uncaught — if an API returned
+HTTP 200 with non-JSON body, the tool would crash. Added `ValueError` to all catch clauses.
+
+#### 64. ~~sed Metacharacter Injection in MongoDB URI~~ ✅ FIXED
+**File:** `augur-uberspace/scripts/setup.sh`
+
+MongoDB connection strings can contain `&` and `\` characters which are sed
+metacharacters. `sed -i "s|...|$DERIVED|"` would corrupt the URI. Fixed by
+escaping `&` and `\` before substitution: `printf '%s' "$DERIVED" | sed 's|[&\\]|\\&|g'`.
+
+#### 65. Sync File I/O in Async Functions — ACCEPTED
+**Files:** `augur_publish.py`, `augur_score.py`
+
+`Path.read_bytes()`, `Path.read_text()`, `Path.write_text()` are synchronous
+blocking calls inside async functions. At current scale (small files, single
+concurrent user) this is negligible. If throughput becomes a concern, move to
+`aiofiles` or `asyncio.to_thread()`.
+
+#### 66. ~~Path Traversal in Social Posting~~ ✅ FIXED
+**File:** `src/servers/augur_publish.py:557-561`
+
+`post_social()` passed `image_path` to `_post_bluesky()`/`_post_mastodon()` without
+boundary validation. A crafted path like `../../etc/passwd` could read arbitrary files
+and upload them. Added `path.resolve().relative_to(site_dir)` check, matching #62 fix.
+
+#### 67. ~~Silent Index Creation Exceptions~~ ✅ FIXED
+**File:** `src/store/server.py:218, 233, 253`
+
+Index creation failures were swallowed with bare `except Exception: pass`. If an index
+fails to create (e.g. Atlas tier limitation, connection error), there was zero visibility.
+Changed to `log.debug()` so failures are visible when debug logging is enabled.
+
+#### 68. ~~Misleading Regex Name in `health_server.py`~~ ✅ FIXED
+**File:** `src/servers/health_server.py:13, 52, 66`
+
+`_SAFE_COUNTRY` regex was reused for drug name validation in `fda_adverse_events()`.
+Semantically misleading — if the pattern were ever changed for country-specific needs,
+drug validation would break silently. Renamed to `_SAFE_TEXT` to reflect broader usage.
+
+---
+
+### Test Coverage Gaps (continued)
+
+T4 and T6 from second review remain open (social posting image upload, alert hooks e2e).
+
+---
+
 ## Summary
 
 | Status | Count | Details |
 |--------|-------|---------|
 | **First review** | | |
-| Fixed | 14 | #1-5, #7-13, #15, #19 |
+| Fixed | 15 | #1-5, #7-13, #15, #17 (not applicable), #19 |
 | Mitigated | 1 | #6 (regex) |
 | Accepted | 3 | #14, #16, #18 (not applicable) |
-| Open | 2 | #17 (perf at scale), #23 (low priority) |
+| Open | 1 | #23 (low priority) |
 | **Second review** | | |
 | Fixed | 17 | #24-31, #33-36, #42-45 |
 | Accepted | 1 | #32 (Plotly CDN pin, document only) |
 | Low/Style | 5 | #37-41 (yaml parser, date format, atomicity, iteration, timeout) |
 | Test gaps fixed | 3 | T1 (risk gate), T5 (api_multi), T2/T3 (already covered) |
 | Test gaps open | 2 | T4 (social image upload), T6 (alert e2e integration) |
+| **Third review** | | |
+| Fixed | 16 | #46-47, #49-50, #53-55, #59-64, #66-68 |
+| Open | 1 | #48 (polling backoff, low priority) |
+| Accepted | 4 | #51 (bare Exception), #57 (curl\|bash), #58 (CLI passwords), #65 (sync I/O) |
+| Low/Style | 1 | #56 (find_profile 36 queries, scaling concern) |

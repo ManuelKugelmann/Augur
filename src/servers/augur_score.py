@@ -161,6 +161,11 @@ async def score_prediction(
     if not path.is_absolute():
         path = Path(site) / path
 
+    try:
+        path.resolve().relative_to(Path(site).resolve())
+    except ValueError:
+        return {"error": "article_path must be within site directory"}
+
     if not path.exists():
         return {"error": f"Article not found: {path}"}
 
@@ -179,7 +184,8 @@ async def score_prediction(
         rest = content[fm_end:]
         pattern = re.compile(rf"^({re.escape(field)}:).*$", re.MULTILINE)
         if pattern.search(fm_block):
-            fm_block = pattern.sub(rf'\1 "{value}"', fm_block)
+            safe_value = value.replace("\\", "\\\\")
+            fm_block = pattern.sub(rf'\1 "{safe_value}"', fm_block)
         else:
             fm_block += f'{field}: "{value}"\n'
         return fm_block + rest

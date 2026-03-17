@@ -46,10 +46,17 @@ async def space_weather() -> dict:
             kp = await c.get("https://services.swpc.noaa.gov/json/planetary_k_index_1m.json")
             solar = await c.get("https://services.swpc.noaa.gov/json/solar_wind/plasma-7-day.json")
             alerts = await c.get("https://services.swpc.noaa.gov/json/alerts.json")
+
+            def _safe_json(r, slicer):
+                try:
+                    return slicer(r.json()) if r.status_code == 200 else []
+                except (ValueError, KeyError):
+                    return []
+
             return {
-                "kp_index": kp.json()[-5:] if kp.status_code == 200 else [],
-                "solar_wind": solar.json()[-5:] if solar.status_code == 200 else [],
-                "alerts": alerts.json()[:10] if alerts.status_code == 200 else [],
+                "kp_index": _safe_json(kp, lambda d: d[-5:]),
+                "solar_wind": _safe_json(solar, lambda d: d[-5:]),
+                "alerts": _safe_json(alerts, lambda d: d[:10]),
             }
     except httpx.HTTPError as e:
         return {"error": f"NOAA SWPC request failed: {type(e).__name__}: {e}"}

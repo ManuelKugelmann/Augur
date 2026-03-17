@@ -1,6 +1,6 @@
 # TODO — MCP Signals Stack
 
-Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
+Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
 
 ---
 
@@ -8,22 +8,25 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 
 - [x] **Validate combined trading server runs without errors**
       Combined server (store + 12 domains) mounts all namespaces.
-      CI smoke test verifies 50+ tools, all 13 namespaces mounted.
+      CI smoke test verifies 75+ tools, all 15 namespaces mounted.
 - [x] **Test signals store against live Atlas M0**
       `snapshot()`, `event()`, `history()`, `trend()`, `aggregate()`, `nearby()` round-trip verified.
       Fixed: sparse indexes on timeseries, invalid `"days"` granularity.
       Integration tests in CI (test_integration_store.py, test_smoke_combined.py).
-- [ ] **Populate seed country profiles** (~20 major economies)
-      Currently only DEU and USA. Need at minimum: CHN, JPN, GBR, FRA, IND, BRA, KOR,
-      AUS, CAN, RUS, SAU, ZAF, MEX, IDN, TUR, ITA, ESP, NLD, CHE, SGP.
-- [ ] **Populate seed entity profiles** (~20 stocks, ~5 ETFs)
-      Currently only AAPL, NVDA, VWO. Need major index constituents and key ETFs
-      (SPY, QQQ, EEM, GLD, USO, etc.).
+- [x] **Populate seed country profiles**
+      162 country profiles across 10 regions (Europe 44, Sub-Saharan Africa 37,
+      Latin America 21, MENA 19, Southeast Asia 11, South Asia 8, East Asia 8,
+      Oceania 6, Central Asia 5, North America 3). (2026-03-16)
+- [x] **Populate seed entity profiles**
+      63 stocks across 8 regions, 30 ETFs, 10 crypto, 15 indices,
+      15 commodities, 15 materials, 15 crops, 15 companies, 10 products,
+      51 regions. Total: 424 profile files. (2026-03-16)
 - [ ] **Add more source profiles** for the 75+ data sources
-      Currently only 3 (usgs, faostat, open-meteo). Each FastMCP server maps to
+      Currently 23 sources (WHO, IMF, FAO, NASA, etc.). Each FastMCP server maps to
       multiple sources — create profiles for at least the top 2 per domain.
-- [ ] **Fix placeholder profiles** (USA.json, faostat.json)
-      Both have `_placeholder: true` with incomplete data. Fill in real values.
+- [x] **Placeholder profiles by design**
+      All 424 seed profiles are marked `_placeholder: true` — this is intentional.
+      Seed data provides structure; live MCP data enriches on first use.
 
 ---
 
@@ -38,9 +41,10 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
       Emits signal_change events when composite signal changes.
       CLI: `augur ingest [kinds]`. Cron: every 6 hours at :05–:14.
 - [ ] **Add Volume-Weighted Average Price (VWAP) indicator**
-      Requires volume data. Add once price ingestion is in place.
+      Requires volume data. Price ingestion already fetches OHLCV with volume.
 - [ ] **Add ATR (Average True Range) indicator**
-      Requires high/low/close. Useful for position sizing and stop-loss placement.
+      Requires high/low/close (available from Yahoo OHLCV). Useful for position sizing
+      and stop-loss placement.
 - [x] **Build periodic ingest scheduler**
       Price ingestion runs every 6 hours via `augur cron` (Augur.sh).
       Iterates all profiled stocks/etfs/crypto/indices, fetches OHLCV,
@@ -63,9 +67,10 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 
 ## P2 — Server Improvements
 
-- [ ] **Optimize `search_profiles()` for scale** (REVIEW.md #17)
-      O(n) disk reads per query — reads every profile file. Fine for <100 profiles,
-      will degrade at 500+. Options: in-memory cache with TTL, or MongoDB text search.
+- [ ] **Optimize `find_profile()` for scale** (REVIEW.md #56)
+      Cross-kind search does 36 MongoDB queries per call (3 × 12 kinds).
+      Fine at current scale (424 profiles). At 1000+, consider a unified search
+      collection or MongoDB Atlas Search.
 - [ ] **Add `econ_indicator()` routing improvements** (review-mcp-tools.md §2.1)
       Router exists in `macro_server.py`. Extend with ECB, OECD, Eurostat providers
       as they're added.
@@ -77,6 +82,14 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 - [x] **Add error handling to domain servers**
       All 12 servers now wrap HTTP calls in `try/except httpx.HTTPError` returning
       `{"error": ...}` instead of crashing. (2026-03-09)
+- [x] **Fix `OAuthToken.headers()` KeyError** (REVIEW.md #46)
+      Catch `KeyError` alongside `httpx.HTTPError` in OAuth token refresh. (2026-03-16)
+- [x] **Fix `_replace_field()` regex injection** (REVIEW.md #47)
+      Escape backslashes in replacement value before `re.sub()`. (2026-03-16)
+- [x] **Fix `price_ingest.py` close field None check** (REVIEW.md #49)
+      Added None guard matching other OHLCV fields. (2026-03-16)
+- [x] **Fix signal change detection order** (REVIEW.md #50)
+      Fetch old composite before storing new snapshot. (2026-03-16)
 - [ ] **Add async support to signals store**
       `server.py` uses sync `pymongo`. Consider `motor` for async MongoDB if needed
       for concurrent snapshot ingestion.
@@ -89,16 +102,21 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 
 ## P3 — Profile Expansion
 
-- [ ] **Generate 200 country profiles from World Bank / CIA Factbook data**
-      Script to fetch and populate `profiles/countries/` from free APIs.
-- [ ] **Generate entity profiles from SEC EDGAR / Yahoo Finance**
-      Script to fetch top stocks by market cap and populate `profiles/entities/stocks/`.
-- [ ] **Add crypto profiles** (BTC, ETH, SOL, and top-20 by market cap)
-      `profiles/entities/crypto/` — currently empty.
-- [ ] **Add index profiles** (SPX, NDX, DJI, FTSE, DAX, N225, etc.)
-      `profiles/entities/indices/` — currently empty.
-- [ ] **Add ETF profiles** for key sector/country/commodity exposure
-      VWO is the only one. Need SPY, QQQ, EEM, GLD, XLE, XLF, etc.
+- [x] **Generate country profiles**
+      162 country profiles from World Bank / CIA Factbook data across 10 regions.
+      (2026-03-16)
+- [ ] **Enrich entity profiles from SEC EDGAR / Yahoo Finance**
+      63 stock profiles exist as seed data. Enrich with real fundamentals
+      (debt/assets, P/E, sector exposure, revenue) from SEC EDGAR / Yahoo Finance.
+- [x] **Add crypto profiles** (BTC, ETH, SOL, and top-10)
+      10 crypto profiles in `profiles/global/crypto/`. (2026-03-16)
+- [x] **Add index profiles** (SPX, NDX, DJI, FTSE, DAX, N225, etc.)
+      15 index profiles in `profiles/global/indices/`. (2026-03-16)
+- [x] **Add ETF profiles** for key sector/country/commodity exposure
+      30 ETF profiles in `profiles/global/etfs/` (SPY, QQQ, EEM, GLD, etc.). (2026-03-16)
+- [x] **Add commodity, material, crop, company, product profiles**
+      15 commodities, 15 materials, 15 crops, 15 companies, 10 products,
+      51 region profiles. All in `profiles/global/`. (2026-03-16)
 
 ---
 
@@ -108,20 +126,22 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
       87+ unit tests (bats + pytest), integration tests against Atlas, E2E smoke tests,
       ShellCheck on all scripts. Release workflow builds bundle on tag push.
 - [x] **Automate LibreChat setup**
-      `ta install` auto-derives MONGO_URI_SIGNALS, auto-seeds agents (if credentials set),
+      `augur install` auto-derives MONGO_URI_SIGNALS, auto-seeds agents (if credentials set),
       auto-sets up data repo (if SSH key exists), rebuilds profile indexes.
       `remoteAgents` enabled by default in librechat.yaml.
 - [x] **MongoDB Atlas backup to Uberspace disk (rolling)**
-      `ta backup` / `ta restore` / `ta backups` — pymongo-based gzipped JSON dumps
+      `augur backup` / `augur restore` / `augur backups` — pymongo-based gzipped JSON dumps
       to `~/backups/mongo/` with rolling retention: daily (7), weekly (4), monthly (3).
-      Runs automatically via `ta cron` at 02:00 UTC alongside compact job.
+      Runs automatically via `augur cron` at 02:00 UTC alongside compact job.
       No git — dumps don't diff well. ~10-50 MB compressed per dump.
-- [ ] **Test Uberspace deployment end-to-end**
-      Run `ta install` on a live Uberspace host.
-      Verify systemd services start, logs rotate, .env is picked up.
-- [ ] **Test LibreChat deployment end-to-end**
-      Run the `augur-uberspace/` deployment package. Verify LibreChat connects
-      to Atlas, MCP servers respond, git-versioned data sync works.
+- [x] **Uberspace deployment** (nearly complete)
+      Systemd services (librechat, augur, charts), cron scheduling, .env pickup,
+      log rotation, first-login user setup (`augur user`). MCP timeout increased
+      to 300s. LibreChat connectivity fixed (0.0.0.0 binding, health endpoint).
+      Remaining: final end-to-end verification pass on live host.
+- [ ] **Final deployment verification**
+      Run full `augur install` on live Uberspace host. Verify all services start,
+      Atlas connects, MCP servers respond, profile seeding works, cron runs.
 - [ ] **Add monitoring / health dashboard**
       Simple status page or script that checks: Atlas connection, each MCP server,
       last successful ingest timestamp per source.
@@ -191,3 +211,10 @@ Global roadmap and task list. Updated 2026-03-09 (staging readiness pass).
 - [x] **Event-to-profile impact mapper** — `src/alerts/impact_mapper.py`: post-event
       hook for high/critical events. Queries `exposure.countries` across 8 profile
       kinds, creates impact snapshots. 14 tests. (2026-03-12)
+- [x] **Seed profiles (424 files)** — 162 countries, 63 stocks, 30 ETFs, 10 crypto,
+      15 indices, 15 commodities, 15 materials, 15 crops, 15 companies, 10 products,
+      51 regions, 23 sources. Organized by region. All `_placeholder: true` (seed data,
+      enriched by live MCP). (2026-03-16)
+- [x] **Third code review** — fresh security/quality audit (REVIEW.md). 5 new warnings
+      found (#46-50), 1 accepted (#51), 1 low/style (#52). No new critical issues.
+      (2026-03-16)

@@ -227,6 +227,7 @@ async def generate_article_image(
                     break
                 await asyncio.sleep(1)
                 r = await client.get(poll_url, headers=auth_headers)
+                r.raise_for_status()
                 prediction = r.json()
 
             if prediction["status"] == "failed":
@@ -557,6 +558,12 @@ async def post_social(
     all_platforms = _AUTO_PLATFORMS | _MANUAL_PLATFORMS
     if platform not in all_platforms:
         return {"error": f"Unknown platform: {platform}. Use: {', '.join(sorted(all_platforms))}"}
+
+    if image_path:
+        try:
+            Path(image_path).resolve().relative_to(Path(site_dir()).resolve())
+        except ValueError:
+            return {"error": "image_path must be within site directory"}
 
     if platform == "bluesky":
         return await _post_bluesky(caption, article_url, image_path)

@@ -1,26 +1,69 @@
 // Newspaper broadsheet layout
 
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .page-wrapper {
   max-width: 720px;
   margin: 0 auto;
   padding: 1.5rem 1rem;
+  flex: 1;
 }
 
-// Masthead
+// Masthead — sticky, CSS-only scale via scroll-driven animation.
+// Only .masthead__brand scales (via animation-timeline: scroll()
+// on a non-sticky child) — the nav stays full-size.
+// transform: scale() is GPU-composited so no layout reflow jitter.
+
+@keyframes brand-scale {
+  from { transform: scale(1); }
+  to   { transform: scale(0.7); }
+}
+
+@keyframes subtitle-hide {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 .masthead {
   text-align: center;
-  padding: 1.5rem 0 1rem;
+  padding: 0.5rem 1rem;
   border-bottom: 4px double var(--ink);
-  margin-bottom: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+
+  // Brand block (title + subtitle) scales down on scroll.
+  // animation-timeline: scroll() is safe here because this div
+  // is NOT position:sticky — no feedback loop.
+  &__brand {
+    padding: 1rem 0 0;
+    transform-origin: top center;
+    will-change: transform;
+    animation: brand-scale linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 150px;
+  }
 
   &__title {
+    display: block;
     font-family: 'Playfair Display', Georgia, serif;
     font-weight: 900;
     font-size: 2.8rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--ink);
+    text-decoration: none;
     margin-bottom: 0.1em;
+
+    &:hover {
+      color: var(--ink);
+      text-decoration: none;
+    }
   }
 
   &__subtitle {
@@ -28,10 +71,13 @@
     font-style: italic;
     font-size: 0.95rem;
     color: var(--meta);
+    animation: subtitle-hide linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 100px;
   }
 
   &__nav {
-    margin-top: 0.8rem;
+    margin-top: 0.5rem;
     padding-top: 0.6rem;
     border-top: 1px solid var(--meta);
     display: flex;
@@ -57,6 +103,31 @@
       padding-bottom: 2px;
     }
   }
+
+  // Splash variant: just "AUGUR", no nav, no subtitle
+  &--splash {
+    border-bottom: none;
+    position: static;
+    background: transparent;
+
+    .masthead__brand {
+      animation: none;
+      padding: 1.5rem 0 0.5rem;
+    }
+
+    .masthead__title--splash {
+      font-size: 3.2rem;
+      letter-spacing: 0.2em;
+    }
+  }
+}
+
+// Splash page background — distinct from brand pages so cards pop (oklch)
+.page--splash {
+  background: oklch(81% 0 0);
+}
+[data-theme="dark"].page--splash {
+  background: oklch(17% 0 0);
 }
 
 // Rule lines (horizontal rules in broadsheet style)
@@ -123,14 +194,312 @@ hr,
   letter-spacing: 0.08em;
 }
 
-// Footer
-.page-footer {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 4px double var(--ink);
-  text-align: center;
-  font-size: 0.8rem;
+// Listing helpers
+.listing__tagline {
+  font-family: 'Lora', Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
   color: var(--meta);
+  margin: 0.2rem 0 0;
+}
+
+.listing__empty {
+  font-style: italic;
+  color: var(--meta);
+  margin-bottom: 1.5rem;
+}
+
+// Splash — home page edition grid (newspaper front-page cards)
+.splash {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 0 2rem;
+
+  &__row {
+    margin-bottom: 1.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__group-label {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--meta);
+    text-align: center;
+    margin: 0 0 0.6rem;
+  }
+
+  &__pair {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    padding: 1.5rem 1rem;
+    min-height: 320px;
+    border: 2px solid var(--card-ink);
+    background: var(--card-bg);
+    color: var(--card-ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    // Light mode edition palettes (oklch for perceptual uniformity)
+    --card-bg: oklch(97% 0.009 85);
+    --card-ink: oklch(22% 0 0);
+    --card-accent: oklch(40% 0.164 29);
+    --card-meta: oklch(48% 0.028 59);
+
+    &[data-edition="financial"],
+    &[data-edition="finanz"] {
+      --card-bg: oklch(97% 0.009 255);
+      --card-accent: oklch(40% 0.164 252);
+      --card-meta: oklch(48% 0.028 248);
+    }
+
+    // Dark mode edition palettes (oklch)
+    [data-theme="dark"] & {
+      --card-bg: oklch(25% 0.008 286);
+      --card-ink: oklch(92% 0 0);
+      --card-accent: oklch(57% 0.162 29);
+      --card-meta: oklch(61% 0.017 61);
+    }
+    [data-theme="dark"] &[data-edition="financial"],
+    [data-theme="dark"] &[data-edition="finanz"] {
+      --card-bg: oklch(25% 0.008 255);
+      --card-accent: oklch(57% 0.162 248);
+      --card-meta: oklch(61% 0.017 248);
+    }
+
+    &:hover {
+      border-color: var(--card-accent);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  &__nameplate {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  &__rule-double {
+    display: block;
+    width: 100%;
+    height: 0;
+    margin: 0.5rem 0;
+    border-top: 3px double var(--card-ink);
+  }
+
+  &__tagline {
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    color: var(--card-meta);
+    margin-bottom: 0.4rem;
+  }
+
+  &__rule-thin {
+    display: block;
+    width: 60%;
+    height: 0;
+    margin: 0.3rem 0;
+    border-top: 1px solid var(--card-meta);
+  }
+
+  &__headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    margin-top: 0.4rem;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    &--placeholder {
+      font-style: italic;
+      color: var(--card-meta);
+    }
+  }
+
+  &__dateline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--card-meta);
+    margin-top: 0.3rem;
+  }
+
+}
+
+// Editions cross-links
+.editions {
+  text-align: center;
+  margin: 1rem 0 1.5rem;
+
+  &__heading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--meta);
+    margin-bottom: 0.8rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+  }
+
+  &__card {
+    display: block;
+    padding: 0.8rem;
+    border: 1px solid var(--meta);
+    text-decoration: none;
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: var(--accent);
+    }
+  }
+
+  &__name {
+    display: block;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  &__sub {
+    display: block;
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 0.75rem;
+    color: var(--meta);
+    margin-top: 0.2rem;
+  }
+}
+
+// Dev links (non-production only)
+.dev-links {
+  margin: 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+
+  &__toggle {
+    cursor: pointer;
+    color: var(--meta);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0.4rem 0 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Sticky bottom group
+.page-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+}
+
+// Footer — single slim row, unified Playfair style
+.page-footer {
+  border-top: 1px solid var(--meta);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 0.6rem;
+  color: var(--meta);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+  padding: 0.3rem 1rem;
+  letter-spacing: 0.06em;
+
+  &__editions {
+    display: flex;
+    gap: 0 0.5rem;
+    text-transform: uppercase;
+  }
+
+  &__sep {
+    opacity: 0.4;
+  }
+
+  &__splash {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  &__theme {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--meta);
+    padding: 0;
+    line-height: 1;
+
+    // CSS-only symbol swap via data-theme on body
+    &::after {
+      content: "☾";
+    }
+    [data-theme="dark"] &::after {
+      content: "☼";
+    }
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  &__build {
+    opacity: 0.5;
+  }
 
   a {
     color: var(--meta);
@@ -139,4 +508,16 @@ hr,
       color: var(--accent);
     }
   }
+}
+
+.disclaimer-banner {
+  width: 100%;
+  padding: 0.4rem 1rem;
+  background: #fff3cd;
+  color: #664d03;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 0.6rem;
+  font-style: italic;
+  text-align: center;
+  letter-spacing: 0.06em;
 }

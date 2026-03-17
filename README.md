@@ -1,5 +1,7 @@
 ### Augur
 
+[augur.news](https://augur.news) — live predictions site
+
 - 4 MCP servers: 3 utility + 1 combined trading server (50+ tools)
 - Signals store (profiles, snapshots, charting, notes, risk gate) + 12 domain servers (75+ free data sources) + 3 utility servers
 - Covers macro, weather, disasters, commodities, health, conflict, and more

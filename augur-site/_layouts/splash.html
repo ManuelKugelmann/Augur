@@ -1,0 +1,71 @@
+---
+layout: default
+splash: true
+---
+<div class="splash">
+  <div class="splash__row">
+    <div class="splash__pair">
+      {% assign the_brand = site.data.brands["the"] %}
+      {% assign the_latest = site.posts | where: "brand", "the" | first %}
+      <a href="{{ '/' | append: the_brand.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="splash__card" data-edition="the">
+        <span class="splash__nameplate">{{ the_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ the_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if the_latest %}
+        <span class="splash__headline">{{ the_latest.headline | default: the_latest.title }}</span>
+        <span class="splash__dateline">{{ the_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ the_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+      {% assign fin_brand = site.data.brands["financial"] %}
+      {% assign fin_latest = site.posts | where: "brand", "financial" | first %}
+      <a href="{{ '/' | append: fin_brand.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="splash__card" data-edition="financial">
+        <span class="splash__nameplate">{{ fin_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ fin_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if fin_latest %}
+        <span class="splash__headline">{{ fin_latest.headline | default: fin_latest.title }}</span>
+        <span class="splash__dateline">{{ fin_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ fin_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="splash__row">
+    <div class="splash__pair">
+      {% assign der_brand = site.data.brands["der"] %}
+      {% assign der_latest = site.posts | where: "brand", "der" | first %}
+      <a href="{{ '/' | append: der_brand.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="splash__card" data-edition="der">
+        <span class="splash__nameplate">{{ der_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ der_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if der_latest %}
+        <span class="splash__headline">{{ der_latest.headline | default: der_latest.title }}</span>
+        <span class="splash__dateline">{{ der_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ der_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+      {% assign finz_brand = site.data.brands["finanz"] %}
+      {% assign finz_latest = site.posts | where: "brand", "finanz" | first %}
+      <a href="{{ '/' | append: finz_brand.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="splash__card" data-edition="finanz">
+        <span class="splash__nameplate">{{ finz_brand.masthead }}</span>
+        <span class="splash__rule-double"></span>
+        <span class="splash__tagline">{{ finz_brand.subtitle }}</span>
+        <span class="splash__rule-thin"></span>
+        {% if finz_latest %}
+        <span class="splash__headline">{{ finz_latest.headline | default: finz_latest.title }}</span>
+        <span class="splash__dateline">{{ finz_latest.date | date: "%B %d, %Y" }}</span>
+        {% else %}
+        <span class="splash__headline splash__headline--placeholder">{{ finz_brand.subtitle }}</span>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+</div>

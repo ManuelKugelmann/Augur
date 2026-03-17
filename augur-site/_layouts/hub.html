@@ -1,47 +1,21 @@
 ---
 layout: default
 ---
+{% assign brand = site.data.brands[page.brand] %}
+
 <div class="listing">
   <div class="listing__header" style="text-align: center;">
-    <h1 style="font-size: 2rem;">{{ site.title }}</h1>
-    <p style="font-style: italic; color: var(--meta);">AI-generated speculative predictions from open-source intelligence.</p>
     <hr class="rule--double">
   </div>
 
-  {% for brand_entry in site.data.brands %}
-  {% assign bkey = brand_entry[0] %}
-  {% assign brand = brand_entry[1] %}
-
-  <h2>
-    <a href="{{ '/' | append: brand.slug | append: '/' | relative_url }}" style="color: var(--ink);">
-      {{ brand.name }}
-    </a>
-  </h2>
-  <p style="font-size: 0.85rem; color: var(--meta); margin-bottom: 0.8rem;">{{ brand.subtitle }}</p>
-
   <ul class="listing__items">
-    {% assign brand_posts = site.posts | where: "brand", bkey %}
-    {% for post in brand_posts limit: 3 %}
+    {% for h in brand.horizons %}
+    {% assign filtered = site.posts | where: "brand", page.brand | where: "horizon", h.key %}
+    {% for post in filtered limit: 1 %}
     <li class="listing__item">
       {% include article-card.html post=post %}
     </li>
     {% endfor %}
+    {% endfor %}
   </ul>
-
-  {% if brand_posts.size == 0 %}
-  <p style="color: var(--meta); font-style: italic; margin-bottom: 1.5rem;">No predictions yet.</p>
-  {% endif %}
-
-  <hr class="rule">
-  {% endfor %}
-
-  <div style="text-align: center; margin-top: 2rem;">
-    <h3>About The Augur</h3>
-    <p style="font-size: 0.9rem; max-width: 500px; margin: 0.5rem auto; color: var(--meta);">
-      The Augur collects real-world open-source intelligence signals and uses AI
-      to extrapolate plausible near-future scenarios. Every prediction is permanently
-      archived and tracked for accuracy. This is not news — it is speculation,
-      clearly labeled and accountable.
-    </p>
-  </div>
 </div>

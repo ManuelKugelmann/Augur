@@ -175,10 +175,9 @@ class TestIngestTicker:
 
     def test_signal_change_emits_event(self):
         """When composite signal changes, an event should be emitted."""
-        # Existing snapshot has "avoid"
+        # Existing snapshot has "avoid" — fetched BEFORE new snapshot is stored
         existing = [
-            {"data": {"composite": "hold"}},  # current (will be stored first)
-            {"data": {"composite": "avoid"}},  # previous
+            {"data": {"composite": "avoid"}},  # previous (most recent before new ingest)
         ]
         ind = _make_indicators_mod()
         store = _make_store_mod(existing_snapshots=existing)
@@ -199,8 +198,7 @@ class TestIngestTicker:
     def test_signal_change_high_severity_for_strong_buy(self):
         """strong_buy and avoid signals should get high severity."""
         existing = [
-            {"data": {"composite": "strong_buy"}},
-            {"data": {"composite": "hold"}},
+            {"data": {"composite": "hold"}},  # previous signal (fetched before new store)
         ]
         analysis = {
             "ticker": "AAPL", "currency": "USD", "current_close": 150.0,
@@ -217,8 +215,7 @@ class TestIngestTicker:
     def test_no_event_when_signal_unchanged(self):
         """No event when composite stays the same."""
         existing = [
-            {"data": {"composite": "hold"}},
-            {"data": {"composite": "hold"}},
+            {"data": {"composite": "hold"}},  # previous signal matches new "hold"
         ]
         ind = _make_indicators_mod()
         store = _make_store_mod(existing_snapshots=existing)

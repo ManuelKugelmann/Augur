@@ -1,0 +1,8 @@
+---
+layout: feed.xml
+feed_brand: financial
+feed_brand_slug: financial.augur
+feed_title: "Financial Augur"
+feed_description: "AI-generated market opinion — not financial advice."
+feed_locale: en
+---

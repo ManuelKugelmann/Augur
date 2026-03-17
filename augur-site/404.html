@@ -8,5 +8,5 @@ permalink: /404.html
 <div style="text-align: center; padding: 3rem 0;">
   <h1 style="font-size: 3rem;">404</h1>
   <p style="font-style: italic; color: var(--meta);">The Augur did not foresee this page.</p>
-  <p><a href="{{ '/' | relative_url }}">&larr; Return to the present</a></p>
+  <p><a href="{{ '/' | relative_url }}?v={{ site.time | date: '%s' }}">&larr; Return to the present</a></p>
 </div>

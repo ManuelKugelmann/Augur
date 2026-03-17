@@ -380,6 +380,10 @@ SAFEEOF
         mkdir -p ~/.config/systemd/user ~/logs
 
         cat > ~/.config/systemd/user/augur.service << SVCEOF
+[Unit]
+Description=Augur signals server (MCP trading tools)
+After=network.target
+
 [Install]
 WantedBy=default.target
 
@@ -393,6 +397,10 @@ Restart=always
 RestartSec=10
 SVCEOF
         cat > ~/.config/systemd/user/charts.service << SVCEOF
+[Unit]
+Description=Augur charts server
+After=network.target
+
 [Install]
 WantedBy=default.target
 
@@ -412,6 +420,10 @@ SVCEOF
         local SVC="$HOME/.config/systemd/user/librechat.service"
         if [[ ! -f "$SVC" ]]; then
             cat > "$SVC" <<SVCEOF
+[Unit]
+Description=LibreChat web application
+After=network.target
+
 [Install]
 WantedBy=default.target
 
@@ -843,12 +855,16 @@ CFGEOF
                 fi
                 mkdir -p "$(dirname "$PROXY_SVC")"
                 cat > "$PROXY_SVC" << SVCEOF
+[Unit]
+Description=CLIProxyAPI (Claude Max subscription proxy)
+After=network.target
+
 [Install]
 WantedBy=default.target
 
 [Service]
 WorkingDirectory=${HOME}
-EnvironmentFile=${PROXY_AUTH}
+EnvironmentFile=-${PROXY_AUTH}
 ExecStart=cliproxyapi --config ${PROXY_CONFIG}
 Restart=always
 RestartSec=10
@@ -934,7 +950,7 @@ SVCEOF
         else _fail "Node.js not found"; fi
         [[ -f "$APP/.version" ]] && _ok "LibreChat installed: $(cat "$APP/.version")" || _fail "LibreChat not installed at $APP"
         if [[ -f "$APP/.env" ]]; then
-            grep -q "MONGO_URI=" "$APP/.env" 2>/dev/null && _ok "LibreChat .env with MONGO_URI" || _warn "LibreChat .env exists but MONGO_URI not set"
+            grep -q "^MONGO_URI=" "$APP/.env" 2>/dev/null && _ok "LibreChat .env with MONGO_URI" || _warn "LibreChat .env exists but MONGO_URI not set"
             grep -q "^HOST=0\.0\.0\.0" "$APP/.env" 2>/dev/null && _ok "LibreChat HOST=0.0.0.0" || _warn "LibreChat HOST not set to 0.0.0.0 — web backend may 502"
         else _fail "LibreChat .env missing"; fi
         if [[ -f "$APP/librechat.yaml" ]]; then

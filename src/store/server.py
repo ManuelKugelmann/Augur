@@ -20,8 +20,11 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 import json
+import logging
 import os
 import re
+
+log = logging.getLogger("augur.store")
 
 try:
     from bson import ObjectId
@@ -215,8 +218,8 @@ def _profiles_col(kind: str):
             ], background=True, default_language="english")
             col.create_index("region", background=True)
             col.create_index("tags", background=True)
-        except Exception:
-            pass  # index creation may fail on some Atlas tiers
+        except Exception as e:
+            log.debug("index creation skipped for %s: %s", name, e)
         _cols_ready.add(name)
         return col
     return _db()[name]
@@ -230,8 +233,8 @@ def _snap_col(kind: str):
     if f"{name}_geo" not in _cols_ready:
         try:
             col.create_index([("location", "2dsphere")], background=True)
-        except Exception:
-            pass  # time-series collections may reject certain index options
+        except Exception as e:
+            log.debug("geo index skipped for %s: %s", name, e)
         _cols_ready.add(f"{name}_geo")
     return col
 
@@ -250,8 +253,8 @@ def _events_col():
     if "events_geo" not in _cols_ready:
         try:
             col.create_index([("location", "2dsphere")], background=True)
-        except Exception:
-            pass  # time-series collections may reject certain index options
+        except Exception as e:
+            log.debug("geo index skipped for events: %s", e)
         _cols_ready.add("events_geo")
     return col
 
