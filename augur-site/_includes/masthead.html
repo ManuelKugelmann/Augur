@@ -16,29 +16,31 @@
 </header>
 <script>
 (function() {
+  var SUN = '\u263C', MOON = '\u263E';
   var t = localStorage.getItem('augur-theme') || '';
   if (t) document.body.setAttribute('data-theme', t);
-  document.addEventListener('click', function(e) {
-    var btn = e.target.closest('[data-set-theme]');
+
+  function updateToggle() {
+    var btn = document.getElementById('theme-toggle');
     if (!btn) return;
-    var theme = btn.getAttribute('data-set-theme');
-    if (theme) {
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('augur-theme', theme);
-    } else {
+    var dark = document.body.getAttribute('data-theme') === 'dark';
+    btn.textContent = dark ? SUN : MOON;
+    btn.title = dark ? 'Light mode' : 'Dark mode';
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#theme-toggle')) return;
+    var dark = document.body.getAttribute('data-theme') === 'dark';
+    if (dark) {
       document.body.removeAttribute('data-theme');
       localStorage.removeItem('augur-theme');
+    } else {
+      document.body.setAttribute('data-theme', 'dark');
+      localStorage.setItem('augur-theme', 'dark');
     }
-    document.querySelectorAll('.theme-switcher__btn').forEach(function(b) {
-      b.classList.toggle('theme-switcher__btn--active',
-        b.getAttribute('data-set-theme') === theme);
-    });
-  });
-  document.querySelectorAll('.theme-switcher__btn').forEach(function(b) {
-    b.classList.toggle('theme-switcher__btn--active',
-      b.getAttribute('data-set-theme') === t);
+    updateToggle();
   });
 
-
+  updateToggle();
 })();
 </script>
