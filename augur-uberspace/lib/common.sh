@@ -353,6 +353,8 @@ _lc_download_and_setup() {
     [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
     [[ -n "$_BUNDLE_TAG" ]]      && echo "$_BUNDLE_TAG"      > "$APP/.release-tag"
 
+    # Explicit cleanup (setup.sh mv'd contents out; remove empty temp dir)
+    rm -rf "$lc_tmp"
     return 0
 }
 
