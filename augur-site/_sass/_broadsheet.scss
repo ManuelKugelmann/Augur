@@ -122,12 +122,12 @@ body {
   }
 }
 
-// Splash page background — darker than brand pages so cards stand out
+// Splash page background — distinct from brand pages so cards pop
 .page--splash {
-  background: #ddd8ce;
+  background: #c8c1b4;
 }
 [data-theme="dark"].page--splash {
-  background: #141418;
+  background: #0e0e12;
 }
 
 // Rule lines (horizontal rules in broadsheet style)
