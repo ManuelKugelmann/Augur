@@ -53,4 +53,17 @@ layout: default
   <div style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--meta); text-transform: uppercase; letter-spacing: 0.1em; padding: 0.5rem; background: repeating-linear-gradient(90deg, var(--meta) 0, var(--meta) 2px, transparent 2px, transparent 6px); background-size: 6px 1px; background-position: bottom; background-repeat: repeat-x;">
     AI-GENERATED SPECULATION
   </div>
+
+  {% if jekyll.environment != "production" %}
+  {% assign page_url = site.url | append: page.url %}
+  <details class="dev-links">
+    <summary class="dev-links__toggle">Card Inspectors</summary>
+    <ul class="dev-links__list">
+      <li><a href="https://opengraph.xyz/url/{{ page_url | url_encode }}" target="_blank" rel="noopener">OpenGraph.xyz</a></li>
+      <li><a href="https://cards-dev.twitter.com/validator" target="_blank" rel="noopener">X / Twitter Card Validator</a></li>
+      <li><a href="https://developers.facebook.com/tools/debug/?q={{ page_url | url_encode }}" target="_blank" rel="noopener">Facebook Debugger</a></li>
+      <li><a href="https://www.linkedin.com/post-inspector/inspect/{{ page_url | url_encode }}" target="_blank" rel="noopener">LinkedIn Post Inspector</a></li>
+    </ul>
+  </details>
+  {% endif %}
 </article>

@@ -205,6 +205,38 @@ hr,
   }
 }
 
+// Dev links (non-production only)
+.dev-links {
+  margin: 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+
+  &__toggle {
+    cursor: pointer;
+    color: var(--meta);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0.4rem 0 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
 // Footer
 .page-footer {
   margin-top: auto;
