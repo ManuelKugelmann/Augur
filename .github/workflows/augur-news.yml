@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: cached-preview
-          key: pages-preview-
+          key: pages-preview-placeholder
           restore-keys: pages-preview-
 
       - name: Assemble root + preview
@@ -171,7 +171,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: cached-root
-          key: pages-root-
+          key: pages-root-placeholder
           restore-keys: pages-root-
 
       - name: Assemble root + preview
