@@ -21,13 +21,20 @@ body {
   margin-bottom: 1.5rem;
 
   &__title {
+    display: block;
     font-family: 'Playfair Display', Georgia, serif;
     font-weight: 900;
     font-size: 2.8rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--ink);
+    text-decoration: none;
     margin-bottom: 0.1em;
+
+    &:hover {
+      color: var(--ink);
+      text-decoration: none;
+    }
   }
 
   &__subtitle {

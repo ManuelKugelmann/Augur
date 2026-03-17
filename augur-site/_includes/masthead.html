@@ -1,7 +1,7 @@
 {% assign brand_key = page.brand | default: "the" %}
 {% assign brand = site.data.brands[brand_key] %}
 <header class="masthead">
-  <div class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</div>
+  <a href="{{ '/' | relative_url }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
   <div class="masthead__subtitle">{{ brand.subtitle | default: "Foresight from the signal noise" }}</div>
   <nav class="masthead__nav">
     {% for h in brand.horizons %}
