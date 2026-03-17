@@ -64,40 +64,7 @@ jobs:
           fi
 
       - name: Ensure at least one article exists
-        run: |
-          if ! find site/_posts -name '*.md' ! -name 'README*' | grep -q .; then
-            DATE=$(date -u +%Y-%m-%d)
-            TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-            mkdir -p site/_posts/the.augur/days
-            cat > "site/_posts/the.augur/days/${DATE}-welcome.md" <<EOF
-          ---
-          layout: article
-          brand: the
-          horizon: days
-          categories: the.augur/days
-          date: ${DATE}
-          headline: "Welcome to Augur News"
-          created_at: "${TIMESTAMP}"
-          tags: [placeholder]
-          sources: []
-          model: placeholder
-          ---
-
-          ## The Signal
-
-          Augur News is live. Articles generated from trading signals will appear here.
-
-          ## The Extrapolation
-
-          This placeholder confirms the Jekyll deployment pipeline is working end-to-end.
-
-          ## In The Works
-
-          Live signal-driven articles are coming soon.
-          EOF
-            sed -i 's/^          //' "site/_posts/the.augur/days/${DATE}-welcome.md"
-            echo "Created placeholder article"
-          fi
+        run: bash main/augur-site/scripts/ensure-placeholder.sh site
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -106,9 +73,17 @@ jobs:
           bundler-cache: true
           working-directory: site
 
+      - name: Detect baseurl
+        id: baseurl
+        run: |
+          # GitHub Pages for project repos serves at /<repo-name>/
+          REPO_NAME="${{ github.event.repository.name }}"
+          echo "root=/${REPO_NAME}" >> "$GITHUB_OUTPUT"
+          echo "preview=/${REPO_NAME}/preview" >> "$GITHUB_OUTPUT"
+
       - name: Build root
         working-directory: site
-        run: bundle exec jekyll build
+        run: bundle exec jekyll build --baseurl "${{ steps.baseurl.outputs.root }}"
         env:
           JEKYLL_ENV: production
 
@@ -153,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}preview/
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v6
@@ -182,40 +157,7 @@ jobs:
           fi
 
       - name: Ensure at least one article exists
-        run: |
-          if ! find site/_posts -name '*.md' ! -name 'README*' | grep -q .; then
-            DATE=$(date -u +%Y-%m-%d)
-            TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-            mkdir -p site/_posts/the.augur/days
-            cat > "site/_posts/the.augur/days/${DATE}-welcome-preview.md" <<EOF
-          ---
-          layout: article
-          brand: the
-          horizon: days
-          categories: the.augur/days
-          date: ${DATE}
-          headline: "Welcome to Augur News — Preview"
-          created_at: "${TIMESTAMP}"
-          tags: [placeholder, preview]
-          sources: []
-          model: placeholder
-          ---
-
-          ## The Signal
-
-          This is a preview deployment of Augur News from a pull request.
-
-          ## The Extrapolation
-
-          Theme and layout changes from the PR are rendered here for review.
-
-          ## In The Works
-
-          Merge the PR to see changes on the production site.
-          EOF
-            sed -i 's/^          //' "site/_posts/the.augur/days/${DATE}-welcome-preview.md"
-            echo "Created placeholder preview article"
-          fi
+        run: bash pr-src/augur-site/scripts/ensure-placeholder.sh site preview
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -224,9 +166,15 @@ jobs:
           bundler-cache: true
           working-directory: site
 
+      - name: Detect baseurl
+        id: baseurl
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          echo "preview=/${REPO_NAME}/preview" >> "$GITHUB_OUTPUT"
+
       - name: Build preview
         working-directory: site
-        run: bundle exec jekyll build --baseurl "/preview"
+        run: bundle exec jekyll build --baseurl "${{ steps.baseurl.outputs.preview }}"
         env:
           JEKYLL_ENV: production
 
