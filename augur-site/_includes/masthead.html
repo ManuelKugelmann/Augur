@@ -2,13 +2,13 @@
 {% assign brand = site.data.brands[brand_key] %}
 <header class="masthead">
   <div class="masthead__brand">
-    <a href="{{ '/' | relative_url }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
+    <a href="{{ '/' | relative_url }}?v={{ site.time | date: '%s' }}" class="masthead__title">{{ brand.masthead | default: "THE AUGUR" }}</a>
     <div class="masthead__subtitle">{{ brand.subtitle | default: "Foresight from the signal noise" }}</div>
   </div>
   <nav class="masthead__nav">
     {% for h in brand.horizons %}
     <a class="masthead__link{% if page.horizon == h.key %} masthead__link--active{% endif %}"
-       href="{{ '/' | append: brand.slug | append: '/' | append: h.slug | append: '/' | relative_url }}">
+       href="{{ '/' | append: brand.slug | append: '/' | append: h.slug | append: '/' | relative_url }}?v={{ site.time | date: '%s' }}">
       {{ h.label }}
     </a>
     {% endfor %}

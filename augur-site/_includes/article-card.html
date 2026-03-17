@@ -8,7 +8,7 @@
 <article class="card">
   <div class="card__horizon">{{ horizon_label }}</div>
   <h2 class="card__headline">
-    <a href="{{ post.url | relative_url }}">{{ post.headline | default: post.title }}</a>
+    <a href="{{ post.url | relative_url }}?v={{ site.time | date: '%s' }}">{{ post.headline | default: post.title }}</a>
   </h2>
   <div class="card__date">{{ post.fictive_date | default: post.date | date: "%Y-%m-%d" }}</div>
   {% if post.tags.size > 0 %}
