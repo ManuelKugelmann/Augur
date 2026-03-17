@@ -9,25 +9,14 @@ layout: default
     <hr class="rule">
   </div>
 
-  {% for h in brand.horizons %}
-  <h2 style="margin-top: 1.5rem;">{{ h.label }}</h2>
-  <hr class="rule">
-
   <ul class="listing__items">
+    {% for h in brand.horizons %}
     {% assign filtered = site.posts | where: "brand", page.brand | where: "horizon", h.key %}
-    {% for post in filtered limit: 5 %}
+    {% for post in filtered limit: 1 %}
     <li class="listing__item">
       {% include article-card.html post=post %}
     </li>
     {% endfor %}
+    {% endfor %}
   </ul>
-
-  {% if filtered.size == 0 %}
-  <p style="color: var(--meta); font-style: italic;">No predictions yet.</p>
-  {% endif %}
-
-  {% if filtered.size > 5 %}
-  <p><a href="{{ '/' | append: brand.slug | append: '/' | append: h.slug | append: '/' | relative_url }}">View all &rarr;</a></p>
-  {% endif %}
-  {% endfor %}
 </div>
