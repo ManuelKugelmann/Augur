@@ -99,7 +99,9 @@ jobs:
             cp -r cached-preview/* site/_site/preview/
             echo "Preview restored from cache"
           else
-            echo "No cached preview, deploying root only"
+            mkdir -p site/_site/preview
+            echo '<html><body><h1>No preview available</h1><p>A PR preview will appear here once a pull request is opened.</p></body></html>' > site/_site/preview/index.html
+            echo "No cached preview, created placeholder"
           fi
 
       - name: Upload Pages artifact
@@ -204,7 +206,7 @@ jobs:
         with:
           script: |
             const pageUrl = '${{ steps.deployment.outputs.page_url }}'.replace(/\/$/, '');
-            const url = `${pageUrl}preview/`;
+            const url = `${pageUrl}/preview/`;
             const body = `**Jekyll preview deployed**\n\n${url}\n\n_Updated for commit ${context.sha.slice(0, 7)}_`;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
