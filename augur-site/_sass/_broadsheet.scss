@@ -122,12 +122,12 @@ body {
   }
 }
 
-// Splash page background — distinct from brand pages so cards pop
+// Splash page background — distinct from brand pages so cards pop (oklch)
 .page--splash {
-  background: #c0c0c0;
+  background: oklch(81% 0 0);
 }
 [data-theme="dark"].page--splash {
-  background: #0e0e12;
+  background: oklch(17% 0.008 286);
 }
 
 // Rule lines (horizontal rules in broadsheet style)
@@ -257,31 +257,31 @@ hr,
     color: var(--card-ink);
     transition: border-color 0.2s, box-shadow 0.2s;
 
-    // Light mode edition palettes
-    --card-bg: #f8f5ef;
-    --card-ink: #1a1a1a;
-    --card-accent: #8b0000;
-    --card-meta: #6b5b4f;
+    // Light mode edition palettes (oklch for perceptual uniformity)
+    --card-bg: oklch(97% 0.009 85);
+    --card-ink: oklch(22% 0 0);
+    --card-accent: oklch(40% 0.164 29);
+    --card-meta: oklch(48% 0.028 59);
 
     &[data-edition="financial"],
     &[data-edition="finanz"] {
-      --card-bg: #f5f6f8;
-      --card-accent: #1a3a5c;
-      --card-meta: #5a6570;
+      --card-bg: oklch(97% 0.009 255);
+      --card-accent: oklch(40% 0.100 252);
+      --card-meta: oklch(48% 0.022 248);
     }
 
-    // Dark mode edition palettes
+    // Dark mode edition palettes (oklch)
     [data-theme="dark"] & {
-      --card-bg: #222226;
-      --card-ink: #e8e4dc;
-      --card-accent: #c4473a;
-      --card-meta: #8a8078;
+      --card-bg: oklch(25% 0.008 286);
+      --card-ink: oklch(92% 0.012 85);
+      --card-accent: oklch(57% 0.162 29);
+      --card-meta: oklch(61% 0.017 61);
     }
     [data-theme="dark"] &[data-edition="financial"],
     [data-theme="dark"] &[data-edition="finanz"] {
-      --card-bg: #1e2228;
-      --card-accent: #5b9bd5;
-      --card-meta: #7a8590;
+      --card-bg: oklch(25% 0.013 255);
+      --card-accent: oklch(57% 0.109 248);
+      --card-meta: oklch(61% 0.021 248);
     }
 
     &:hover {
