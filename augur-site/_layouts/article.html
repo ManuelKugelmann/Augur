@@ -22,7 +22,7 @@ layout: default
 
   {% if page.image_paths %}
   <div class="article__image">
-    <img src="{{ page.image_paths[0] | relative_url }}" alt="{{ page.headline | default: page.title }}">
+    <img src="{{ page.image_paths[0] | relative_url }}?v={{ site.time | date: '%s' }}" alt="{{ page.headline | default: page.title }}">
     <div class="article__image-disclaimer">AI-GENERATED &middot; NOT A PHOTO</div>
   </div>
   {% endif %}
