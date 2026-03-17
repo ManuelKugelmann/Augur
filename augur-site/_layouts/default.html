@@ -4,7 +4,6 @@
   {% include head.html %}
 </head>
 <body data-brand="{{ page.brand | default: 'the' }}">
-  {% include disclaimer.html %}
   <div class="page-wrapper">
     {% include masthead.html %}
     <main>
@@ -12,5 +11,6 @@
     </main>
     {% include footer.html %}
   </div>
+  {% include disclaimer.html %}
 </body>
 </html>
