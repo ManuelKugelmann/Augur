@@ -26,21 +26,22 @@
   </nav>
   <span class="page-footer__sep">&middot;</span>
   {% endunless %}
-  <p class="page-footer__legal">
-    {% if locale == "de" %}
-    <a href="{{ '/impressum/' | relative_url }}?v={{ bust }}">Impressum</a> &middot;
-    <a href="{{ '/datenschutz/' | relative_url }}?v={{ bust }}">Datenschutz</a> &middot;
-    {% else %}
-    <a href="{{ '/legal-notice/' | relative_url }}?v={{ bust }}">Legal Notice</a> &middot;
-    <a href="{{ '/privacy-policy/' | relative_url }}?v={{ bust }}">Privacy Policy</a> &middot;
-    {% endif %}
-    <a href="{{ '/' | append: brand.slug | append: '/feed.xml' | relative_url }}">RSS</a>
-  </p>
-  <span class="page-footer__sep">&middot;</span>
   <a href="{{ '/' | relative_url }}?v={{ bust }}" class="page-footer__splash">AUGUR</a>
   <span class="page-footer__sep">&middot;</span>
-  <div class="theme-switcher">
-    <button class="theme-switcher__btn" data-set-theme="">Classic</button>
-    <button class="theme-switcher__btn" data-set-theme="dark">Dark</button>
-  </div>
+  {% if locale == "de" %}
+  <a href="{{ '/impressum/' | relative_url }}?v={{ bust }}">Impressum</a>
+  <span class="page-footer__sep">&middot;</span>
+  <a href="{{ '/datenschutz/' | relative_url }}?v={{ bust }}">Datenschutz</a>
+  {% else %}
+  <a href="{{ '/legal-notice/' | relative_url }}?v={{ bust }}">Legal Notice</a>
+  <span class="page-footer__sep">&middot;</span>
+  <a href="{{ '/privacy-policy/' | relative_url }}?v={{ bust }}">Privacy Policy</a>
+  {% endif %}
+  <span class="page-footer__sep">&middot;</span>
+  <a href="{{ '/' | append: brand.slug | append: '/feed.xml' | relative_url }}">RSS</a>
+  <span class="page-footer__sep">&middot;</span>
+  <button class="page-footer__theme" data-set-theme="dark" title="Dark mode">&#9790;</button>
+  <button class="page-footer__theme" data-set-theme="" title="Light mode">&#9788;</button>
+  <span class="page-footer__sep">&middot;</span>
+  <span class="page-footer__build">{{ site.data.build.sha }} &middot; {{ site.data.build.time }}</span>
 </footer>
