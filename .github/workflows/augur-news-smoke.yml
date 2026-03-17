@@ -16,6 +16,8 @@ jobs:
   push-sentinel:
     name: Push sentinel article to augur_news
     runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ steps.push.outputs.timestamp }}
     steps:
       - name: Checkout augur_news (or create orphan)
         run: |
@@ -80,6 +82,8 @@ jobs:
           git commit -m "sentinel: ${TIMESTAMP} (run #${{ github.run_number }})"
           git push -u origin augur_news
 
+          echo "timestamp=${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+
           echo "### Sentinel pushed" >> "$GITHUB_STEP_SUMMARY"
           echo "- File: \`$ARTICLE_FILE\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Timestamp: ${TIMESTAMP}" >> "$GITHUB_STEP_SUMMARY"
@@ -138,7 +142,7 @@ jobs:
 
   verify-site:
     name: Verify deployed site
-    needs: wait-for-deploy
+    needs: [push-sentinel, wait-for-deploy]
     runs-on: ubuntu-latest
     steps:
       - name: Resolve Pages URL
@@ -162,19 +166,38 @@ jobs:
               console.log(`Pages API unavailable, using fallback: ${url}`);
             }
 
-      - name: Check site responds
+      - name: Verify sentinel article with timestamp
+        env:
+          EXPECTED_TS: ${{ needs.push-sentinel.outputs.timestamp }}
         run: |
           SITE_URL="${{ steps.url.outputs.site_url }}"
+          SENTINEL_URL="${SITE_URL}/the.augur/days/ci-sentinel-pipeline-validation/"
           sleep 10
 
+          # Check site root
           STATUS=$(curl -sL -o /dev/null -w '%{http_code}' "$SITE_URL" || echo "000")
-          echo "$SITE_URL → HTTP $STATUS"
+          echo "Site root: $SITE_URL → HTTP $STATUS"
 
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-            echo "Site is live"
-          else
-            echo "::warning::Site returned HTTP $STATUS — may still be propagating"
+          # Fetch sentinel article and check for timestamp
+          BODY=$(curl -sL "$SENTINEL_URL")
+          ART_STATUS=$(curl -sL -o /dev/null -w '%{http_code}' "$SENTINEL_URL")
+          echo "Sentinel: $SENTINEL_URL → HTTP $ART_STATUS"
+
+          echo "### Site verification" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Site root: HTTP $STATUS" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Sentinel article: HTTP $ART_STATUS" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$ART_STATUS" != "200" ]; then
+            echo "::error::Sentinel article not found (HTTP $ART_STATUS)"
+            echo "- **FAIL**: sentinel article not found" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
 
-          echo "### Site check" >> "$GITHUB_STEP_SUMMARY"
-          echo "- [$SITE_URL]($SITE_URL) → HTTP $STATUS" >> "$GITHUB_STEP_SUMMARY"
+          if echo "$BODY" | grep -q "$EXPECTED_TS"; then
+            echo "Sentinel contains expected timestamp: $EXPECTED_TS"
+            echo "- **PASS**: timestamp \`$EXPECTED_TS\` found in deployed article" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Sentinel article missing expected timestamp $EXPECTED_TS"
+            echo "- **FAIL**: timestamp \`$EXPECTED_TS\` not found in deployed article" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
