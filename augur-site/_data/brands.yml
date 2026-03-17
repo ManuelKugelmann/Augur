@@ -1,7 +1,7 @@
 the:
   name: "The Augur"
   masthead: "THE AUGUR"
-  subtitle: "Signal from noise"
+  subtitle: "Foresight from the signal noise"
   locale: en
   module: general
   slug: the.augur
@@ -36,7 +36,7 @@ the:
 der:
   name: "Der Augur"
   masthead: "DER AUGUR"
-  subtitle: "Signal aus dem Rauschen"
+  subtitle: "Voraussicht aus dem Signalrauschen"
   locale: de
   module: general
   slug: der.augur
@@ -71,7 +71,7 @@ der:
 financial:
   name: "Financial Augur"
   masthead: "FINANCIAL AUGUR"
-  subtitle: "Signal from markets"
+  subtitle: "Market foresight from open signals"
   locale: en
   module: markets
   slug: financial.augur
@@ -106,7 +106,7 @@ financial:
 finanz:
   name: "Finanz Augur"
   masthead: "FINANZ AUGUR"
-  subtitle: "Signal aus den Märkten"
+  subtitle: "Marktvoraussicht aus offenen Signalen"
   locale: de
   module: markets
   slug: finanz.augur
