@@ -3,15 +3,18 @@ layout: default
 ---
 {% assign brand = site.data.brands[page.brand] %}
 {% assign horizon_label = "" %}
+{% assign horizon_subtitle = "" %}
 {% for h in brand.horizons %}
   {% if h.key == page.horizon %}
     {% assign horizon_label = h.label %}
+    {% assign horizon_subtitle = h.subtitle %}
   {% endif %}
 {% endfor %}
 
 <div class="listing">
   <div class="listing__header">
     <h1>{{ horizon_label }}</h1>
+    {% if horizon_subtitle %}<p class="listing__subtitle">{{ horizon_subtitle }}</p>{% endif %}
     <div class="dateline">{{ brand.name }}</div>
     <hr class="rule">
   </div>

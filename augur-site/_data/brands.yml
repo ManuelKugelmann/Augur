@@ -14,18 +14,23 @@ the:
     - key: days
       slug: days
       label: Days
+      subtitle: "What will happen tomorrow?"
     - key: weeks
       slug: weeks
       label: Weeks
+      subtitle: "What to watch this week?"
     - key: months
       slug: months
       label: Months
+      subtitle: "What shapes the coming months?"
     - key: years
       slug: years
       label: Years
+      subtitle: "What defines the years ahead?"
     - key: decades
       slug: decades
       label: Decades
+      subtitle: "What will the world look like?"
   disclaimer: "AI-generated speculation — not news. Not financial advice."
 
 der:
@@ -44,18 +49,23 @@ der:
     - key: days
       slug: tage
       label: Tage
+      subtitle: "Was passiert morgen?"
     - key: weeks
       slug: wochen
       label: Wochen
+      subtitle: "Was bewegt diese Woche?"
     - key: months
       slug: monate
       label: Monate
+      subtitle: "Was prägt die kommenden Monate?"
     - key: years
       slug: jahre
       label: Jahre
+      subtitle: "Was bestimmt die nächsten Jahre?"
     - key: decades
       slug: jahrzehnte
       label: Jahrzehnte
+      subtitle: "Wie wird die Welt aussehen?"
   disclaimer: "KI-generierte Spekulation — keine Nachricht. Keine Finanzberatung."
 
 financial:
@@ -74,18 +84,23 @@ financial:
     - key: days
       slug: days
       label: Days
+      subtitle: "What moves markets tomorrow?"
     - key: weeks
       slug: weeks
       label: Weeks
+      subtitle: "What to watch this week?"
     - key: months
       slug: months
       label: Months
+      subtitle: "What shapes the coming quarters?"
     - key: years
       slug: years
       label: Years
+      subtitle: "What secular trends are forming?"
     - key: decades
       slug: decades
       label: Decades
+      subtitle: "What will reshape the global economy?"
   disclaimer: "AI-generated opinion — not financial advice. The Augur may hold positions in discussed sectors."
 
 finanz:
@@ -104,16 +119,21 @@ finanz:
     - key: days
       slug: tage
       label: Tage
+      subtitle: "Was bewegt die Märkte morgen?"
     - key: weeks
       slug: wochen
       label: Wochen
+      subtitle: "Was bewegt diese Woche?"
     - key: months
       slug: monate
       label: Monate
+      subtitle: "Was prägt die kommenden Quartale?"
     - key: years
       slug: jahre
       label: Jahre
+      subtitle: "Welche säkularen Trends zeichnen sich ab?"
     - key: decades
       slug: jahrzehnte
       label: Jahrzehnte
+      subtitle: "Was wird die Weltwirtschaft verändern?"
   disclaimer: "KI-generierte Einschätzung — keine Finanzberatung. Der Augur kann Positionen in besprochenen Sektoren halten."
