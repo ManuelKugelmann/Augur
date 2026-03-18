@@ -80,7 +80,7 @@ endpoints:
           - mistral-small-latest
           - mistral-large-latest
           - magistral-small-latest
-          - devstral-small-latest
+          - magistral-medium-latest
         fetch: false
       titleConvo: true
       titleModel: "mistral-small-latest"
@@ -154,7 +154,7 @@ endpoints:
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
-          - "qwen/qwen3-coder:free"
+          - "google/gemini-2.5-flash:free"
           - "nvidia/nemotron-3-super-120b:free"
           - "meta-llama/llama-3.3-70b-instruct:free"
           - "deepseek/deepseek-r1:free"

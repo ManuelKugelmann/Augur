@@ -57,7 +57,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://console.mistral.ai/api-keys |
 | **Free limits** | 1 req/sec, 500K tokens/min |
-| **Best models** | `mistral-small-latest`, `mistral-large-latest`, `magistral-small-latest`, `devstral-small-latest` |
+| **Best models** | `mistral-small-latest`, `mistral-large-latest`, `magistral-small-latest`, `magistral-medium-latest` |
 | **Env var** | `MISTRAL_API_KEY=...` |
 | **Notes** | Codestral is great for code tasks. Free tier very generous. |
 
@@ -107,7 +107,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://openrouter.ai/keys |
 | **Free limits** | 20 RPM, 50 req/day (free models only, `:free` suffix) |
-| **Best models** | `qwen/qwen3-coder:free`, `deepseek/deepseek-r1:free`, `meta-llama/llama-3.3-70b-instruct:free` |
+| **Best models** | `google/gemini-2.5-flash:free`, `deepseek/deepseek-r1:free`, `meta-llama/llama-3.3-70b-instruct:free` |
 | **Env var** | `OPENROUTER_API_KEY=sk-or-...` |
 | **Notes** | Aggregates many providers. Free models marked with `:free`. Also has paid models (see below). |
 
@@ -117,7 +117,7 @@ For a free multi-model LibreChat setup, use these 3 together:
 
 1. **Groq** -- daily driver (fast, high limits)
 2. **Gemini** -- large context tasks (1M tokens/day)
-3. **Mistral** -- code tasks (Codestral)
+3. **Mistral** -- reasoning tasks (Magistral)
 
 ---
 
@@ -169,7 +169,7 @@ For a free multi-model LibreChat setup, use these 3 together:
 |---|---|
 | **Signup** | https://console.mistral.ai/api-keys |
 | **Pricing** | Pay-per-token |
-| **Best models** | `mistral-large-latest`, `devstral-small-latest` (higher limits) |
+| **Best models** | `mistral-large-latest`, `magistral-medium-latest` (higher limits) |
 | **Env var** | `MISTRAL_API_KEY=...` |
 | **Notes** | Same key as free tier. Enable billing for higher limits and large model access. |
 
@@ -275,7 +275,7 @@ endpoints:
       apiKey: "${MISTRAL_API_KEY}"
       baseURL: "https://api.mistral.ai/v1"
       models:
-        default: [mistral-small-latest, mistral-large-latest, magistral-small-latest, devstral-small-latest]
+        default: [mistral-small-latest, mistral-large-latest, magistral-small-latest, magistral-medium-latest]
         fetch: false
       titleConvo: true
       titleModel: "mistral-small-latest"
@@ -331,7 +331,7 @@ endpoints:
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
-          - "qwen/qwen3-coder:free"
+          - "google/gemini-2.5-flash:free"
           - "nvidia/nemotron-3-super-120b:free"
           - "meta-llama/llama-3.3-70b-instruct:free"
           - "deepseek/deepseek-r1:free"
