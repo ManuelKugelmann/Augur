@@ -224,7 +224,17 @@ def main():
     # Connect and authenticate
     client = httpx.Client(base_url=args.base_url, timeout=30)
 
-    print(f"\nLogging in to {args.base_url} as {args.email}...")
+    # Pre-flight connectivity check
+    print(f"\nConnecting to {args.base_url}...")
+    try:
+        client.get("/")
+    except httpx.ConnectError:
+        print(f"ERROR: Cannot connect to {args.base_url}\n"
+              f"  Is LibreChat running? Check with: systemctl --user status librechat",
+              file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Logging in as {args.email}...")
     token = login(client, args.email, args.password)
     client.headers["Authorization"] = f"Bearer {token}"
     print("  OK")
