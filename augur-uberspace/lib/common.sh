@@ -26,6 +26,19 @@ _augur_load_conf
 APP="${APP_DIR:-$HOME/LibreChat}"
 STACK="${STACK_DIR:-$HOME/augur}"
 
+# ── LibreChat version from package.json (ground truth) ──
+_lc_pkg_version() {
+    local pkg="$APP/package.json"
+    if [[ -f "$pkg" ]] && command -v node &>/dev/null; then
+        node -p "require('$pkg').version" 2>/dev/null && return
+    fi
+    # Fallback: grep without node
+    if [[ -f "$pkg" ]]; then
+        grep -m1 '"version"' "$pkg" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+[^"]*' && return
+    fi
+    echo "unknown"
+}
+
 # ── Output helpers ──
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}✓${NC} $1"; }
@@ -352,6 +365,11 @@ _lc_download_and_setup() {
     # Store tracking files for next skip check (sync with install.sh)
     [[ -n "$_BUNDLE_ASSET_TS" ]] && echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
     [[ -n "$_BUNDLE_TAG" ]]      && echo "$_BUNDLE_TAG"      > "$APP/.release-tag"
+
+    # Log real version from package.json for verification
+    local _real_ver
+    _real_ver=$(_lc_pkg_version)
+    [[ "$_real_ver" != "unknown" ]] && log "LibreChat package.json: v${_real_ver}"
 
     # Explicit cleanup (setup.sh mv'd contents out; remove empty temp dir)
     rm -rf "$lc_tmp"

@@ -100,7 +100,14 @@ case "$CMD" in
         _svc_status librechat || echo "librechat: not registered"
         _svc_status augur || true
         _svc_status charts || true
-        echo -e "${CYAN}Version:${NC} $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        local _st_pkg_ver _st_bundle_ver
+        _st_pkg_ver=$(_lc_pkg_version)
+        _st_bundle_ver=$(cat "$APP/.version" 2>/dev/null || echo "unknown")
+        if [[ "$_st_pkg_ver" != "unknown" ]]; then
+            echo -e "${CYAN}Version:${NC} v${_st_pkg_ver} (bundle: ${_st_bundle_ver})"
+        else
+            echo -e "${CYAN}Version:${NC} ${_st_bundle_ver}"
+        fi
         echo -e "${CYAN}Host:${NC} ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}"
         echo -e "${CYAN}Platform:${NC} U8 (Arch/systemd)"
         ;;
@@ -224,7 +231,13 @@ case "$CMD" in
         echo -e "${CYAN}── Environment ──${NC}"
         echo -e "  Stack:     $STACK"
         echo -e "  App:       $APP"
-        echo -e "  Version:   $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        local _dbg_pkg_ver
+        _dbg_pkg_ver=$(_lc_pkg_version)
+        if [[ "$_dbg_pkg_ver" != "unknown" ]]; then
+            echo -e "  Version:   v${_dbg_pkg_ver} (bundle: $(cat "$APP/.version" 2>/dev/null || echo '?'))"
+        else
+            echo -e "  Version:   $(cat "$APP/.version" 2>/dev/null || echo 'unknown')"
+        fi
         echo -e "  Node:      $(node -v 2>/dev/null || echo 'not found')"
         echo -e "  Python:    $("$STACK/venv/bin/python" --version 2>&1 2>/dev/null || echo 'venv missing')"
         echo -e "  Disk free: $(df -h "$HOME" 2>/dev/null | awk 'NR==2{print $4}' || echo '?')"
@@ -394,9 +407,14 @@ SAFEEOF
         _sha=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
         _date=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
         echo -e "Augur ${_sha} (${_date})"
-        local _lc_ver
-        _lc_ver=$(cat "$APP/.version" 2>/dev/null || echo "unknown")
-        echo -e "LibreChat ${_lc_ver}"
+        local _lc_pkg_ver _lc_bundle_ver
+        _lc_pkg_ver=$(_lc_pkg_version)
+        _lc_bundle_ver=$(cat "$APP/.version" 2>/dev/null || echo "unknown")
+        if [[ "$_lc_pkg_ver" != "unknown" ]]; then
+            echo -e "LibreChat v${_lc_pkg_ver} (bundle: ${_lc_bundle_ver})"
+        else
+            echo -e "LibreChat ${_lc_bundle_ver}"
+        fi
         ;;
     pull)
         echo -e "${CYAN}Quick pull (dev)...${NC}"
