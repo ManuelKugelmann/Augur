@@ -1224,6 +1224,11 @@ SVCEOF
             echo "    3. Calls POST ${LC_URL}/api/auth/register"
             echo "    4. Restores original ALLOW_REGISTRATION setting"
             echo "    5. Restarts LibreChat again to lock registration"
+            echo ""
+            echo "  See also:"
+            echo "    augur signup on      Enable public self-registration"
+            echo "    augur signup off     Disable public self-registration"
+            echo "    augur signup status  Show current registration setting"
             exit 0
         fi
         _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
