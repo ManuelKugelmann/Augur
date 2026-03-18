@@ -96,6 +96,7 @@ jobs:
             - rss-mcp
             - prediction-markets-mcp
             - @devabdultech/hn-mcp-server
+            - @mzxrai/mcp-webresearch
             - mcp-remote
 
             **Built:** ${{ env.MCP_DATE }}
