@@ -74,11 +74,21 @@ def list_agents(client: "httpx.Client") -> list[dict]:
     if resp.status_code != 200:
         print(f"List agents failed ({resp.status_code}): {resp.text}", file=sys.stderr)
         return []
-    data = resp.json()
+    text = resp.text.strip()
+    if not text:
+        return []
+    try:
+        data = resp.json()
+    except (json.JSONDecodeError, ValueError):
+        print(f"  WARNING: /api/agents returned non-JSON ({resp.status_code}): "
+              f"{text[:200]}", file=sys.stderr)
+        return []
     # Response may be {agents: [...]} or just [...]
     if isinstance(data, dict):
         return data.get("agents", data.get("data", []))
-    return data
+    if isinstance(data, list):
+        return data
+    return []
 
 
 def find_agent_by_name(agents: list[dict], name: str) -> dict | None:
@@ -89,13 +99,28 @@ def find_agent_by_name(agents: list[dict], name: str) -> dict | None:
     return None
 
 
+def _safe_json(resp: "httpx.Response", label: str) -> dict:
+    """Parse JSON response, returning {} on empty or invalid body."""
+    text = resp.text.strip()
+    if not text:
+        print(f"  {label}: empty response ({resp.status_code})", file=sys.stderr)
+        return {}
+    try:
+        data = resp.json()
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, ValueError):
+        print(f"  {label}: non-JSON response ({resp.status_code}): {text[:200]}",
+              file=sys.stderr)
+        return {}
+
+
 def create_agent(client: "httpx.Client", agent_def: dict) -> dict:
     """Create a new agent."""
     resp = client.post("/api/agents", json=agent_def)
     if resp.status_code not in (200, 201):
         print(f"  Create failed ({resp.status_code}): {resp.text}", file=sys.stderr)
         return {}
-    return resp.json()
+    return _safe_json(resp, "Create")
 
 
 def update_agent(client: "httpx.Client", agent_id: str, agent_def: dict) -> dict:
@@ -108,7 +133,7 @@ def update_agent(client: "httpx.Client", agent_id: str, agent_def: dict) -> dict
     if resp.status_code not in (200, 201):
         print(f"  Update failed ({resp.status_code}): {resp.text}", file=sys.stderr)
         return {}
-    return resp.json()
+    return _safe_json(resp, "Update")
 
 
 def build_api_payload(agent_def: dict) -> dict:
