@@ -1,0 +1,12 @@
+{
+  "_comment": "Model overrides for agents. Layer defaults apply first, then per-agent overrides win. Provider names must match librechat-user.yaml endpoint names (e.g. 'Groq', 'Gemini') or native providers ('anthropic'). Remove this file or use --no-model-overrides to use agents.json built-in defaults.",
+  "defaults": {
+    "L1":      {"provider": "Groq",   "model": "llama-3.3-70b-versatile"},
+    "utility": {"provider": "Groq",   "model": "llama-3.3-70b-versatile"},
+    "L2":      {"provider": "Gemini", "model": "gemini-2.5-flash"},
+    "L3":      {"provider": "Gemini", "model": "gemini-2.5-flash"},
+    "L4":      {"provider": "Gemini", "model": "gemini-2.5-flash"},
+    "L5":      {"provider": "Gemini", "model": "gemini-2.5-pro"}
+  },
+  "agents": {}
+}
