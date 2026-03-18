@@ -47,22 +47,22 @@ fi
 # Wait for LibreChat to become healthy (up to ~90s, with progress)
 _wait_lc() {
     local _lc_url="http://localhost:${LC_PORT:-3080}"
-    local _max_attempts=45  # 45 x 2s = 90s
+    local _max_attempts=36  # 36 x 5s = 180s
     local _ready=false
     for i in $(seq 1 $_max_attempts); do
         if curl -sf "${_lc_url}/api/health" >/dev/null 2>&1; then
             _ready=true; break
         fi
-        if [[ "$((i % 5))" -eq 0 ]]; then
-            echo -e "        waiting for LibreChat... (${i}/${_max_attempts}, $((i * 2))s elapsed)"
+        if [[ "$((i % 3))" -eq 0 ]]; then
+            echo -e "        waiting for LibreChat... (${i}/${_max_attempts}, $((i * 5))s elapsed)"
         fi
-        sleep 2
+        sleep 5
     done
     if [[ "$_ready" == true ]]; then
         echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/api/health)"
         return 0
     else
-        echo -e "        ${RED}✗${NC} LibreChat not ready after $((${_max_attempts} * 2))s"
+        echo -e "        ${RED}✗${NC} LibreChat not ready after $((${_max_attempts} * 5))s"
         return 1
     fi
 }
@@ -604,7 +604,7 @@ SVCEOF
             echo ""
         else
             echo -e "  ${CYAN}First login:${NC}"
-            echo "    augur user         # register your admin account"
+            echo "    augur user <email> <password> [display-name]"
             echo ""
         fi
         ;;
