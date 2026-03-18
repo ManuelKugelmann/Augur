@@ -20,7 +20,7 @@ import yaml
 
 # Keys that are exclusively owned by the system template.
 # User overlay values for these keys are ignored.
-SYSTEM_KEYS = {"version", "mcpSettings", "mcpServers", "interface"}
+SYSTEM_KEYS = {"version", "mcpSettings", "mcpServers", "interface", "memory", "fileConfig"}
 
 
 def deep_merge(base, overlay):

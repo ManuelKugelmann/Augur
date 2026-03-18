@@ -5,9 +5,17 @@ version: 1.3.6
 
 interface:
   endpointsMenu: true
+  # TODO: after dev, set sidePanel or agents to hide MCP Settings from users
+  # sidePanel: false  # hides entire right panel (including MCP Settings)
   agents:
     use: true
     create: true
+
+# ── Memories ──────────────────────────────
+# Disabled — no dedicated memory agent configured.
+# LibreChat stores memories in MongoDB but needs an LLM agent to extract them.
+memory:
+  disabled: true
 
 # ── File Uploads ──────────────────────────
 # Disabled — no RAG backend (no Meilisearch/vector DB).
