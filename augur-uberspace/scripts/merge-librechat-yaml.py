@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """Merge librechat-system.yaml + librechat-user.yaml → librechat.yaml.
 
-System template provides: version, mcpSettings, mcpServers, interface,
-endpoints.agents.  These keys always come from the system template.
-
-User overlay provides everything else: cache, registration,
-endpoints.custom (LLM providers), and any other LibreChat settings.
+System template provides defaults (MCP servers, interface, etc.).
+User overlay can override anything — deep-merged on top of system.
 
 Usage:
     python merge-librechat-yaml.py <system.yaml> <user.yaml> <output.yaml> [home_dir]
@@ -17,10 +14,6 @@ import os
 import sys
 
 import yaml
-
-# Keys that are exclusively owned by the system template.
-# User overlay values for these keys are ignored.
-SYSTEM_KEYS = {"version", "mcpSettings", "mcpServers", "interface", "memory", "fileConfig"}
 
 
 def deep_merge(base, overlay):
@@ -52,23 +45,8 @@ def merge(system_path, user_path, home_dir=None):
     with open(user_path) as f:
         user = yaml.safe_load(f) or {}
 
-    # Start with system as base, overlay user settings
+    # System as base, user overlay wins on conflicts
     merged = deep_merge(system, user)
-
-    # Force system-owned keys back (user cannot override these)
-    for key in SYSTEM_KEYS:
-        if key in system:
-            merged[key] = system[key]
-
-    # endpoints is special: system owns 'agents', user owns 'custom'
-    sys_endpoints = system.get("endpoints", {})
-    user_endpoints = user.get("endpoints", {})
-    merged_endpoints = deep_merge(sys_endpoints, user_endpoints)
-    # Always keep system's agents config
-    if "agents" in sys_endpoints:
-        merged_endpoints["agents"] = sys_endpoints["agents"]
-    if merged_endpoints:
-        merged["endpoints"] = merged_endpoints
 
     # Replace __HOME__ placeholders
     if home_dir:
