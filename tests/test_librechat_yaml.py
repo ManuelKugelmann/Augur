@@ -147,8 +147,8 @@ class TestMergeScript:
         # System defaults survive when not overridden
         assert "mcpServers" in merged
 
-    def test_user_replaces_top_level_key_wholesale(self):
-        """User override replaces entire top-level key, not deep-merged."""
+    def test_deep_override_merges_nested(self):
+        """User fields override at any depth, system fields survive if untouched."""
         mod = _load_merge_module()
         user_with_endpoints = {
             "endpoints": {
@@ -160,11 +160,24 @@ class TestMergeScript:
             f.flush()
             merged = mod.merge(str(SYSTEM_YAML), f.name)
         os.unlink(f.name)
-        # User's endpoints replaces system's entirely
+        # User's custom endpoints added
         assert "custom" in merged["endpoints"]
         assert merged["endpoints"]["custom"][0]["name"] == "TestLLM"
-        # System's agents endpoint is gone (replaced wholesale)
-        assert "agents" not in merged["endpoints"]
+        # System's agents endpoint survives (user didn't touch it)
+        assert "agents" in merged["endpoints"]
+
+    def test_deep_override_scalar_replaces(self):
+        """User scalar value replaces system value at any depth."""
+        mod = _load_merge_module()
+        user_override = {"interface": {"endpointsMenu": False}}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(user_override, f)
+            f.flush()
+            merged = mod.merge(str(SYSTEM_YAML), f.name)
+        os.unlink(f.name)
+        assert merged["interface"]["endpointsMenu"] is False
+        # Other interface keys from system survive
+        assert "agents" in merged["interface"]
 
     def test_write_produces_valid_yaml(self, merged_cfg):
         """Merge output is valid, parseable YAML."""

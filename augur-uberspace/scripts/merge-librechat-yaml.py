@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Merge librechat-system.yaml + librechat-user.yaml → librechat.yaml.
 
-System yaml provides defaults. User yaml overrides top-level keys.
-Simple dict.update() — user keys replace system keys wholesale.
+System yaml provides defaults. User yaml deep-overrides: any field the
+user sets replaces the corresponding field in system, at any depth.
+Non-dict values replace wholesale; dicts recurse so the user only needs
+to specify the fields they want to change.
 
 Usage:
     python merge-librechat-yaml.py <system.yaml> <user.yaml> <output.yaml> [home_dir]
@@ -14,6 +16,19 @@ import os
 import sys
 
 import yaml
+
+
+def deep_override(base, override):
+    """Recursively override base with override. Override always wins."""
+    if not isinstance(base, dict) or not isinstance(override, dict):
+        return override
+    merged = dict(base)
+    for key, val in override.items():
+        if key in merged and isinstance(merged[key], dict) and isinstance(val, dict):
+            merged[key] = deep_override(merged[key], val)
+        else:
+            merged[key] = val
+    return merged
 
 
 def replace_home(obj, home_dir):
@@ -34,10 +49,8 @@ def merge(system_path, user_path, home_dir=None):
     with open(user_path) as f:
         user = yaml.safe_load(f) or {}
 
-    # System as base, user overrides top-level keys
-    merged = {**system, **user}
+    merged = deep_override(system, user)
 
-    # Replace __HOME__ placeholders
     if home_dir:
         merged = replace_home(merged, home_dir)
 
