@@ -34,6 +34,7 @@ except ImportError:
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "config")
 AGENTS_FILE = os.path.join(CONFIG_DIR, "agents.json")
+MODELS_FILE = os.path.join(CONFIG_DIR, "agent-models.json")
 PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 
 ALL_GROUPS = {"core", "trading", "news"}
@@ -58,6 +59,45 @@ def load_prompt(agent_name: str) -> str | None:
         with open(path, encoding="utf-8") as f:
             return f.read().strip()
     return None
+
+
+def load_model_overrides(path: str | None = None) -> dict:
+    """Load agent-models.json if it exists. Returns {"defaults": {}, "agents": {}}."""
+    path = path or MODELS_FILE
+    if not os.path.isfile(path):
+        return {"defaults": {}, "agents": {}}
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {
+        "defaults": data.get("defaults", {}),
+        "agents": data.get("agents", {}),
+    }
+
+
+def apply_model_overrides(agent_defs: list[dict], overrides: dict) -> int:
+    """Apply model overrides to agent definitions in-place.
+
+    Resolution order: agents.json built-in -> defaults[_layer] -> agents[_name].
+    Returns count of agents whose provider/model changed.
+    """
+    defaults = overrides.get("defaults", {})
+    per_agent = overrides.get("agents", {})
+    count = 0
+    for agent in agent_defs:
+        layer = agent.get("_layer", "")
+        name = agent.get("_name", "")
+        original = (agent.get("provider"), agent.get("model"))
+        # Layer default
+        if layer in defaults:
+            agent["provider"] = defaults[layer]["provider"]
+            agent["model"] = defaults[layer]["model"]
+        # Per-agent override (takes precedence)
+        if name in per_agent:
+            agent["provider"] = per_agent[name]["provider"]
+            agent["model"] = per_agent[name]["model"]
+        if (agent.get("provider"), agent.get("model")) != original:
+            count += 1
+    return count
 
 
 def filter_by_groups(agent_defs: list[dict], groups: set[str]) -> list[dict]:
@@ -193,6 +233,12 @@ def main():
     parser.add_argument("--all", action="store_true", help="Seed all groups")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
     parser.add_argument("--agents-file", default=AGENTS_FILE, help="Path to agents.json")
+    parser.add_argument("--models-file", default=MODELS_FILE,
+                        help="Path to agent-models.json (model overrides)")
+    parser.add_argument("--no-model-overrides", action="store_true",
+                        help="Ignore agent-models.json, use agents.json models as-is")
+    parser.add_argument("--export", action="store_true",
+                        help="Export current agent configs from LibreChat API as JSON")
     parser.add_argument("--lc-wait", type=int, default=0, metavar="SECS",
                         help="Wait up to SECS seconds for LibreChat to become reachable")
     args = parser.parse_args()
@@ -224,17 +270,27 @@ def main():
             agent_def["instructions"] = prompt
             prompt_count += 1
 
+    # Apply model overrides from agent-models.json
+    if not args.no_model_overrides:
+        overrides = load_model_overrides(args.models_file)
+        override_count = apply_model_overrides(agent_defs, overrides)
+    else:
+        override_count = 0
+
     group_str = ", ".join(sorted(groups))
     print(f"Loaded {len(agent_defs)} agents (groups: {group_str}) from {args.agents_file}")
     if prompt_count:
         print(f"  ({prompt_count} instructions loaded from {PROMPTS_DIR}/)")
+    if override_count:
+        print(f"  ({override_count} model overrides applied from {args.models_file})")
 
     if args.dry_run:
         print(f"\n[DRY RUN] Would create/update these agents (groups: {group_str}):")
         for a in agent_defs:
             edges = a.get("edges", [])
             edge_str = f" -> [{', '.join(edges)}]" if edges else ""
-            print(f"  [{a['_group']}:{a['_layer']}] {a['_name']}: {a['name']} ({a['model']}){edge_str}")
+            print(f"  [{a['_group']}:{a['_layer']}] {a['_name']}: {a['name']} "
+                  f"({a['provider']}/{a['model']}){edge_str}")
         return
 
     # Connect and authenticate
@@ -271,6 +327,27 @@ def main():
 
     # List existing agents (includes agents from all groups already on server)
     existing = list_agents(client)
+
+    # --export: dump current agent configs from LibreChat API and exit
+    if args.export:
+        name_to_meta = {a["name"]: {k: v for k, v in a.items() if k.startswith("_")}
+                        for a in all_defs}
+        export_data = []
+        for ea in existing:
+            entry = {
+                "id": ea.get("id"),
+                "name": ea.get("name"),
+                "provider": ea.get("provider"),
+                "model": ea.get("model"),
+                "tools": ea.get("tools", []),
+            }
+            meta = name_to_meta.get(ea.get("name"), {})
+            entry.update(meta)
+            export_data.append(entry)
+        print(json.dumps(export_data, indent=2))
+        client.close()
+        return
+
     print(f"Found {len(existing)} existing agents")
 
     # Build id_map from existing agents too (for cross-group edge resolution)

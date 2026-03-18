@@ -1,0 +1,45 @@
+{
+  "_comment": "Model overrides for agents. Layer defaults apply first, then per-agent overrides win. Provider names must match librechat-user.yaml endpoint names. Remove this file or use --no-model-overrides to use agents.json built-in defaults.",
+  "_budget_notes": {
+    "Groq":          "~500K tok/day (70b model), 30 RPM — workhorse, fast",
+    "Cerebras":      "1M-120M tok/day, 30 RPM — workhorse, fast",
+    "Gemini":        "250 RPD (Flash), 100 RPD (Pro), 10/5 RPM — quality but daily caps",
+    "GitHub Models": "50-150 RPD depending on model — moderate",
+    "Mistral":       "1B tok/month but only 2 RPM — low-frequency only",
+    "Cohere":        "1,000 req/month (~33/day) — very low volume",
+    "OpenRouter":    "50 req/day (free, no credits) — very low volume",
+    "Qwen":          "~1M tokens per model — limited, prototyping"
+  },
+  "defaults": {
+    "L1":      {"provider": "Groq",     "model": "llama-3.3-70b-versatile"},
+    "utility": {"provider": "Groq",     "model": "llama-3.1-8b-instant"},
+    "L2":      {"provider": "Gemini",   "model": "gemini-2.5-flash"},
+    "L3":      {"provider": "Gemini",   "model": "gemini-2.5-pro"},
+    "L4":      {"provider": "Cerebras", "model": "qwen3-235b"},
+    "L5":      {"provider": "GitHub Models", "model": "gpt-4o-mini"}
+  },
+  "agents": {
+    "_design": "Core (10 agents) uses high-budget providers: Groq, Cerebras, Gemini. News (4 agents) uses low-budget providers: Cohere, OpenRouter, GitHub Models, Mistral — low call frequency (~2-4 articles/day each). Trading (2 agents) uses Cerebras + Groq for speed.",
+
+    "market-data":     {"provider": "Groq",     "model": "llama-3.3-70b-versatile",        "_load": "~30 calls/day, tool-heavy scraping"},
+    "osint-data":      {"provider": "Cerebras", "model": "qwen3-235b",                     "_load": "~20 calls/day, many MCP tools"},
+    "signals-data":    {"provider": "Cerebras", "model": "gpt-oss-120b",                   "_load": "~20 calls/day, RSS/Reddit/HN tools"},
+
+    "market-analyst":  {"provider": "Gemini",       "model": "gemini-2.5-flash",            "_load": "~10 calls/day, reasoning"},
+    "osint-analyst":   {"provider": "Gemini",       "model": "gemini-2.5-flash",            "_load": "~10 calls/day, threat assessment"},
+    "signals-analyst": {"provider": "GitHub Models", "model": "gpt-4o-mini",                "_load": "~10 calls/day, sentiment analysis"},
+
+    "synthesizer":     {"provider": "Gemini",   "model": "gemini-2.5-pro",                  "_load": "~3 calls/day, highest reasoning"},
+
+    "cron-planner":    {"provider": "Cerebras", "model": "qwen3-235b",                      "_load": "~5 calls/day, planning + scheduling"},
+    "cron-trading":    {"provider": "Groq",     "model": "llama-3.3-70b-versatile",         "_load": "~5 calls/day, trade execution"},
+
+    "news-the-augur":       {"provider": "Cohere",        "model": "command-a-03-2025",     "_load": "~3 calls/day, EN general articles"},
+    "news-der-augur":       {"provider": "Mistral",       "model": "mistral-small-latest",  "_load": "~3 calls/day, DE general articles — Mistral strong on European languages"},
+    "news-financial-augur": {"provider": "OpenRouter",    "model": "google/gemini-2.5-flash:free", "_load": "~3 calls/day, EN financial articles"},
+    "news-finanz-augur":    {"provider": "GitHub Models", "model": "gpt-4o-mini",           "_load": "~3 calls/day, DE financial articles"},
+
+    "trader":          {"provider": "Groq",     "model": "llama-3.3-70b-versatile",         "_load": "~15 calls/day, stateless broker ops, needs reliability"},
+    "charter":         {"provider": "Groq",     "model": "llama-3.1-8b-instant",            "_load": "~15 calls/day, just calls store_chart, fastest/cheapest"}
+  }
+}

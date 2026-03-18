@@ -11,6 +11,7 @@ import pytest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 AGENTS_FILE = REPO_ROOT / "augur-uberspace" / "config" / "agents.json"
+MODELS_FILE = REPO_ROOT / "augur-uberspace" / "config" / "agent-models.json"
 PROMPTS_DIR = REPO_ROOT / "augur-uberspace" / "config" / "prompts"
 
 # Import seed-agents.py functions for testing edge resolution
@@ -462,3 +463,104 @@ class TestEdgeResolution:
         mod = self._load_module()
         result = mod.filter_by_groups(agents, {"core", "trading", "news"})
         assert len(result) == len(agents)
+
+
+# ── Model overrides ─────────────────────────
+
+class TestModelOverrides:
+    """Test agent-models.json structure and override logic."""
+
+    def _load_module(self):
+        pytest.importorskip("httpx", reason="httpx required for seed-agents import")
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("seed_agents", _seed_module_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_models_file_exists(self):
+        assert MODELS_FILE.exists(), "agent-models.json should exist"
+
+    def test_models_file_valid_json(self):
+        data = json.loads(MODELS_FILE.read_text())
+        assert "defaults" in data
+        assert "agents" in data
+        assert isinstance(data["defaults"], dict)
+        assert isinstance(data["agents"], dict)
+
+    def test_defaults_have_valid_layers(self):
+        data = json.loads(MODELS_FILE.read_text())
+        valid_layers = {"L1", "L2", "L3", "L4", "L5", "utility"}
+        for layer in data["defaults"]:
+            assert layer in valid_layers, f"Unknown layer: {layer}"
+
+    def test_defaults_have_provider_and_model(self):
+        data = json.loads(MODELS_FILE.read_text())
+        for layer, cfg in data["defaults"].items():
+            assert "provider" in cfg, f"Layer {layer} missing provider"
+            assert "model" in cfg, f"Layer {layer} missing model"
+
+    def test_agent_overrides_reference_valid_names(self, agent_names):
+        data = json.loads(MODELS_FILE.read_text())
+        for name in data["agents"]:
+            if name.startswith("_"):
+                continue  # skip metadata keys like _design
+            assert name in agent_names, f"Override for unknown agent: {name}"
+
+    def test_load_model_overrides_missing_file(self):
+        mod = self._load_module()
+        result = mod.load_model_overrides("/nonexistent/path.json")
+        assert result == {"defaults": {}, "agents": {}}
+
+    def test_apply_model_overrides_layer_default(self, agents):
+        import copy
+        mod = self._load_module()
+        test_agents = copy.deepcopy(agents)
+        overrides = {
+            "defaults": {"L1": {"provider": "Groq", "model": "llama-3.3-70b-versatile"}},
+            "agents": {},
+        }
+        count = mod.apply_model_overrides(test_agents, overrides)
+        assert count == 3  # 3 L1 agents
+        for a in test_agents:
+            if a["_layer"] == "L1":
+                assert a["provider"] == "Groq"
+                assert a["model"] == "llama-3.3-70b-versatile"
+
+    def test_apply_model_overrides_agent_beats_layer(self, agents):
+        import copy
+        mod = self._load_module()
+        test_agents = copy.deepcopy(agents)
+        overrides = {
+            "defaults": {"L1": {"provider": "Groq", "model": "llama-3.3-70b-versatile"}},
+            "agents": {"market-data": {"provider": "Cerebras", "model": "llama3.1-8b"}},
+        }
+        mod.apply_model_overrides(test_agents, overrides)
+        md = next(a for a in test_agents if a["_name"] == "market-data")
+        assert md["provider"] == "Cerebras"
+        assert md["model"] == "llama3.1-8b"
+        # Other L1 agents still get layer default
+        od = next(a for a in test_agents if a["_name"] == "osint-data")
+        assert od["provider"] == "Groq"
+
+    def test_apply_model_overrides_no_change_returns_zero(self, agents):
+        import copy
+        mod = self._load_module()
+        test_agents = copy.deepcopy(agents)
+        count = mod.apply_model_overrides(test_agents, {"defaults": {}, "agents": {}})
+        assert count == 0
+
+    def test_apply_model_overrides_preserves_non_model_fields(self, agents):
+        import copy
+        mod = self._load_module()
+        test_agents = copy.deepcopy(agents)
+        overrides = {
+            "defaults": {"L1": {"provider": "Groq", "model": "llama-3.3-70b-versatile"}},
+            "agents": {},
+        }
+        mod.apply_model_overrides(test_agents, overrides)
+        for orig, modified in zip(agents, test_agents):
+            if orig["_layer"] == "L1":
+                assert modified["_name"] == orig["_name"]
+                assert modified["tools"] == orig["tools"]
+                assert modified["edges"] == orig["edges"]
