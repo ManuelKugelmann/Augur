@@ -386,7 +386,13 @@ SAFEEOF
         esac
         ;;
     version)
-        cat "$APP/.version" 2>/dev/null || echo "unknown"
+        local _sha _date
+        _sha=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+        _date=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
+        echo -e "Augur ${_sha} (${_date})"
+        local _lc_ver
+        _lc_ver=$(cat "$APP/.version" 2>/dev/null || echo "unknown")
+        echo -e "LibreChat ${_lc_ver}"
         ;;
     pull)
         echo -e "${CYAN}Quick pull (dev)...${NC}"
@@ -604,14 +610,42 @@ SVCEOF
         _post_info
         ;;
     update)
-        echo -e "${CYAN}Updating Augur stack...${NC}"
+        # Show current version
+        local _cur_sha _cur_date
+        _cur_sha=$(git -C "$STACK" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+        _cur_date=$(git -C "$STACK" log -1 --format='%ci' 2>/dev/null || echo "unknown")
+        echo -e "${CYAN}Updating Augur stack...${NC} (current: ${_cur_sha}, ${_cur_date})"
+
+        # ── Pull first, re-exec if the update script itself changed ──
+        if [[ -z "${_AUGUR_REEXEC:-}" ]]; then
+            local _pre_sha
+            _pre_sha=$(git -C "$STACK" rev-parse HEAD 2>/dev/null)
+            git -C "$STACK" pull --ff-only || true
+            local _post_sha
+            _post_sha=$(git -C "$STACK" rev-parse HEAD 2>/dev/null)
+
+            if [[ "$_pre_sha" != "$_post_sha" ]]; then
+                log "Code updated (${_pre_sha:0:7} → ${_post_sha:0:7})"
+                # Check if the update script itself changed
+                if git -C "$STACK" diff --name-only "$_pre_sha" "$_post_sha" | grep -qE '^(Augur\.sh|augur-uberspace/)'; then
+                    log "Update script changed — restarting with new version..."
+                    # Copy new CLI atomically
+                    cp "$STACK/Augur.sh" "$HOME/bin/augur.tmp" 2>/dev/null \
+                        && mv -f "$HOME/bin/augur.tmp" "$HOME/bin/augur" 2>/dev/null || true
+                    chmod +x "$HOME/bin/augur" 2>/dev/null || true
+                    ln -sf "$HOME/bin/augur" "$HOME/bin/Augur" 2>/dev/null || true
+                    # Re-exec with flag to skip pull on re-entry
+                    exec env _AUGUR_REEXEC=1 "$HOME/bin/augur" update
+                fi
+            fi
+        fi
 
         # Stop all services before updating
         _svc_stop librechat || true
         _svc_stop augur || true
         _svc_stop charts || true
 
-        # Shared core: pull, venv check, pip, LC bundle, MCP nodes, yaml patch, legacy cleanup
+        # Shared core: pull (no-op if already up-to-date), venv check, pip, LC bundle, MCP nodes, yaml patch, legacy cleanup
         _update_core update
 
         echo ""
