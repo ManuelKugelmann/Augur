@@ -604,14 +604,14 @@ SVCEOF
                 "$0" user
             else
                 echo ""
-                echo "    You can register later with: augur user"
-                echo "    Or enable public signup with: augur signup on"
+                echo "    augur user <email> <pw> [name]  # register later"
+                echo "    augur signup on|off|status       # public self-registration"
             fi
             echo ""
         else
             echo -e "  ${CYAN}First login:${NC}"
-            echo "    augur user <email> <password> [display-name]"
-            echo "    augur signup on    # or enable public self-registration"
+            echo "    augur user <email> <pw> [name]  # register a user"
+            echo "    augur signup on|off|status       # public self-registration"
             echo ""
         fi
         ;;
@@ -644,8 +644,8 @@ SVCEOF
         echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
         echo ""
         echo -e "  ${CYAN}User management:${NC}"
-        echo "    augur user         # create a user account"
-        echo "    augur signup on    # enable public self-registration"
+        echo "    augur user <email> <pw> [name]  # register a user"
+        echo "    augur signup on|off|status       # public self-registration"
         echo ""
         ;;
     clean)
