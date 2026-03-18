@@ -7,9 +7,9 @@
 # Creates two releases per build:
 #   - lc-<version> (e.g. lc-1.6.1)  — versioned, kept as history
 #   - librechat-build                — rolling pointer to latest main build
-#   - dev-staging                    — rolling pointer to latest non-main build
+#   - librechat-dev-build                    — rolling pointer to latest non-main build
 #
-# To auto-update from dev builds: set RELEASE_TAG=dev-staging in deploy.conf
+# To auto-update from dev builds: set RELEASE_TAG=librechat-dev-build in deploy.conf
 name: Build LibreChat
 
 on:
@@ -105,7 +105,7 @@ jobs:
           if [[ "$LC_REF" == "main" ]]; then
             echo "ROLLING_TAG=librechat-build" >> "$GITHUB_ENV"
           else
-            echo "ROLLING_TAG=dev-staging" >> "$GITHUB_ENV"
+            echo "ROLLING_TAG=librechat-dev-build" >> "$GITHUB_ENV"
           fi
 
       - name: Update rolling release (${{ env.ROLLING_TAG }} → latest)
