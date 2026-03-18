@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Merge librechat-system.yaml + librechat-user.yaml → librechat.yaml.
 
-System template provides defaults (MCP servers, interface, etc.).
-User overlay can override anything — deep-merged on top of system.
+System yaml provides defaults. User yaml overrides top-level keys.
+Simple dict.update() — user keys replace system keys wholesale.
 
 Usage:
     python merge-librechat-yaml.py <system.yaml> <user.yaml> <output.yaml> [home_dir]
@@ -14,17 +14,6 @@ import os
 import sys
 
 import yaml
-
-
-def deep_merge(base, overlay):
-    """Recursively merge overlay into base. Overlay wins on conflicts."""
-    merged = dict(base)
-    for key, val in overlay.items():
-        if key in merged and isinstance(merged[key], dict) and isinstance(val, dict):
-            merged[key] = deep_merge(merged[key], val)
-        else:
-            merged[key] = val
-    return merged
 
 
 def replace_home(obj, home_dir):
@@ -45,8 +34,8 @@ def merge(system_path, user_path, home_dir=None):
     with open(user_path) as f:
         user = yaml.safe_load(f) or {}
 
-    # System as base, user overlay wins on conflicts
-    merged = deep_merge(system, user)
+    # System as base, user overrides top-level keys
+    merged = {**system, **user}
 
     # Replace __HOME__ placeholders
     if home_dir:
