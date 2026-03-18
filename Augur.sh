@@ -133,9 +133,11 @@ case "$CMD" in
         _USR_YAML="$APP/librechat-user.yaml"
         _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
         if [[ -f "$_SYS_YAML" ]] && [[ -f "$_USR_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
-            # Keep .sample copies so users can diff against latest templates
-            cp "$_SYS_YAML" "$APP/librechat-system.yaml.sample" 2>/dev/null || true
-            cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$APP/librechat-user.yaml.sample" 2>/dev/null || true
+            # Keep .example copies next to active configs so users can diff
+            cp "$_SYS_YAML" "$APP/librechat-system.yaml.example" 2>/dev/null || true
+            cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$APP/librechat-user.yaml.example" 2>/dev/null || true
+            cp "$STACK/augur-uberspace/config/.env.example" "$APP/.env.example" 2>/dev/null || true
+            rm -f "$APP/librechat-system.yaml.sample" "$APP/librechat-user.yaml.sample" 2>/dev/null || true
             _MERGE_PY=""
             for _py in "$STACK/venv/bin/python" python3 python; do
                 command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
@@ -1164,7 +1166,7 @@ SVCEOF
     yaml)
         echo -e "${CYAN}System config:${NC} $STACK/augur-uberspace/config/librechat-system.yaml (managed by Augur)"
         echo -e "${CYAN}User config:${NC}   $APP/librechat-user.yaml (your customizations)"
-        echo -e "${CYAN}Samples:${NC}       $APP/librechat-system.yaml.sample  $APP/librechat-user.yaml.sample"
+        echo -e "${CYAN}Examples:${NC}      $APP/librechat-system.yaml.example  $APP/librechat-user.yaml.example"
         echo -e "Opening user config for editing..."
         ${EDITOR:-nano} "$APP/librechat-user.yaml"
         echo -e "${YELLOW}⚠${NC} Run ${CYAN}augur restart${NC} to apply changes (merge + restart)"

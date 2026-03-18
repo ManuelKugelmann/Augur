@@ -10,6 +10,12 @@ interface:
   agents:
     use: true
     create: true
+  # Remote Agents API — enables programmatic access via API keys.
+  # Users generate persistent keys in Settings > Data controls > Agent API Keys.
+  # Use these keys as AUGUR_AGENTS_API_KEY for cron/trigger/bootstrap.
+  remoteAgents:
+    use: true
+    create: true
 
 # ── Memories ──────────────────────────────
 # Disabled — no dedicated memory agent configured.
