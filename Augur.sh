@@ -1189,8 +1189,11 @@ SVCEOF
         ${EDITOR:-nano} "$APP/librechat-user.yaml"
         echo -e "${YELLOW}⚠${NC} Run ${CYAN}augur restart${NC} to apply changes (merge + restart)"
         ;;
-    "test models"|testmodels)
+    test|testmodels)
         # Smoke-test all configured LLM providers and models
+        if [[ "$CMD" == "test" && "${2:-}" != "models" ]]; then
+            echo "Usage: augur test models [--timeout SECS]"; exit 1
+        fi
         [[ -f "$APP/librechat.yaml" ]] || die "librechat.yaml not found — run augur restart first"
         _TEST_PY=""
         for _py in "$STACK/venv/bin/python" python3 python; do
@@ -1202,7 +1205,11 @@ SVCEOF
         # shellcheck disable=SC1091
         [[ -f "$APP/.env" ]] && source "$APP/.env"
         set +a
-        "$_TEST_PY" "$STACK/augur-uberspace/scripts/test-models.py" "$APP/librechat.yaml" "${@:2}"
+        if [[ "$CMD" == "testmodels" ]]; then
+            "$_TEST_PY" "$STACK/augur-uberspace/scripts/test-models.py" "$APP/librechat.yaml" "${@:2}"
+        else
+            "$_TEST_PY" "$STACK/augur-uberspace/scripts/test-models.py" "$APP/librechat.yaml" "${@:3}"
+        fi
         ;;
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
