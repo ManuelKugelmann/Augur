@@ -276,7 +276,7 @@ endpoints:
       baseURL: "https://api.groq.com/openai/v1"
       models:
         default: [llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b-32768, gemma2-9b-it]
-        fetch: true
+        fetch: false  # true fetches all provider models — use false for curated list
       titleConvo: true
       titleModel: "llama-3.1-8b-instant"
       modelDisplayLabel: "Groq"
@@ -298,7 +298,7 @@ endpoints:
       baseURL: "https://api.mistral.ai/v1"
       models:
         default: [mistral-small-latest, codestral-latest, mistral-large-latest]
-        fetch: true
+        fetch: false
       titleConvo: true
       titleModel: "mistral-small-latest"
       modelDisplayLabel: "Mistral"
@@ -309,7 +309,7 @@ endpoints:
       baseURL: "https://api.cerebras.ai/v1"
       models:
         default: [llama-3.3-70b, llama-3.1-8b, qwen-3-235b]
-        fetch: true
+        fetch: false
       titleConvo: true
       titleModel: "llama-3.1-8b"
       modelDisplayLabel: "Cerebras"
@@ -320,7 +320,7 @@ endpoints:
       baseURL: "https://api.cohere.com/compatibility/v1"
       models:
         default: [command-a-03-2025, command-r-plus-08-2024, command-r-08-2024]
-        fetch: true
+        fetch: false
       titleConvo: true
       titleModel: "command-r-08-2024"
       modelDisplayLabel: "Cohere"
@@ -331,7 +331,7 @@ endpoints:
       baseURL: "https://api.sambanova.ai/v1"
       models:
         default: [DeepSeek-V3-0324, Meta-Llama-3.3-70B-Instruct, Qwen2.5-72B-Instruct]
-        fetch: true
+        fetch: false
       titleConvo: true
       titleModel: "Meta-Llama-3.3-70B-Instruct"
       modelDisplayLabel: "SambaNova"
@@ -353,7 +353,7 @@ endpoints:
       baseURL: "https://models.inference.ai.azure.com"
       models:
         default: [gpt-4o-mini, Meta-Llama-3.1-405B-Instruct, Mistral-large-2411, Phi-4]
-        fetch: true
+        fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "GitHub Models"
@@ -364,7 +364,7 @@ endpoints:
       baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
       models:
         default: [qwen-plus, qwen-turbo, qwen-max, qwen-long]
-        fetch: true
+        fetch: false
       titleConvo: true
       titleModel: "qwen-turbo"
       modelDisplayLabel: "Qwen"

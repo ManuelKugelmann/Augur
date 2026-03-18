@@ -49,7 +49,7 @@ registration:
 #           - llama-3.3-70b-versatile
 #           - llama-3.1-8b-instant
 #           - openai/gpt-oss-120b
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "llama-3.1-8b-instant"
 #       modelDisplayLabel: "Groq"
@@ -79,7 +79,7 @@ registration:
 #           - mistral-small-latest
 #           - mistral-large-latest
 #           - magistral-small-latest
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "mistral-small-latest"
 #       modelDisplayLabel: "Mistral"
@@ -93,7 +93,7 @@ registration:
 #         default:
 #           - llama3.1-8b
 #           - gpt-oss-120b
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "llama3.1-8b"
 #       modelDisplayLabel: "Cerebras"
@@ -108,7 +108,7 @@ registration:
 #           - command-a-03-2025
 #           - command-a-reasoning-08-2025
 #           - command-r7b-12-2024
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "command-r7b-12-2024"
 #       modelDisplayLabel: "Cohere"
@@ -123,7 +123,7 @@ registration:
 #           - DeepSeek-V3.1
 #           - DeepSeek-R1-0528
 #           - Meta-Llama-3.3-70B-Instruct
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "Meta-Llama-3.3-70B-Instruct"
 #       modelDisplayLabel: "SambaNova"
@@ -152,7 +152,7 @@ registration:
 #         default:
 #           - gpt-4o-mini
 #           - Phi-4
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "gpt-4o-mini"
 #       modelDisplayLabel: "GitHub Models"
@@ -168,7 +168,7 @@ registration:
 #           - qwen-turbo
 #           - qwen-max
 #           - qwen-long
-#         fetch: true
+#         fetch: false
 #       titleConvo: true
 #       titleModel: "qwen-turbo"
 #       modelDisplayLabel: "Qwen"
