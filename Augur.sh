@@ -643,6 +643,10 @@ SVCEOF
         echo -e "  ${CYAN}Access:${NC}"
         echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
         echo ""
+        echo -e "  ${CYAN}User management:${NC}"
+        echo "    augur user         # create a user account"
+        echo "    augur signup on    # enable public self-registration"
+        echo ""
         ;;
     clean)
         echo -e "${CYAN}Clearing caches...${NC}"
