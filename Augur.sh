@@ -60,7 +60,7 @@ _post_info() {
     echo "    https://${UBER}"
     echo ""
     echo -e "  ${CYAN}User management:${NC}"
-    echo "    augur user <email> <pw> [name]  # register a user"
+    echo "    augur user <email> [name]  # register a user"
     echo "    augur signup on|off|status       # public self-registration"
     echo ""
 }
@@ -1198,8 +1198,7 @@ SVCEOF
         # Register a new LibreChat user account
         LC_URL="http://localhost:${LC_PORT:-3080}"
         _USER_EMAIL="${2:-}"
-        _USER_PASS="${3:-}"
-        _USER_NAME="${4:-}"
+        _USER_NAME="${3:-}"
         if [[ -z "$_USER_EMAIL" ]] && [[ -t 0 ]]; then
             echo -e "${CYAN}Register a new LibreChat user${NC}"
             echo ""
@@ -1219,19 +1218,19 @@ SVCEOF
             read -rp "  Display name [${_USER_EMAIL%%@*}]: " _USER_NAME
             _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
         elif [[ -z "$_USER_EMAIL" ]]; then
-            echo -e "${YELLOW}Usage: augur user <email> <password> [display-name]${NC}"
+            echo -e "${YELLOW}Usage: augur user <email> [display-name]${NC}"
             echo ""
             echo "  Register a new LibreChat user account."
+            echo "  Password is always prompted interactively (never passed as argument)."
             echo ""
             echo "  Parameters:"
             echo "    email          User email address (required)"
-            echo "    password       Account password (required)"
             echo "    display-name   Display name (optional, defaults to email prefix)"
             echo ""
             echo "  Examples:"
-            echo "    augur user admin@example.com MyPass123!"
-            echo "    augur user admin@example.com MyPass123! 'Admin User'"
-            echo "    augur user   # interactive mode (prompts for each field)"
+            echo "    augur user admin@example.com"
+            echo "    augur user admin@example.com 'Admin User'"
+            echo "    augur user   # fully interactive mode"
             echo ""
             echo "  What happens:"
             echo "    1. Temporarily sets ALLOW_REGISTRATION=true in LibreChat .env"
@@ -1240,14 +1239,18 @@ SVCEOF
             echo "    4. Restores original ALLOW_REGISTRATION setting"
             echo "    5. Restarts LibreChat again to lock registration"
             echo ""
-            echo -e "  ${YELLOW}Note: Passing the password on the command line will store it"
-            echo -e "  in your shell history. Use interactive mode (no args) to avoid this.${NC}"
-            echo ""
             echo "  See also:"
             echo "    augur signup on      Enable public self-registration"
             echo "    augur signup off     Disable public self-registration"
             echo "    augur signup status  Show current registration setting"
             exit 0
+        else
+            # Email provided as arg — prompt for password interactively
+            if [[ ! -t 0 ]]; then die "Password must be entered interactively (stdin is not a terminal)"; fi
+            read -rsp "  Password for $_USER_EMAIL: " _USER_PASS; echo ""
+            if [[ -z "$_USER_PASS" ]]; then die "Password is required"; fi
+            read -rsp "  Confirm password: " _USER_PASS_CONFIRM; echo ""
+            if [[ "$_USER_PASS" != "$_USER_PASS_CONFIRM" ]]; then die "Passwords do not match"; fi
         fi
         _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
         echo -e "${CYAN}Registering user: ${_USER_EMAIL} (name: ${_USER_NAME})${NC}"
@@ -1700,7 +1703,7 @@ PYEOF
         echo "  augur trigger <a>  Invoke an agent with streaming output"
         echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
-        echo "  augur user <email> <pw> [name]  Register a new LibreChat user"
+        echo "  augur user <email> [name]  Register a new LibreChat user"
         echo "  augur signup       Enable/disable public self-registration"
         echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
