@@ -22,9 +22,8 @@ registration:
 # Option A: SearXNG (free, public instance or self-hosted)
 # Public instances: https://searx.space — pick one with good uptime.
 # Self-hosted: pip install searxng (or Docker)
-#
-# webSearch:
-#   searxngInstanceUrl: "${SEARXNG_INSTANCE_URL}"
+webSearch:
+  searxngInstanceUrl: "${SEARXNG_INSTANCE_URL}"
 
 # Option B: Serper (2,500 free searches/month, Google results)
 # Key: https://serper.dev
@@ -33,175 +32,150 @@ registration:
 #   serperApiKey: "${SERPER_API_KEY}"
 
 # ── LLM Endpoints ──────────────────────────
-# Set the API key in .env (augur env), then uncomment the block below.
-# Only include providers you have keys for.
+# Set the API key in .env (augur env) for each provider you want to use.
+# Providers without a valid key will show an error — comment out unused ones.
+# fetch: false = show only the curated default list (not the full provider catalog).
 
-# endpoints:
-#   custom:
-#
-#     # ── Groq (free, very fast inference) ──
-#     # Key: https://console.groq.com/keys
-#     - name: "Groq"
-#       apiKey: "${GROQ_API_KEY}"
-#       baseURL: "https://api.groq.com/openai/v1"
-#       models:
-#         default:
-#           - llama-3.3-70b-versatile
-#           - llama-3.1-8b-instant
-#           - openai/gpt-oss-120b
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "llama-3.1-8b-instant"
-#       modelDisplayLabel: "Groq"
-#
-#     # ── Google Gemini (free tier, 15 RPM / 1M TPD) ──
-#     # Key: https://aistudio.google.com/apikey
-#     - name: "Gemini"
-#       apiKey: "${GEMINI_API_KEY}"
-#       baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
-#       models:
-#         default:
-#           - gemini-2.5-flash
-#           - gemini-2.5-flash-lite
-#           - gemini-2.5-pro
-#         fetch: false
-#       titleConvo: true
-#       titleModel: "gemini-2.5-flash-lite"
-#       modelDisplayLabel: "Gemini"
-#
-#     # ── Mistral (free tier: mistral-small-4) ──
-#     # Key: https://console.mistral.ai/api-keys
-#     - name: "Mistral"
-#       apiKey: "${MISTRAL_API_KEY}"
-#       baseURL: "https://api.mistral.ai/v1"
-#       models:
-#         default:
-#           - mistral-small-latest
-#           - mistral-large-latest
-#           - magistral-small-latest
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "mistral-small-latest"
-#       modelDisplayLabel: "Mistral"
-#
-#     # ── Cerebras (free, 30 RPM / 14.4K RPD, fast inference) ──
-#     # Key: https://cloud.cerebras.ai
-#     - name: "Cerebras"
-#       apiKey: "${CEREBRAS_API_KEY}"
-#       baseURL: "https://api.cerebras.ai/v1"
-#       models:
-#         default:
-#           - llama3.1-8b
-#           - gpt-oss-120b
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "llama3.1-8b"
-#       modelDisplayLabel: "Cerebras"
-#
-#     # ── Cohere (free, 20 RPM / 1K req/month) ──
-#     # Key: https://dashboard.cohere.com/api-keys
-#     - name: "Cohere"
-#       apiKey: "${COHERE_API_KEY}"
-#       baseURL: "https://api.cohere.com/compatibility/v1"
-#       models:
-#         default:
-#           - command-a-03-2025
-#           - command-a-reasoning-08-2025
-#           - command-r7b-12-2024
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "command-r7b-12-2024"
-#       modelDisplayLabel: "Cohere"
-#
-#     # ── SambaNova (free $5 trial credits, fast inference) ──
-#     # Key: https://cloud.sambanova.ai
-#     - name: "SambaNova"
-#       apiKey: "${SAMBANOVA_API_KEY}"
-#       baseURL: "https://api.sambanova.ai/v1"
-#       models:
-#         default:
-#           - DeepSeek-V3.1
-#           - DeepSeek-R1-0528
-#           - Meta-Llama-3.3-70B-Instruct
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "Meta-Llama-3.3-70B-Instruct"
-#       modelDisplayLabel: "SambaNova"
-#
-#     # ── HuggingFace Inference (free tier) ──
-#     # Key: https://huggingface.co/settings/tokens
-#     - name: "HuggingFace"
-#       apiKey: "${HF_API_KEY}"
-#       baseURL: "https://router.huggingface.co/v1"
-#       models:
-#         default:
-#           - Qwen/Qwen3-235B-A22B
-#           - meta-llama/Llama-3.3-70B-Instruct
-#           - mistralai/Mistral-Small-3.1-24B-Instruct-2503
-#         fetch: false
-#       titleConvo: true
-#       titleModel: "mistralai/Mistral-Small-3.1-24B-Instruct-2503"
-#       modelDisplayLabel: "HuggingFace"
-#
-#     # ── GitHub Models (free, uses GitHub PAT) ──
-#     # Key: https://github.com/settings/tokens (use PAT with no scopes)
-#     - name: "GitHub Models"
-#       apiKey: "${GITHUB_MODELS_PAT}"
-#       baseURL: "https://models.inference.ai.azure.com"
-#       models:
-#         default:
-#           - gpt-4o-mini
-#           - Phi-4
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "gpt-4o-mini"
-#       modelDisplayLabel: "GitHub Models"
-#
-#     # ── Alibaba Cloud / Qwen (free 1M tokens/month) ──
-#     # Key: https://dashscope.console.aliyun.com/apiKey
-#     - name: "Qwen"
-#       apiKey: "${DASHSCOPE_API_KEY}"
-#       baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-#       models:
-#         default:
-#           - qwen-plus
-#           - qwen-turbo
-#           - qwen-max
-#           - qwen-long
-#         fetch: true
-#       titleConvo: true
-#       titleModel: "qwen-turbo"
-#       modelDisplayLabel: "Qwen"
-#
-#     # ── OpenRouter (some free models with :free suffix) ──
-#     # Key: https://openrouter.ai/keys
-#     - name: "OpenRouter"
-#       apiKey: "${OPENROUTER_API_KEY}"
-#       baseURL: "https://openrouter.ai/api/v1"
-#       models:
-#         default:
-#           - "qwen/qwen3-coder:free"
-#           - "nvidia/nemotron-3-super-120b:free"
-#           - "meta-llama/llama-3.3-70b-instruct:free"
-#           - "deepseek/deepseek-r1:free"
-#         fetch: false
-#       titleConvo: true
-#       titleModel: "meta-llama/llama-3.3-70b-instruct:free"
-#       modelDisplayLabel: "OpenRouter"
-#
-#     # ── Claude Max (subscription via CLIProxyAPI) ──
-#     # Requires: augur proxy setup + token in ~/.claude-auth.env
-#     # See docs/claude-token-wrapper.md for full setup guide.
-#     - name: "Claude Max"
-#       apiKey: "dummy"
-#       baseURL: "http://localhost:8317/v1"
-#       models:
-#         default:
-#           - claude-sonnet-4-6
-#           - claude-opus-4-6
-#           - claude-haiku-4-5-20251001
-#         fetch: false
-#       titleConvo: true
-#       titleModel: "claude-sonnet-4-6"
-#       directEndpoint: true
-#       summarize: false
+endpoints:
+  custom:
+
+    # ── Groq (free, very fast inference) ──
+    # Key: https://console.groq.com/keys
+    - name: "Groq"
+      apiKey: "${GROQ_API_KEY}"
+      baseURL: "https://api.groq.com/openai/v1"
+      models:
+        default:
+          - openai/gpt-oss-120b
+          - llama-3.3-70b-versatile
+          - llama-3.1-8b-instant
+          - kimi-k2-0905
+        fetch: false
+      titleConvo: true
+      titleModel: "llama-3.1-8b-instant"
+      modelDisplayLabel: "Groq"
+
+    # ── Google Gemini (free tier, 15 RPM / 1M TPD) ──
+    # Key: https://aistudio.google.com/apikey
+    - name: "Gemini"
+      apiKey: "${GEMINI_API_KEY}"
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
+      models:
+        default:
+          - gemini-2.5-flash
+          - gemini-2.5-pro
+          - gemini-3-flash-preview
+        fetch: false
+      titleConvo: true
+      titleModel: "gemini-2.5-flash"
+      modelDisplayLabel: "Gemini"
+
+    # ── Mistral (free tier: mistral-small) ──
+    # Key: https://console.mistral.ai/api-keys
+    - name: "Mistral"
+      apiKey: "${MISTRAL_API_KEY}"
+      baseURL: "https://api.mistral.ai/v1"
+      models:
+        default:
+          - mistral-small-latest
+          - mistral-large-latest
+          - magistral-small-latest
+          - magistral-medium-latest
+        fetch: false
+      titleConvo: true
+      titleModel: "mistral-small-latest"
+      modelDisplayLabel: "Mistral"
+
+    # ── Cerebras (free, 30 RPM / 14.4K RPD, fast inference) ──
+    # Key: https://cloud.cerebras.ai
+    - name: "Cerebras"
+      apiKey: "${CEREBRAS_API_KEY}"
+      baseURL: "https://api.cerebras.ai/v1"
+      models:
+        default:
+          - qwen3-235b
+          - gpt-oss-120b
+          - llama3.1-8b
+        fetch: false
+      titleConvo: true
+      titleModel: "llama3.1-8b"
+      modelDisplayLabel: "Cerebras"
+
+    # ── Cohere (free, 20 RPM / 1K req/month) ──
+    # Key: https://dashboard.cohere.com/api-keys
+    - name: "Cohere"
+      apiKey: "${COHERE_API_KEY}"
+      baseURL: "https://api.cohere.com/compatibility/v1"
+      models:
+        default:
+          - command-a-03-2025
+          - command-a-reasoning-08-2025
+          - command-r7b-12-2024
+        fetch: false
+      titleConvo: true
+      titleModel: "command-r7b-12-2024"
+      modelDisplayLabel: "Cohere"
+
+    # ── GitHub Models (free, uses GitHub PAT) ──
+    # Key: https://github.com/settings/tokens (use PAT with no scopes)
+    - name: "GitHub Models"
+      apiKey: "${GITHUB_MODELS_PAT}"
+      baseURL: "https://models.inference.ai.azure.com"
+      models:
+        default:
+          - gpt-4o-mini
+          - o4-mini
+          - Phi-4
+        fetch: false
+      titleConvo: true
+      titleModel: "gpt-4o-mini"
+      modelDisplayLabel: "GitHub Models"
+
+    # ── Alibaba Cloud / Qwen (free 1M tokens/month) ──
+    # Key: https://dashscope.console.aliyun.com/apiKey
+    - name: "Qwen"
+      apiKey: "${DASHSCOPE_API_KEY}"
+      baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      models:
+        default:
+          - qwen3-max
+          - qwen-plus
+          - qwen-flash
+          - qwen-long
+        fetch: false
+      titleConvo: true
+      titleModel: "qwen-flash"
+      modelDisplayLabel: "Qwen"
+
+    # ── OpenRouter (some free models with :free suffix) ──
+    # Key: https://openrouter.ai/keys
+    - name: "OpenRouter"
+      apiKey: "${OPENROUTER_API_KEY}"
+      baseURL: "https://openrouter.ai/api/v1"
+      models:
+        default:
+          - "google/gemini-2.5-flash:free"
+          - "nvidia/nemotron-3-super-120b:free"
+          - "meta-llama/llama-3.3-70b-instruct:free"
+          - "deepseek/deepseek-r1:free"
+        fetch: false
+      titleConvo: true
+      titleModel: "meta-llama/llama-3.3-70b-instruct:free"
+      modelDisplayLabel: "OpenRouter"
+
+    # ── Claude Max (subscription via CLIProxyAPI) ──
+    # Requires: augur proxy setup + token in ~/.claude-auth.env
+    # See docs/claude-token-wrapper.md for full setup guide.
+    # - name: "Claude Max"
+    #   apiKey: "dummy"
+    #   baseURL: "http://localhost:8317/v1"
+    #   models:
+    #     default:
+    #       - claude-sonnet-4-6
+    #       - claude-opus-4-6
+    #       - claude-haiku-4-5-20251001
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: "claude-sonnet-4-6"
+    #   directEndpoint: true
+    #   summarize: false
