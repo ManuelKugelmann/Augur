@@ -234,24 +234,37 @@ class TestAgentsJson:
 
 
 class TestConnectivityCheck:
-    def test_connect_error_exits(self, seed_agents, monkeypatch):
-        """Verify the script exits with a clear message on connection refused."""
-        import httpx as _httpx
+    def _make_fake_httpx(self, connect_error_cls, fail_count=None):
+        """Build a fake httpx namespace with a Client that fails N times then succeeds."""
+        call_count = 0
 
         class FakeClient:
             def __init__(self, **kw):
                 pass
 
             def get(self, url):
-                raise _httpx.ConnectError("[Errno 111] Connection refused")
+                nonlocal call_count
+                call_count += 1
+                if fail_count is None or call_count <= fail_count:
+                    raise connect_error_cls("[Errno 111] Connection refused")
+                return types.SimpleNamespace(status_code=200)
 
-        monkeypatch.setattr(seed_agents, "httpx", types.SimpleNamespace(
+            def post(self, url, **kw):
+                return types.SimpleNamespace(status_code=401, text="Unauthorized")
+
+        return types.SimpleNamespace(
             Client=FakeClient,
-            ConnectError=_httpx.ConnectError,
-        ))
+            ConnectError=connect_error_cls,
+        ), lambda: call_count
+
+    def test_connect_error_exits(self, seed_agents, monkeypatch):
+        """Verify the script exits with a clear message on connection refused."""
+        import httpx as _httpx
+
+        fake_httpx, _ = self._make_fake_httpx(_httpx.ConnectError)
+        monkeypatch.setattr(seed_agents, "httpx", fake_httpx)
 
         with pytest.raises(SystemExit) as exc_info:
-            # Simulate main() with minimal args
             monkeypatch.setattr(
                 sys, "argv",
                 ["seed-agents.py", "--email", "x@x.com", "--password", "p"],
@@ -259,3 +272,41 @@ class TestConnectivityCheck:
             seed_agents.main()
 
         assert exc_info.value.code == 1
+
+    def test_lc_wait_retries_then_fails(self, seed_agents, monkeypatch):
+        """With --lc-wait, retries until deadline then exits."""
+        import httpx as _httpx
+
+        fake_httpx, get_count = self._make_fake_httpx(_httpx.ConnectError)
+        monkeypatch.setattr(seed_agents, "httpx", fake_httpx)
+
+        with pytest.raises(SystemExit) as exc_info:
+            monkeypatch.setattr(
+                sys, "argv",
+                ["seed-agents.py", "--email", "x@x.com", "--password", "p",
+                 "--lc-wait", "2"],
+            )
+            seed_agents.main()
+
+        assert exc_info.value.code == 1
+        assert get_count() > 1  # retried at least once
+
+    def test_lc_wait_succeeds_after_retry(self, seed_agents, monkeypatch):
+        """With --lc-wait, succeeds once LibreChat comes up."""
+        import httpx as _httpx
+
+        # Fail first 2 GETs, then succeed
+        fake_httpx, get_count = self._make_fake_httpx(_httpx.ConnectError, fail_count=2)
+        monkeypatch.setattr(seed_agents, "httpx", fake_httpx)
+
+        # Will get past connectivity check but fail at login (no real server)
+        with pytest.raises(SystemExit):
+            monkeypatch.setattr(
+                sys, "argv",
+                ["seed-agents.py", "--email", "x@x.com", "--password", "p",
+                 "--lc-wait", "30"],
+            )
+            seed_agents.main()
+
+        # Should have retried and gotten past the connectivity check
+        assert get_count() == 3

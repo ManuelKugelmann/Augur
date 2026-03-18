@@ -179,6 +179,8 @@ def main():
     parser.add_argument("--all", action="store_true", help="Seed all groups")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
     parser.add_argument("--agents-file", default=AGENTS_FILE, help="Path to agents.json")
+    parser.add_argument("--lc-wait", type=int, default=0, metavar="SECS",
+                        help="Wait up to SECS seconds for LibreChat to become reachable")
     args = parser.parse_args()
 
     # Determine which groups to seed (core is always included)
@@ -224,15 +226,29 @@ def main():
     # Connect and authenticate
     client = httpx.Client(base_url=args.base_url, timeout=30)
 
-    # Pre-flight connectivity check
-    print(f"\nConnecting to {args.base_url}...")
-    try:
-        client.get("/")
-    except httpx.ConnectError:
-        print(f"ERROR: Cannot connect to {args.base_url}\n"
-              f"  Is LibreChat running? Check with: systemctl --user status librechat",
-              file=sys.stderr)
-        sys.exit(1)
+    # Pre-flight connectivity check (with optional wait)
+    deadline = time.monotonic() + args.lc_wait
+    attempt = 0
+    print(f"\nConnecting to {args.base_url}..." +
+          (f" (waiting up to {args.lc_wait}s)" if args.lc_wait else ""))
+    while True:
+        try:
+            client.get("/")
+            break
+        except httpx.ConnectError:
+            attempt += 1
+            if time.monotonic() >= deadline:
+                waited = f" after waiting {args.lc_wait}s" if args.lc_wait else ""
+                print(f"ERROR: Cannot connect to {args.base_url}{waited}\n"
+                      f"  Is LibreChat running? Check with: systemctl --user status librechat",
+                      file=sys.stderr)
+                sys.exit(1)
+            delay = min(2 ** attempt, 10)
+            remaining = deadline - time.monotonic()
+            delay = min(delay, remaining)
+            if delay > 0:
+                print(f"  waiting ({attempt})...", flush=True)
+                time.sleep(delay)
 
     print(f"Logging in as {args.email}...")
     token = login(client, args.email, args.password)
