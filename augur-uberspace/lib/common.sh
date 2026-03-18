@@ -299,13 +299,18 @@ _lc_download_and_setup() {
             log "LibreChat already up-to-date (asset unchanged since ${installed_ts})"
             return 0
         fi
-        # Fallback: check release tag (written by install.sh)
+        # Timestamp available but different → asset changed, skip tag fallback
+        if [[ -n "$installed_ts" ]]; then
+            log "Asset timestamp changed (${installed_ts} → ${_BUNDLE_ASSET_TS}), updating..."
+        fi
+    fi
+
+    # Fallback: check release tag when no asset timestamp available
+    if [[ "$skip_current" == true && -z "$_BUNDLE_ASSET_TS" ]]; then
         local installed_tag=""
         [[ -f "$APP/.release-tag" ]] && installed_tag=$(cat "$APP/.release-tag" 2>/dev/null)
         if [[ -n "$installed_tag" && "$installed_tag" == "$_BUNDLE_TAG" ]]; then
             log "LibreChat already up-to-date (tag ${installed_tag})"
-            # Backfill .asset_ts so future checks are fast
-            echo "$_BUNDLE_ASSET_TS" > "$APP/.asset_ts"
             return 0
         fi
     fi
