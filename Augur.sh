@@ -44,6 +44,29 @@ else
     die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 fi
 
+# Wait for LibreChat to become healthy (up to ~90s, with progress)
+_wait_lc() {
+    local _lc_url="http://localhost:${LC_PORT:-3080}"
+    local _max_attempts=45  # 45 x 2s = 90s
+    local _ready=false
+    for i in $(seq 1 $_max_attempts); do
+        if curl -sf "${_lc_url}/api/health" >/dev/null 2>&1; then
+            _ready=true; break
+        fi
+        if [[ "$((i % 5))" -eq 0 ]]; then
+            echo -e "        waiting for LibreChat... (${i}/${_max_attempts}, $((i * 2))s elapsed)"
+        fi
+        sleep 2
+    done
+    if [[ "$_ready" == true ]]; then
+        echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/api/health)"
+        return 0
+    else
+        echo -e "        ${RED}✗${NC} LibreChat not ready after $((${_max_attempts} * 2))s"
+        return 1
+    fi
+}
+
 # ── Command dispatch ──
 CMD="${1:-help}"
 
@@ -473,10 +496,10 @@ SVCEOF
                 sleep 2
             done
             if [[ "$LC_READY" == true ]]; then
-                log "LibreChat is ready, seeding agents..."
+                log "LibreChat is ready, seeding all agents..."
                 "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
                     --email "$AUGUR_SETUP_EMAIL" --password "$AUGUR_SETUP_PASSWORD" \
-                    --base-url "$LC_URL" 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
+                    --base-url "$LC_URL" --all 2>&1 || warn "Agent seeding failed (seed manually: augur agents)"
             else
                 warn "LibreChat not ready after 60s — seed agents manually: augur agents <email> <password>"
             fi
@@ -738,11 +761,15 @@ PYEOF
         if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -f "$STACK/venv/bin/python" ]]; then
             sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
             LC_URL="http://localhost:${LC_PORT:-3080}"
-            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$HOUR" "$MIN" <<'PYEOF' 2>&1 \
+            mkdir -p "$HOME/logs/agents"
+            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$HOUR" "$MIN" "$HOME/logs/agents" <<'PYEOF' 2>&1 \
                 | while read -r line; do _cron_log "agents: $line"; done
-import httpx, json, sys
+import httpx, json, sys, os
+from datetime import datetime, timezone
 
-lc_url, api_key, hour, minute = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+lc_url, api_key = sys.argv[1], sys.argv[2]
+hour, minute = int(sys.argv[3]), int(sys.argv[4])
+log_dir = sys.argv[5]
 headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
 # ── Dispatch table: (name_match, due_check, message, timeout) ──
@@ -777,12 +804,58 @@ try:
 except Exception as e:
     print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
 
-# Build name→id lookup (match by substring in id or name)
+# Build name->id lookup (match by substring in id or name)
 def find_agent(name_match):
     for aid, m in agents.items():
         if name_match in aid.lower() or name_match in m.get("name", "").lower():
             return aid
     return None
+
+def stream_agent(agent_id, message, timeout, name_match):
+    """Invoke agent with streaming, write worklog to file, return content."""
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    log_file = os.path.join(log_dir, f"{name_match}_{ts}.log")
+    content_parts = []
+    try:
+        with httpx.stream("POST", f"{lc_url}/api/agents/v1/chat/completions",
+                          headers=headers,
+                          json={"model": agent_id,
+                                "messages": [{"role": "user", "content": message}],
+                                "stream": True},
+                          timeout=timeout) as resp:
+            if resp.status_code != 200:
+                err = f"ERROR {name_match}: {resp.status_code}"
+                with open(log_file, "w") as f:
+                    f.write(f"[{ts}] {err}\n")
+                return err
+            with open(log_file, "w") as f:
+                f.write(f"[{ts}] agent={name_match} id={agent_id}\n")
+                f.write(f"[{ts}] prompt: {message}\n")
+                f.write(f"{'='*60}\n")
+                for line in resp.iter_lines():
+                    if not line or not line.startswith("data: "):
+                        continue
+                    data_str = line[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data_str)
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                        text = delta.get("content", "")
+                        if text:
+                            content_parts.append(text)
+                            f.write(text)
+                            f.flush()
+                    except json.JSONDecodeError:
+                        pass
+                f.write(f"\n{'='*60}\n")
+                f.write(f"[{ts}] done\n")
+    except Exception as e:
+        with open(log_file, "a") as f:
+            f.write(f"\n[ERROR] {e}\n")
+        return f"ERROR {name_match}: {e}"
+    content = "".join(content_parts)
+    return f"OK {name_match}: {content[:200]}"
 
 # Invoke due agents
 invoked = 0
@@ -794,21 +867,19 @@ for name_match, due_check, message, timeout in DISPATCH:
         print(f"SKIP {name_match}: agent not found")
         continue
     print(f"invoking {name_match} ({agent_id})")
-    try:
-        r = httpx.post(f"{lc_url}/api/agents/v1/chat/completions",
-                       headers=headers,
-                       json={"model": agent_id,
-                             "messages": [{"role": "user", "content": message}],
-                             "stream": False},
-                       timeout=timeout)
-        if r.status_code == 200:
-            content = r.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-            print(f"OK {name_match}: {content[:200]}")
-        else:
-            print(f"ERROR {name_match}: {r.status_code} {r.text[:200]}", file=sys.stderr)
-    except Exception as e:
-        print(f"ERROR {name_match}: {e}", file=sys.stderr)
+    result = stream_agent(agent_id, message, timeout, name_match)
+    print(result)
     invoked += 1
+
+# Clean up old logs (keep last 7 days)
+import glob, time
+cutoff = time.time() - 7 * 86400
+for old_log in glob.glob(os.path.join(log_dir, "*.log")):
+    try:
+        if os.path.getmtime(old_log) < cutoff:
+            os.remove(old_log)
+    except OSError:
+        pass
 
 print(f"done: {invoked} agents invoked")
 PYEOF
@@ -1117,6 +1188,13 @@ SVCEOF
         if [[ -z "$_USER_EMAIL" ]] && [[ -t 0 ]]; then
             echo -e "${CYAN}Register a new LibreChat user${NC}"
             echo ""
+            echo "  This will:"
+            echo "    1. Temporarily enable ALLOW_REGISTRATION in LibreChat .env"
+            echo "    2. Restart LibreChat to apply"
+            echo "    3. POST /api/auth/register with your credentials"
+            echo "    4. Restore original registration setting"
+            echo "    5. Restart LibreChat again"
+            echo ""
             read -rp "  Email: " _USER_EMAIL
             if [[ -z "$_USER_EMAIL" ]]; then die "Email is required"; fi
             read -rsp "  Password: " _USER_PASS; echo ""
@@ -1126,12 +1204,30 @@ SVCEOF
             read -rp "  Display name [${_USER_EMAIL%%@*}]: " _USER_NAME
             _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
         elif [[ -z "$_USER_EMAIL" ]]; then
-            echo -e "${YELLOW}Usage: augur user <email> <password> [name]${NC}"
-            echo ""; echo "  augur user admin@example.com MyPass123!"
-            echo "  augur user   # interactive (prompts for email + password)"
+            echo -e "${YELLOW}Usage: augur user <email> <password> [display-name]${NC}"
+            echo ""
+            echo "  Register a new LibreChat user account."
+            echo ""
+            echo "  Parameters:"
+            echo "    email          User email address (required)"
+            echo "    password       Account password (required)"
+            echo "    display-name   Display name (optional, defaults to email prefix)"
+            echo ""
+            echo "  Examples:"
+            echo "    augur user admin@example.com MyPass123!"
+            echo "    augur user admin@example.com MyPass123! 'Admin User'"
+            echo "    augur user   # interactive mode (prompts for each field)"
+            echo ""
+            echo "  What happens:"
+            echo "    1. Temporarily sets ALLOW_REGISTRATION=true in LibreChat .env"
+            echo "    2. Restarts LibreChat to apply the change"
+            echo "    3. Calls POST ${LC_URL}/api/auth/register"
+            echo "    4. Restores original ALLOW_REGISTRATION setting"
+            echo "    5. Restarts LibreChat again to lock registration"
             exit 0
         fi
         _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
+        echo -e "${CYAN}Registering user: ${_USER_EMAIL} (name: ${_USER_NAME})${NC}"
         # Temporarily enable registration, register, then restore
         _LC_ENV="$APP/.env"
         _HAD_ALLOW_REG=false
@@ -1143,25 +1239,20 @@ SVCEOF
         else
             echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
         fi
+        log "  [1/5] Set ALLOW_REGISTRATION=true in $_LC_ENV"
         # Restart LibreChat to pick up the change
+        log "  [2/5] Restarting LibreChat..."
         _svc_restart librechat >/dev/null 2>&1 || true
-        # Wait for LibreChat to be ready
-        _LC_READY=false
-        for i in $(seq 1 30); do
-            if curl -sf "${LC_URL}/api/health" >/dev/null 2>&1; then
-                _LC_READY=true; break
-            fi
-            sleep 2
-        done
-        if [[ "$_LC_READY" != true ]]; then
+        if ! _wait_lc; then
             # Restore .env before aborting
             if [[ "$_HAD_ALLOW_REG" == true ]]; then
                 sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
             else
                 sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
             fi
-            die "LibreChat not ready after 60s — cannot register user"
+            die "LibreChat not ready — cannot register user. Check: augur logs"
         fi
+        log "  [3/5] POST ${LC_URL}/api/auth/register (email=${_USER_EMAIL}, name=${_USER_NAME})"
         # Register via API
         _REG_RESP=$(curl -sf -X POST "${LC_URL}/api/auth/register" \
             -H "Content-Type: application/json" \
@@ -1170,33 +1261,130 @@ SVCEOF
         # Restore registration setting
         if [[ "$_HAD_ALLOW_REG" == true ]]; then
             sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
+            log "  [4/5] Restored ${_OLD_ALLOW_REG} in $_LC_ENV"
         else
             sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
+            log "  [4/5] Removed ALLOW_REGISTRATION from $_LC_ENV"
         fi
+        log "  [5/5] Restarting LibreChat..."
         _svc_restart librechat >/dev/null 2>&1 || true
+        _wait_lc || warn "LibreChat slow to restart — it may still be starting up"
         if [[ "$_REG_OK" == true ]]; then
             echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
             echo -e "  Log in at: https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+            # Auto-seed core agents for the new user
+            if [[ -x "$STACK/venv/bin/python" ]]; then
+                echo -e "${CYAN}Seeding core agents for ${_USER_EMAIL}...${NC}"
+                "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
+                    --email "$_USER_EMAIL" --password "$_USER_PASS" \
+                    --base-url "$LC_URL" 2>&1 \
+                    && echo -e "${GREEN}✓${NC} Core agents seeded" \
+                    || warn "Agent seeding failed (seed manually: augur agents ${_USER_EMAIL} <password>)"
+            fi
         else
             echo -e "${RED}✗${NC} Registration failed: ${_REG_RESP}" >&2
             exit 1
         fi
         ;;
+    signup)
+        # Enable or disable public self-registration (requires LibreChat restart)
+        _LC_ENV="$APP/.env"
+        SUB="${2:-}"
+        case "$SUB" in
+            on)
+                if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+                    sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=true/' "$_LC_ENV"
+                else
+                    echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
+                fi
+                log "Set ALLOW_REGISTRATION=true in $_LC_ENV"
+                log "Restarting LibreChat to apply..."
+                _svc_restart librechat >/dev/null 2>&1 || true
+                _wait_lc || warn "LibreChat slow to restart — check: augur logs"
+                echo -e "${GREEN}✓${NC} Public signup enabled"
+                echo -e "  ${YELLOW}Warning:${NC} Anyone can now register at https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+                echo -e "  Run ${CYAN}augur signup off${NC} when done"
+                ;;
+            off)
+                if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+                    sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=false/' "$_LC_ENV"
+                else
+                    echo "ALLOW_REGISTRATION=false" >> "$_LC_ENV"
+                fi
+                log "Set ALLOW_REGISTRATION=false in $_LC_ENV"
+                log "Restarting LibreChat to apply..."
+                _svc_restart librechat >/dev/null 2>&1 || true
+                _wait_lc || warn "LibreChat slow to restart — check: augur logs"
+                echo -e "${GREEN}✓${NC} Public signup disabled"
+                ;;
+            status|"")
+                _CURRENT="(not set)"
+                if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
+                    _CURRENT=$(grep '^ALLOW_REGISTRATION=' "$_LC_ENV" | tail -1 | cut -d= -f2)
+                fi
+                echo -e "${CYAN}Public signup:${NC} ALLOW_REGISTRATION=${_CURRENT} (in $APP/.env)"
+                echo ""
+                echo "  augur signup on      Enable public self-registration (+ restart LibreChat)"
+                echo "  augur signup off     Disable public self-registration (+ restart LibreChat)"
+                echo "  augur signup status  Show current setting"
+                echo ""
+                echo "  Note: LibreChat must restart for changes to take effect."
+                echo "  Use ${CYAN}augur user${NC} to register a single user without leaving signup open."
+                ;;
+            *)
+                echo -e "${YELLOW}Usage: augur signup [on|off|status]${NC}"
+                ;;
+        esac
+        ;;
     agents)
-        AGENTS_EMAIL="${2:-${AUGUR_SETUP_EMAIL:-}}"
-        AGENTS_PASS="${3:-${AUGUR_SETUP_PASSWORD:-}}"
-        if [[ "${2:-}" == "--dry-run" ]]; then
+        # Parse: augur agents [--dry-run] [--group GROUP...] [--all] <email> <password>
+        _AGENTS_ARGS=()
+        _AGENTS_EMAIL=""
+        _AGENTS_PASS=""
+        shift  # consume "agents"
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --dry-run) _AGENTS_ARGS+=("--dry-run"); shift ;;
+                --all) _AGENTS_ARGS+=("--all"); shift ;;
+                --group) _AGENTS_ARGS+=("--group" "$2"); shift 2 ;;
+                --group=*) _AGENTS_ARGS+=("--group" "${1#*=}"); shift ;;
+                -*) echo "Unknown flag: $1" >&2; exit 1 ;;
+                *)
+                    if [[ -z "$_AGENTS_EMAIL" ]]; then _AGENTS_EMAIL="$1"
+                    elif [[ -z "$_AGENTS_PASS" ]]; then _AGENTS_PASS="$1"
+                    fi
+                    shift ;;
+            esac
+        done
+        _AGENTS_EMAIL="${_AGENTS_EMAIL:-${AUGUR_SETUP_EMAIL:-}}"
+        _AGENTS_PASS="${_AGENTS_PASS:-${AUGUR_SETUP_PASSWORD:-}}"
+        if [[ " ${_AGENTS_ARGS[*]} " == *" --dry-run "* ]]; then
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
-                --email "dummy@example.com" --password "dummy" --dry-run
-        elif [[ -z "$AGENTS_EMAIL" || -z "$AGENTS_PASS" ]]; then
-            echo -e "${YELLOW}Usage: augur agents <email> <password>${NC}"
-            echo ""; echo "  augur agents admin@example.com mypassword"
-            echo "  augur agents --dry-run  # preview only"
+                --email "dummy@example.com" --password "dummy" "${_AGENTS_ARGS[@]}"
+        elif [[ -z "$_AGENTS_EMAIL" || -z "$_AGENTS_PASS" ]]; then
+            echo -e "${YELLOW}Usage: augur agents [options] <email> <password>${NC}"
+            echo ""
+            echo "  Groups (core is always included):"
+            echo "    (default)       Core agents only (data + analysis + planning)"
+            echo "    --group trading Add trading agents (broker)"
+            echo "    --group news    Add news agents (4 brands)"
+            echo "    --all           All groups"
+            echo ""
+            echo "  Options:"
+            echo "    --dry-run       Preview only"
+            echo ""
+            echo "  Examples:"
+            echo "    augur agents admin@example.com mypassword"
+            echo "    augur agents --group trading admin@example.com mypassword"
+            echo "    augur agents --group trading --group news admin@example.com mypassword"
+            echo "    augur agents --all admin@example.com mypassword"
+            echo "    augur agents --dry-run"
         else
             LC_URL="http://localhost:${LC_PORT:-3080}"
-            echo -e "${CYAN}Seeding agents at ${LC_URL} for ${AGENTS_EMAIL}...${NC}"
+            echo -e "${CYAN}Seeding agents at ${LC_URL} for ${_AGENTS_EMAIL}...${NC}"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
-                --email "$AGENTS_EMAIL" --password "$AGENTS_PASS" --base-url "$LC_URL"
+                --email "$_AGENTS_EMAIL" --password "$_AGENTS_PASS" \
+                --base-url "$LC_URL" "${_AGENTS_ARGS[@]}"
             echo -e "${GREEN}✓${NC} Agent seeding complete"
         fi
         ;;
@@ -1250,6 +1438,216 @@ for kind, info in sorted(result.items()):
 "
         echo -e "${GREEN}✓${NC} Reseed complete"
         ;;
+    trigger)
+        # Invoke an agent interactively with streaming output to terminal
+        AGENT_NAME="${2:-}"
+        AGENT_MSG="${3:-}"
+        if [[ -z "$AGENT_NAME" ]]; then
+            echo -e "${YELLOW}Usage: augur trigger <agent-name> [message]${NC}"
+            echo ""
+            echo "  Agents: cron-planner, market-data, osint-data, signals-data,"
+            echo "          market-analyst, osint-analyst, signals-analyst, synthesizer,"
+            echo "          news-the-augur, news-der-augur, news-financial-augur,"
+            echo "          news-finanz-augur, trader, charter, live-chat"
+            echo ""
+            echo "  augur trigger cron-planner                   # default cron prompt"
+            echo "  augur trigger market-data 'Refresh US techs' # custom prompt"
+            echo ""
+            echo "  Output streams to terminal AND saves to ~/logs/agents/"
+        else
+            [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] || die "AUGUR_AGENTS_API_KEY not set in .env"
+            [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
+            LC_URL="http://localhost:${LC_PORT:-3080}"
+            mkdir -p "$HOME/logs/agents"
+            echo -e "${CYAN}Triggering agent: ${AGENT_NAME}${NC}"
+            "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$AGENT_NAME" "$HOME/logs/agents" "$AGENT_MSG" <<'PYEOF'
+import httpx, json, sys, os
+from datetime import datetime, timezone
+
+lc_url, api_key, agent_name, log_dir = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+custom_msg = sys.argv[5] if len(sys.argv) > 5 and sys.argv[5] else ""
+headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+# Default prompts per agent (same as cron dispatch)
+DEFAULT_PROMPTS = {
+    "cron-planner": (
+        "Execute your periodic routine: "
+        "1) Read plans (store_get_notes kind=plan). "
+        "2) Check risk status. "
+        "3) For watched entities, refresh data via data agents. "
+        "4) Run analysis if data is stale. "
+        "5) Update plans with results. "
+        "6) Log summary as event."
+    ),
+    "news-the-augur": "Check augur_due_now() and produce any due articles.",
+    "news-der-augur": "Check augur_due_now() and produce any due articles.",
+    "news-financial-augur": "Check augur_due_now() and produce any due articles.",
+    "news-finanz-augur": "Check augur_due_now() and produce any due articles.",
+    "market-data": "Scrape latest market data for all watched entities and store snapshots.",
+    "osint-data": "Scrape latest OSINT data: disasters, conflicts, weather, health, elections.",
+    "signals-data": "Scrape latest signals: RSS feeds, Reddit, HN, crypto sentiment.",
+    "market-analyst": "Analyze latest market data trends. Read your previous notes first.",
+    "osint-analyst": "Analyze latest OSINT data: threat assessment, country risk, supply chain exposure.",
+    "signals-analyst": "Analyze latest signals: sentiment, narratives, filing significance.",
+    "synthesizer": "Read all analyst notes and produce a cross-domain briefing.",
+}
+message = custom_msg or DEFAULT_PROMPTS.get(agent_name, f"Run your primary task.")
+
+# Fetch agent list
+try:
+    r = httpx.get(f"{lc_url}/api/agents/v1/models", headers=headers, timeout=10)
+    if r.status_code != 200:
+        print(f"ERROR: agent list {r.status_code}", file=sys.stderr); sys.exit(1)
+    agents = {m["id"]: m for m in r.json().get("data", [])}
+except Exception as e:
+    print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
+
+# Find agent
+agent_id = None
+for aid, m in agents.items():
+    if agent_name in aid.lower() or agent_name in m.get("name", "").lower():
+        agent_id = aid; break
+if not agent_id:
+    print(f"ERROR: agent '{agent_name}' not found. Available:")
+    for aid, m in agents.items():
+        print(f"  {m.get('name', aid)}")
+    sys.exit(1)
+
+ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+log_file = os.path.join(log_dir, f"{agent_name}_{ts}.log")
+print(f"Agent: {agent_name} ({agent_id})")
+print(f"Prompt: {message}")
+print(f"Log: {log_file}")
+print("=" * 60)
+
+try:
+    with httpx.stream("POST", f"{lc_url}/api/agents/v1/chat/completions",
+                      headers=headers,
+                      json={"model": agent_id,
+                            "messages": [{"role": "user", "content": message}],
+                            "stream": True},
+                      timeout=600) as resp:
+        if resp.status_code != 200:
+            print(f"ERROR: {resp.status_code} {resp.read().decode()[:500]}", file=sys.stderr)
+            sys.exit(1)
+        with open(log_file, "w") as f:
+            f.write(f"[{ts}] agent={agent_name} id={agent_id}\n")
+            f.write(f"[{ts}] prompt: {message}\n")
+            f.write(f"{'='*60}\n")
+            for line in resp.iter_lines():
+                if not line or not line.startswith("data: "):
+                    continue
+                data_str = line[6:]
+                if data_str.strip() == "[DONE]":
+                    break
+                try:
+                    chunk = json.loads(data_str)
+                    delta = chunk.get("choices", [{}])[0].get("delta", {})
+                    text = delta.get("content", "")
+                    if text:
+                        sys.stdout.write(text)
+                        sys.stdout.flush()
+                        f.write(text)
+                        f.flush()
+                except json.JSONDecodeError:
+                    pass
+            f.write(f"\n{'='*60}\n[{ts}] done\n")
+except Exception as e:
+    print(f"\nERROR: {e}", file=sys.stderr)
+    sys.exit(1)
+print(f"\n{'='*60}")
+print(f"Done. Log saved to {log_file}")
+PYEOF
+        fi
+        ;;
+    worklog)
+        # View agent worklogs (file logs + MongoDB journal notes)
+        LOG_DIR="$HOME/logs/agents"
+        SUB="${2:-}"
+        case "$SUB" in
+            tail|"")
+                # Tail the most recent log file, or follow new ones
+                if [[ -d "$LOG_DIR" ]] && ls "$LOG_DIR"/*.log &>/dev/null; then
+                    LATEST=$(ls -t "$LOG_DIR"/*.log 2>/dev/null | head -1)
+                    echo -e "${CYAN}Latest worklog: ${LATEST}${NC}"
+                    cat "$LATEST"
+                else
+                    echo -e "${YELLOW}No worklogs yet. Run: augur trigger <agent> or wait for cron.${NC}"
+                fi
+                ;;
+            list)
+                # List recent worklogs
+                if [[ -d "$LOG_DIR" ]] && ls "$LOG_DIR"/*.log &>/dev/null; then
+                    echo -e "${CYAN}Recent agent worklogs:${NC}"
+                    ls -lt "$LOG_DIR"/*.log 2>/dev/null | head -20 | while read -r line; do
+                        echo "  $line"
+                    done
+                else
+                    echo -e "${YELLOW}No worklogs found in ${LOG_DIR}${NC}"
+                fi
+                ;;
+            follow)
+                # Follow worklogs as they appear (watch mode)
+                echo -e "${CYAN}Watching for new worklogs in ${LOG_DIR}/ (Ctrl-C to stop)${NC}"
+                mkdir -p "$LOG_DIR"
+                LAST_FILE=""
+                while true; do
+                    NEWEST=$(ls -t "$LOG_DIR"/*.log 2>/dev/null | head -1)
+                    if [[ -n "$NEWEST" ]] && [[ "$NEWEST" != "$LAST_FILE" ]]; then
+                        LAST_FILE="$NEWEST"
+                        echo -e "\n${CYAN}──── $(basename "$NEWEST") ────${NC}"
+                        tail -f "$NEWEST" &
+                        TAIL_PID=$!
+                    fi
+                    sleep 5
+                done
+                ;;
+            journal)
+                # Query journal notes from MongoDB (what agents write internally)
+                [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
+                AGENT_TAG="${3:-cron}"
+                LIMIT="${4:-10}"
+                echo -e "${CYAN}Agent journal notes (tag=${AGENT_TAG}, limit=${LIMIT}):${NC}"
+                "$STACK/venv/bin/python" - <<PYEOF
+import os, sys, json
+sys.path.insert(0, os.path.join("$STACK", "src", "store"))
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join("$STACK", ".env"))
+except ImportError:
+    pass
+from server import _notes_col
+
+col = _notes_col()
+query = {"kind": "journal", "tags": "$AGENT_TAG"}
+results = list(col.find(query).sort("updated_at", -1).limit(int("$LIMIT")))
+if not results:
+    print("  No journal entries found.")
+else:
+    for note in results:
+        ts = note.get("updated_at", note.get("created_at", "?"))
+        title = note.get("title", "(untitled)")
+        tags = ", ".join(note.get("tags", []))
+        print(f"\n  [{ts}] {title}  ({tags})")
+        content = note.get("content", "")
+        # Show first 500 chars of content
+        preview = content[:500] + ("..." if len(content) > 500 else "")
+        for line in preview.split("\n"):
+            print(f"    {line}")
+PYEOF
+                ;;
+            *)
+                echo -e "${YELLOW}Usage: augur worklog [tail|list|follow|journal]${NC}"
+                echo ""
+                echo "  augur worklog          Show latest agent worklog"
+                echo "  augur worklog list     List recent worklogs"
+                echo "  augur worklog follow   Watch for new worklogs in real-time"
+                echo "  augur worklog journal [tag] [limit]"
+                echo "                         Query agent journal notes from MongoDB"
+                echo "                         Tags: cron, log, news-the, news-der, etc."
+                ;;
+        esac
+        ;;
     *)
         echo -e "${CYAN}Augur — ops shortcuts${NC}"
         echo -e "${CYAN}Host: ${UBER_HOST:-$(hostname -f 2>/dev/null || echo 'unknown')}${NC}"
@@ -1276,9 +1674,12 @@ for kind, info in sorted(result.items()):
         echo "  augur restore [f]  Restore MongoDB from backup (latest if no file)"
         echo "  augur backups      List available backups"
         echo "  augur cron         Run cron hook (compact + agent invocation)"
+        echo "  augur trigger <a>  Invoke an agent with streaming output"
+        echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
         echo "  augur user         Register a new LibreChat user account"
-        echo "  augur agents       Seed multi-agent architecture (11 agents)"
+        echo "  augur signup       Enable/disable public self-registration"
+        echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
         echo "  augur reseed       Clear all profiles and re-seed from disk"
         echo "  augur check        Health check (services, config, connectivity)"
