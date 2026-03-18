@@ -44,10 +44,19 @@ jobs:
           cd librechat-src
           LC_PKG_VER=$(node -p "require('./package.json').version" 2>/dev/null || echo "unknown")
           LC_COMMIT=$(git rev-parse --short HEAD)
+          LC_REF="${{ inputs.librechat_ref || 'main' }}"
           echo "LC_PKG_VER=${LC_PKG_VER}" >> "$GITHUB_ENV"
           echo "LC_COMMIT=${LC_COMMIT}" >> "$GITHUB_ENV"
-          echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
-          echo "LC_TAG=lc-${LC_PKG_VER}" >> "$GITHUB_ENV"
+          # Non-main builds get a ref suffix to avoid tag collisions
+          if [[ "$LC_REF" == "main" ]]; then
+            echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
+            echo "LC_TAG=lc-${LC_PKG_VER}" >> "$GITHUB_ENV"
+          else
+            # Sanitize ref for tag: replace / with -
+            LC_REF_SAFE=$(echo "$LC_REF" | tr '/' '-')
+            echo "LC_VERSION=${LC_PKG_VER}-${LC_REF_SAFE}+${LC_COMMIT}" >> "$GITHUB_ENV"
+            echo "LC_TAG=lc-${LC_PKG_VER}-${LC_REF_SAFE}" >> "$GITHUB_ENV"
+          fi
           npm ci
           NODE_OPTIONS="--max-old-space-size=4096" npm run frontend
           cd ..
