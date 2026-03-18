@@ -13,10 +13,6 @@
 name: Build LibreChat
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/librechat-build.yml'
   workflow_dispatch:
     inputs:
       librechat_ref:
