@@ -47,7 +47,7 @@ fi
 # Wait for LibreChat to become healthy (up to ~90s, with progress)
 _wait_lc() {
     local _lc_url="http://localhost:${LC_PORT:-3080}"
-    local _max_attempts=45  # 45 x 2s = 90s
+    local _max_attempts=90  # 90 x 2s = 180s
     local _ready=false
     for i in $(seq 1 $_max_attempts); do
         if curl -sf "${_lc_url}/api/health" >/dev/null 2>&1; then
