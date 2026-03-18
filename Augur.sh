@@ -44,6 +44,27 @@ else
     die()  { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 fi
 
+# Shared post-install / post-update info block
+_post_info() {
+    local UBER="${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+    echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
+    echo "    augur start        # start all services"
+    echo "    augur stop         # stop all services"
+    echo "    augur restart      # restart all services"
+    echo ""
+    echo -e "  ${CYAN}Verify:${NC}"
+    echo "    augur check        # full health check"
+    echo "    augur status       # quick service status"
+    echo ""
+    echo -e "  ${CYAN}Access:${NC}"
+    echo "    https://${UBER}"
+    echo ""
+    echo -e "  ${CYAN}User management:${NC}"
+    echo "    augur user <email> <pw> [name]  # register a user"
+    echo "    augur signup on|off|status       # public self-registration"
+    echo ""
+}
+
 # Wait for LibreChat to become healthy (up to ~90s, with progress)
 _wait_lc() {
     local _lc_url="http://localhost:${LC_PORT:-3080}"
@@ -545,7 +566,6 @@ SVCEOF
             fi
         done
 
-        local UBER="${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
         echo ""
         echo -e "${CYAN}══════════════════════════════════════════${NC}"
         echo -e "${GREEN}✓${NC} Installation complete!"
@@ -581,39 +601,7 @@ SVCEOF
             fi
         fi
 
-        echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
-        echo "    augur start        # start all services"
-        echo "    augur stop         # stop all services"
-        echo "    augur restart      # restart all services"
-        echo ""
-        echo -e "  ${CYAN}Verify:${NC}"
-        echo "    augur check        # full health check"
-        echo "    augur status       # quick service status"
-        echo ""
-        echo -e "  ${CYAN}Access:${NC}"
-        echo "    https://${UBER}"
-        echo ""
-
-        # First login: prompt to create initial user account
-        if [[ -t 0 ]]; then
-            echo -e "  ${CYAN}First login:${NC}"
-            echo "    Create your admin account to access the web UI."
-            read -rp "    Register a user now? [Y/n] " _reg_ans
-            if [[ "${_reg_ans:-Y}" =~ ^[Yy]?$ ]]; then
-                # Delegate to augur user (interactive mode)
-                "$0" user
-            else
-                echo ""
-                echo "    augur user <email> <pw> [name]  # register later"
-                echo "    augur signup on|off|status       # public self-registration"
-            fi
-            echo ""
-        else
-            echo -e "  ${CYAN}First login:${NC}"
-            echo "    augur user <email> <pw> [name]  # register a user"
-            echo "    augur signup on|off|status       # public self-registration"
-            echo ""
-        fi
+        _post_info
         ;;
     update)
         echo -e "${CYAN}Updating Augur stack...${NC}"
@@ -631,22 +619,7 @@ SVCEOF
         echo -e "${GREEN}✓${NC} Updated to ${_INSTALL_SHA} (${_INSTALL_COMMIT_DATE})"
         echo -e "${CYAN}══════════════════════════════════════════${NC}"
         echo ""
-        echo -e "  ${CYAN}Start / Stop / Restart:${NC}"
-        echo "    augur start        # start all services"
-        echo "    augur stop         # stop all services"
-        echo "    augur restart      # restart all services"
-        echo ""
-        echo -e "  ${CYAN}Verify:${NC}"
-        echo "    augur check        # full health check"
-        echo "    augur status       # quick service status"
-        echo ""
-        echo -e "  ${CYAN}Access:${NC}"
-        echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
-        echo ""
-        echo -e "  ${CYAN}User management:${NC}"
-        echo "    augur user <email> <pw> [name]  # register a user"
-        echo "    augur signup on|off|status       # public self-registration"
-        echo ""
+        _post_info
         ;;
     clean)
         echo -e "${CYAN}Clearing caches...${NC}"
