@@ -39,6 +39,17 @@ PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 ALL_GROUPS = {"core", "trading", "news"}
 DEFAULT_BASE_URL = "http://localhost:3080"
 
+# Browser-like headers to avoid LibreChat's non-browser violation scoring.
+# Without these, httpx's default User-Agent triggers NON_BROWSER_VIOLATION_SCORE
+# (default 20) which can lead to silent request rejection.
+BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+}
+
 
 def load_prompt(agent_name: str) -> str | None:
     """Load agent instructions from prompts/<name>.md if it exists."""
@@ -80,8 +91,9 @@ def list_agents(client: "httpx.Client") -> list[dict]:
     try:
         data = resp.json()
     except (json.JSONDecodeError, ValueError):
-        print(f"  WARNING: /api/agents returned non-JSON ({resp.status_code}): "
-              f"{text[:200]}", file=sys.stderr)
+        ct = resp.headers.get("content-type", "?")
+        print(f"  WARNING: /api/agents returned non-JSON ({resp.status_code}, "
+              f"content-type={ct}): {text[:200]}", file=sys.stderr)
         return []
     # Response may be {agents: [...]} or just [...]
     if isinstance(data, dict):
@@ -109,7 +121,9 @@ def _safe_json(resp: "httpx.Response", label: str) -> dict:
         data = resp.json()
         return data if isinstance(data, dict) else {}
     except (json.JSONDecodeError, ValueError):
-        print(f"  {label}: non-JSON response ({resp.status_code}): {text[:200]}",
+        ct = resp.headers.get("content-type", "?")
+        print(f"  {label}: non-JSON response ({resp.status_code}, "
+              f"content-type={ct}): {text[:200]}",
               file=sys.stderr)
         return {}
 
@@ -179,6 +193,8 @@ def main():
     parser.add_argument("--all", action="store_true", help="Seed all groups")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
     parser.add_argument("--agents-file", default=AGENTS_FILE, help="Path to agents.json")
+    parser.add_argument("--lc-wait", type=int, default=0, metavar="SECS",
+                        help="Wait up to SECS seconds for LibreChat to become reachable")
     args = parser.parse_args()
 
     # Determine which groups to seed (core is always included)
@@ -222,9 +238,33 @@ def main():
         return
 
     # Connect and authenticate
-    client = httpx.Client(base_url=args.base_url, timeout=30)
+    client = httpx.Client(base_url=args.base_url, timeout=30, headers=BROWSER_HEADERS)
 
-    print(f"\nLogging in to {args.base_url} as {args.email}...")
+    # Pre-flight connectivity check (with optional wait)
+    deadline = time.monotonic() + args.lc_wait
+    attempt = 0
+    print(f"\nConnecting to {args.base_url}..." +
+          (f" (waiting up to {args.lc_wait}s)" if args.lc_wait else ""))
+    while True:
+        try:
+            client.get("/")
+            break
+        except httpx.ConnectError:
+            attempt += 1
+            if time.monotonic() >= deadline:
+                waited = f" after waiting {args.lc_wait}s" if args.lc_wait else ""
+                print(f"ERROR: Cannot connect to {args.base_url}{waited}\n"
+                      f"  Is LibreChat running? Check with: systemctl --user status librechat",
+                      file=sys.stderr)
+                sys.exit(1)
+            delay = min(2 ** attempt, 10)
+            remaining = deadline - time.monotonic()
+            delay = min(delay, remaining)
+            if delay > 0:
+                print(f"  waiting ({attempt})...", flush=True)
+                time.sleep(delay)
+
+    print(f"Logging in as {args.email}...")
     token = login(client, args.email, args.password)
     client.headers["Authorization"] = f"Bearer {token}"
     print("  OK")
