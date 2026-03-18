@@ -39,6 +39,8 @@
     "news-financial-augur": {"provider": "OpenRouter",    "model": "google/gemini-2.5-flash:free", "_load": "~3 calls/day, EN financial articles"},
     "news-finanz-augur":    {"provider": "GitHub Models", "model": "gpt-4o-mini",           "_load": "~3 calls/day, DE financial articles"},
 
+    "live-chat":       {"provider": "anthropic", "model": "claude-sonnet-4-6",               "_load": "main chat agent, needs best reasoning — keep on Anthropic"},
+
     "trader":          {"provider": "Groq",     "model": "llama-3.3-70b-versatile",         "_load": "~15 calls/day, stateless broker ops, needs reliability"},
     "charter":         {"provider": "Groq",     "model": "llama-3.1-8b-instant",            "_load": "~15 calls/day, just calls store_chart, fastest/cheapest"}
   }

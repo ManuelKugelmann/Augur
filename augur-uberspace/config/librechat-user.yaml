@@ -117,7 +117,7 @@ endpoints:
       modelDisplayLabel: "Cohere"
 
     # ── GitHub Models (free, uses GitHub PAT) ──
-    # Key: https://github.com/settings/tokens (use PAT with no scopes)
+    # Key: https://github.com/settings/tokens (classic PAT or fine-grained with "Models" read permission)
     - name: "GitHub Models"
       apiKey: "${GITHUB_MODELS_PAT}"
       baseURL: "https://models.inference.ai.azure.com"

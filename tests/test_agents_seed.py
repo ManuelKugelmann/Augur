@@ -12,7 +12,11 @@ import pytest
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 AGENTS_FILE = REPO_ROOT / "augur-uberspace" / "config" / "agents.json"
 MODELS_FILE = REPO_ROOT / "augur-uberspace" / "config" / "agent-models.json"
+USER_YAML = REPO_ROOT / "augur-uberspace" / "config" / "librechat-user.yaml"
 PROMPTS_DIR = REPO_ROOT / "augur-uberspace" / "config" / "prompts"
+
+# Native providers that need no YAML endpoint (just .env key)
+NATIVE_PROVIDERS = {"openai", "anthropic"}
 
 # Import seed-agents.py functions for testing edge resolution
 sys.path.insert(0, str(REPO_ROOT / "augur-uberspace" / "scripts"))
@@ -564,3 +568,65 @@ class TestModelOverrides:
                 assert modified["_name"] == orig["_name"]
                 assert modified["tools"] == orig["tools"]
                 assert modified["edges"] == orig["edges"]
+
+
+class TestProviderBinding:
+    """Verify every agent's effective provider exists in librechat-user.yaml or is native."""
+
+    @pytest.fixture(scope="class")
+    def yaml_provider_names(self):
+        """Extract endpoint names from librechat-user.yaml."""
+        yaml = pytest.importorskip("yaml", reason="PyYAML required")
+        if not USER_YAML.exists():
+            pytest.skip("librechat-user.yaml not found")
+        cfg = yaml.safe_load(USER_YAML.read_text()) or {}
+        custom = cfg.get("endpoints", {}).get("custom", [])
+        return {ep["name"].lower() for ep in custom if isinstance(ep, dict) and "name" in ep}
+
+    @pytest.fixture(scope="class")
+    def effective_assignments(self):
+        """Resolve agent-models.json overrides to get effective provider per agent."""
+        data = json.loads(MODELS_FILE.read_text())
+        agents_data = json.loads(AGENTS_FILE.read_text())
+        result = {}
+        for a in agents_data:
+            name = a["_name"]
+            layer = a["_layer"]
+            # Start with agents.json built-in
+            provider = a.get("provider", "")
+            model = a.get("model", "")
+            # Apply layer default
+            if layer in data.get("defaults", {}):
+                provider = data["defaults"][layer].get("provider", provider)
+                model = data["defaults"][layer].get("model", model)
+            # Apply per-agent override (wins)
+            if name in data.get("agents", {}):
+                provider = data["agents"][name].get("provider", provider)
+                model = data["agents"][name].get("model", model)
+            result[name] = {"provider": provider, "model": model}
+        return result
+
+    def test_all_agents_have_provider(self, effective_assignments):
+        for name, cfg in effective_assignments.items():
+            assert cfg["provider"], f"Agent {name} has no effective provider"
+
+    def test_all_agents_have_model(self, effective_assignments):
+        for name, cfg in effective_assignments.items():
+            assert cfg["model"], f"Agent {name} has no effective model"
+
+    def test_providers_exist_in_yaml_or_native(self, effective_assignments, yaml_provider_names):
+        """Every agent's provider must be a native provider or a custom endpoint in librechat-user.yaml."""
+        missing = []
+        for name, cfg in effective_assignments.items():
+            provider = cfg["provider"].lower()
+            if provider not in NATIVE_PROVIDERS and provider not in yaml_provider_names:
+                missing.append(f"{name}: provider '{cfg['provider']}' not in YAML or native")
+        assert not missing, "Agents reference providers not in librechat-user.yaml:\n  " + "\n  ".join(missing)
+
+    def test_live_chat_not_downgraded(self, effective_assignments):
+        """The main chat agent (live-chat/L5) should stay on a premium provider."""
+        lc = effective_assignments.get("live-chat")
+        assert lc, "live-chat agent not found"
+        assert lc["provider"].lower() in NATIVE_PROVIDERS, (
+            f"live-chat should use a native provider (anthropic/openai), got '{lc['provider']}'"
+        )
