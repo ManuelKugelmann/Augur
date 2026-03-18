@@ -218,3 +218,34 @@ Global roadmap and task list. Updated 2026-03-16 (fresh state audit).
 - [x] **Third code review** — fresh security/quality audit (REVIEW.md). 5 new warnings
       found (#46-50), 1 accepted (#51), 1 low/style (#52). No new critical issues.
       (2026-03-16)
+- [x] **Multi-provider budget spread** — 16 agents distributed across 8 free providers
+      (Groq, Cerebras, Gemini, GitHub Models, Mistral, Cohere, OpenRouter, Qwen).
+      Core agents on high-budget providers, news agents on low-volume providers.
+      Configured via per-agent overrides in `agent-models.json`. (2026-03-18)
+
+---
+
+## Far Future
+
+- [ ] **Provider fallback / auto-swap on 429**
+      Add `"fallback"` field per agent in `agent-models.json`. When a provider returns
+      429 (rate limit), `seed-agents.py --swap` rotates to the fallback provider and
+      re-seeds. Could also be triggered automatically by `augur cron` when recent logs
+      show 429 errors. Alternative: keep a second config (`agent-models-fallback.json`)
+      and swap with `augur agents --models-file agent-models-fallback.json`.
+- [ ] **Dynamic provider rotation (time-of-day)**
+      Some free tiers reset daily. Rotate providers mid-day to spread load across
+      reset windows (e.g., Groq morning, Cerebras afternoon). Requires tracking
+      per-provider daily usage.
+- [ ] **Cost tracking dashboard**
+      Track token usage per provider/agent per day. Store in MongoDB (`usage_log`
+      collection). Surface via a simple `augur usage` CLI or store tool.
+      Helps identify which agents burn budget fastest and when to swap providers.
+- [ ] **Paid tier upgrade path**
+      When free tiers aren't enough: Cerebras developer ($10 min), Groq pay-per-token,
+      Gemini pay-as-you-go. Document break-even points (at what call volume does each
+      provider's paid tier become worth it vs. spreading across more free providers).
+- [ ] **Self-hosted model option (Ollama / vLLM)**
+      For L1 data agents and utility agents that don't need frontier reasoning,
+      self-hosted open models (Llama 3.x, Qwen 3) on a GPU box could eliminate
+      rate limits entirely. Requires Uberspace upgrade or external GPU host.
