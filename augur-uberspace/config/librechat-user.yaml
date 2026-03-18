@@ -48,8 +48,7 @@ registration:
 #         default:
 #           - llama-3.3-70b-versatile
 #           - llama-3.1-8b-instant
-#           - mixtral-8x7b-32768
-#           - gemma2-9b-it
+#           - openai/gpt-oss-120b
 #         fetch: true
 #       titleConvo: true
 #       titleModel: "llama-3.1-8b-instant"
@@ -62,15 +61,15 @@ registration:
 #       baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
 #       models:
 #         default:
-#           - gemini-2.0-flash
-#           - gemini-2.0-flash-lite
-#           - gemini-1.5-flash
+#           - gemini-2.5-flash
+#           - gemini-2.5-flash-lite
+#           - gemini-2.5-pro
 #         fetch: false
 #       titleConvo: true
-#       titleModel: "gemini-2.0-flash-lite"
+#       titleModel: "gemini-2.5-flash-lite"
 #       modelDisplayLabel: "Gemini"
 #
-#     # ── Mistral (free tier: mistral-small, codestral) ──
+#     # ── Mistral (free tier: mistral-small-4) ──
 #     # Key: https://console.mistral.ai/api-keys
 #     - name: "Mistral"
 #       apiKey: "${MISTRAL_API_KEY}"
@@ -78,8 +77,8 @@ registration:
 #       models:
 #         default:
 #           - mistral-small-latest
-#           - codestral-latest
 #           - mistral-large-latest
+#           - magistral-small-latest
 #         fetch: true
 #       titleConvo: true
 #       titleModel: "mistral-small-latest"
@@ -92,12 +91,11 @@ registration:
 #       baseURL: "https://api.cerebras.ai/v1"
 #       models:
 #         default:
-#           - llama-3.3-70b
-#           - llama-3.1-8b
-#           - qwen-3-235b
+#           - llama3.1-8b
+#           - gpt-oss-120b
 #         fetch: true
 #       titleConvo: true
-#       titleModel: "llama-3.1-8b"
+#       titleModel: "llama3.1-8b"
 #       modelDisplayLabel: "Cerebras"
 #
 #     # ── Cohere (free, 20 RPM / 1K req/month) ──
@@ -108,11 +106,11 @@ registration:
 #       models:
 #         default:
 #           - command-a-03-2025
-#           - command-r-plus-08-2024
-#           - command-r-08-2024
+#           - command-a-reasoning-08-2025
+#           - command-r7b-12-2024
 #         fetch: true
 #       titleConvo: true
-#       titleModel: "command-r-08-2024"
+#       titleModel: "command-r7b-12-2024"
 #       modelDisplayLabel: "Cohere"
 #
 #     # ── SambaNova (free $5 trial credits, fast inference) ──
@@ -122,9 +120,9 @@ registration:
 #       baseURL: "https://api.sambanova.ai/v1"
 #       models:
 #         default:
-#           - DeepSeek-V3-0324
+#           - DeepSeek-V3.1
+#           - DeepSeek-R1-0528
 #           - Meta-Llama-3.3-70B-Instruct
-#           - Qwen2.5-72B-Instruct
 #         fetch: true
 #       titleConvo: true
 #       titleModel: "Meta-Llama-3.3-70B-Instruct"
@@ -137,12 +135,12 @@ registration:
 #       baseURL: "https://router.huggingface.co/v1"
 #       models:
 #         default:
-#           - Qwen/Qwen2.5-72B-Instruct
-#           - mistralai/Mistral-7B-Instruct-v0.3
+#           - Qwen/Qwen3-235B-A22B
 #           - meta-llama/Llama-3.3-70B-Instruct
+#           - mistralai/Mistral-Small-3.1-24B-Instruct-2503
 #         fetch: false
 #       titleConvo: true
-#       titleModel: "mistralai/Mistral-7B-Instruct-v0.3"
+#       titleModel: "mistralai/Mistral-Small-3.1-24B-Instruct-2503"
 #       modelDisplayLabel: "HuggingFace"
 #
 #     # ── GitHub Models (free, uses GitHub PAT) ──
@@ -153,8 +151,6 @@ registration:
 #       models:
 #         default:
 #           - gpt-4o-mini
-#           - Meta-Llama-3.1-405B-Instruct
-#           - Mistral-large-2411
 #           - Phi-4
 #         fetch: true
 #       titleConvo: true
@@ -184,10 +180,10 @@ registration:
 #       baseURL: "https://openrouter.ai/api/v1"
 #       models:
 #         default:
-#           - "google/gemini-2.0-flash-exp:free"
+#           - "qwen/qwen3-coder:free"
+#           - "nvidia/nemotron-3-super-120b:free"
 #           - "meta-llama/llama-3.3-70b-instruct:free"
-#           - "qwen/qwen-2.5-72b-instruct:free"
-#           - "mistralai/mistral-small-3.1-24b-instruct:free"
+#           - "deepseek/deepseek-r1:free"
 #         fetch: false
 #       titleConvo: true
 #       titleModel: "meta-llama/llama-3.3-70b-instruct:free"
