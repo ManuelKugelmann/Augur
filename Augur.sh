@@ -54,7 +54,10 @@ _wait_lc() {
             _ready=true; break
         fi
         if [[ "$((i % 3))" -eq 0 ]]; then
+            local _last_log
+            _last_log=$(journalctl --user -u librechat -n 1 --no-pager -o cat 2>/dev/null || true)
             echo -e "        waiting for LibreChat... (${i}/${_max_attempts}, $((i * 5))s elapsed)"
+            [[ -n "$_last_log" ]] && echo -e "        └─ ${_last_log}"
         fi
         sleep 5
     done
@@ -1674,7 +1677,7 @@ PYEOF
         echo "  augur trigger <a>  Invoke an agent with streaming output"
         echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
-        echo "  augur user         Register a new LibreChat user account"
+        echo "  augur user <email> <pw> [name]  Register a new LibreChat user"
         echo "  augur signup       Enable/disable public self-registration"
         echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
