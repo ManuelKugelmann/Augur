@@ -6,14 +6,13 @@
 #
 # Creates two releases per build:
 #   - lc-<version> (e.g. lc-1.6.1)  — versioned, kept as history
-#   - librechat-build                — rolling pointer to latest build
+#   - librechat-build                — rolling pointer to latest main build
+#   - librechat-dev-build                    — rolling pointer to latest non-main build
+#
+# To auto-update from dev builds: set RELEASE_TAG=librechat-dev-build in deploy.conf
 name: Build LibreChat
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/librechat-build.yml'
   workflow_dispatch:
     inputs:
       librechat_ref:
@@ -44,10 +43,19 @@ jobs:
           cd librechat-src
           LC_PKG_VER=$(node -p "require('./package.json').version" 2>/dev/null || echo "unknown")
           LC_COMMIT=$(git rev-parse --short HEAD)
+          LC_REF="${{ inputs.librechat_ref || 'main' }}"
           echo "LC_PKG_VER=${LC_PKG_VER}" >> "$GITHUB_ENV"
           echo "LC_COMMIT=${LC_COMMIT}" >> "$GITHUB_ENV"
-          echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
-          echo "LC_TAG=lc-${LC_PKG_VER}" >> "$GITHUB_ENV"
+          # Non-main builds get a ref suffix to avoid tag collisions
+          if [[ "$LC_REF" == "main" ]]; then
+            echo "LC_VERSION=${LC_PKG_VER}+${LC_COMMIT}" >> "$GITHUB_ENV"
+            echo "LC_TAG=lc-${LC_PKG_VER}" >> "$GITHUB_ENV"
+          else
+            # Sanitize ref for tag: replace / with -
+            LC_REF_SAFE=$(echo "$LC_REF" | tr '/' '-')
+            echo "LC_VERSION=${LC_PKG_VER}-${LC_REF_SAFE}+${LC_COMMIT}" >> "$GITHUB_ENV"
+            echo "LC_TAG=lc-${LC_PKG_VER}-${LC_REF_SAFE}" >> "$GITHUB_ENV"
+          fi
           npm ci
           NODE_OPTIONS="--max-old-space-size=4096" npm run frontend
           cd ..
@@ -91,22 +99,34 @@ jobs:
           prerelease: true
           make_latest: false
 
-      - name: Update rolling release (librechat-build → latest)
+      - name: Determine rolling release tag
         run: |
-          # Move the librechat-build tag to current commit
-          git tag -f librechat-build
-          git push -f origin librechat-build
+          LC_REF="${{ inputs.librechat_ref || 'main' }}"
+          if [[ "$LC_REF" == "main" ]]; then
+            echo "ROLLING_TAG=librechat-build" >> "$GITHUB_ENV"
+          else
+            echo "ROLLING_TAG=librechat-dev-build" >> "$GITHUB_ENV"
+          fi
+
+      - name: Update rolling release (${{ env.ROLLING_TAG }} → latest)
+        run: |
+          ROLLING="${ROLLING_TAG}"
+
+          # Move the rolling tag to current commit
+          git tag -f "$ROLLING"
+          git push -f origin "$ROLLING"
 
           # Delete existing release if present, then recreate
-          gh release delete librechat-build --yes 2>/dev/null || true
-          gh release create librechat-build \
+          gh release delete "$ROLLING" --yes 2>/dev/null || true
+          gh release create "$ROLLING" \
             --title "LibreChat ${{ env.LC_VERSION }} (latest)" \
             --notes "Rolling pointer to the latest LibreChat build.
 
           **LibreChat**: ${{ env.LC_PKG_VER }} ([\`${{ env.LC_COMMIT }}\`](https://github.com/danny-avila/LibreChat/commit/${{ env.LC_COMMIT }}))
+          **Built from ref**: \`${{ inputs.librechat_ref || 'main' }}\`
           **Versioned tag**: [\`${{ env.LC_TAG }}\`](https://github.com/${{ github.repository }}/releases/tag/${{ env.LC_TAG }})
 
-          Install: \`RELEASE_TAG=librechat-build augur install\`" \
+          Install: \`RELEASE_TAG=$ROLLING augur install\`" \
             --prerelease \
             librechat-build.tar.gz
         env:

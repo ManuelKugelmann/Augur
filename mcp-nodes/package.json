@@ -6,6 +6,7 @@
   "dependencies": {
     "rss-mcp": "^1.0.1",
     "prediction-markets-mcp": "^1.0.3",
-    "@devabdultech/hn-mcp-server": "^1.2.2"
+    "@devabdultech/hn-mcp-server": "^1.2.2",
+    "@mzxrai/mcp-webresearch": "^1.2.0"
   }
 }
