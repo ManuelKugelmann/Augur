@@ -422,7 +422,10 @@ _update_core() {
                 command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
             done
             if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
-                if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
+                # Keep .sample copies so users can diff against latest templates
+            cp "$_SYS_YAML" "$APP/librechat-system.yaml.sample" 2>/dev/null || true
+            cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$APP/librechat-user.yaml.sample" 2>/dev/null || true
+            if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
                     log "Merged librechat.yaml (system + user)"
                 else
                     warn "Config merge failed — using system template"

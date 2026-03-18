@@ -106,6 +106,9 @@ if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
     for _py in "$STACK/venv/bin/python" python3 python; do
         command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
     done
+    # Keep .sample copies so users can diff against latest templates
+    cp "$_SYS_YAML" "$APP/librechat-system.yaml.sample" 2>/dev/null || true
+    cp "$_USR_YAML_SRC" "$APP/librechat-user.yaml.sample" 2>/dev/null || true
     if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
         if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
             log "Merged librechat.yaml (system + user, paths adjusted to $HOME)"

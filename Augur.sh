@@ -133,6 +133,9 @@ case "$CMD" in
         _USR_YAML="$APP/librechat-user.yaml"
         _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
         if [[ -f "$_SYS_YAML" ]] && [[ -f "$_USR_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+            # Keep .sample copies so users can diff against latest templates
+            cp "$_SYS_YAML" "$APP/librechat-system.yaml.sample" 2>/dev/null || true
+            cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$APP/librechat-user.yaml.sample" 2>/dev/null || true
             _MERGE_PY=""
             for _py in "$STACK/venv/bin/python" python3 python; do
                 command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
@@ -1161,9 +1164,25 @@ SVCEOF
     yaml)
         echo -e "${CYAN}System config:${NC} $STACK/augur-uberspace/config/librechat-system.yaml (managed by Augur)"
         echo -e "${CYAN}User config:${NC}   $APP/librechat-user.yaml (your customizations)"
+        echo -e "${CYAN}Samples:${NC}       $APP/librechat-system.yaml.sample  $APP/librechat-user.yaml.sample"
         echo -e "Opening user config for editing..."
         ${EDITOR:-nano} "$APP/librechat-user.yaml"
         echo -e "${YELLOW}⚠${NC} Run ${CYAN}augur restart${NC} to apply changes (merge + restart)"
+        ;;
+    "test models"|testmodels)
+        # Smoke-test all configured LLM providers and models
+        [[ -f "$APP/librechat.yaml" ]] || die "librechat.yaml not found — run augur restart first"
+        _TEST_PY=""
+        for _py in "$STACK/venv/bin/python" python3 python; do
+            command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _TEST_PY="$_py"; break; }
+        done
+        [[ -n "$_TEST_PY" ]] || die "Python with PyYAML not found"
+        # Source .env so API key vars are available
+        set -a
+        # shellcheck disable=SC1091
+        [[ -f "$APP/.env" ]] && source "$APP/.env"
+        set +a
+        "$_TEST_PY" "$STACK/augur-uberspace/scripts/test-models.py" "$APP/librechat.yaml" "${@:2}"
         ;;
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
@@ -1600,6 +1619,7 @@ PYEOF
         echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
         echo "  augur env          Edit .env"
         echo "  augur yaml         Edit librechat-user.yaml (LLM endpoints, etc.)"
+        echo "  augur test models  Smoke-test all LLM providers/models from librechat.yaml"
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Install / reinstall (idempotent):"
