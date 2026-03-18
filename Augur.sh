@@ -604,7 +604,7 @@ SVCEOF
             echo ""
         else
             echo -e "  ${CYAN}First login:${NC}"
-            echo "    augur user         # register your admin account"
+            echo "    augur user <email> <password> [display-name]"
             echo ""
         fi
         ;;
