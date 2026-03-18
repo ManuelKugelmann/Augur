@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Merge librechat-system.yaml + librechat-user.yaml → librechat.yaml.
 
-System template provides: version, mcpSettings, mcpServers, interface,
-endpoints.agents.  These keys always come from the system template.
-
-User overlay provides everything else: cache, registration,
-endpoints.custom (LLM providers), and any other LibreChat settings.
+System yaml provides defaults. User yaml deep-overrides: any field the
+user sets replaces the corresponding field in system, at any depth.
+Non-dict values replace wholesale; dicts recurse so the user only needs
+to specify the fields they want to change.
 
 Usage:
     python merge-librechat-yaml.py <system.yaml> <user.yaml> <output.yaml> [home_dir]
@@ -18,17 +17,15 @@ import sys
 
 import yaml
 
-# Keys that are exclusively owned by the system template.
-# User overlay values for these keys are ignored.
-SYSTEM_KEYS = {"version", "mcpSettings", "mcpServers", "interface"}
 
-
-def deep_merge(base, overlay):
-    """Recursively merge overlay into base. Overlay wins on conflicts."""
+def deep_override(base, override):
+    """Recursively override base with override. Override always wins."""
+    if not isinstance(base, dict) or not isinstance(override, dict):
+        return override
     merged = dict(base)
-    for key, val in overlay.items():
+    for key, val in override.items():
         if key in merged and isinstance(merged[key], dict) and isinstance(val, dict):
-            merged[key] = deep_merge(merged[key], val)
+            merged[key] = deep_override(merged[key], val)
         else:
             merged[key] = val
     return merged
@@ -52,25 +49,8 @@ def merge(system_path, user_path, home_dir=None):
     with open(user_path) as f:
         user = yaml.safe_load(f) or {}
 
-    # Start with system as base, overlay user settings
-    merged = deep_merge(system, user)
+    merged = deep_override(system, user)
 
-    # Force system-owned keys back (user cannot override these)
-    for key in SYSTEM_KEYS:
-        if key in system:
-            merged[key] = system[key]
-
-    # endpoints is special: system owns 'agents', user owns 'custom'
-    sys_endpoints = system.get("endpoints", {})
-    user_endpoints = user.get("endpoints", {})
-    merged_endpoints = deep_merge(sys_endpoints, user_endpoints)
-    # Always keep system's agents config
-    if "agents" in sys_endpoints:
-        merged_endpoints["agents"] = sys_endpoints["agents"]
-    if merged_endpoints:
-        merged["endpoints"] = merged_endpoints
-
-    # Replace __HOME__ placeholders
     if home_dir:
         merged = replace_home(merged, home_dir)
 

@@ -60,7 +60,6 @@ _post_info() {
     echo "    https://${UBER}"
     echo ""
     echo -e "  ${CYAN}User management:${NC}"
-    echo "    augur user <email> <pw> [name]  # register a user"
     echo "    augur signup on|off|status       # public self-registration"
     echo ""
 }
@@ -134,6 +133,11 @@ case "$CMD" in
         _USR_YAML="$APP/librechat-user.yaml"
         _MERGE_SCRIPT="$STACK/augur-uberspace/scripts/merge-librechat-yaml.py"
         if [[ -f "$_SYS_YAML" ]] && [[ -f "$_USR_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
+            # Keep .example copies next to active configs so users can diff
+            cp "$_SYS_YAML" "$APP/librechat-system.yaml.example" 2>/dev/null || true
+            cp "$STACK/augur-uberspace/config/librechat-user.yaml" "$APP/librechat-user.yaml.example" 2>/dev/null || true
+            cp "$STACK/augur-uberspace/config/.env.example" "$APP/.env.example" 2>/dev/null || true
+            rm -f "$APP/librechat-system.yaml.sample" "$APP/librechat-user.yaml.sample" 2>/dev/null || true
             _MERGE_PY=""
             for _py in "$STACK/venv/bin/python" python3 python; do
                 command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
@@ -1162,9 +1166,25 @@ SVCEOF
     yaml)
         echo -e "${CYAN}System config:${NC} $STACK/augur-uberspace/config/librechat-system.yaml (managed by Augur)"
         echo -e "${CYAN}User config:${NC}   $APP/librechat-user.yaml (your customizations)"
+        echo -e "${CYAN}Examples:${NC}      $APP/librechat-system.yaml.example  $APP/librechat-user.yaml.example"
         echo -e "Opening user config for editing..."
         ${EDITOR:-nano} "$APP/librechat-user.yaml"
         echo -e "${YELLOW}⚠${NC} Run ${CYAN}augur restart${NC} to apply changes (merge + restart)"
+        ;;
+    "test models"|testmodels)
+        # Smoke-test all configured LLM providers and models
+        [[ -f "$APP/librechat.yaml" ]] || die "librechat.yaml not found — run augur restart first"
+        _TEST_PY=""
+        for _py in "$STACK/venv/bin/python" python3 python; do
+            command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _TEST_PY="$_py"; break; }
+        done
+        [[ -n "$_TEST_PY" ]] || die "Python with PyYAML not found"
+        # Source .env so API key vars are available
+        set -a
+        # shellcheck disable=SC1091
+        [[ -f "$APP/.env" ]] && source "$APP/.env"
+        set +a
+        "$_TEST_PY" "$STACK/augur-uberspace/scripts/test-models.py" "$APP/librechat.yaml" "${@:2}"
         ;;
     conf)
         ${EDITOR:-nano} "$STACK/deploy.conf"
@@ -1195,116 +1215,12 @@ SVCEOF
         fi
         ;;
     user)
-        # Register a new LibreChat user account
-        LC_URL="http://localhost:${LC_PORT:-3080}"
-        _USER_EMAIL="${2:-}"
-        _USER_PASS="${3:-}"
-        _USER_NAME="${4:-}"
-        if [[ -z "$_USER_EMAIL" ]] && [[ -t 0 ]]; then
-            echo -e "${CYAN}Register a new LibreChat user${NC}"
-            echo ""
-            echo "  This will:"
-            echo "    1. Temporarily enable ALLOW_REGISTRATION in LibreChat .env"
-            echo "    2. Restart LibreChat to apply"
-            echo "    3. POST /api/auth/register with your credentials"
-            echo "    4. Restore original registration setting"
-            echo "    5. Restart LibreChat again"
-            echo ""
-            read -rp "  Email: " _USER_EMAIL
-            if [[ -z "$_USER_EMAIL" ]]; then die "Email is required"; fi
-            read -rsp "  Password: " _USER_PASS; echo ""
-            if [[ -z "$_USER_PASS" ]]; then die "Password is required"; fi
-            read -rsp "  Confirm password: " _USER_PASS_CONFIRM; echo ""
-            if [[ "$_USER_PASS" != "$_USER_PASS_CONFIRM" ]]; then die "Passwords do not match"; fi
-            read -rp "  Display name [${_USER_EMAIL%%@*}]: " _USER_NAME
-            _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
-        elif [[ -z "$_USER_EMAIL" ]]; then
-            echo -e "${YELLOW}Usage: augur user <email> <password> [display-name]${NC}"
-            echo ""
-            echo "  Register a new LibreChat user account."
-            echo ""
-            echo "  Parameters:"
-            echo "    email          User email address (required)"
-            echo "    password       Account password (required)"
-            echo "    display-name   Display name (optional, defaults to email prefix)"
-            echo ""
-            echo "  Examples:"
-            echo "    augur user admin@example.com MyPass123!"
-            echo "    augur user admin@example.com MyPass123! 'Admin User'"
-            echo "    augur user   # interactive mode (prompts for each field)"
-            echo ""
-            echo "  What happens:"
-            echo "    1. Temporarily sets ALLOW_REGISTRATION=true in LibreChat .env"
-            echo "    2. Restarts LibreChat to apply the change"
-            echo "    3. Calls POST ${LC_URL}/api/auth/register"
-            echo "    4. Restores original ALLOW_REGISTRATION setting"
-            echo "    5. Restarts LibreChat again to lock registration"
-            echo ""
-            echo "  See also:"
-            echo "    augur signup on      Enable public self-registration"
-            echo "    augur signup off     Disable public self-registration"
-            echo "    augur signup status  Show current registration setting"
-            exit 0
-        fi
-        _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
-        echo -e "${CYAN}Registering user: ${_USER_EMAIL} (name: ${_USER_NAME})${NC}"
-        # Temporarily enable registration, register, then restore
-        _LC_ENV="$APP/.env"
-        _HAD_ALLOW_REG=false
-        _OLD_ALLOW_REG=""
-        if grep -q '^ALLOW_REGISTRATION=' "$_LC_ENV" 2>/dev/null; then
-            _HAD_ALLOW_REG=true
-            _OLD_ALLOW_REG=$(grep '^ALLOW_REGISTRATION=' "$_LC_ENV" | tail -1)
-            sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=true/' "$_LC_ENV"
-        else
-            echo "ALLOW_REGISTRATION=true" >> "$_LC_ENV"
-        fi
-        log "  [1/5] Set ALLOW_REGISTRATION=true in $_LC_ENV"
-        # Restart LibreChat to pick up the change
-        log "  [2/5] Restarting LibreChat..."
-        _svc_restart librechat >/dev/null 2>&1 || true
-        if ! _wait_lc; then
-            # Restore .env before aborting
-            if [[ "$_HAD_ALLOW_REG" == true ]]; then
-                sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
-            else
-                sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
-            fi
-            die "LibreChat not ready — cannot register user. Check: augur logs"
-        fi
-        log "  [3/5] POST ${LC_URL}/api/auth/register (email=${_USER_EMAIL}, name=${_USER_NAME})"
-        # Register via API
-        _REG_RESP=$(curl -sf -X POST "${LC_URL}/api/auth/register" \
-            -H "Content-Type: application/json" \
-            -d "{\"email\":\"${_USER_EMAIL}\",\"password\":\"${_USER_PASS}\",\"confirm_password\":\"${_USER_PASS}\",\"name\":\"${_USER_NAME}\"}" 2>&1) \
-            && _REG_OK=true || _REG_OK=false
-        # Restore registration setting
-        if [[ "$_HAD_ALLOW_REG" == true ]]; then
-            sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
-            log "  [4/5] Restored ${_OLD_ALLOW_REG} in $_LC_ENV"
-        else
-            sed -i '/^ALLOW_REGISTRATION=true$/d' "$_LC_ENV"
-            log "  [4/5] Removed ALLOW_REGISTRATION from $_LC_ENV"
-        fi
-        log "  [5/5] Restarting LibreChat..."
-        _svc_restart librechat >/dev/null 2>&1 || true
-        _wait_lc || warn "LibreChat slow to restart — it may still be starting up"
-        if [[ "$_REG_OK" == true ]]; then
-            echo -e "${GREEN}✓${NC} User registered: ${_USER_EMAIL}"
-            echo -e "  Log in at: https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
-            # Auto-seed core agents for the new user
-            if [[ -x "$STACK/venv/bin/python" ]]; then
-                echo -e "${CYAN}Seeding core agents for ${_USER_EMAIL}...${NC}"
-                "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/seed-agents.py" \
-                    --email "$_USER_EMAIL" --password "$_USER_PASS" \
-                    --base-url "$LC_URL" 2>&1 \
-                    && echo -e "${GREEN}✓${NC} Core agents seeded" \
-                    || warn "Agent seeding failed (seed manually: augur agents ${_USER_EMAIL} <password>)"
-            fi
-        else
-            echo -e "${RED}✗${NC} Registration failed: ${_REG_RESP}" >&2
-            exit 1
-        fi
+        echo -e "${YELLOW}The 'augur user' command has been removed.${NC}"
+        echo ""
+        echo "  Use ${CYAN}augur signup on${NC} to enable public self-registration,"
+        echo "  then register at https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
+        echo "  and run ${CYAN}augur signup off${NC} when done."
+        exit 1
         ;;
     signup)
         # Enable or disable public self-registration (requires LibreChat restart)
@@ -1349,7 +1265,6 @@ SVCEOF
                 echo "  augur signup status  Show current setting"
                 echo ""
                 echo "  Note: LibreChat must restart for changes to take effect."
-                echo "  Use ${CYAN}augur user${NC} to register a single user without leaving signup open."
                 ;;
             *)
                 echo -e "${YELLOW}Usage: augur signup [on|off|status]${NC}"
@@ -1697,7 +1612,6 @@ PYEOF
         echo "  augur trigger <a>  Invoke an agent with streaming output"
         echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
-        echo "  augur user <email> <pw> [name]  Register a new LibreChat user"
         echo "  augur signup       Enable/disable public self-registration"
         echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
@@ -1707,6 +1621,7 @@ PYEOF
         echo "  augur proxy ...    CLIProxyAPI (Claude Max subscription proxy)"
         echo "  augur env          Edit .env"
         echo "  augur yaml         Edit librechat-user.yaml (LLM endpoints, etc.)"
+        echo "  augur test models  Smoke-test all LLM providers/models from librechat.yaml"
         echo "  augur conf         Edit deploy.conf"
         echo ""
         echo "  Install / reinstall (idempotent):"

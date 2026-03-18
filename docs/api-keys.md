@@ -32,6 +32,33 @@ All domain servers work partially without keys — tools that need a key return 
 | `IDMC_API_KEY` | IDMC (displacement data) | humanitarian_server | free (request key) | https://www.internal-displacement.org/ |
 | `RELIEFWEB_APPNAME` | ReliefWeb (reports/disasters) | humanitarian_server | free (register appname) | https://apidoc.reliefweb.int/ |
 
+## Agents API Key (cron, trigger, bootstrap)
+
+| Variable | Purpose | Where to set |
+|----------|---------|-------------|
+| `AUGUR_AGENTS_API_KEY` | Authenticates `augur cron`, `augur trigger`, `augur bootstrap` against LibreChat's Agents API | `~/augur/.env` |
+| `AUGUR_BOOTSTRAP_AGENT_ID` | Agent ID for `augur bootstrap` profile seeding | `~/augur/.env` |
+
+**How to generate:**
+
+1. Ensure `remoteAgents` is enabled in `librechat.yaml` (enabled by default since Augur setup):
+   ```yaml
+   interface:
+     remoteAgents:
+       use: true
+       create: true
+   ```
+2. Restart LibreChat: `augur restart librechat`
+3. In LibreChat UI: **Settings > Data controls > Agent API Keys** → create a new key
+4. Copy the key to `~/augur/.env`:
+   ```
+   AUGUR_AGENTS_API_KEY=sk-...
+   ```
+
+These keys are persistent (no expiry), unlike JWT session tokens.
+
+> **Note:** If "Agent API Keys" doesn't appear in Settings, see [LibreChat #12149](https://github.com/danny-avila/LibreChat/issues/12149) — a known bug in some v0.8.x versions. As a workaround, use `augur token` to generate a JWT-based token.
+
 ## LLM Provider Keys (LibreChat)
 
 Set in `~/LibreChat/.env` (not in the signals stack `.env`).

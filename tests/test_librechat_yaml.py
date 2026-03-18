@@ -2,8 +2,8 @@
 
 Validates:
   - System template (librechat-system.yaml): MCP servers, version, mcpSettings
-  - User overlay (librechat-user.yaml): user-editable settings
-  - Merge script produces valid combined config
+  - User overlay (librechat-user.yaml): freeform user settings
+  - Merge script: system as base, user overlay wins on conflicts
 """
 
 import importlib.util
@@ -102,10 +102,9 @@ class TestUserOverlay:
     def test_has_registration(self, user_cfg):
         assert "registration" in user_cfg
 
-    def test_no_system_keys(self, user_cfg):
-        """User overlay should not contain system-owned keys."""
-        for key in ("version", "mcpSettings", "mcpServers"):
-            assert key not in user_cfg, f"System key '{key}' found in user overlay"
+    def test_no_mcp_servers_in_user(self, user_cfg):
+        """User overlay typically doesn't redefine MCP servers (system provides them)."""
+        assert "mcpServers" not in user_cfg, "mcpServers should be in system yaml"
 
 
 # ── Merge script ─────────────────────────────
@@ -134,39 +133,51 @@ class TestMergeScript:
         finance = merged_cfg["mcpServers"]["finance"]
         assert "/home/testuser/" in finance["command"]
 
-    def test_system_keys_not_overridable(self):
-        """User overlay cannot override system-owned keys."""
+    def test_user_overlay_wins(self):
+        """User overlay can override any key including system defaults."""
         mod = _load_merge_module()
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump({"version": "0.0.0", "cache": False, "mcpServers": {}}, f)
+            yaml.dump({"version": "9.9.9", "cache": False}, f)
             f.flush()
             merged = mod.merge(str(SYSTEM_YAML), f.name)
         os.unlink(f.name)
-        # System keys must come from system template
-        assert merged["version"] == yaml.safe_load(SYSTEM_YAML.read_text())["version"]
-        assert merged["mcpServers"] == yaml.safe_load(SYSTEM_YAML.read_text())["mcpServers"]
-        # User key (cache) should come from user overlay
+        # User overlay wins on conflicts
+        assert merged["version"] == "9.9.9"
         assert merged["cache"] is False
+        # System defaults survive when not overridden
+        assert "mcpServers" in merged
 
-    def test_endpoints_merge(self):
-        """System's endpoints.agents + user's endpoints.custom both survive."""
+    def test_deep_override_merges_nested(self):
+        """User fields override at any depth, system fields survive if untouched."""
         mod = _load_merge_module()
-        user_with_custom = {
+        user_with_endpoints = {
             "endpoints": {
                 "custom": [{"name": "TestLLM", "apiKey": "test"}]
             }
         }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump(user_with_custom, f)
+            yaml.dump(user_with_endpoints, f)
             f.flush()
             merged = mod.merge(str(SYSTEM_YAML), f.name)
         os.unlink(f.name)
-        # System's agents endpoint must be present
-        assert "agents" in merged["endpoints"]
-        assert "capabilities" in merged["endpoints"]["agents"]
-        # User's custom endpoints must also be present
+        # User's custom endpoints added
         assert "custom" in merged["endpoints"]
         assert merged["endpoints"]["custom"][0]["name"] == "TestLLM"
+        # System's agents endpoint survives (user didn't touch it)
+        assert "agents" in merged["endpoints"]
+
+    def test_deep_override_scalar_replaces(self):
+        """User scalar value replaces system value at any depth."""
+        mod = _load_merge_module()
+        user_override = {"interface": {"endpointsMenu": False}}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(user_override, f)
+            f.flush()
+            merged = mod.merge(str(SYSTEM_YAML), f.name)
+        os.unlink(f.name)
+        assert merged["interface"]["endpointsMenu"] is False
+        # Other interface keys from system survive
+        assert "agents" in merged["interface"]
 
     def test_write_produces_valid_yaml(self, merged_cfg):
         """Merge output is valid, parseable YAML."""

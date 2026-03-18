@@ -106,6 +106,10 @@ if [[ -f "$_SYS_YAML" ]] && [[ -f "$_MERGE_SCRIPT" ]]; then
     for _py in "$STACK/venv/bin/python" python3 python; do
         command -v "$_py" &>/dev/null && "$_py" -c "import yaml" 2>/dev/null && { _MERGE_PY="$_py"; break; }
     done
+    # Keep .example copies next to active configs so users can diff
+    cp "$_SYS_YAML" "$APP/librechat-system.yaml.example" 2>/dev/null || true
+    cp "$_USR_YAML_SRC" "$APP/librechat-user.yaml.example" 2>/dev/null || true
+    cp "$STACK/augur-uberspace/config/.env.example" "$APP/.env.example" 2>/dev/null || true
     if [[ -n "$_MERGE_PY" ]] && [[ -f "$_USR_YAML" ]]; then
         if "$_MERGE_PY" "$_MERGE_SCRIPT" "$_SYS_YAML" "$_USR_YAML" "$APP/librechat.yaml" "$HOME" 2>/dev/null; then
             log "Merged librechat.yaml (system + user, paths adjusted to $HOME)"
