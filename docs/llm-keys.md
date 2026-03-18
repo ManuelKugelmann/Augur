@@ -37,7 +37,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://console.groq.com/keys |
 | **Free limits** | 14,400 req/day (varies by model), 6K-30K tokens/min |
-| **Best models** | `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `mixtral-8x7b-32768` |
+| **Best models** | `openai/gpt-oss-120b`, `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `kimi-k2-0905` |
 | **Env var** | `GROQ_API_KEY=gsk_...` |
 | **Notes** | Custom LPU hardware, extremely fast. Best free option for daily use. |
 
@@ -47,7 +47,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://aistudio.google.com/apikey |
 | **Free limits** | 15 RPM, 1M tokens/day (Gemini Flash) |
-| **Best models** | `gemini-2.0-flash`, `gemini-2.0-flash-lite`, `gemini-1.5-flash` |
+| **Best models** | `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-3-flash-preview` |
 | **Env var** | `GEMINI_API_KEY=AI...` |
 | **Notes** | Very generous token limits. 1M context on paid tier. |
 
@@ -57,7 +57,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://console.mistral.ai/api-keys |
 | **Free limits** | 1 req/sec, 500K tokens/min |
-| **Best models** | `mistral-small-latest`, `codestral-latest` |
+| **Best models** | `mistral-small-latest`, `mistral-large-latest`, `magistral-small-latest`, `devstral-small-latest` |
 | **Env var** | `MISTRAL_API_KEY=...` |
 | **Notes** | Codestral is great for code tasks. Free tier very generous. |
 
@@ -67,7 +67,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://cloud.cerebras.ai |
 | **Free limits** | 30 RPM, 14,400 req/day |
-| **Best models** | `llama-3.3-70b`, `qwen-3-235b`, `llama-3.1-8b` |
+| **Best models** | `qwen3-235b`, `gpt-oss-120b`, `llama3.1-8b` |
 | **Env var** | `CEREBRAS_API_KEY=csk-...` |
 | **Notes** | Very fast inference on open models. |
 
@@ -77,29 +77,9 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://dashboard.cohere.com/api-keys |
 | **Free limits** | 20 RPM, 1,000 req/month |
-| **Best models** | `command-a-03-2025`, `command-r-plus-08-2024` |
+| **Best models** | `command-a-03-2025`, `command-a-reasoning-08-2025`, `command-r7b-12-2024` |
 | **Env var** | `COHERE_API_KEY=...` |
 | **Notes** | Good for RAG use cases. Lower monthly limit but capable models. |
-
-### SambaNova -- Trial credits
-
-| | |
-|---|---|
-| **Signup** | https://cloud.sambanova.ai |
-| **Free limits** | $5 trial credit (3 month expiry) |
-| **Best models** | `DeepSeek-V3-0324`, `Meta-Llama-3.3-70B-Instruct`, `Qwen2.5-72B-Instruct` |
-| **Env var** | `SAMBANOVA_API_KEY=...` |
-| **Notes** | Very fast inference. Trial credits, not perpetual free tier. |
-
-### HuggingFace -- Open model hub
-
-| | |
-|---|---|
-| **Signup** | https://huggingface.co/settings/tokens |
-| **Free limits** | Rate-limited free inference API |
-| **Best models** | `Qwen/Qwen2.5-72B-Instruct`, `meta-llama/Llama-3.3-70B-Instruct` |
-| **Env var** | `HF_API_KEY=hf_...` |
-| **Notes** | Huge model selection. Some models may have queue times. |
 
 ### GitHub Models -- Free via GitHub PAT
 
@@ -107,7 +87,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://github.com/settings/tokens (PAT with no scopes needed) |
 | **Free limits** | Rate-limited, generous for personal use |
-| **Best models** | `gpt-4o-mini`, `Meta-Llama-3.1-405B-Instruct`, `Mistral-large-2411`, `Phi-4` |
+| **Best models** | `gpt-4o-mini`, `o4-mini`, `Phi-4` |
 | **Env var** | `GITHUB_MODELS_PAT=ghp_...` |
 | **Notes** | Uses your GitHub account. Access via [GitHub Marketplace Models](https://github.com/marketplace?type=models). |
 
@@ -117,7 +97,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://dashscope.console.aliyun.com/apiKey |
 | **Free limits** | 1M free tokens/month, rate-limited |
-| **Best models** | `qwen-plus`, `qwen-turbo`, `qwen-max`, `qwen-long` |
+| **Best models** | `qwen3-max`, `qwen-plus`, `qwen-flash`, `qwen-long` |
 | **Env var** | `DASHSCOPE_API_KEY=sk-...` |
 | **Notes** | Alibaba's Qwen family. International endpoint. [Landing page](https://www.alibabacloud.com/en/campaign/qwen-ai-landing-page). |
 
@@ -127,7 +107,7 @@ Reference: [cheahjs/free-llm-api-resources](https://github.com/cheahjs/free-llm-
 |---|---|
 | **Signup** | https://openrouter.ai/keys |
 | **Free limits** | 20 RPM, 50 req/day (free models only, `:free` suffix) |
-| **Best models** | `google/gemini-2.0-flash-exp:free`, `meta-llama/llama-3.3-70b-instruct:free` |
+| **Best models** | `qwen/qwen3-coder:free`, `deepseek/deepseek-r1:free`, `meta-llama/llama-3.3-70b-instruct:free` |
 | **Env var** | `OPENROUTER_API_KEY=sk-or-...` |
 | **Notes** | Aggregates many providers. Free models marked with `:free`. Also has paid models (see below). |
 
@@ -149,7 +129,7 @@ For a free multi-model LibreChat setup, use these 3 together:
 |---|---|
 | **Signup** | https://platform.openai.com/api-keys |
 | **Pricing** | Pay-per-token, prepaid credits |
-| **Best models** | `gpt-4o`, `gpt-4o-mini`, `o3-mini` |
+| **Best models** | `gpt-4o`, `o4-mini`, `gpt-4o-mini` |
 | **Env var** | `OPENAI_API_KEY=sk-...` |
 | **Notes** | Native LibreChat endpoint (no custom config needed). Set in `.env` and it works. |
 
@@ -179,7 +159,7 @@ For a free multi-model LibreChat setup, use these 3 together:
 |---|---|
 | **Signup** | https://aistudio.google.com/apikey |
 | **Pricing** | Pay-per-token (same key as free tier, billing enabled) |
-| **Best models** | `gemini-2.0-pro`, `gemini-2.0-flash` (higher limits) |
+| **Best models** | `gemini-2.5-pro`, `gemini-2.5-flash` (higher limits) |
 | **Env var** | `GEMINI_API_KEY=AI...` |
 | **Notes** | Same key as free tier. Enable billing for higher rate limits and pro models. |
 
@@ -189,7 +169,7 @@ For a free multi-model LibreChat setup, use these 3 together:
 |---|---|
 | **Signup** | https://console.mistral.ai/api-keys |
 | **Pricing** | Pay-per-token |
-| **Best models** | `mistral-large-latest`, `codestral-latest` (higher limits) |
+| **Best models** | `mistral-large-latest`, `devstral-small-latest` (higher limits) |
 | **Env var** | `MISTRAL_API_KEY=...` |
 | **Notes** | Same key as free tier. Enable billing for higher limits and large model access. |
 
@@ -245,8 +225,6 @@ GEMINI_API_KEY=AIza...
 # MISTRAL_API_KEY=...
 # CEREBRAS_API_KEY=csk-...
 # COHERE_API_KEY=...
-# SAMBANOVA_API_KEY=...
-# HF_API_KEY=hf_...
 # GITHUB_MODELS_PAT=ghp_...
 # DASHSCOPE_API_KEY=sk-...
 
@@ -275,7 +253,7 @@ endpoints:
       apiKey: "${GROQ_API_KEY}"
       baseURL: "https://api.groq.com/openai/v1"
       models:
-        default: [llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b-32768, gemma2-9b-it]
+        default: [openai/gpt-oss-120b, llama-3.3-70b-versatile, llama-3.1-8b-instant, kimi-k2-0905]
         fetch: false  # true fetches all provider models — use false for curated list
       titleConvo: true
       titleModel: "llama-3.1-8b-instant"
@@ -286,18 +264,18 @@ endpoints:
       apiKey: "${GEMINI_API_KEY}"
       baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
       models:
-        default: [gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-flash]
+        default: [gemini-2.5-flash, gemini-2.5-pro, gemini-3-flash-preview]
         fetch: false
       titleConvo: true
-      titleModel: "gemini-2.0-flash-lite"
+      titleModel: "gemini-2.5-flash"
       modelDisplayLabel: "Gemini"
 
-    # ── Mistral (free tier: mistral-small, codestral) ──
+    # ── Mistral (free tier: mistral-small) ──
     - name: "Mistral"
       apiKey: "${MISTRAL_API_KEY}"
       baseURL: "https://api.mistral.ai/v1"
       models:
-        default: [mistral-small-latest, codestral-latest, mistral-large-latest]
+        default: [mistral-small-latest, mistral-large-latest, magistral-small-latest, devstral-small-latest]
         fetch: false
       titleConvo: true
       titleModel: "mistral-small-latest"
@@ -308,10 +286,10 @@ endpoints:
       apiKey: "${CEREBRAS_API_KEY}"
       baseURL: "https://api.cerebras.ai/v1"
       models:
-        default: [llama-3.3-70b, llama-3.1-8b, qwen-3-235b]
+        default: [qwen3-235b, gpt-oss-120b, llama3.1-8b]
         fetch: false
       titleConvo: true
-      titleModel: "llama-3.1-8b"
+      titleModel: "llama3.1-8b"
       modelDisplayLabel: "Cerebras"
 
     # ── Cohere (free, 20 RPM / 1K req/month) ──
@@ -319,40 +297,18 @@ endpoints:
       apiKey: "${COHERE_API_KEY}"
       baseURL: "https://api.cohere.com/compatibility/v1"
       models:
-        default: [command-a-03-2025, command-r-plus-08-2024, command-r-08-2024]
+        default: [command-a-03-2025, command-a-reasoning-08-2025, command-r7b-12-2024]
         fetch: false
       titleConvo: true
-      titleModel: "command-r-08-2024"
+      titleModel: "command-r7b-12-2024"
       modelDisplayLabel: "Cohere"
-
-    # ── SambaNova (free $5 trial credits) ──
-    - name: "SambaNova"
-      apiKey: "${SAMBANOVA_API_KEY}"
-      baseURL: "https://api.sambanova.ai/v1"
-      models:
-        default: [DeepSeek-V3-0324, Meta-Llama-3.3-70B-Instruct, Qwen2.5-72B-Instruct]
-        fetch: false
-      titleConvo: true
-      titleModel: "Meta-Llama-3.3-70B-Instruct"
-      modelDisplayLabel: "SambaNova"
-
-    # ── HuggingFace Inference (free tier) ──
-    - name: "HuggingFace"
-      apiKey: "${HF_API_KEY}"
-      baseURL: "https://router.huggingface.co/v1"
-      models:
-        default: [Qwen/Qwen2.5-72B-Instruct, mistralai/Mistral-7B-Instruct-v0.3, meta-llama/Llama-3.3-70B-Instruct]
-        fetch: false
-      titleConvo: true
-      titleModel: "mistralai/Mistral-7B-Instruct-v0.3"
-      modelDisplayLabel: "HuggingFace"
 
     # ── GitHub Models (free, uses GitHub PAT) ──
     - name: "GitHub Models"
       apiKey: "${GITHUB_MODELS_PAT}"
       baseURL: "https://models.inference.ai.azure.com"
       models:
-        default: [gpt-4o-mini, Meta-Llama-3.1-405B-Instruct, Mistral-large-2411, Phi-4]
+        default: [gpt-4o-mini, o4-mini, Phi-4]
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
@@ -363,10 +319,10 @@ endpoints:
       apiKey: "${DASHSCOPE_API_KEY}"
       baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
       models:
-        default: [qwen-plus, qwen-turbo, qwen-max, qwen-long]
+        default: [qwen3-max, qwen-plus, qwen-flash, qwen-long]
         fetch: false
       titleConvo: true
-      titleModel: "qwen-turbo"
+      titleModel: "qwen-flash"
       modelDisplayLabel: "Qwen"
 
     # ── OpenRouter (some free models with :free suffix) ──
@@ -375,10 +331,10 @@ endpoints:
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
-          - "google/gemini-2.0-flash-exp:free"
+          - "qwen/qwen3-coder:free"
+          - "nvidia/nemotron-3-super-120b:free"
           - "meta-llama/llama-3.3-70b-instruct:free"
-          - "qwen/qwen-2.5-72b-instruct:free"
-          - "mistralai/mistral-small-3.1-24b-instruct:free"
+          - "deepseek/deepseek-r1:free"
         fetch: false
       titleConvo: true
       titleModel: "meta-llama/llama-3.3-70b-instruct:free"
@@ -387,16 +343,16 @@ endpoints:
     # ── Claude Max (subscription via CLIProxyAPI) ──
     # Requires: augur proxy setup + token
     # See docs/claude-token-wrapper.md for full guide.
-    - name: "Claude Max"
-      apiKey: "dummy"
-      baseURL: "http://localhost:8317/v1"
-      models:
-        default: [claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5-20251001]
-        fetch: false
-      titleConvo: true
-      titleModel: "claude-sonnet-4-6"
-      directEndpoint: true
-      summarize: false
+    # - name: "Claude Max"
+    #   apiKey: "dummy"
+    #   baseURL: "http://localhost:8317/v1"
+    #   models:
+    #     default: [claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5-20251001]
+    #     fetch: false
+    #   titleConvo: true
+    #   titleModel: "claude-sonnet-4-6"
+    #   directEndpoint: true
+    #   summarize: false
 ```
 
 Only include the providers you have keys for. Delete blocks you don't need.
