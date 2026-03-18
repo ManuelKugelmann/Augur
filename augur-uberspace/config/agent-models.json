@@ -1,12 +1,25 @@
 {
   "_comment": "Model overrides for agents. Layer defaults apply first, then per-agent overrides win. Provider names must match librechat-user.yaml endpoint names (e.g. 'Groq', 'Gemini') or native providers ('anthropic'). Remove this file or use --no-model-overrides to use agents.json built-in defaults.",
+  "_budget": "16 agents spread across 8 free providers to maximize combined free tiers.",
   "defaults": {
-    "L1":      {"provider": "Groq",   "model": "llama-3.3-70b-versatile"},
-    "utility": {"provider": "Groq",   "model": "llama-3.3-70b-versatile"},
-    "L2":      {"provider": "Gemini", "model": "gemini-2.5-flash"},
-    "L3":      {"provider": "Gemini", "model": "gemini-2.5-flash"},
-    "L4":      {"provider": "Gemini", "model": "gemini-2.5-flash"},
-    "L5":      {"provider": "Gemini", "model": "gemini-2.5-pro"}
+    "L1":      {"provider": "Groq",     "model": "llama-3.3-70b-versatile"},
+    "utility": {"provider": "Cerebras", "model": "gpt-oss-120b"},
+    "L2":      {"provider": "Gemini",   "model": "gemini-2.5-flash"},
+    "L3":      {"provider": "Gemini",   "model": "gemini-2.5-pro"},
+    "L4":      {"provider": "Gemini",   "model": "gemini-2.5-flash"},
+    "L5":      {"provider": "Gemini",   "model": "gemini-2.5-pro"}
   },
-  "agents": {}
+  "agents": {
+    "osint-data":           {"provider": "Cerebras",      "model": "qwen3-235b"},
+    "signals-data":         {"provider": "Mistral",       "model": "mistral-small-latest"},
+    "market-analyst":       {"provider": "Mistral",       "model": "mistral-small-latest"},
+    "osint-analyst":        {"provider": "Qwen",          "model": "qwen-plus"},
+    "signals-analyst":      {"provider": "GitHub Models", "model": "gpt-4o-mini"},
+    "cron-planner":         {"provider": "Qwen",          "model": "qwen-plus"},
+    "news-the-augur":       {"provider": "Cohere",        "model": "command-a-03-2025"},
+    "news-der-augur":       {"provider": "OpenRouter",    "model": "google/gemini-2.5-flash:free"},
+    "news-financial-augur": {"provider": "GitHub Models", "model": "gpt-4o-mini"},
+    "news-finanz-augur":    {"provider": "Groq",          "model": "llama-3.3-70b-versatile"},
+    "charter":              {"provider": "Groq",          "model": "llama-3.1-8b-instant"}
+  }
 }
