@@ -50,19 +50,24 @@ _wait_lc() {
     local _max_attempts=36  # 36 x 5s = 180s
     local _ready=false
     for i in $(seq 1 $_max_attempts); do
-        if curl -sf "${_lc_url}/api/health" >/dev/null 2>&1; then
+        if curl -sf "${_lc_url}/health" >/dev/null 2>&1; then
             _ready=true; break
         fi
         if [[ "$((i % 3))" -eq 0 ]]; then
+            local _last_log
+            _last_log=$(journalctl --user -u librechat -n 1 --no-pager -o cat 2>/dev/null || true)
             echo -e "        waiting for LibreChat... (${i}/${_max_attempts}, $((i * 5))s elapsed)"
+            [[ -n "$_last_log" ]] && echo -e "        └─ ${_last_log}"
         fi
         sleep 5
     done
     if [[ "$_ready" == true ]]; then
-        echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/api/health)"
+        echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/health)"
         return 0
     else
         echo -e "        ${RED}✗${NC} LibreChat not ready after $((${_max_attempts} * 5))s"
+        echo ""
+        "$0" check 2>/dev/null || true
         return 1
     fi
 }
@@ -600,11 +605,13 @@ SVCEOF
             else
                 echo ""
                 echo "    You can register later with: augur user"
+                echo "    Or enable public signup with: augur signup on"
             fi
             echo ""
         else
             echo -e "  ${CYAN}First login:${NC}"
             echo "    augur user <email> <password> [display-name]"
+            echo "    augur signup on    # or enable public self-registration"
             echo ""
         fi
         ;;
@@ -635,9 +642,6 @@ SVCEOF
         echo ""
         echo -e "  ${CYAN}Access:${NC}"
         echo "    https://${UBER_HOST:-$(hostname -f 2>/dev/null || echo "$USER.uber.space")}"
-        echo ""
-        echo -e "  ${CYAN}User management:${NC}"
-        echo "    augur user         # register a new user account"
         echo ""
         ;;
     clean)
@@ -1224,6 +1228,11 @@ SVCEOF
             echo "    3. Calls POST ${LC_URL}/api/auth/register"
             echo "    4. Restores original ALLOW_REGISTRATION setting"
             echo "    5. Restarts LibreChat again to lock registration"
+            echo ""
+            echo "  See also:"
+            echo "    augur signup on      Enable public self-registration"
+            echo "    augur signup off     Disable public self-registration"
+            echo "    augur signup status  Show current registration setting"
             exit 0
         fi
         _USER_NAME="${_USER_NAME:-${_USER_EMAIL%%@*}}"
@@ -1677,7 +1686,7 @@ PYEOF
         echo "  augur trigger <a>  Invoke an agent with streaming output"
         echo "  augur worklog      View agent worklogs (file logs + journal notes)"
         echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
-        echo "  augur user         Register a new LibreChat user account"
+        echo "  augur user <email> <pw> [name]  Register a new LibreChat user"
         echo "  augur signup       Enable/disable public self-registration"
         echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
