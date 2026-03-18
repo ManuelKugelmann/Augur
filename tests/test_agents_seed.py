@@ -503,6 +503,8 @@ class TestModelOverrides:
     def test_agent_overrides_reference_valid_names(self, agent_names):
         data = json.loads(MODELS_FILE.read_text())
         for name in data["agents"]:
+            if name.startswith("_"):
+                continue  # skip metadata keys like _design
             assert name in agent_names, f"Override for unknown agent: {name}"
 
     def test_load_model_overrides_missing_file(self):
