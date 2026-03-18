@@ -1280,10 +1280,12 @@ SVCEOF
         fi
         log "  [3/5] POST ${LC_URL}/api/auth/register (email=${_USER_EMAIL}, name=${_USER_NAME})"
         # Register via API
-        _REG_RESP=$(curl -sf -X POST "${LC_URL}/api/auth/register" \
+        _REG_TMP=$(mktemp)
+        _REG_HTTP=$(curl -s -w '%{http_code}' -o "$_REG_TMP" -X POST "${LC_URL}/api/auth/register" \
             -H "Content-Type: application/json" \
-            -d "{\"email\":\"${_USER_EMAIL}\",\"password\":\"${_USER_PASS}\",\"confirm_password\":\"${_USER_PASS}\",\"name\":\"${_USER_NAME}\"}" 2>&1) \
-            && _REG_OK=true || _REG_OK=false
+            -d "{\"email\":\"${_USER_EMAIL}\",\"password\":\"${_USER_PASS}\",\"confirm_password\":\"${_USER_PASS}\",\"name\":\"${_USER_NAME}\"}" 2>&1) || true
+        _REG_RESP=$(cat "$_REG_TMP"); rm -f "$_REG_TMP"
+        if [[ "$_REG_HTTP" =~ ^2 ]]; then _REG_OK=true; else _REG_OK=false; fi
         # Restore registration setting
         if [[ "$_HAD_ALLOW_REG" == true ]]; then
             sed -i "s/^ALLOW_REGISTRATION=.*/$_OLD_ALLOW_REG/" "$_LC_ENV"
@@ -1308,7 +1310,15 @@ SVCEOF
                     || warn "Agent seeding failed (seed manually: augur agents ${_USER_EMAIL} <password>)"
             fi
         else
-            echo -e "${RED}✗${NC} Registration failed: ${_REG_RESP}" >&2
+            echo -e "${RED}✗${NC} Registration failed (HTTP ${_REG_HTTP}):" >&2
+            # Try to extract a readable message from the JSON response
+            if command -v python3 &>/dev/null; then
+                _REG_MSG=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('message',sys.argv[1]))" "$_REG_RESP" 2>/dev/null) \
+                    && echo -e "  ${_REG_MSG}" >&2 \
+                    || echo -e "  ${_REG_RESP}" >&2
+            else
+                echo -e "  ${_REG_RESP}" >&2
+            fi
             exit 1
         fi
         ;;
