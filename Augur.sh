@@ -50,7 +50,7 @@ _wait_lc() {
     local _max_attempts=36  # 36 x 5s = 180s
     local _ready=false
     for i in $(seq 1 $_max_attempts); do
-        if curl -sf "${_lc_url}/api/health" >/dev/null 2>&1; then
+        if curl -sf "${_lc_url}/health" >/dev/null 2>&1; then
             _ready=true; break
         fi
         if [[ "$((i % 3))" -eq 0 ]]; then
@@ -62,10 +62,12 @@ _wait_lc() {
         sleep 5
     done
     if [[ "$_ready" == true ]]; then
-        echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/api/health)"
+        echo -e "        ${GREEN}✓${NC} LibreChat healthy (${_lc_url}/health)"
         return 0
     else
         echo -e "        ${RED}✗${NC} LibreChat not ready after $((${_max_attempts} * 5))s"
+        echo ""
+        "$0" check 2>/dev/null || true
         return 1
     fi
 }
