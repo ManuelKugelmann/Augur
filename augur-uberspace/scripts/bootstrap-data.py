@@ -291,6 +291,103 @@ def build_timeseries_prompt(kind: str, targets: list[dict]) -> str | None:
     return "\n".join(prompt_parts)
 
 
+def build_events_prompt(kind: str, targets: list[dict]) -> str:
+    """Build a prompt to seed current events for a batch of entities."""
+    events_instructions = {
+        "countries": (
+            "Delegate to osint-data to scrape GDELT, disaster feeds, and conflict trackers. "
+            "Look for: active conflicts, sanctions, elections, policy changes, natural disasters, "
+            "economic crises. Also delegate to signals-data for trending news about these countries."
+        ),
+        "stocks": (
+            "Delegate to market-data for recent earnings surprises, significant price moves (>3% daily), "
+            "IPOs, delistings, and rating changes. Delegate to signals-data for trending Reddit/HN "
+            "discussions and breaking news about these stocks."
+        ),
+        "commodities": (
+            "Delegate to market-data for recent price spikes/drops, supply disruptions, "
+            "OPEC decisions. Delegate to osint-data for geopolitical events affecting supply chains."
+        ),
+        "crypto": (
+            "Delegate to market-data for recent price moves. Delegate to signals-data "
+            "for Reddit/HN sentiment and regulatory news."
+        ),
+        "regions": (
+            "Delegate to osint-data for regional events: weather extremes, shipping disruptions "
+            "(Suez, Panama), trade bloc policy changes, humanitarian crises."
+        ),
+    }
+    instructions = events_instructions.get(kind,
+        f"Delegate to appropriate L1 agents to find current events affecting these {kind}.")
+
+    entity_list = "\n".join(f"- **{t['id']}** (region: {t['region']})" for t in targets)
+
+    return (
+        f"## Events Bootstrap: {kind}\n\n"
+        "Seed the events collection with current real-world events for the entities below. "
+        "Delegate to L1 data agents to scrape real data, then store each significant event "
+        "via `event(subtype, summary, data, severity, countries, entities, region, source)`.\n\n"
+        f"### Instructions\n{instructions}\n\n"
+        f"### Entities\n{entity_list}\n\n"
+        "### Rules\n"
+        "1. Only store REAL current events — do not fabricate.\n"
+        "2. Severity: routine=low, notable=medium, major disruption=high, crisis=critical.\n"
+        "3. Link events to entities via `countries` (ISO3) and `entities` (IDs) arrays.\n"
+        "4. Set `source` to data origin (gdelt, reddit, rss, finance, google_news).\n"
+        "5. Valid subtypes: earthquake, volcano, flood, drought, wildfire, conflict, sanctions, "
+        "election, policy, tariff, earnings, ipo, default, signal_change, price_spike, "
+        "supply_disruption, transport, epidemic, sentiment_shift.\n"
+        "6. Skip entities with no current events — don't force-create events.\n"
+        "7. Report: {events_stored: N, by_severity: {...}, errors: N}."
+    )
+
+
+def build_plans_prompt(targets: dict) -> str:
+    """Build a prompt to create initial plans and watchlists for cron-planner."""
+    # Summarize what kinds and how many entities exist
+    kind_summary = ", ".join(f"{k}: {len(v)}" for k, v in sorted(targets.items()))
+
+    return (
+        "## Bootstrap Plans & Watchlists\n\n"
+        "Create initial research plans and watchlists so cron-planner has work from day one. "
+        "First, read any existing plans (`get_notes(kind=\"plan\")`) and watchlists "
+        "(`get_notes(kind=\"watchlist\")`) to avoid duplicates.\n\n"
+        f"**Bootstrapped entity counts**: {kind_summary}\n\n"
+        "### Plans to create (`save_note` with `kind=\"plan\"`):\n\n"
+        "1. **Daily Data Refresh Plan** — title: \"Daily data refresh\"\n"
+        "   Content: schedule for each entity kind, which L1 agent handles it, priority order. "
+        "   Markets/stocks: 2x daily (pre-market, post-close). Commodities/crypto: daily. "
+        "   Countries/regions: weekly. Sources: monthly.\n\n"
+        "2. **High-Priority Watchlist Plan** — title: \"High-priority entities\"\n"
+        "   Content: entities that need closer monitoring. Use `recent_events()` to find entities "
+        "   with severity >= medium. Include reason for watch and suggested check frequency.\n\n"
+        "3. **Coverage Gap Plan** — title: \"Coverage gaps\"\n"
+        "   Content: read bootstrap journal logs (`get_notes(kind=\"journal\", tag=\"bootstrap\")`) "
+        "   and identify kinds/regions with thin data. List what needs deeper enrichment.\n\n"
+        "4. **Analysis Schedule** — title: \"Analysis cadence\"\n"
+        "   Content: when to run L2 analysts and L3 synthesizer. After daily data refresh, "
+        "   on event triggers (severity >= high), weekly deep-dive (Sundays).\n\n"
+        "### Watchlists to create (`save_note` with `kind=\"watchlist\"`):\n\n"
+        "1. **Market Movers** — title: \"Market movers\"\n"
+        "   Content: stocks/ETFs/crypto with highest recent volatility or signal changes. "
+        "   Check `recent_events(subtype=\"signal_change\")` and `recent_events(subtype=\"price_spike\")`.\n\n"
+        "2. **Geopolitical Hotspots** — title: \"Geopolitical hotspots\"\n"
+        "   Content: countries/regions with active conflicts, sanctions, elections, disasters. "
+        "   Check `recent_events(subtype=\"conflict\")`, etc.\n\n"
+        "3. **Supply Chain Risks** — title: \"Supply chain risks\"\n"
+        "   Content: commodities/materials/products with disruption signals. "
+        "   Check `recent_events(subtype=\"supply_disruption\")`.\n\n"
+        "### Rules\n"
+        "- Tag all plans with `[\"bootstrap\", \"initial\"]`.\n"
+        "- Tag all watchlists with `[\"bootstrap\", \"watchlist\"]`.\n"
+        "- Use markdown formatting in content for readability.\n"
+        "- Include specific entity IDs in watchlists (not just categories).\n"
+        "- If no events exist yet (events phase hasn't run), base watchlists on profile data "
+        "  (e.g., countries with high risk_factors, volatile sectors).\n"
+        "- Report: {plans_created: N, watchlists_created: N}."
+    )
+
+
 def batch_targets(targets: list[dict], batch_size: int) -> list[list[dict]]:
     """Split targets into batches."""
     return [targets[i:i + batch_size] for i in range(0, len(targets), batch_size)]
@@ -305,6 +402,8 @@ def run_bootstrap(
     batch_size: int = DEFAULT_BATCH_SIZE,
     dry_run: bool = False,
     timeseries: bool = False,
+    events: bool = False,
+    plans: bool = False,
 ) -> dict:
     """Run the full bootstrap process. Returns summary stats."""
     stats = {"kinds": 0, "batches": 0, "targets": 0, "ok": 0, "errors": 0}
@@ -421,6 +520,83 @@ def run_bootstrap(
                 if not dry_run and i < len(batches):
                     time.sleep(random.uniform(1.0, 4.0))
 
+    # ── Phase 3: Events bootstrap (seed current events) ──
+    if events:
+        # Kinds that benefit from event seeding
+        events_kinds = ["countries", "stocks", "commodities", "crypto", "regions"]
+        ev_kinds = [kind_filter] if kind_filter else [k for k in events_kinds if k in targets]
+        for kind in ev_kinds:
+            kind_targets = targets[kind]
+            ev_batch_size = max(1, batch_size // 2)  # smaller batches — more tool calls
+            batches = batch_targets(kind_targets, ev_batch_size)
+
+            print(f"\n{'='*60}")
+            print(f"Events: {kind} — {len(kind_targets)} targets, {len(batches)} batches")
+            print(f"{'='*60}")
+
+            for i, batch in enumerate(batches, 1):
+                prompt = build_events_prompt(kind, batch)
+                batch_ids = [t["id"] for t in batch]
+                print(f"\n  Events Batch {i}/{len(batches)}: {batch_ids}")
+                stats["batches"] += 1
+                stats["targets"] += len(batch)
+
+                if dry_run:
+                    print(f"    [DRY RUN] Events prompt ({len(prompt)} chars):")
+                    for line in prompt[:500].split("\n"):
+                        print(f"      {line}")
+                    if len(prompt) > 500:
+                        print(f"      ... ({len(prompt) - 500} more chars)")
+                    stats["ok"] += 1
+                    continue
+
+                result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
+
+                if result["status"] == "ok":
+                    content = result.get("content", "")
+                    print(f"    OK — response: {len(content)} chars")
+                    stats["ok"] += 1
+                else:
+                    error = result.get("error", "unknown error")
+                    print(f"    FAIL — {error}", file=sys.stderr)
+                    stats["errors"] += 1
+
+                if not dry_run and i < len(batches):
+                    time.sleep(random.uniform(1.0, 4.0))
+
+    # ── Phase 4: Plans & watchlists (seed cron-planner work) ──
+    if plans:
+        print(f"\n{'='*60}")
+        print("Plans & Watchlists: creating initial plans for cron-planner")
+        print(f"{'='*60}")
+
+        prompt = build_plans_prompt(targets)
+        stats["batches"] += 1
+
+        if dry_run:
+            print(f"  [DRY RUN] Plans prompt ({len(prompt)} chars):")
+            for line in prompt[:800].split("\n"):
+                print(f"    {line}")
+            if len(prompt) > 800:
+                print(f"    ... ({len(prompt) - 800} more chars)")
+            stats["ok"] += 1
+        else:
+            result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
+
+            if result["status"] == "ok":
+                content = result.get("content", "")
+                print(f"  OK — response: {len(content)} chars")
+                if content:
+                    summary = content[-300:] if len(content) > 300 else content
+                    for line in summary.split("\n")[-5:]:
+                        if line.strip():
+                            print(f"  > {line.strip()[:100]}")
+                stats["ok"] += 1
+            else:
+                error = result.get("error", "unknown error")
+                print(f"  FAIL — {error}", file=sys.stderr)
+                stats["errors"] += 1
+
     return stats
 
 
@@ -479,7 +655,27 @@ def main():
         action="store_true",
         help="Also bootstrap rough historical timeseries data via store_snapshot()",
     )
+    parser.add_argument(
+        "--events",
+        action="store_true",
+        help="Seed current events for bootstrapped entities via event()",
+    )
+    parser.add_argument(
+        "--plans",
+        action="store_true",
+        help="Create initial plans and watchlists for cron-planner",
+    )
+    parser.add_argument(
+        "--all-phases",
+        action="store_true",
+        help="Run all phases: profiles + timeseries + events + plans",
+    )
     args = parser.parse_args()
+
+    if args.all_phases:
+        args.timeseries = True
+        args.events = True
+        args.plans = True
 
     # Load .env for API key (unless already in environment)
     load_env()
@@ -533,6 +729,8 @@ def main():
         batch_size=args.batch_size,
         dry_run=args.dry_run,
         timeseries=args.timeseries,
+        events=args.events,
+        plans=args.plans,
     )
 
     # Summary

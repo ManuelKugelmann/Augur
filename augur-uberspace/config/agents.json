@@ -206,18 +206,21 @@
     "_layer": "L4",
     "_group": "bootstrap",
     "name": "Bootstrap",
-    "description": "Bulk profile bootstrapper. Delegates to L1 data agents to fetch real data, then stores profiles and snapshots.",
+    "description": "Bulk bootstrapper. Delegates to L1 data agents for profiles, events, snapshots, and creates initial plans for cron-planner.",
     "instructions": "See prompts/bootstrap.md",
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
     "tools": [
       "sys__server__sys_mcp_augur",
+      "sys__server__sys_mcp_google-news",
       "sys__server__sys_mcp_webresearch",
       "sys__server__sys_mcp_fetch"
     ],
     "conversation_starters": [
       "Bootstrap countries profiles: fetch macro data via L1 agents and store profiles.",
       "Bootstrap stocks profiles: fetch price + fundamentals via market-data agent.",
+      "Seed current events: delegate to L1 agents to scrape recent news, disasters, market moves and store as events.",
+      "Create initial plans and watchlists for cron-planner based on bootstrap results.",
       "Resume bootstrap: read journal logs (store_get_notes kind=journal tag=bootstrap) and report coverage gaps."
     ],
     "edges": [
