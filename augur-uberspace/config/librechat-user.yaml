@@ -124,7 +124,6 @@ endpoints:
       models:
         default:
           - gpt-4o-mini
-          - o4-mini
           - Phi-4
         fetch: false
       titleConvo: true
@@ -141,7 +140,6 @@ endpoints:
           - qwen3-max
           - qwen-plus
           - qwen-flash
-          - qwen-long
         fetch: false
       titleConvo: true
       titleModel: "qwen-flash"
@@ -154,13 +152,13 @@ endpoints:
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
-          - "google/gemini-2.5-flash:free"
-          - "nvidia/nemotron-3-super-120b:free"
-          - "meta-llama/llama-3.3-70b-instruct:free"
-          - "deepseek/deepseek-r1:free"
+          - "google/gemini-2.5-flash-preview:free"
+          - "meta-llama/llama-4-scout:free"
+          - "deepseek/deepseek-r1-0528:free"
+          - "qwen/qwen3-235b:free"
         fetch: false
       titleConvo: true
-      titleModel: "meta-llama/llama-3.3-70b-instruct:free"
+      titleModel: "google/gemini-2.5-flash-preview:free"
       modelDisplayLabel: "OpenRouter"
 
     # ── Claude Max (subscription via CLIProxyAPI) ──
