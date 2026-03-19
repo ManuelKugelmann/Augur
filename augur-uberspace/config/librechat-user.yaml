@@ -148,13 +148,13 @@ endpoints:
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
-          - "google/gemini-2.5-flash-preview:free"
-          - "meta-llama/llama-4-scout:free"
-          - "deepseek/deepseek-r1-0528:free"
-          - "qwen/qwen3-235b:free"
+          - "openai/gpt-oss-120b:free"
+          - "nvidia/nemotron-3-super-120b-a12b:free"
+          - "meta-llama/llama-3.3-70b-instruct:free"
+          - "nousresearch/hermes-3-llama-3.1-405b:free"
         fetch: true
       titleConvo: true
-      titleModel: "google/gemini-2.5-flash-preview:free"
+      titleModel: "openai/gpt-oss-120b:free"
       modelDisplayLabel: "OpenRouter"
 
     # ── Claude Max (subscription via CLIProxyAPI) ──
