@@ -16,12 +16,17 @@ Usage:
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 
 try:
     import httpx
 except ImportError:
     httpx = None  # type: ignore[assignment]
+
+# Retry config for rate-limited requests
+MAX_RETRIES = 4
+BACKOFF_BASE = 2  # seconds: 2, 4, 8, 16
 
 
 def load_env(env_file: str | None = None) -> None:
@@ -125,71 +130,121 @@ class AgentClient:
         usage: dict = {}
         log_fh = None
 
-        try:
-            if log_file:
-                os.makedirs(os.path.dirname(log_file), exist_ok=True)
-                log_fh = open(log_file, "w")
-                log_fh.write(f"[{ts}] agent_id={agent_id}\n")
-                log_fh.write(f"[{ts}] prompt: {message}\n")
-                log_fh.write(f"{'=' * 60}\n")
+        for attempt in range(MAX_RETRIES + 1):
+            content_parts = []
+            usage = {}
 
-            with httpx.stream(
-                "POST",
-                f"{self.base_url}/api/agents/v1/chat/completions",
-                headers=self.headers,
-                json={
-                    "model": agent_id,
-                    "messages": [{"role": "user", "content": message}],
-                    "stream": True,
-                },
-                timeout=timeout,
-            ) as resp:
-                if resp.status_code != 200:
-                    error_body = ""
-                    for chunk in resp.iter_text():
-                        error_body += chunk
-                    return {"status": "error", "content": "",
-                            "error": f"HTTP {resp.status_code}: {error_body[:500]}"}
+            try:
+                if log_file:
+                    mode = "w" if attempt == 0 else "a"
+                    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+                    log_fh = open(log_file, mode)
+                    if attempt == 0:
+                        log_fh.write(f"[{ts}] agent_id={agent_id}\n")
+                        log_fh.write(f"[{ts}] prompt: {message}\n")
+                        log_fh.write(f"{'=' * 60}\n")
+                    else:
+                        log_fh.write(f"\n[{ts}] retry {attempt}/{MAX_RETRIES}\n")
 
-                for line in resp.iter_lines():
-                    if not line or not line.startswith("data: "):
+                with httpx.stream(
+                    "POST",
+                    f"{self.base_url}/api/agents/v1/chat/completions",
+                    headers=self.headers,
+                    json={
+                        "model": agent_id,
+                        "messages": [{"role": "user", "content": message}],
+                        "stream": True,
+                    },
+                    timeout=timeout,
+                ) as resp:
+                    if resp.status_code == 429 and attempt < MAX_RETRIES:
+                        # Rate limited — backoff and retry
+                        wait = BACKOFF_BASE ** (attempt + 1)
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after and retry_after.isdigit():
+                            wait = max(wait, int(retry_after))
+                        print(f"    Rate limited (429), retrying in {wait}s "
+                              f"(attempt {attempt + 1}/{MAX_RETRIES})",
+                              file=sys.stderr)
+                        if log_fh:
+                            log_fh.close()
+                            log_fh = None
+                        time.sleep(wait)
                         continue
-                    data_str = line[6:].strip()
-                    if data_str == "[DONE]":
-                        break
-                    try:
-                        chunk = json.loads(data_str)
-                        choices = chunk.get("choices", [])
-                        if choices:
-                            delta = choices[0].get("delta", {})
-                            text = delta.get("content", "")
-                            if text:
-                                content_parts.append(text)
-                                if stream_to_stdout:
-                                    sys.stdout.write(text)
-                                    sys.stdout.flush()
-                                if log_fh:
-                                    log_fh.write(text)
-                                    log_fh.flush()
-                        if "usage" in chunk:
-                            usage = chunk["usage"]
-                    except json.JSONDecodeError:
-                        pass
 
-            if log_fh:
-                log_fh.write(f"\n{'=' * 60}\n[{ts}] done\n")
+                    if resp.status_code != 200:
+                        error_body = ""
+                        for chunk in resp.iter_text():
+                            error_body += chunk
+                        if resp.status_code >= 500 and attempt < MAX_RETRIES:
+                            wait = BACKOFF_BASE ** (attempt + 1)
+                            print(f"    Server error ({resp.status_code}), retrying in {wait}s "
+                                  f"(attempt {attempt + 1}/{MAX_RETRIES})",
+                                  file=sys.stderr)
+                            if log_fh:
+                                log_fh.close()
+                                log_fh = None
+                            time.sleep(wait)
+                            continue
+                        return {"status": "error", "content": "",
+                                "error": f"HTTP {resp.status_code}: {error_body[:500]}"}
 
-        except httpx.TimeoutException:
-            return {"status": "timeout", "content": "".join(content_parts),
-                    "error": "Request timed out", "usage": usage}
-        except httpx.HTTPError as e:
-            return {"status": "error", "content": "".join(content_parts),
-                    "error": str(e), "usage": usage}
-        finally:
-            if log_fh:
-                log_fh.close()
+                    for line in resp.iter_lines():
+                        if not line or not line.startswith("data: "):
+                            continue
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            choices = chunk.get("choices", [])
+                            if choices:
+                                delta = choices[0].get("delta", {})
+                                text = delta.get("content", "")
+                                if text:
+                                    content_parts.append(text)
+                                    if stream_to_stdout:
+                                        sys.stdout.write(text)
+                                        sys.stdout.flush()
+                                    if log_fh:
+                                        log_fh.write(text)
+                                        log_fh.flush()
+                            if "usage" in chunk:
+                                usage = chunk["usage"]
+                        except json.JSONDecodeError:
+                            pass
 
-        return {"status": "ok", "content": "".join(content_parts), "usage": usage}
+                if log_fh:
+                    log_fh.write(f"\n{'=' * 60}\n[{ts}] done\n")
+
+                return {"status": "ok", "content": "".join(content_parts), "usage": usage}
+
+            except httpx.TimeoutException:
+                if attempt < MAX_RETRIES:
+                    wait = BACKOFF_BASE ** (attempt + 1)
+                    print(f"    Timeout, retrying in {wait}s "
+                          f"(attempt {attempt + 1}/{MAX_RETRIES})",
+                          file=sys.stderr)
+                    time.sleep(wait)
+                    continue
+                return {"status": "timeout", "content": "".join(content_parts),
+                        "error": "Request timed out", "usage": usage}
+            except httpx.HTTPError as e:
+                if attempt < MAX_RETRIES:
+                    wait = BACKOFF_BASE ** (attempt + 1)
+                    print(f"    Network error, retrying in {wait}s "
+                          f"(attempt {attempt + 1}/{MAX_RETRIES})",
+                          file=sys.stderr)
+                    time.sleep(wait)
+                    continue
+                return {"status": "error", "content": "".join(content_parts),
+                        "error": str(e), "usage": usage}
+            finally:
+                if log_fh:
+                    log_fh.close()
+                    log_fh = None
+
+        return {"status": "error", "content": "", "error": "Max retries exceeded"}
 
     def close(self):
         """No-op for compatibility (httpx calls are per-request)."""
