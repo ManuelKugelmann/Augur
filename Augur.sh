@@ -68,14 +68,16 @@ _post_info() {
     echo "       augur models test              # verify all configured providers"
     echo ""
     echo -e "  ${CYAN}Agent setup:${NC}"
-    echo "    augur agents EMAIL PASSWORD                  # seed core agents"
-    echo "    augur agents --group trading EMAIL PASSWORD   # add trading agents"
-    echo "    augur agents --all EMAIL PASSWORD             # all agent groups"
+    echo "    augur agents EMAIL PASSWORD                         # seed core agents"
+    echo "    augur agents --bootstrap EMAIL PASSWORD                # Qwen models (free tokens, core only)"
+    echo "    augur agents --trading EMAIL PASSWORD                 # add trading agents"
+    echo "    augur agents --all EMAIL PASSWORD                    # all agent groups"
     echo ""
     echo -e "  ${CYAN}Bootstrap (first run):${NC}"
-    echo "    1. augur agents EMAIL PASSWORD               # seed core agents"
+    echo "    1. augur agents --bootstrap EMAIL PASSWORD             # seed core with Qwen"
     echo "    2. Add AUGUR_AGENTS_API_KEY to .env"
-    echo "    3. augur bootstrap                           # populate profile data"
+    echo "    3. augur bootstrap                                   # populate profile data"
+    echo "    4. augur agents EMAIL PASSWORD                       # switch to production models"
     echo ""
 }
 
@@ -1266,8 +1268,11 @@ SVCEOF
             case "$1" in
                 --dry-run) _AGENTS_ARGS+=("--dry-run"); shift ;;
                 --all) _AGENTS_ARGS+=("--all"); shift ;;
-                --group) _AGENTS_ARGS+=("--group" "$2"); shift 2 ;;
-                --group=*) _AGENTS_ARGS+=("--group" "${1#*=}"); shift ;;
+                --trading) _AGENTS_ARGS+=("--group" "trading"); shift ;;
+                --news) _AGENTS_ARGS+=("--group" "news"); shift ;;
+                --bootstrap) _AGENTS_ARGS+=("--mode" "bootstrap"); shift ;;
+                --mode) _AGENTS_ARGS+=("--mode" "$2"); shift 2 ;;
+                --mode=*) _AGENTS_ARGS+=("--mode" "${1#*=}"); shift ;;
                 -*) echo "Unknown flag: $1" >&2; exit 1 ;;
                 *)
                     if [[ -z "$_AGENTS_EMAIL" ]]; then _AGENTS_EMAIL="$1"
@@ -1286,17 +1291,22 @@ SVCEOF
             echo ""
             echo "  Groups (core is always included):"
             echo "    (default)       Core agents only (data + analysis + planning)"
-            echo "    --group trading Add trading agents (broker)"
-            echo "    --group news    Add news agents (4 brands)"
+            echo "    --trading       Add trading agents (broker)"
+            echo "    --news          Add news agents (4 brands)"
             echo "    --all           All groups"
+            echo ""
+            echo "  Mode:"
+            echo "    (default)           Regular/continuous (production providers)"
+            echo "    --bootstrap         Use Qwen models for initial data seeding (core only)"
             echo ""
             echo "  Options:"
             echo "    --dry-run       Preview only"
             echo ""
             echo "  Examples:"
             echo "    augur agents admin@example.com mypassword"
-            echo "    augur agents --group trading admin@example.com mypassword"
-            echo "    augur agents --group trading --group news admin@example.com mypassword"
+            echo "    augur agents --bootstrap admin@example.com mypassword"
+            echo "    augur agents --trading admin@example.com mypassword"
+            echo "    augur agents --trading --news admin@example.com mypassword"
             echo "    augur agents --all admin@example.com mypassword"
             echo "    augur agents --dry-run"
         else
