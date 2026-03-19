@@ -152,7 +152,7 @@ endpoints:
           - "meta-llama/llama-4-scout:free"
           - "deepseek/deepseek-r1-0528:free"
           - "qwen/qwen3-235b:free"
-        fetch: false
+        fetch: true
       titleConvo: true
       titleModel: "google/gemini-2.5-flash-preview:free"
       modelDisplayLabel: "OpenRouter"
