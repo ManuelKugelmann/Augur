@@ -1,14 +1,14 @@
 {
   "_comment": "Model overrides for agents. Layer defaults apply first, then per-agent overrides win. Provider names must match librechat-user.yaml endpoint names. Remove this file or use --no-model-overrides to use agents.json built-in defaults.",
   "_budget_notes": {
-    "Groq":          "~500K tok/day (70b model), 30 RPM — workhorse, fast",
-    "Cerebras":      "1M tok/day free, 30 RPM — workhorse, fast",
-    "Gemini":        "250 RPD (Flash), 100 RPD (Pro), 10/5 RPM — quality but daily caps",
-    "GitHub Models": "50-150 RPD depending on model — moderate",
-    "Mistral":       "1B tok/month but only 2 RPM — low-frequency only",
-    "Cohere":        "1,000 req/month (~33/day) — very low volume",
-    "OpenRouter":    "50 req/day (free, no credits) — very low volume",
-    "Qwen":          "~1M tokens per model — limited, prototyping"
+    "Groq":          "30 RPM, ~500K tok/day (70B), 14.4K RPD — workhorse, fast",
+    "Cerebras":      "1M tok/day, 30 RPM, 8K ctx free — workhorse, fastest",
+    "Gemini":        "Flash 10 RPM / 250 RPD, Pro 5 RPM / 100 RPD — quality but daily caps",
+    "GitHub Models": "10 RPM / 50 RPD (high-end), ~150 RPD (small) — moderate",
+    "Mistral":       "1B tok/month, all models, but only 2 RPM — low-frequency only",
+    "Cohere":        "20 RPM, 1K req/month (~33/day) — very low volume",
+    "OpenRouter":    "20 RPM / 50 RPD (:free models, no credits) — very low volume",
+    "Qwen":          "1M tokens/model one-time grant, then paid — prototyping only"
   },
   "defaults": {
     "L1":      {"provider": "Groq",     "model": "llama-3.3-70b-versatile"},

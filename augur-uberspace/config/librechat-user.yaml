@@ -116,7 +116,7 @@ endpoints:
       titleModel: "command-r7b-12-2024"
       modelDisplayLabel: "Cohere"
 
-    # ── GitHub Models (free: ~50-150 RPD, rate-limited per model) ──
+    # ── GitHub Models (free: 10 RPM / 50 RPD high-end, ~150 RPD small) ──
     # Key: https://github.com/settings/tokens (classic PAT or fine-grained with "Models" read permission)
     - name: "GitHub Models"
       apiKey: "${GITHUB_MODELS_PAT}"
@@ -130,7 +130,7 @@ endpoints:
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "GitHub Models"
 
-    # ── Alibaba Cloud / Qwen (free: ~1M tokens/model, intl tier) ──
+    # ── Alibaba Cloud / Qwen (free: 1M tokens/model one-time, then paid) ──
     # Key: https://dashscope.console.aliyun.com/apiKey
     - name: "Qwen"
       apiKey: "${DASHSCOPE_API_KEY}"
@@ -145,7 +145,7 @@ endpoints:
       titleModel: "qwen-flash"
       modelDisplayLabel: "Qwen"
 
-    # ── OpenRouter (free: ~50 req/day on :free models, 27+ models) ──
+    # ── OpenRouter (free: 20 RPM / 50 RPD on :free models, ~29 models) ──
     # Key: https://openrouter.ai/keys
     - name: "OpenRouter"
       apiKey: "${OPENROUTER_API_KEY}"
