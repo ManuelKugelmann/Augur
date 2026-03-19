@@ -94,6 +94,7 @@ endpoints:
       baseURL: "https://api.cerebras.ai/v1"
       models:
         default:
+          - qwen-3-235b-a22b-instruct-2507
           - llama3.1-8b
         fetch: true
       titleConvo: true
