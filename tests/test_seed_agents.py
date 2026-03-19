@@ -191,6 +191,38 @@ AGENTS_JSON = os.path.join(
 AGENTS_JSON = os.path.normpath(AGENTS_JSON)
 
 
+BOOTSTRAP_MODELS_JSON = os.path.join(
+    os.path.dirname(__file__), os.pardir,
+    "augur-uberspace", "config", "agent-models-bootstrap.json",
+)
+BOOTSTRAP_MODELS_JSON = os.path.normpath(BOOTSTRAP_MODELS_JSON)
+
+
+class TestBootstrapModelsJson:
+    @pytest.fixture(scope="class")
+    def data(self):
+        with open(BOOTSTRAP_MODELS_JSON) as f:
+            return json.load(f)
+
+    def test_has_required_keys(self, data):
+        assert "defaults" in data
+        assert "agents" in data
+
+    def test_all_agent_names_match_agents_json(self, data):
+        with open(AGENTS_JSON) as f:
+            agents = json.load(f)
+        expected = {a["_name"] for a in agents}
+        actual = {k for k in data["agents"] if not k.startswith("_")}
+        assert actual == expected, f"Mismatch: extra={actual - expected}, missing={expected - actual}"
+
+    def test_data_agents_use_qwen(self, data):
+        for name in ("market-data", "osint-data", "signals-data"):
+            assert data["agents"][name]["provider"] == "Qwen"
+
+    def test_cron_planner_uses_qwen(self, data):
+        assert data["agents"]["cron-planner"]["provider"] == "Qwen"
+
+
 class TestAgentsJson:
     @pytest.fixture(scope="class")
     def agents(self):
@@ -290,6 +322,63 @@ class TestConnectivityCheck:
 
         assert exc_info.value.code == 1
         assert get_count() > 1  # retried at least once
+
+    def test_mode_continuous_selects_default_models(self, seed_agents, monkeypatch):
+        """--mode continuous selects agent-models.json."""
+        expected = seed_agents.MODE_MODELS_FILES["continuous"]
+        assert expected.endswith("agent-models.json")
+        assert os.path.isfile(expected), f"Missing: {expected}"
+
+    def test_mode_bootstrap_selects_bootstrap_models(self, seed_agents, monkeypatch):
+        """--mode bootstrap selects agent-models-bootstrap.json."""
+        expected = seed_agents.MODE_MODELS_FILES["bootstrap"]
+        assert expected.endswith("agent-models-bootstrap.json")
+        assert os.path.isfile(expected), f"Missing: {expected}"
+
+    def test_valid_modes(self, seed_agents):
+        """Both mode files are valid JSON with required structure."""
+        for mode, path in seed_agents.MODE_MODELS_FILES.items():
+            with open(path) as f:
+                data = json.load(f)
+            assert "defaults" in data, f"{mode}: missing 'defaults'"
+            assert "agents" in data, f"{mode}: missing 'agents'"
+            # Defaults must have L1-L4 at minimum
+            for layer in ("L1", "L2", "L3", "L4"):
+                assert layer in data["defaults"], f"{mode}: missing default for {layer}"
+                assert "provider" in data["defaults"][layer]
+                assert "model" in data["defaults"][layer]
+
+    def test_bootstrap_uses_qwen_for_data_agents(self, seed_agents):
+        """Bootstrap mode must assign Qwen to L1 data agents."""
+        overrides = seed_agents.load_model_overrides(
+            seed_agents.MODE_MODELS_FILES["bootstrap"]
+        )
+        agents = overrides["agents"]
+        for name in ("market-data", "osint-data", "signals-data"):
+            assert agents[name]["provider"] == "Qwen", (
+                f"Bootstrap: {name} should use Qwen, got {agents[name]['provider']}"
+            )
+
+    def test_continuous_no_qwen_in_l1_l4(self, seed_agents):
+        """Continuous mode must not use Qwen/GitHub Models/OpenRouter/Cohere in L1-L4."""
+        restricted = {"Qwen", "GitHub Models", "OpenRouter"}
+        overrides = seed_agents.load_model_overrides(
+            seed_agents.MODE_MODELS_FILES["continuous"]
+        )
+        agents_json_path = os.path.join(
+            os.path.dirname(__file__), os.pardir,
+            "augur-uberspace", "config", "agents.json",
+        )
+        with open(os.path.normpath(agents_json_path)) as f:
+            agent_defs = json.load(f)
+        # Apply overrides
+        seed_agents.apply_model_overrides(agent_defs, overrides)
+        for a in agent_defs:
+            if a["_layer"] in ("L1", "L2", "L3", "L4"):
+                assert a["provider"] not in restricted, (
+                    f"Continuous: {a['_name']} ({a['_layer']}) uses restricted "
+                    f"provider {a['provider']}"
+                )
 
     def test_lc_wait_succeeds_after_retry(self, seed_agents, monkeypatch):
         """With --lc-wait, succeeds once LibreChat comes up."""

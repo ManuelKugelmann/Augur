@@ -62,6 +62,20 @@ _post_info() {
     echo -e "  ${CYAN}User management:${NC}"
     echo "    augur signup on|off|status       # public self-registration"
     echo ""
+    echo -e "  ${CYAN}LLM provider setup:${NC}"
+    echo "    1. Add API keys to LibreChat .env  (see docs/llm-keys.md)"
+    echo "    2. Test connectivity:"
+    echo "       augur models test              # verify all configured providers"
+    echo ""
+    echo -e "  ${CYAN}Agent setup:${NC}"
+    echo "    augur agents EMAIL PASSWORD                   # seed agents (continuous mode)"
+    echo "    augur agents EMAIL PASSWORD --mode bootstrap  # seed with Qwen for data seeding"
+    echo ""
+    echo -e "  ${CYAN}Bootstrap (first run):${NC}"
+    echo "    1. augur agents EMAIL PASSWORD --mode bootstrap"
+    echo "    2. augur bootstrap --agent-id AGENT_ID --api-key KEY"
+    echo "    3. augur agents EMAIL PASSWORD --mode continuous   # switch to production"
+    echo ""
 }
 
 # Wait for LibreChat to become healthy (up to ~90s, with progress)
