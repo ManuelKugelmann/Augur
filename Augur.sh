@@ -73,7 +73,7 @@ _post_info() {
     echo ""
     echo -e "  ${CYAN}Bootstrap (first run):${NC}"
     echo "    1. augur agents EMAIL PASSWORD --mode bootstrap"
-    echo "    2. augur bootstrap --agent-id AGENT_ID --api-key KEY"
+    echo "    2. augur bootstrap                                # auto-discovers API key + agent"
     echo "    3. augur agents EMAIL PASSWORD --mode continuous   # switch to production"
     echo ""
 }
@@ -813,15 +813,16 @@ PYEOF
             sleep "$((RANDOM % 180))"   # 0–3 min jitter for agent calls
             LC_URL="http://localhost:${LC_PORT:-3080}"
             mkdir -p "$HOME/logs/agents"
+            PYTHONPATH="$STACK/augur-uberspace/scripts" \
             "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$HOUR" "$MIN" "$HOME/logs/agents" <<'PYEOF' 2>&1 \
                 | while read -r line; do _cron_log "agents: $line"; done
-import httpx, json, sys, os
+import sys, os, glob, time
 from datetime import datetime, timezone
+from agent_client import AgentClient
 
 lc_url, api_key = sys.argv[1], sys.argv[2]
 hour, minute = int(sys.argv[3]), int(sys.argv[4])
 log_dir = sys.argv[5]
-headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
 # ── Dispatch table: (name_match, due_check, message, timeout) ──
 DISPATCH = [
@@ -845,85 +846,26 @@ DISPATCH = [
      "Check augur_due_now() and produce any due articles.", 600),
 ]
 
-# Fetch agent list once
-try:
-    r = httpx.get(f"{lc_url}/api/agents/v1/models",
-                  headers=headers, timeout=10)
-    if r.status_code != 200:
-        print(f"ERROR: agent list {r.status_code}", file=sys.stderr); sys.exit(1)
-    agents = {m["id"]: m for m in r.json().get("data", [])}
-except Exception as e:
-    print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
-
-# Build name->id lookup (match by substring in id or name)
-def find_agent(name_match):
-    for aid, m in agents.items():
-        if name_match in aid.lower() or name_match in m.get("name", "").lower():
-            return aid
-    return None
-
-def stream_agent(agent_id, message, timeout, name_match):
-    """Invoke agent with streaming, write worklog to file, return content."""
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    log_file = os.path.join(log_dir, f"{name_match}_{ts}.log")
-    content_parts = []
-    try:
-        with httpx.stream("POST", f"{lc_url}/api/agents/v1/chat/completions",
-                          headers=headers,
-                          json={"model": agent_id,
-                                "messages": [{"role": "user", "content": message}],
-                                "stream": True},
-                          timeout=timeout) as resp:
-            if resp.status_code != 200:
-                err = f"ERROR {name_match}: {resp.status_code}"
-                with open(log_file, "w") as f:
-                    f.write(f"[{ts}] {err}\n")
-                return err
-            with open(log_file, "w") as f:
-                f.write(f"[{ts}] agent={name_match} id={agent_id}\n")
-                f.write(f"[{ts}] prompt: {message}\n")
-                f.write(f"{'='*60}\n")
-                for line in resp.iter_lines():
-                    if not line or not line.startswith("data: "):
-                        continue
-                    data_str = line[6:]
-                    if data_str.strip() == "[DONE]":
-                        break
-                    try:
-                        chunk = json.loads(data_str)
-                        delta = chunk.get("choices", [{}])[0].get("delta", {})
-                        text = delta.get("content", "")
-                        if text:
-                            content_parts.append(text)
-                            f.write(text)
-                            f.flush()
-                    except json.JSONDecodeError:
-                        pass
-                f.write(f"\n{'='*60}\n")
-                f.write(f"[{ts}] done\n")
-    except Exception as e:
-        with open(log_file, "a") as f:
-            f.write(f"\n[ERROR] {e}\n")
-        return f"ERROR {name_match}: {e}"
-    content = "".join(content_parts)
-    return f"OK {name_match}: {content[:200]}"
+client = AgentClient(lc_url, api_key)
 
 # Invoke due agents
 invoked = 0
 for name_match, due_check, message, timeout in DISPATCH:
     if not due_check(hour, minute):
         continue
-    agent_id = find_agent(name_match)
+    agent_id = client.find_agent(name_match)
     if not agent_id:
         print(f"SKIP {name_match}: agent not found")
         continue
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    log_file = os.path.join(log_dir, f"{name_match}_{ts}.log")
     print(f"invoking {name_match} ({agent_id})")
-    result = stream_agent(agent_id, message, timeout, name_match)
-    print(result)
+    result = client.invoke(agent_id, message, timeout=timeout, log_file=log_file)
+    content = result.get("content", "")
+    print(f"{result['status'].upper()} {name_match}: {content[:200]}")
     invoked += 1
 
 # Clean up old logs (keep last 7 days)
-import glob, time
 cutoff = time.time() - 7 * 86400
 for old_log in glob.glob(os.path.join(log_dir, "*.log")):
     try:
@@ -1236,20 +1178,23 @@ SVCEOF
         echo -e "${GREEN}✓${NC} Ingestion complete"
         ;;
     bootstrap)
-        BOOTSTRAP_API_KEY="${AUGUR_AGENTS_API_KEY:-}"
-        BOOTSTRAP_AGENT_ID="${AUGUR_BOOTSTRAP_AGENT_ID:-}"
+        [[ -f "$STACK/venv/bin/python" ]] || die "Python venv not found. Run: augur install"
+        LC_URL="http://localhost:${LC_PORT:-3080}"
         if [[ "${2:-}" == "--dry-run" ]]; then
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" --dry-run "${@:3}"
-        elif [[ -z "$BOOTSTRAP_API_KEY" ]]; then
+        elif [[ -z "${AUGUR_AGENTS_API_KEY:-}" ]]; then
             echo -e "${YELLOW}Usage: augur bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
-            echo ""; echo "  Required env vars: AUGUR_AGENTS_API_KEY, AUGUR_BOOTSTRAP_AGENT_ID"
-            echo ""; echo "  augur bootstrap --kind countries  # one kind"
-            echo "  augur bootstrap --dry-run          # preview only"
+            echo ""
+            echo "  Reads AUGUR_AGENTS_API_KEY from .env, auto-discovers agent ID."
+            echo "  Set the key first: nano $STACK/.env"
+            echo ""
+            echo "  augur bootstrap                    # all kinds"
+            echo "  augur bootstrap --kind countries    # one kind"
+            echo "  augur bootstrap --dry-run           # preview only"
         else
-            LC_URL="http://localhost:${LC_PORT:-3080}"
             echo -e "${CYAN}Bootstrapping profiles via ${LC_URL}...${NC}"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
-                --api-key "$BOOTSTRAP_API_KEY" --agent-id "$BOOTSTRAP_AGENT_ID" --base-url "$LC_URL" "${@:2}"
+                --base-url "$LC_URL" "${@:2}"
             echo -e "${GREEN}✓${NC} Bootstrap complete"
         fi
         ;;
@@ -1434,13 +1379,14 @@ for kind, info in sorted(result.items()):
             LC_URL="http://localhost:${LC_PORT:-3080}"
             mkdir -p "$HOME/logs/agents"
             echo -e "${CYAN}Triggering agent: ${AGENT_NAME}${NC}"
+            PYTHONPATH="$STACK/augur-uberspace/scripts" \
             "$STACK/venv/bin/python" - "$LC_URL" "$AUGUR_AGENTS_API_KEY" "$AGENT_NAME" "$HOME/logs/agents" "$AGENT_MSG" <<'PYEOF'
-import httpx, json, sys, os
+import sys, os
 from datetime import datetime, timezone
+from agent_client import AgentClient
 
 lc_url, api_key, agent_name, log_dir = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 custom_msg = sys.argv[5] if len(sys.argv) > 5 and sys.argv[5] else ""
-headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
 # Default prompts per agent (same as cron dispatch)
 DEFAULT_PROMPTS = {
@@ -1465,26 +1411,14 @@ DEFAULT_PROMPTS = {
     "signals-analyst": "Analyze latest signals: sentiment, narratives, filing significance.",
     "synthesizer": "Read all analyst notes and produce a cross-domain briefing.",
 }
-message = custom_msg or DEFAULT_PROMPTS.get(agent_name, f"Run your primary task.")
+message = custom_msg or DEFAULT_PROMPTS.get(agent_name, "Run your primary task.")
 
-# Fetch agent list
-try:
-    r = httpx.get(f"{lc_url}/api/agents/v1/models", headers=headers, timeout=10)
-    if r.status_code != 200:
-        print(f"ERROR: agent list {r.status_code}", file=sys.stderr); sys.exit(1)
-    agents = {m["id"]: m for m in r.json().get("data", [])}
-except Exception as e:
-    print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
-
-# Find agent
-agent_id = None
-for aid, m in agents.items():
-    if agent_name in aid.lower() or agent_name in m.get("name", "").lower():
-        agent_id = aid; break
+client = AgentClient(lc_url, api_key)
+agent_id = client.find_agent(agent_name)
 if not agent_id:
     print(f"ERROR: agent '{agent_name}' not found. Available:")
-    for aid, m in agents.items():
-        print(f"  {m.get('name', aid)}")
+    for aid, name in client.list_agents().items():
+        print(f"  {name}")
     sys.exit(1)
 
 ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -1494,40 +1428,10 @@ print(f"Prompt: {message}")
 print(f"Log: {log_file}")
 print("=" * 60)
 
-try:
-    with httpx.stream("POST", f"{lc_url}/api/agents/v1/chat/completions",
-                      headers=headers,
-                      json={"model": agent_id,
-                            "messages": [{"role": "user", "content": message}],
-                            "stream": True},
-                      timeout=600) as resp:
-        if resp.status_code != 200:
-            print(f"ERROR: {resp.status_code} {resp.read().decode()[:500]}", file=sys.stderr)
-            sys.exit(1)
-        with open(log_file, "w") as f:
-            f.write(f"[{ts}] agent={agent_name} id={agent_id}\n")
-            f.write(f"[{ts}] prompt: {message}\n")
-            f.write(f"{'='*60}\n")
-            for line in resp.iter_lines():
-                if not line or not line.startswith("data: "):
-                    continue
-                data_str = line[6:]
-                if data_str.strip() == "[DONE]":
-                    break
-                try:
-                    chunk = json.loads(data_str)
-                    delta = chunk.get("choices", [{}])[0].get("delta", {})
-                    text = delta.get("content", "")
-                    if text:
-                        sys.stdout.write(text)
-                        sys.stdout.flush()
-                        f.write(text)
-                        f.flush()
-                except json.JSONDecodeError:
-                    pass
-            f.write(f"\n{'='*60}\n[{ts}] done\n")
-except Exception as e:
-    print(f"\nERROR: {e}", file=sys.stderr)
+result = client.invoke(agent_id, message, timeout=600,
+                       log_file=log_file, stream_to_stdout=True)
+if result["status"] != "ok":
+    print(f"\nERROR: {result.get('error', 'unknown')}", file=sys.stderr)
     sys.exit(1)
 print(f"\n{'='*60}")
 print(f"Done. Log saved to {log_file}")

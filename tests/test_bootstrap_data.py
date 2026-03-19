@@ -264,15 +264,14 @@ class TestBatching:
 
 
 class TestSSEParsing:
-    """Test SSE response handling (via mocked httpx)."""
+    """Test SSE response handling (via AgentClient)."""
 
-    def test_send_bootstrap_handles_timeout(self):
+    def test_invoke_handles_timeout(self):
         """Verify timeout produces proper error result."""
-        # Create a client that will fail (no server running)
-        client = bootstrap.httpx.Client(base_url="http://127.0.0.1:1", timeout=0.1)
-        result = bootstrap.send_bootstrap_message(client, "test-agent", "test prompt", timeout=0.1)
+        from agent_client import AgentClient
+        client = AgentClient("http://127.0.0.1:1", "test-key")
+        result = client.invoke("test-agent", "test prompt", timeout=1)
         assert result["status"] in ("error", "timeout")
-        client.close()
 
 
 # ── Dry run integration test ─────────────────────
@@ -282,46 +281,40 @@ class TestDryRun:
     """Test the dry run mode end-to-end."""
 
     def test_dry_run_all_kinds(self, targets, profiles_dir, capsys):
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             dry_run=True,
         )
-        client.close()
 
         assert stats["kinds"] == len(targets)
         assert stats["errors"] == 0
         assert stats["ok"] > 0
 
     def test_dry_run_single_kind(self, targets, profiles_dir):
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             kind_filter="countries",
             dry_run=True,
         )
-        client.close()
 
         assert stats["kinds"] == 1
         assert stats["errors"] == 0
 
     def test_dry_run_invalid_kind(self, targets, profiles_dir):
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             kind_filter="invalid_kind",
             dry_run=True,
         )
-        client.close()
 
         assert stats["kinds"] == 0
 
@@ -334,31 +327,27 @@ class TestE2EBootstrap:
 
     def test_e2e_dry_run_single_kind(self, profiles_dir, targets):
         """Dry-run bootstrap for a single kind, verify stats."""
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             kind_filter="countries",
             dry_run=True,
         )
-        client.close()
         assert stats["kinds"] == 1
         assert stats["errors"] == 0
         assert stats["targets"] > 0
 
     def test_e2e_dry_run_all_kinds(self, profiles_dir, targets):
         """Dry-run all kinds, verify no errors."""
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             dry_run=True,
         )
-        client.close()
 
         assert stats["kinds"] == len(targets)
         assert stats["errors"] == 0

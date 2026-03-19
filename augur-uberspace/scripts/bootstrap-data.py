@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
 """Bootstrap profile data via LibreChat Agents API.
 
-Sends structured prompts to the L4 cron-planner agent (or any agent with
+Sends structured prompts to the cron-planner agent (or any agent with
 store_put_profile access) to populate and enrich profile data at scale.
 
 The script is additive: existing profiles are enriched with fresh data from
 MCP tools and web search; new profiles are created for missing entities.
 Bootstrap targets are defined in bootstrap-targets.json.
 
+API key and agent ID are auto-discovered from .env and the LibreChat API:
+  - AUGUR_AGENTS_API_KEY from ~/augur/.env (same key used by cron)
+  - Agent ID discovered via /api/agents/v1/models (matches by name)
+
 Usage:
     # Dry run — preview prompts without calling API
     python bootstrap-data.py --dry-run
 
-    # Bootstrap all kinds via cron-planner
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123
+    # Bootstrap all kinds (auto-discovers API key + agent ID)
+    python bootstrap-data.py
 
     # Bootstrap one kind with custom batch size
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --kind countries --batch-size 5
+    python bootstrap-data.py --kind countries --batch-size 5
 
-    # Custom LibreChat URL
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --base-url http://augur.uber.space:3080
+    # Override auto-discovery
+    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123
 """
 
 import argparse
@@ -29,21 +33,18 @@ import sys
 import random
 import time
 
-try:
-    import httpx
-except ImportError:
-    httpx = None  # type: ignore[assignment]
-    if __name__ == "__main__":
-        print("ERROR: httpx required. Install: pip install httpx", file=sys.stderr)
-        sys.exit(1)
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, SCRIPT_DIR)
+
+from agent_client import AgentClient, load_env  # noqa: E402
+
 TARGETS_FILE = os.path.join(SCRIPT_DIR, "bootstrap-targets.json")
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 PROFILES_DIR = os.path.join(REPO_ROOT, "profiles")
 
 DEFAULT_BASE_URL = "http://localhost:3080"
 DEFAULT_BATCH_SIZE = 10
+DEFAULT_AGENT_NAME = "cron-planner"
 API_TIMEOUT = 300  # 5 min per batch (agent may call many tools)
 
 VALID_KINDS = {
@@ -295,72 +296,8 @@ def batch_targets(targets: list[dict], batch_size: int) -> list[list[dict]]:
     return [targets[i:i + batch_size] for i in range(0, len(targets), batch_size)]
 
 
-def send_bootstrap_message(
-    client: httpx.Client,
-    agent_id: str,
-    prompt: str,
-    timeout: int = API_TIMEOUT,
-) -> dict:
-    """Send a bootstrap prompt to the LibreChat Agents API and collect response.
-
-    Uses the OpenAI-compatible chat completions endpoint with SSE streaming.
-    Returns {status, content, usage} or {status, error}.
-    """
-    payload = {
-        "model": agent_id,
-        "messages": [{"role": "user", "content": prompt}],
-        "stream": True,
-    }
-
-    collected_content = []
-    usage = {}
-
-    try:
-        with client.stream(
-            "POST",
-            "/api/agents/v1/chat/completions",
-            json=payload,
-            timeout=timeout,
-        ) as response:
-            if response.status_code != 200:
-                error_body = ""
-                for chunk in response.iter_text():
-                    error_body += chunk
-                return {"status": "error", "error": f"HTTP {response.status_code}: {error_body[:500]}"}
-
-            for line in response.iter_lines():
-                if not line.startswith("data: "):
-                    continue
-                data_str = line[6:].strip()
-                if data_str == "[DONE]":
-                    break
-                try:
-                    chunk = json.loads(data_str)
-                    choices = chunk.get("choices", [])
-                    if choices:
-                        delta = choices[0].get("delta", {})
-                        content = delta.get("content", "")
-                        if content:
-                            collected_content.append(content)
-                    if "usage" in chunk:
-                        usage = chunk["usage"]
-                except json.JSONDecodeError:
-                    continue
-
-    except httpx.TimeoutException:
-        return {"status": "timeout", "content": "".join(collected_content), "error": "Request timed out"}
-    except httpx.HTTPError as e:
-        return {"status": "error", "error": str(e)}
-
-    return {
-        "status": "ok",
-        "content": "".join(collected_content),
-        "usage": usage,
-    }
-
-
 def run_bootstrap(
-    client: httpx.Client,
+    client: AgentClient,
     agent_id: str,
     targets: dict,
     profiles_dir: str,
@@ -412,7 +349,7 @@ def run_bootstrap(
                 stats["ok"] += 1
                 continue
 
-            result = send_bootstrap_message(client, agent_id, prompt)
+            result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
 
             if result["status"] == "ok":
                 content = result.get("content", "")
@@ -470,7 +407,7 @@ def run_bootstrap(
                     stats["ok"] += 1
                     continue
 
-                result = send_bootstrap_message(client, agent_id, prompt)
+                result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
 
                 if result["status"] == "ok":
                     content = result.get("content", "")
@@ -493,13 +430,18 @@ def main():
     )
     parser.add_argument(
         "--api-key",
-        default=os.environ.get("TA_AGENTS_API_KEY", ""),
-        help="LibreChat Agents API key (or set TA_AGENTS_API_KEY env var)",
+        default=None,
+        help="LibreChat Agents API key (default: AUGUR_AGENTS_API_KEY from .env)",
     )
     parser.add_argument(
         "--agent-id",
-        default=os.environ.get("TA_BOOTSTRAP_AGENT_ID", ""),
-        help="Agent ID to send prompts to (or set TA_BOOTSTRAP_AGENT_ID env var)",
+        default=None,
+        help="Agent ID to send prompts to (default: auto-discovered from LibreChat API)",
+    )
+    parser.add_argument(
+        "--agent-name",
+        default=DEFAULT_AGENT_NAME,
+        help=f"Agent name to discover (default: {DEFAULT_AGENT_NAME})",
     )
     parser.add_argument(
         "--base-url",
@@ -539,17 +481,20 @@ def main():
     )
     args = parser.parse_args()
 
-    # Validate args
-    if not args.dry_run:
-        if not args.api_key:
-            print("ERROR: --api-key required (or set TA_AGENTS_API_KEY)", file=sys.stderr)
-            sys.exit(1)
-        if not args.agent_id:
-            print("ERROR: --agent-id required (or set TA_BOOTSTRAP_AGENT_ID)", file=sys.stderr)
-            sys.exit(1)
+    # Load .env for API key (unless already in environment)
+    load_env()
+
+    # Resolve API key: --api-key > AUGUR_AGENTS_API_KEY env var
+    api_key = args.api_key or os.environ.get("AUGUR_AGENTS_API_KEY", "")
 
     if args.kind and args.kind not in VALID_KINDS:
         print(f"ERROR: unknown kind '{args.kind}', valid: {sorted(VALID_KINDS)}", file=sys.stderr)
+        sys.exit(1)
+
+    # Validate API key (not needed for dry-run)
+    if not args.dry_run and not api_key:
+        print("ERROR: No API key found. Set AUGUR_AGENTS_API_KEY in .env or pass --api-key",
+              file=sys.stderr)
         sys.exit(1)
 
     # Load targets
@@ -560,17 +505,28 @@ def main():
     if args.dry_run:
         print("[DRY RUN MODE — no API calls will be made]\n")
 
-    # Set up HTTP client
-    client = httpx.Client(base_url=args.base_url, timeout=30)
+    # Set up agent client
+    client = AgentClient(args.base_url, api_key) if not args.dry_run else None
+
+    # Resolve agent ID: --agent-id > auto-discover from API
+    agent_id = args.agent_id
+    if not agent_id and not args.dry_run:
+        print(f"Discovering agent '{args.agent_name}' from {args.base_url}...")
+        agent_id = client.find_agent(args.agent_name)
+        if not agent_id:
+            print(f"ERROR: Could not find agent '{args.agent_name}' via API. "
+                  f"Seed agents first: seed-agents.py --mode bootstrap",
+                  file=sys.stderr)
+            sys.exit(1)
+        print(f"  Found: {agent_id}")
+
     if not args.dry_run:
-        client.headers["Authorization"] = f"Bearer {args.api_key}"
-        client.headers["Content-Type"] = "application/json"
-        print(f"Targeting agent {args.agent_id} at {args.base_url}")
+        print(f"Targeting agent {agent_id} at {args.base_url}")
 
     # Run bootstrap
     stats = run_bootstrap(
         client=client,
-        agent_id=args.agent_id or "dry-run",
+        agent_id=agent_id or "dry-run",
         targets=targets,
         profiles_dir=args.profiles_dir,
         kind_filter=args.kind,
@@ -578,8 +534,6 @@ def main():
         dry_run=args.dry_run,
         timeseries=args.timeseries,
     )
-
-    client.close()
 
     # Summary
     print(f"\n{'='*60}")
