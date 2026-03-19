@@ -74,10 +74,10 @@ _post_info() {
     echo "    augur agents --all EMAIL PASSWORD                    # all agent groups"
     echo ""
     echo -e "  ${CYAN}Bootstrap (first run):${NC}"
-    echo "    1. augur agents --bootstrap EMAIL PASSWORD             # seed core with Qwen"
+    echo "    1. augur agents EMAIL PASSWORD                        # seed agents"
+    echo "       augur agents --bootstrap EMAIL PASSWORD            #   (or use Qwen free tokens)"
     echo "    2. Add AUGUR_AGENTS_API_KEY to .env"
     echo "    3. augur bootstrap                                   # populate profile data"
-    echo "    4. augur agents EMAIL PASSWORD                       # switch to production models"
     echo ""
 }
 
