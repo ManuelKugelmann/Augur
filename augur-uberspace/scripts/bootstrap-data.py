@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Bootstrap profile data via LibreChat Agents API.
 
-Sends structured prompts to the cron-planner agent (or any agent with
-store_put_profile access) to populate and enrich profile data at scale.
+Sends structured prompts to the bootstrap agent (which delegates to L1
+data agents) to populate and enrich profile data at scale.
 
 The script is additive: existing profiles are enriched with fresh data from
 MCP tools and web search; new profiles are created for missing entities.
@@ -44,7 +44,7 @@ PROFILES_DIR = os.path.join(REPO_ROOT, "profiles")
 
 DEFAULT_BASE_URL = "http://localhost:3080"
 DEFAULT_BATCH_SIZE = 10
-DEFAULT_AGENT_NAME = "cron-planner"
+DEFAULT_AGENT_NAME = "bootstrap"
 API_TIMEOUT = 300  # 5 min per batch (agent may call many tools)
 
 VALID_KINDS = {

@@ -27,7 +27,8 @@
 
     "synthesizer":     {"provider": "Gemini",   "model": "gemini-2.5-pro",   "_load": "Not used during bootstrap"},
 
-    "cron-planner":    {"provider": "Qwen",     "model": "qwen-plus",   "_load": "BOOTSTRAP: orchestrates data agent calls"},
+    "cron-planner":    {"provider": "Qwen",     "model": "qwen-plus",   "_load": "Not used during bootstrap"},
+    "bootstrap":       {"provider": "Qwen",     "model": "qwen3-max",   "_load": "BOOTSTRAP: orchestrates L1 data agent delegation, needs best reasoning"},
     "cron-trading":    {"provider": "Groq",     "model": "llama-3.3-70b-versatile", "_load": "Not used during bootstrap"},
 
     "news-the-augur":       {"provider": "Cerebras", "model": "qwen-3-235b-a22b-instruct-2507", "_load": "Not used during bootstrap"},

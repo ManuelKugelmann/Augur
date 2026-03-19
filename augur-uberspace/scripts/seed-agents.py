@@ -37,7 +37,7 @@ AGENTS_FILE = os.path.join(CONFIG_DIR, "agents.json")
 MODELS_FILE = os.path.join(CONFIG_DIR, "agent-models.json")
 PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 
-ALL_GROUPS = {"core", "trading", "news"}
+ALL_GROUPS = {"core", "trading", "news", "bootstrap"}
 VALID_MODES = {"continuous", "bootstrap"}
 MODE_MODELS_FILES = {
     "continuous": os.path.join(CONFIG_DIR, "agent-models.json"),

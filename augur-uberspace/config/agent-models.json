@@ -32,6 +32,7 @@
     "synthesizer":     {"provider": "Gemini",   "model": "gemini-2.5-pro",                  "_load": "~3 calls/day, highest reasoning"},
 
     "cron-planner":    {"provider": "Cerebras", "model": "qwen-3-235b-a22b-instruct-2507",  "_load": "~5 calls/day, planning + scheduling"},
+    "bootstrap":       {"provider": "Cerebras", "model": "qwen-3-235b-a22b-instruct-2507",  "_load": "on-demand, bulk profile bootstrapping via L1 delegation"},
     "cron-trading":    {"provider": "Groq",     "model": "llama-3.3-70b-versatile",         "_load": "~5 calls/day, trade execution"},
 
     "news-the-augur":       {"provider": "Cerebras",      "model": "qwen-3-235b-a22b-instruct-2507", "_load": "~3 calls/day, EN general articles"},
