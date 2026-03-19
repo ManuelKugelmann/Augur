@@ -8,7 +8,7 @@
     "Mistral":       "1B tok/month, all models, but only 2 RPM — low-frequency only",
     "Cohere":        "20 RPM, 1K req/month (~33/day) — very low volume",
     "OpenRouter":    "20 RPM / 50 RPD (:free models, no credits) — very low volume",
-    "Qwen":          "1M tokens/model one-time grant, then paid — prototyping only"
+    "Qwen":          "1M tokens/model, 90-day grant, then paid — prototyping only"
   },
   "defaults": {
     "L1":      {"provider": "Groq",     "model": "llama-3.3-70b-versatile"},

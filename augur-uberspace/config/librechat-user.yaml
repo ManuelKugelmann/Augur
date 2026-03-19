@@ -130,7 +130,7 @@ endpoints:
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "GitHub Models"
 
-    # ── Alibaba Cloud / Qwen (free: 1M tokens/model one-time, then paid) ──
+    # ── Alibaba Cloud / Qwen (free: 1M tokens/model, 90-day grant, then paid) ──
     # Key: https://dashscope.console.aliyun.com/apiKey
     - name: "Qwen"
       apiKey: "${DASHSCOPE_API_KEY}"
