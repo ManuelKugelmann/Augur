@@ -221,6 +221,7 @@ class TestElectionsFree:
         result = run(self.m.eu_parliament_meps(country="DE", limit=10))
         _check_upstream(result, "count", "meps")
 
+    @pytest.mark.timeout(120)  # EU Parliament API is slow
     def test_eu_parliament_votes(self):
         result = run(self.m.eu_parliament_votes(year="2024", limit=5))
         _check_upstream(result)
