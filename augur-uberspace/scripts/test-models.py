@@ -52,13 +52,16 @@ def test_model(base_url, api_key, model, timeout):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     }
     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = json.loads(resp.read())
             text = body.get("choices", [{}])[0].get("message", {}).get("content", "")
-            return True, text.strip()[:40] or "(empty response)"
+            if isinstance(text, list):
+                text = "".join(p.get("text", "") if isinstance(p, dict) else str(p) for p in text)
+            return True, (text or "").strip()[:40] or "(empty response)"
     except urllib.error.HTTPError as e:
         detail = ""
         try:

@@ -6,7 +6,6 @@ Tests the script's logic without requiring a running LibreChat instance.
 import json
 import os
 import sys
-import tempfile
 
 import pytest
 
@@ -38,14 +37,12 @@ def targets():
 @pytest.fixture
 def profiles_dir(tmp_path):
     """Create a temporary profiles directory with some existing profiles."""
-    # Create region/kind directories
     (tmp_path / "north_america" / "countries").mkdir(parents=True)
     (tmp_path / "europe" / "countries").mkdir(parents=True)
     (tmp_path / "north_america" / "stocks").mkdir(parents=True)
     (tmp_path / "global" / "etfs").mkdir(parents=True)
     (tmp_path / "global" / "sources").mkdir(parents=True)
 
-    # Write some existing profiles
     (tmp_path / "north_america" / "countries" / "USA.json").write_text(
         json.dumps({"id": "USA", "name": "United States", "_placeholder": True})
     )
@@ -93,7 +90,6 @@ class TestTargets:
             for entry in entries:
                 eid = entry["id"]
                 if kind in uppercase_kinds:
-                    # These should be uppercase (or numeric for some stock tickers)
                     assert eid == eid.upper() or eid.isdigit() or "-" in eid, \
                         f"{kind}/{eid}: expected uppercase ID"
                 elif kind in lowercase_kinds:
@@ -122,11 +118,6 @@ class TestTargets:
         """Each kind should have at least 10 targets."""
         for kind, entries in targets.items():
             assert len(entries) >= 10, f"{kind} has only {len(entries)} targets, expected >= 10"
-
-    def test_schema_required_covers_all_kinds(self):
-        for kind in bootstrap.VALID_KINDS:
-            assert kind in bootstrap.REQUIRED_FIELDS, \
-                f"Missing SCHEMA_REQUIRED entry for {kind}"
 
     def test_kind_instructions_covers_all_kinds(self):
         for kind in bootstrap.VALID_KINDS:
@@ -173,106 +164,112 @@ class TestExistingProfiles:
 
 
 class TestPromptGeneration:
-    """Test the build_prompt function."""
+    """Test the prompt builder functions."""
 
-    def test_prompt_contains_kind(self):
+    def test_profiles_prompt_contains_kind(self):
         targets = [{"id": "USA", "region": "north_america"}]
-        prompt = bootstrap.build_prompt("countries", targets, set())
+        prompt = bootstrap.build_profiles_prompt("countries", targets, set())
         assert "countries" in prompt
 
-    def test_prompt_marks_new_entities(self):
+    def test_profiles_prompt_marks_new_entities(self):
         targets = [{"id": "CHN", "region": "east_asia"}]
-        prompt = bootstrap.build_prompt("countries", targets, set())
+        prompt = bootstrap.build_profiles_prompt("countries", targets, set())
         assert "CREATE" in prompt
         assert "CHN" in prompt
 
-    def test_prompt_marks_enrichment(self):
+    def test_profiles_prompt_marks_enrichment(self):
         targets = [{"id": "USA", "region": "north_america"}]
-        prompt = bootstrap.build_prompt("countries", targets, {"USA"})
+        prompt = bootstrap.build_profiles_prompt("countries", targets, {"USA"})
         assert "ENRICH" in prompt
         assert "USA" in prompt
 
-    def test_prompt_includes_both_new_and_enrich(self):
+    def test_profiles_prompt_includes_both_new_and_enrich(self):
         targets = [
             {"id": "USA", "region": "north_america"},
             {"id": "CHN", "region": "east_asia"},
         ]
-        prompt = bootstrap.build_prompt("countries", targets, {"USA"})
+        prompt = bootstrap.build_profiles_prompt("countries", targets, {"USA"})
         assert "ENRICH" in prompt
         assert "CREATE" in prompt
 
-    def test_prompt_includes_required_fields(self):
-        targets = [{"id": "BTC", "region": "global"}]
-        prompt = bootstrap.build_prompt("crypto", targets, set())
-        for field in bootstrap.REQUIRED_FIELDS["crypto"]:
-            assert field in prompt
-
-    def test_prompt_includes_kind_instructions(self):
+    def test_profiles_prompt_includes_kind_instructions(self):
         targets = [{"id": "crude_oil", "region": "global"}]
-        prompt = bootstrap.build_prompt("commodities", targets, set())
+        prompt = bootstrap.build_profiles_prompt("commodities", targets, set())
         assert "eia" in prompt.lower() or "faostat" in prompt.lower()
 
-    def test_prompt_includes_put_profile_instruction(self):
+    def test_profiles_prompt_includes_put_profile(self):
         targets = [{"id": "AAPL", "region": "north_america"}]
-        prompt = bootstrap.build_prompt("stocks", targets, set())
+        prompt = bootstrap.build_profiles_prompt("stocks", targets, set())
         assert "store_put_profile" in prompt
 
-    def test_prompt_discourages_placeholder(self):
+    def test_profiles_prompt_discourages_placeholder(self):
         targets = [{"id": "AAPL", "region": "north_america"}]
-        prompt = bootstrap.build_prompt("stocks", targets, set())
-        # Prompt should instruct agent NOT to use placeholder flag
+        prompt = bootstrap.build_profiles_prompt("stocks", targets, set())
         assert "NOT" in prompt and "_placeholder" in prompt
 
+    def test_timeseries_prompt_for_countries(self):
+        targets = [{"id": "USA", "region": "north_america"}]
+        prompt = bootstrap.build_timeseries_prompt("countries", targets)
+        assert prompt is not None
+        assert "store_snapshot" in prompt
+        assert "USA" in prompt
 
-# ── Batch splitting tests ────────────────────────
+    def test_timeseries_prompt_none_for_unsupported(self):
+        targets = [{"id": "lithium", "region": "global"}]
+        prompt = bootstrap.build_timeseries_prompt("materials", targets)
+        assert prompt is None
+
+    def test_events_prompt_contains_severity(self):
+        targets = [{"id": "USA", "region": "north_america"}]
+        prompt = bootstrap.build_events_prompt("countries", targets)
+        assert "severity" in prompt.lower()
+        assert "event(" in prompt
+
+    def test_plans_prompt_contains_watchlist(self):
+        targets = {"countries": [{"id": "USA", "region": "north_america"}]}
+        prompt = bootstrap.build_plans_prompt(targets)
+        assert "watchlist" in prompt.lower()
+        assert "plan" in prompt.lower()
+
+    def test_plans_prompt_rerun_aware(self):
+        targets = {"countries": [{"id": "USA", "region": "north_america"}]}
+        prompt = bootstrap.build_plans_prompt(targets)
+        assert "update" in prompt.lower() or "existing" in prompt.lower()
 
 
-class TestBatching:
-    """Test the batch_targets function."""
+# ── Profile counting tests ──────────────────────
 
-    def test_single_batch(self):
-        targets = [{"id": f"T{i}"} for i in range(5)]
-        batches = bootstrap.batch_targets(targets, 10)
-        assert len(batches) == 1
-        assert len(batches[0]) == 5
 
-    def test_exact_split(self):
-        targets = [{"id": f"T{i}"} for i in range(20)]
-        batches = bootstrap.batch_targets(targets, 10)
-        assert len(batches) == 2
-        assert len(batches[0]) == 10
-        assert len(batches[1]) == 10
+class TestProfileCounting:
+    """Test the count_all_profiles function."""
 
-    def test_remainder_batch(self):
-        targets = [{"id": f"T{i}"} for i in range(15)]
-        batches = bootstrap.batch_targets(targets, 10)
-        assert len(batches) == 2
-        assert len(batches[0]) == 10
-        assert len(batches[1]) == 5
+    def test_counts_profiles(self, profiles_dir):
+        counts = bootstrap.count_all_profiles(str(profiles_dir))
+        assert counts.get("countries", 0) == 2  # USA + DEU
+        assert counts.get("stocks", 0) == 1     # AAPL
+        assert counts.get("etfs", 0) == 1       # VWO
 
-    def test_empty_targets(self):
-        batches = bootstrap.batch_targets([], 10)
-        assert len(batches) == 0
+    def test_empty_dir(self, tmp_path):
+        counts = bootstrap.count_all_profiles(str(tmp_path))
+        assert counts == {}
 
-    def test_batch_size_one(self):
-        targets = [{"id": f"T{i}"} for i in range(3)]
-        batches = bootstrap.batch_targets(targets, 1)
-        assert len(batches) == 3
+    def test_nonexistent_dir(self, tmp_path):
+        counts = bootstrap.count_all_profiles(str(tmp_path / "nope"))
+        assert counts == {}
 
 
 # ── SSE parsing tests ────────────────────────────
 
 
 class TestSSEParsing:
-    """Test SSE response handling (via mocked httpx)."""
+    """Test SSE response handling (via AgentClient)."""
 
-    def test_send_bootstrap_handles_timeout(self):
+    def test_invoke_handles_timeout(self):
         """Verify timeout produces proper error result."""
-        # Create a client that will fail (no server running)
-        client = bootstrap.httpx.Client(base_url="http://127.0.0.1:1", timeout=0.1)
-        result = bootstrap.send_bootstrap_message(client, "test-agent", "test prompt", timeout=0.1)
+        from agent_client import AgentClient
+        client = AgentClient("http://127.0.0.1:1", "test-key")
+        result = client.invoke("test-agent", "test prompt", timeout=1)
         assert result["status"] in ("error", "timeout")
-        client.close()
 
 
 # ── Dry run integration test ─────────────────────
@@ -281,49 +278,58 @@ class TestSSEParsing:
 class TestDryRun:
     """Test the dry run mode end-to-end."""
 
-    def test_dry_run_all_kinds(self, targets, profiles_dir, capsys):
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
+    def test_dry_run_all_phases(self, targets, profiles_dir, capsys):
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             dry_run=True,
         )
-        client.close()
-
-        assert stats["kinds"] == len(targets)
         assert stats["errors"] == 0
         assert stats["ok"] > 0
+        assert stats["calls"] > 0
+        assert "profiles" in stats["phases"]
+        assert "plans" in stats["phases"]
 
     def test_dry_run_single_kind(self, targets, profiles_dir):
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             kind_filter="countries",
             dry_run=True,
         )
-        client.close()
-
-        assert stats["kinds"] == 1
         assert stats["errors"] == 0
+        # countries has profiles + timeseries + events = 3 calls, plus plans = 4
+        assert stats["calls"] >= 3
+
+    def test_dry_run_single_phase(self, targets, profiles_dir):
+        stats = bootstrap.run_bootstrap(
+            client=None,
+            agent_id="dry-run",
+            targets=targets,
+            profiles_dir=str(profiles_dir),
+            phases=["profiles"],
+            dry_run=True,
+        )
+        assert stats["errors"] == 0
+        assert stats["phases"] == ["profiles"]
+        # One call per kind
+        assert stats["calls"] == len(targets)
 
     def test_dry_run_invalid_kind(self, targets, profiles_dir):
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             kind_filter="invalid_kind",
             dry_run=True,
         )
-        client.close()
-
-        assert stats["kinds"] == 0
+        # Plans phase still runs (1 call), but profiles/timeseries/events produce 0
+        assert stats["calls"] == 1  # plans only
 
 
 # ── E2E: bootstrap dry-run ─────────────────────
@@ -333,32 +339,26 @@ class TestE2EBootstrap:
     """End-to-end test: bootstrap dry-run with real targets."""
 
     def test_e2e_dry_run_single_kind(self, profiles_dir, targets):
-        """Dry-run bootstrap for a single kind, verify stats."""
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             kind_filter="countries",
             dry_run=True,
         )
-        client.close()
-        assert stats["kinds"] == 1
         assert stats["errors"] == 0
-        assert stats["targets"] > 0
+        assert stats["ok"] > 0
 
     def test_e2e_dry_run_all_kinds(self, profiles_dir, targets):
-        """Dry-run all kinds, verify no errors."""
-        client = bootstrap.httpx.Client(base_url="http://localhost:1")
         stats = bootstrap.run_bootstrap(
-            client=client,
+            client=None,
             agent_id="dry-run",
             targets=targets,
             profiles_dir=str(profiles_dir),
             dry_run=True,
         )
-        client.close()
-
-        assert stats["kinds"] == len(targets)
         assert stats["errors"] == 0
+        assert stats["ok"] > 0
+        # All 4 phases run
+        assert len(stats["phases"]) == 4

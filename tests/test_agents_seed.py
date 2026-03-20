@@ -50,7 +50,7 @@ class TestAgentsFile:
         assert isinstance(agents, list)
 
     def test_expected_count(self, agents):
-        assert len(agents) == 16, f"Expected 16 agents, got {len(agents)}"
+        assert len(agents) == 17, f"Expected 17 agents, got {len(agents)}"
 
 
 # ── Required fields ──────────────────────────
@@ -100,7 +100,7 @@ class TestLayers:
 
     def test_l4_agents(self, agents):
         l4 = [a for a in agents if a["_layer"] == "L4"]
-        assert len(l4) == 6
+        assert len(l4) == 7
         names = {a["_name"] for a in l4}
         assert "cron-planner" in names
         assert "cron-trading" in names
@@ -124,7 +124,7 @@ class TestLayers:
 # ── Group structure ──────────────────────────
 
 class TestGroups:
-    VALID_GROUPS = {"core", "trading", "news"}
+    VALID_GROUPS = {"core", "trading", "news", "bootstrap"}
 
     def test_all_agents_have_valid_group(self, agents):
         for a in agents:
@@ -465,7 +465,7 @@ class TestEdgeResolution:
 
     def test_filter_by_groups_all(self, agents):
         mod = self._load_module()
-        result = mod.filter_by_groups(agents, {"core", "trading", "news"})
+        result = mod.filter_by_groups(agents, {"core", "trading", "news", "bootstrap"})
         assert len(result) == len(agents)
 
 
