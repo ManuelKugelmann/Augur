@@ -124,7 +124,7 @@ class TestLayers:
 # ── Group structure ──────────────────────────
 
 class TestGroups:
-    VALID_GROUPS = {"core", "trading", "news", "bootstrap"}
+    VALID_GROUPS = {"core", "trading", "news"}
 
     def test_all_agents_have_valid_group(self, agents):
         for a in agents:
@@ -136,7 +136,8 @@ class TestGroups:
         names = {a["_name"] for a in core}
         expected = {"market-data", "osint-data", "signals-data",
                     "market-analyst", "osint-analyst", "signals-analyst",
-                    "synthesizer", "cron-planner", "charter", "live-chat"}
+                    "synthesizer", "cron-planner", "charter", "live-chat",
+                    "bootstrap"}
         assert names == expected
 
     def test_trading_agents(self, agents):
@@ -454,18 +455,18 @@ class TestEdgeResolution:
         mod = self._load_module()
         core = mod.filter_by_groups(agents, {"core"})
         assert all(a["_group"] == "core" for a in core)
-        assert len(core) == 10
+        assert len(core) == 11
 
     def test_filter_by_groups_core_plus_trading(self, agents):
         mod = self._load_module()
         result = mod.filter_by_groups(agents, {"core", "trading"})
         groups = {a["_group"] for a in result}
         assert groups == {"core", "trading"}
-        assert len(result) == 12
+        assert len(result) == 13
 
     def test_filter_by_groups_all(self, agents):
         mod = self._load_module()
-        result = mod.filter_by_groups(agents, {"core", "trading", "news", "bootstrap"})
+        result = mod.filter_by_groups(agents, {"core", "trading", "news"})
         assert len(result) == len(agents)
 
 
