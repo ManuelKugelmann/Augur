@@ -111,7 +111,7 @@ class ChartHandler(BaseHTTPRequestHandler):
                     except Exception:
                         pass
 
-            html = _INDEX_HTML.format(rows="\n".join(rows) if rows else "<tr><td colspan=5>No data yet</td></tr>")
+            html = _INDEX_HTML.replace("{rows}", "\n".join(rows) if rows else "<tr><td colspan=5>No data yet</td></tr>")
             self._respond(200, "text/html", html)
         except Exception as e:
             self._error(500, f"Index error: {e}")

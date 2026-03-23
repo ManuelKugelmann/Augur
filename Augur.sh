@@ -577,7 +577,7 @@ SVCEOF
         fi
 
         # Bootstrap profile data via agent (if env vars set)
-        if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]] && [[ -n "${AUGUR_BOOTSTRAP_AGENT_ID:-}" ]]; then
+        if [[ -n "${AUGUR_AGENTS_API_KEY:-}" ]]; then
             local LC_URL="http://localhost:${LC_PORT:-3080}"
             local LC_READY=false
             for i in $(seq 1 15); do
@@ -590,9 +590,8 @@ SVCEOF
                 log "Bootstrapping profile data via agent..."
                 "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
                     --api-key "$AUGUR_AGENTS_API_KEY" \
-                    --agent-id "$AUGUR_BOOTSTRAP_AGENT_ID" \
                     --base-url "$LC_URL" \
-                    --timeseries 2>&1 | while read -r line; do log "bootstrap: $line"; done \
+                    2>&1 | while read -r line; do log "bootstrap: $line"; done \
                     || warn "Bootstrap failed (run manually: augur bootstrap)"
             else
                 warn "LibreChat not ready — run bootstrap manually: augur bootstrap"
@@ -1186,14 +1185,15 @@ SVCEOF
         if [[ "${2:-}" == "--dry-run" ]]; then
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" --dry-run "${@:3}"
         elif [[ -z "${AUGUR_AGENTS_API_KEY:-}" ]]; then
-            echo -e "${YELLOW}Usage: augur bootstrap [--kind KIND] [--batch-size N] [--dry-run]${NC}"
+            echo -e "${YELLOW}Usage: augur bootstrap [--kind KIND] [--phase PHASE] [--dry-run]${NC}"
             echo ""
             echo "  Reads AUGUR_AGENTS_API_KEY from .env, auto-discovers agent ID."
             echo "  Set the key first: nano $STACK/.env"
             echo ""
-            echo "  augur bootstrap                    # all kinds"
-            echo "  augur bootstrap --kind countries    # one kind"
-            echo "  augur bootstrap --dry-run           # preview only"
+            echo "  augur bootstrap                    # all kinds, all phases"
+            echo "  augur bootstrap --kind countries    # one kind only"
+            echo "  augur bootstrap --phase profiles    # one phase only"
+            echo "  augur bootstrap --dry-run           # preview prompts"
         else
             echo -e "${CYAN}Bootstrapping profiles via ${LC_URL}...${NC}"
             "$STACK/venv/bin/python" "$STACK/augur-uberspace/scripts/bootstrap-data.py" \
@@ -1565,7 +1565,7 @@ PYEOF
         echo "  augur cron         Run cron hook (compact + agent invocation)"
         echo "  augur trigger <a>  Invoke an agent with streaming output"
         echo "  augur worklog      View agent worklogs (file logs + journal notes)"
-        echo "  augur bootstrap    Bootstrap profile data via agent (MCP + search)"
+        echo "  augur bootstrap    Bootstrap profile data via agent (all phases by default)"
         echo "  augur signup       Enable/disable public self-registration"
         echo "  augur agents       Seed agents (core default, --group trading/news, --all)"
         echo "  augur seed         Seed profiles from disk into MongoDB (additive)"
