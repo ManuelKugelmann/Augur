@@ -1,0 +1,44 @@
+{
+  "_comment": "Bootstrap model overrides — burns Qwen's 1M-token free grant for initial bulk data seeding. Switch back to agent-models.json for continuous/production use. Usage: seed-agents.py --mode bootstrap OR --models-file agent-models-bootstrap.json",
+  "_strategy": "Qwen for L1 data agents (heaviest token consumers) and cron-planner (orchestrator). L2 analysts and L3 synthesizer stay on production providers — they run after bootstrap, not during. GitHub Models used for low-volume L2 where Qwen budget should be preserved.",
+  "_token_budget": {
+    "qwen3-max":  "1M tokens (90-day grant) — best quality, use for complex profiles (countries, companies)",
+    "qwen-plus":  "1M tokens (90-day grant) — good quality, use for structured data (stocks, ETFs, commodities)",
+    "qwen-flash": "1M tokens (90-day grant) — fastest, use for simple lookups (sources, indices)"
+  },
+  "defaults": {
+    "L1":      {"provider": "Qwen",    "model": "qwen-plus"},
+    "utility": {"provider": "Groq",    "model": "llama-3.1-8b-instant"},
+    "L2":      {"provider": "Gemini",  "model": "gemini-2.5-flash"},
+    "L3":      {"provider": "Gemini",  "model": "gemini-2.5-pro"},
+    "L4":      {"provider": "Qwen",    "model": "qwen-plus"},
+    "L5":      {"provider": "Cohere",  "model": "command-a-03-2025"}
+  },
+  "agents": {
+    "_design": "Bootstrap mode: Qwen for data-heavy agents to burn the free 1M-token grant per model variant. Each Qwen model variant (qwen3-max, qwen-plus, qwen-flash) gets its own 1M pool, so spread across variants. After bootstrap, run: seed-agents.py --mode continuous to switch to production providers.",
+
+    "market-data":     {"provider": "Qwen",     "model": "qwen-plus",   "_load": "BOOTSTRAP: ~200 stock/ETF/commodity profiles, heaviest"},
+    "osint-data":      {"provider": "Qwen",     "model": "qwen3-max",   "_load": "BOOTSTRAP: ~165 country + 48 region profiles, needs best reasoning"},
+    "signals-data":    {"provider": "Qwen",     "model": "qwen-flash",  "_load": "BOOTSTRAP: ~52 source profiles, simple structure"},
+
+    "market-analyst":  {"provider": "Gemini",   "model": "gemini-2.5-flash", "_load": "Not used during bootstrap"},
+    "osint-analyst":   {"provider": "Gemini",   "model": "gemini-2.5-flash", "_load": "Not used during bootstrap"},
+    "signals-analyst": {"provider": "Groq",     "model": "llama-3.3-70b-versatile", "_load": "Not used during bootstrap"},
+
+    "synthesizer":     {"provider": "Gemini",   "model": "gemini-2.5-pro",   "_load": "Not used during bootstrap"},
+
+    "cron-planner":    {"provider": "Qwen",     "model": "qwen-plus",   "_load": "Not used during bootstrap"},
+    "bootstrap":       {"provider": "Qwen",     "model": "qwen3-max",   "_load": "BOOTSTRAP: orchestrates L1 data agent delegation, needs best reasoning"},
+    "cron-trading":    {"provider": "Groq",     "model": "llama-3.3-70b-versatile", "_load": "Not used during bootstrap"},
+
+    "news-the-augur":       {"provider": "Cerebras", "model": "qwen-3-235b-a22b-instruct-2507", "_load": "Not used during bootstrap"},
+    "news-der-augur":       {"provider": "Mistral",  "model": "mistral-small-latest",  "_load": "Not used during bootstrap"},
+    "news-financial-augur": {"provider": "Groq",     "model": "llama-3.3-70b-versatile", "_load": "Not used during bootstrap"},
+    "news-finanz-augur":    {"provider": "Mistral",  "model": "mistral-small-latest",  "_load": "Not used during bootstrap"},
+
+    "live-chat":       {"provider": "anthropic", "model": "claude-sonnet-4-6", "_load": "Keep on Anthropic always"},
+
+    "trader":          {"provider": "Groq",     "model": "llama-3.3-70b-versatile", "_load": "Not used during bootstrap"},
+    "charter":         {"provider": "Groq",     "model": "llama-3.1-8b-instant",    "_load": "Not used during bootstrap"}
+  }
+}

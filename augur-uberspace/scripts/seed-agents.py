@@ -37,7 +37,12 @@ AGENTS_FILE = os.path.join(CONFIG_DIR, "agents.json")
 MODELS_FILE = os.path.join(CONFIG_DIR, "agent-models.json")
 PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 
-ALL_GROUPS = {"core", "trading", "news"}
+ALL_GROUPS = {"core", "trading", "news", "bootstrap"}
+VALID_MODES = {"continuous", "bootstrap"}
+MODE_MODELS_FILES = {
+    "continuous": os.path.join(CONFIG_DIR, "agent-models.json"),
+    "bootstrap":  os.path.join(CONFIG_DIR, "agent-models-bootstrap.json"),
+}
 DEFAULT_BASE_URL = "http://localhost:3080"
 
 # Browser-like headers to avoid LibreChat's non-browser violation scoring.
@@ -233,8 +238,12 @@ def main():
     parser.add_argument("--all", action="store_true", help="Seed all groups")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
     parser.add_argument("--agents-file", default=AGENTS_FILE, help="Path to agents.json")
-    parser.add_argument("--models-file", default=MODELS_FILE,
-                        help="Path to agent-models.json (model overrides)")
+    parser.add_argument("--mode", choices=sorted(VALID_MODES), default=None,
+                        help="Seeder mode: 'continuous' (production providers) or "
+                             "'bootstrap' (Qwen-heavy for initial data seeding). "
+                             "Selects the matching agent-models file automatically.")
+    parser.add_argument("--models-file", default=None,
+                        help="Path to agent-models JSON file (overrides --mode)")
     parser.add_argument("--no-model-overrides", action="store_true",
                         help="Ignore agent-models.json, use agents.json models as-is")
     parser.add_argument("--export", action="store_true",
@@ -270,11 +279,18 @@ def main():
             agent_def["instructions"] = prompt
             prompt_count += 1
 
-    # Apply model overrides from agent-models.json
+    # Resolve which models file to use: --models-file > --mode > default (continuous)
     if not args.no_model_overrides:
-        overrides = load_model_overrides(args.models_file)
+        if args.models_file:
+            models_path = args.models_file
+        elif args.mode:
+            models_path = MODE_MODELS_FILES[args.mode]
+        else:
+            models_path = MODE_MODELS_FILES["continuous"]
+        overrides = load_model_overrides(models_path)
         override_count = apply_model_overrides(agent_defs, overrides)
     else:
+        models_path = None
         override_count = 0
 
     group_str = ", ".join(sorted(groups))
@@ -282,7 +298,8 @@ def main():
     if prompt_count:
         print(f"  ({prompt_count} instructions loaded from {PROMPTS_DIR}/)")
     if override_count:
-        print(f"  ({override_count} model overrides applied from {args.models_file})")
+        mode_label = f" [{args.mode}]" if args.mode else ""
+        print(f"  ({override_count} model overrides applied from {models_path}{mode_label})")
 
     if args.dry_run:
         print(f"\n[DRY RUN] Would create/update these agents (groups: {group_str}):")

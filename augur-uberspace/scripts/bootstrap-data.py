@@ -1,50 +1,40 @@
 #!/usr/bin/env python3
-"""Bootstrap profile data via LibreChat Agents API.
+"""Bootstrap data via the bootstrap agent.
 
-Sends structured prompts to the L4 cron-planner agent (or any agent with
-store_put_profile access) to populate and enrich profile data at scale.
+Single command, all phases, one agent call per kind. Safe to re-run —
+each run deepens data (enriches existing profiles, adds new events,
+updates stale plans). Rate limits handled by agent_client retry logic.
 
-The script is additive: existing profiles are enriched with fresh data from
-MCP tools and web search; new profiles are created for missing entities.
-Bootstrap targets are defined in bootstrap-targets.json.
+Phases: profiles → timeseries → events → plans
 
 Usage:
-    # Dry run — preview prompts without calling API
-    python bootstrap-data.py --dry-run
-
-    # Bootstrap all kinds via cron-planner
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123
-
-    # Bootstrap one kind with custom batch size
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --kind countries --batch-size 5
-
-    # Custom LibreChat URL
-    python bootstrap-data.py --api-key KEY --agent-id agent_ABC123 --base-url http://augur.uber.space:3080
+    python bootstrap-data.py --dry-run          # preview prompts
+    python bootstrap-data.py                    # all kinds, all phases
+    python bootstrap-data.py --kind countries   # one kind only
+    python bootstrap-data.py --phase profiles   # one phase only
+    python bootstrap-data.py                    # re-run to deepen data
 """
 
 import argparse
 import json
 import os
 import sys
-import random
 import time
-
-try:
-    import httpx
-except ImportError:
-    httpx = None  # type: ignore[assignment]
-    if __name__ == "__main__":
-        print("ERROR: httpx required. Install: pip install httpx", file=sys.stderr)
-        sys.exit(1)
+from datetime import datetime, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, SCRIPT_DIR)
+
+from agent_client import AgentClient, load_env  # noqa: E402
+
 TARGETS_FILE = os.path.join(SCRIPT_DIR, "bootstrap-targets.json")
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 PROFILES_DIR = os.path.join(REPO_ROOT, "profiles")
 
 DEFAULT_BASE_URL = "http://localhost:3080"
-DEFAULT_BATCH_SIZE = 10
-API_TIMEOUT = 300  # 5 min per batch (agent may call many tools)
+DEFAULT_AGENT_NAME = "bootstrap"
+# Long timeout — agent makes many tool calls per kind
+API_TIMEOUT = 600  # 10 min per kind
 
 VALID_KINDS = {
     "countries", "stocks", "etfs", "crypto", "indices", "sources",
@@ -52,10 +42,16 @@ VALID_KINDS = {
     "regions",
 }
 
-# Minimal required fields per kind (id + name for all)
-REQUIRED_FIELDS = {k: ["id", "name"] for k in VALID_KINDS}
+ALL_PHASES = ["profiles", "timeseries", "events", "plans"]
 
-# Kind-specific data enrichment instructions
+# Kinds that have timeseries bootstrap instructions
+TIMESERIES_KINDS = {"countries", "stocks", "etfs", "commodities", "crops"}
+
+# Kinds that benefit from event seeding
+EVENTS_KINDS = {"countries", "stocks", "commodities", "crypto", "regions"}
+
+# ── Kind-specific instructions ──────────────────────────────
+
 KIND_INSTRUCTIONS = {
     "countries": (
         "For each country, use available MCP tools to fetch real data:\n"
@@ -135,60 +131,79 @@ KIND_INSTRUCTIONS = {
     ),
 }
 
-# Kind-specific timeseries bootstrap instructions (rough historical data)
 TIMESERIES_INSTRUCTIONS = {
     "countries": (
-        "For each country, fetch rough historical economic data and store as snapshots:\n"
+        "Fetch rough historical economic data and store as snapshots:\n"
         "- Use econ_world_bank_indicator for GDP, GDP growth, inflation, unemployment (annual, last 5 years)\n"
         "- Use econ_fred_series for US-specific time series\n"
         "- Use econ_imf_weo for forecasts\n"
-        "For each data point, call `store_snapshot(kind='countries', entity='{id}', "
-        "type='macro', data={{year, gdp, gdp_growth, inflation, unemployment, ...}}, "
-        "region='{region}')`. One snapshot per year."
+        "Call `store_snapshot(kind='countries', entity=ID, type='macro', "
+        "data={year, gdp, gdp_growth, inflation, unemployment, ...}, region=REGION)`. One snapshot per year."
     ),
     "stocks": (
-        "For each stock, fetch recent price history and store as snapshots:\n"
-        "- Use ta_analyze_full to get current OHLCV + technical indicators\n"
-        "- Store the result via `store_snapshot(kind='stocks', entity='{id}', "
-        "type='indicators', data={{...analysis result...}}, region='{region}')`.\n"
-        "One snapshot with the current analysis is sufficient."
+        "Fetch recent price + technical indicators:\n"
+        "- Use ta_analyze_full for current OHLCV + indicators\n"
+        "Call `store_snapshot(kind='stocks', entity=ID, type='indicators', data={...}, region=REGION)`."
     ),
     "etfs": (
-        "For each ETF, fetch current data and store as snapshot:\n"
-        "- Use ta_analyze_full to get current OHLCV + technical indicators\n"
-        "- Store via `store_snapshot(kind='etfs', entity='{id}', "
-        "type='indicators', data={{...}}, region='{region}')`."
+        "Fetch current data and store as snapshot:\n"
+        "- Use ta_analyze_full for current OHLCV + indicators\n"
+        "Call `store_snapshot(kind='etfs', entity=ID, type='indicators', data={...}, region=REGION)`."
     ),
     "commodities": (
-        "For each commodity, fetch recent price/production data:\n"
-        "- Use commodities_eia_series for energy commodities (crude oil, natural gas)\n"
+        "Fetch recent price/production data:\n"
+        "- Use commodities_eia_series for energy commodities\n"
         "- Use agri_faostat_data for agricultural commodities\n"
-        "- Store each data point via `store_snapshot(kind='commodities', entity='{id}', "
-        "type='price', data={{...}}, region='global')`."
+        "Call `store_snapshot(kind='commodities', entity=ID, type='price', data={...}, region='global')`."
     ),
     "crops": (
-        "For each crop, fetch recent production data:\n"
+        "Fetch recent production data:\n"
         "- Use agri_faostat_data for global production/trade\n"
         "- Use agri_usda_nass for US production\n"
-        "- Store via `store_snapshot(kind='crops', entity='{id}', "
-        "type='production', data={{year, production_mt, area_ha, yield_kg_ha, ...}}, "
-        "region='global')`. One snapshot per available year."
+        "Call `store_snapshot(kind='crops', entity=ID, type='production', "
+        "data={year, production_mt, area_ha, yield_kg_ha, ...}, region='global')`. One snapshot per year."
     ),
 }
 
+EVENTS_INSTRUCTIONS = {
+    "countries": (
+        "Delegate to osint-data to scrape GDELT, disaster feeds, and conflict trackers. "
+        "Look for: active conflicts, sanctions, elections, policy changes, natural disasters, "
+        "economic crises. Also delegate to signals-data for trending news."
+    ),
+    "stocks": (
+        "Delegate to market-data for recent earnings surprises, significant price moves (>3% daily), "
+        "IPOs, delistings, rating changes. Delegate to signals-data for trending Reddit/HN discussions."
+    ),
+    "commodities": (
+        "Delegate to market-data for recent price spikes/drops, supply disruptions, "
+        "OPEC decisions. Delegate to osint-data for geopolitical events affecting supply chains."
+    ),
+    "crypto": (
+        "Delegate to market-data for recent price moves. Delegate to signals-data "
+        "for Reddit/HN sentiment and regulatory news."
+    ),
+    "regions": (
+        "Delegate to osint-data for regional events: weather extremes, shipping disruptions "
+        "(Suez, Panama), trade bloc policy changes, humanitarian crises."
+    ),
+}
+
+
+# ── Prompt builders ─────────────────────────────────────────
 
 def load_targets(targets_file: str) -> dict:
     """Load bootstrap targets from JSON file."""
     with open(targets_file) as f:
         data = json.load(f)
-    # Strip metadata keys
     return {k: v for k, v in data.items() if not k.startswith("_")}
 
 
 def find_existing_profiles(profiles_dir: str, kind: str) -> set[str]:
     """Find profile IDs that already exist on disk."""
     existing = set()
-    profiles_path = os.path.join(profiles_dir, "")
+    if not os.path.isdir(profiles_dir):
+        return existing
     for region_dir in os.listdir(profiles_dir):
         region_path = os.path.join(profiles_dir, region_dir)
         if not os.path.isdir(region_path) or region_dir.startswith((".", "_")):
@@ -200,306 +215,346 @@ def find_existing_profiles(profiles_dir: str, kind: str) -> set[str]:
             continue
         for f in os.listdir(kind_path):
             if f.endswith(".json") and not f.startswith("_"):
-                existing.add(f[:-5])  # strip .json
+                existing.add(f[:-5])
     return existing
 
 
-def build_prompt(kind: str, targets: list[dict], existing_ids: set[str]) -> str:
-    """Build the bootstrap prompt for a batch of targets."""
-    required = REQUIRED_FIELDS.get(kind, [])
-    instructions = KIND_INSTRUCTIONS.get(kind, "Populate all schema fields accurately.")
+def count_all_profiles(profiles_dir: str) -> dict[str, int]:
+    """Count existing profiles per kind on disk."""
+    counts: dict[str, int] = {}
+    if not os.path.isdir(profiles_dir):
+        return counts
+    for region_dir in os.listdir(profiles_dir):
+        region_path = os.path.join(profiles_dir, region_dir)
+        if not os.path.isdir(region_path) or region_dir.startswith((".", "_")):
+            continue
+        if region_dir in ("SCHEMAS",):
+            continue
+        for kind_dir in os.listdir(region_path):
+            kind_path = os.path.join(region_path, kind_dir)
+            if not os.path.isdir(kind_path):
+                continue
+            n = sum(1 for f in os.listdir(kind_path)
+                    if f.endswith(".json") and not f.startswith("_"))
+            counts[kind_dir] = counts.get(kind_dir, 0) + n
+    return counts
 
-    # Classify targets as new or existing (for enrichment)
+
+def print_data_stats(profiles_dir: str, targets: dict, label: str = ""):
+    """Print profile counts vs target counts."""
+    counts = count_all_profiles(profiles_dir)
+    print(f"\n  {'Data' if not label else label}:")
+    print(f"  {'Kind':<15} {'Profiles':>8} / {'Targets':>7}  {'Coverage':>8}")
+    print(f"  {'─'*15} {'─'*8} {'─'*2} {'─'*7}  {'─'*8}")
+    total_profiles = 0
+    total_targets = 0
+    for kind in sorted(targets.keys()):
+        n_profiles = counts.get(kind, 0)
+        n_targets = len(targets[kind])
+        pct = f"{n_profiles / n_targets * 100:.0f}%" if n_targets else "—"
+        print(f"  {kind:<15} {n_profiles:>8} / {n_targets:>7}  {pct:>8}")
+        total_profiles += n_profiles
+        total_targets += n_targets
+    print(f"  {'─'*15} {'─'*8} {'─'*2} {'─'*7}  {'─'*8}")
+    pct = f"{total_profiles / total_targets * 100:.0f}%" if total_targets else "—"
+    print(f"  {'TOTAL':<15} {total_profiles:>8} / {total_targets:>7}  {pct:>8}")
+
+
+def _entity_list(targets: list[dict]) -> str:
+    """Format entity list for prompts."""
+    return "\n".join(f"- **{t['id']}** (region: {t['region']})" for t in targets)
+
+
+def build_profiles_prompt(kind: str, targets: list[dict], existing_ids: set[str]) -> str:
+    """Build profile bootstrap prompt for all targets of a kind."""
+    instructions = KIND_INSTRUCTIONS.get(kind, "Populate all schema fields accurately.")
     new_targets = [t for t in targets if t["id"] not in existing_ids]
     enrich_targets = [t for t in targets if t["id"] in existing_ids]
 
-    prompt_parts = [
-        f"## Profile Bootstrap Task: {kind}\n",
-        "You are bootstrapping profile data for the trading signals platform. "
-        "Use MCP tools (data APIs) and web search to gather accurate, current data. "
-        "For each entity, call `store_put_profile()` to create or update the profile.\n",
-        f"**Schema required fields**: {', '.join(required)}",
-        f"**Kind**: {kind}\n",
+    parts = [
+        f"## Profile Bootstrap: {kind} ({len(targets)} entities)\n",
+        "Bootstrap profile data for the trading signals platform. "
+        "Delegate to L1 data agents, then call `store_put_profile()` for each entity. "
+        "This may be a re-run — enrich existing profiles with deeper/fresher data, "
+        "don't skip entities just because they already exist.\n",
         f"### Data gathering instructions\n{instructions}\n",
     ]
 
     if enrich_targets:
-        prompt_parts.append(
-            "### Profiles to ENRICH (already exist — update with fresh data)\n"
-            "These profiles exist but may have incomplete or stale data. "
-            "First read each with `store_get_profile()`, then update with fresh data "
-            "from MCP tools. Merge new data, don't overwrite existing good data.\n"
+        parts.append(
+            f"### Profiles to ENRICH ({len(enrich_targets)} existing)\n"
+            "Read each with `store_get_profile()`, then update with fresh data.\n"
         )
-        for t in enrich_targets:
-            prompt_parts.append(f"- **{t['id']}** (region: {t['region']})")
+        parts.append(_entity_list(enrich_targets))
 
     if new_targets:
-        prompt_parts.append(
-            "\n### Profiles to CREATE (new)\n"
-            "These profiles don't exist yet. Create them with comprehensive data.\n"
+        parts.append(
+            f"\n### Profiles to CREATE ({len(new_targets)} new)\n"
         )
-        for t in new_targets:
-            prompt_parts.append(f"- **{t['id']}** (region: {t['region']})")
+        parts.append(_entity_list(new_targets))
 
-    prompt_parts.extend([
+    parts.extend([
         "\n### Rules",
-        "1. Call `store_put_profile(kind=\"{kind}\", id=\"{id}\", data={{...}}, region=\"{region}\")` for each entity.".format(
-            kind=kind, id="{id}", region="{region}"
-        ),
-        "2. Set `_sources` to list the actual data sources used (e.g., [\"world_bank\", \"fred\"]).",
-        "3. Do NOT set `_placeholder: true` — this is real data.",
-        "4. Include `tags` array with relevant categorization tags.",
-        "5. Process ALL entities listed above. Report results when done.",
-        "6. If an MCP tool fails, skip that data point and note it — don't stop.",
+        f"1. Call `store_put_profile(kind=\"{kind}\", id=ID, data={{...}}, region=REGION)` for each.",
+        "2. Set `_sources` array to actual data sources used.",
+        "3. Do NOT set `_placeholder: true`.",
+        "4. Include `tags` array.",
+        "5. Process ALL entities. Report: {created: N, enriched: N, errors: N}.",
+        "6. If a tool fails, skip that entity and continue.",
     ])
 
-    return "\n".join(prompt_parts)
+    return "\n".join(parts)
 
 
 def build_timeseries_prompt(kind: str, targets: list[dict]) -> str | None:
-    """Build a timeseries bootstrap prompt for a batch of targets.
-
-    Returns None if this kind has no timeseries instructions.
-    """
+    """Build timeseries bootstrap prompt for all targets of a kind."""
     instructions = TIMESERIES_INSTRUCTIONS.get(kind)
     if not instructions:
         return None
 
-    prompt_parts = [
-        f"## Historical Timeseries Bootstrap: {kind}\n",
-        "You are bootstrapping rough historical timeseries data for the trading signals "
-        "platform. Use MCP tools (data APIs) to fetch real historical data points and "
-        "store each as a snapshot via `store_snapshot()`.\n",
-        f"### Data gathering instructions\n{instructions}\n",
-        "### Entities to process\n",
-    ]
-
-    for t in targets:
-        filled = instructions.replace("{id}", t["id"]).replace("{region}", t["region"])
-        prompt_parts.append(f"- **{t['id']}** (region: {t['region']})")
-
-    prompt_parts.extend([
-        "\n### Rules",
-        "1. Use MCP data tools to fetch REAL data — do not fabricate numbers.",
-        "2. Store each data point via `store_snapshot()` with appropriate type.",
-        "3. If a tool fails or returns no data for an entity, skip it and continue.",
-        "4. Rough/approximate data is fine — this is seed data, not precision data.",
-        "5. Process ALL entities listed above. Report results when done.",
+    return "\n".join([
+        f"## Timeseries Bootstrap: {kind} ({len(targets)} entities)\n",
+        "Fetch historical data via L1 agents, store as snapshots.\n",
+        f"### Instructions\n{instructions}\n",
+        f"### Entities\n{_entity_list(targets)}\n",
+        "### Rules",
+        "1. Use MCP data tools to fetch REAL data — do not fabricate.",
+        "2. Store each data point via `store_snapshot()`.",
+        "3. Skip entities where tools fail — continue with the rest.",
+        "4. Rough/approximate data is fine — this is seed data.",
+        "5. Process ALL entities. Report: {snapshots_stored: N, errors: N}.",
     ])
 
-    return "\n".join(prompt_parts)
+
+def build_events_prompt(kind: str, targets: list[dict]) -> str:
+    """Build events bootstrap prompt for all targets of a kind."""
+    instructions = EVENTS_INSTRUCTIONS.get(kind,
+        f"Delegate to appropriate L1 agents to find current events affecting these {kind}.")
+
+    return "\n".join([
+        f"## Events Bootstrap: {kind} ({len(targets)} entities)\n",
+        "Seed current events by delegating to L1 agents, then call "
+        "`event(subtype, summary, data, severity, countries, entities, region, source)`. "
+        "This may be a re-run — focus on NEW events since the last run. "
+        "Check `recent_events()` first to avoid duplicating existing events.\n",
+        f"### Instructions\n{instructions}\n",
+        f"### Entities\n{_entity_list(targets)}\n",
+        "### Rules",
+        "1. Only store REAL current events — do not fabricate.",
+        "2. Severity: routine=low, notable=medium, major=high, crisis=critical.",
+        "3. Link events via `countries` (ISO3) and `entities` (IDs) arrays.",
+        "4. Set `source` to data origin (gdelt, reddit, rss, finance, google_news).",
+        "5. Valid subtypes: earthquake, volcano, flood, drought, wildfire, conflict, "
+        "sanctions, election, policy, tariff, earnings, ipo, default, signal_change, "
+        "price_spike, supply_disruption, transport, epidemic, sentiment_shift.",
+        "6. Skip entities with no current events.",
+        "7. Report: {events_stored: N, by_severity: {...}, errors: N}.",
+    ])
 
 
-def batch_targets(targets: list[dict], batch_size: int) -> list[list[dict]]:
-    """Split targets into batches."""
-    return [targets[i:i + batch_size] for i in range(0, len(targets), batch_size)]
+def build_plans_prompt(targets: dict) -> str:
+    """Build prompt to create initial plans and watchlists."""
+    kind_summary = ", ".join(f"{k}: {len(v)}" for k, v in sorted(targets.items()))
+
+    return (
+        "## Bootstrap Plans & Watchlists\n\n"
+        "Create or update research plans and watchlists for cron-planner. "
+        "First, read existing plans (`get_notes(kind=\"plan\")`) and watchlists "
+        "(`get_notes(kind=\"watchlist\")`). Update existing ones with fresh data "
+        "rather than creating duplicates.\n\n"
+        f"**Bootstrapped entity counts**: {kind_summary}\n\n"
+        "### Plans to create (`save_note` with `kind=\"plan\"`):\n\n"
+        "1. **Daily data refresh** — schedule per kind: stocks 2x daily, "
+        "commodities/crypto daily, countries/regions weekly, sources monthly.\n"
+        "2. **High-priority entities** — use `recent_events()` to find entities "
+        "with severity >= medium. Include reason and check frequency.\n"
+        "3. **Coverage gaps** — read bootstrap journal logs "
+        "(`get_notes(kind=\"journal\", tag=\"bootstrap\")`) and list thin areas.\n"
+        "4. **Analysis cadence** — L2 analysts after daily refresh, "
+        "L3 synthesizer on high-severity events and weekly deep-dive.\n\n"
+        "### Watchlists to create (`save_note` with `kind=\"watchlist\"`):\n\n"
+        "1. **Market movers** — highest volatility stocks/ETFs/crypto.\n"
+        "2. **Geopolitical hotspots** — active conflicts, sanctions, disasters.\n"
+        "3. **Supply chain risks** — disrupted commodities/materials.\n\n"
+        "### Rules\n"
+        "- Tag plans with `[\"bootstrap\", \"initial\"]`, watchlists with `[\"bootstrap\", \"watchlist\"]`.\n"
+        "- Include specific entity IDs in watchlists.\n"
+        "- If no events exist yet, base watchlists on profile risk_factors.\n"
+        "- Report: {plans_created: N, watchlists_created: N}."
+    )
 
 
-def send_bootstrap_message(
-    client: httpx.Client,
-    agent_id: str,
-    prompt: str,
-    timeout: int = API_TIMEOUT,
-) -> dict:
-    """Send a bootstrap prompt to the LibreChat Agents API and collect response.
+# ── Logging helpers ─────────────────────────────────────────
 
-    Uses the OpenAI-compatible chat completions endpoint with SSE streaming.
-    Returns {status, content, usage} or {status, error}.
-    """
-    payload = {
-        "model": agent_id,
-        "messages": [{"role": "user", "content": prompt}],
-        "stream": True,
-    }
+def log_phase(phase: str, kind: str = "", count: int = 0):
+    """Print phase/kind header."""
+    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+    if kind:
+        print(f"\n[{ts}] ── {phase}: {kind} ({count} entities) ──")
+    else:
+        print(f"\n[{ts}] ── {phase} ──")
 
-    collected_content = []
-    usage = {}
 
-    try:
-        with client.stream(
-            "POST",
-            "/api/agents/v1/chat/completions",
-            json=payload,
-            timeout=timeout,
-        ) as response:
-            if response.status_code != 200:
-                error_body = ""
-                for chunk in response.iter_text():
-                    error_body += chunk
-                return {"status": "error", "error": f"HTTP {response.status_code}: {error_body[:500]}"}
+def log_result(result: dict, label: str = "") -> bool:
+    """Print result summary. Returns True if ok."""
+    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+    prefix = f"  {label}: " if label else "  "
 
-            for line in response.iter_lines():
-                if not line.startswith("data: "):
-                    continue
-                data_str = line[6:].strip()
-                if data_str == "[DONE]":
-                    break
-                try:
-                    chunk = json.loads(data_str)
-                    choices = chunk.get("choices", [])
-                    if choices:
-                        delta = choices[0].get("delta", {})
-                        content = delta.get("content", "")
-                        if content:
-                            collected_content.append(content)
-                    if "usage" in chunk:
-                        usage = chunk["usage"]
-                except json.JSONDecodeError:
-                    continue
+    if result["status"] == "ok":
+        content = result.get("content", "")
+        usage = result.get("usage", {})
+        tok_in = usage.get("prompt_tokens", "?")
+        tok_out = usage.get("completion_tokens", "?")
+        print(f"[{ts}]{prefix}OK ({len(content)} chars, {tok_in}→{tok_out} tokens)")
+        # Print last few lines of response (usually the summary)
+        if content:
+            for line in content.strip().split("\n")[-3:]:
+                if line.strip():
+                    print(f"         {line.strip()[:120]}")
+        return True
+    else:
+        error = result.get("error", "unknown")
+        print(f"[{ts}]{prefix}FAIL — {error}", file=sys.stderr)
+        return False
 
-    except httpx.TimeoutException:
-        return {"status": "timeout", "content": "".join(collected_content), "error": "Request timed out"}
-    except httpx.HTTPError as e:
-        return {"status": "error", "error": str(e)}
 
-    return {
-        "status": "ok",
-        "content": "".join(collected_content),
-        "usage": usage,
-    }
+def log_dry_run(prompt: str, label: str = ""):
+    """Print dry-run prompt preview."""
+    prefix = f"  {label}: " if label else "  "
+    print(f"{prefix}[DRY RUN] {len(prompt)} chars")
+    # Show first 3 non-empty lines
+    shown = 0
+    for line in prompt.split("\n"):
+        if line.strip() and shown < 3:
+            print(f"    {line.strip()[:100]}")
+            shown += 1
 
+
+# ── Main runner ─────────────────────────────────────────────
 
 def run_bootstrap(
-    client: httpx.Client,
+    client: AgentClient | None,
     agent_id: str,
     targets: dict,
     profiles_dir: str,
     kind_filter: str | None = None,
-    batch_size: int = DEFAULT_BATCH_SIZE,
+    phases: list[str] | None = None,
     dry_run: bool = False,
-    timeseries: bool = False,
 ) -> dict:
-    """Run the full bootstrap process. Returns summary stats."""
-    stats = {"kinds": 0, "batches": 0, "targets": 0, "ok": 0, "errors": 0}
+    """Run bootstrap phases. One agent call per kind per phase."""
+    phases = phases or ALL_PHASES
+    stats = {"calls": 0, "ok": 0, "errors": 0, "phases": []}
+    start = time.monotonic()
 
-    kinds_to_process = [kind_filter] if kind_filter else sorted(targets.keys())
+    kinds = [kind_filter] if kind_filter else sorted(
+        k for k in targets if k in VALID_KINDS)
 
-    for kind in kinds_to_process:
-        if kind not in targets:
-            print(f"  SKIP: no targets for kind '{kind}'", file=sys.stderr)
-            continue
-        if kind not in VALID_KINDS:
-            print(f"  SKIP: invalid kind '{kind}'", file=sys.stderr)
-            continue
+    for phase in phases:
+        stats["phases"].append(phase)
 
-        kind_targets = targets[kind]
-        existing = find_existing_profiles(profiles_dir, kind)
-        batches = batch_targets(kind_targets, batch_size)
-
-        print(f"\n{'='*60}")
-        print(f"Kind: {kind} — {len(kind_targets)} targets, {len(existing)} existing, {len(batches)} batches")
-        print(f"{'='*60}")
-        stats["kinds"] += 1
-
-        for i, batch in enumerate(batches, 1):
-            prompt = build_prompt(kind, batch, existing)
-            batch_ids = [t["id"] for t in batch]
-            new_count = sum(1 for t in batch if t["id"] not in existing)
-            enrich_count = len(batch) - new_count
-
-            print(f"\n  Batch {i}/{len(batches)}: {batch_ids}")
-            print(f"    New: {new_count}, Enrich: {enrich_count}")
-            stats["batches"] += 1
-            stats["targets"] += len(batch)
-
-            if dry_run:
-                print(f"    [DRY RUN] Prompt ({len(prompt)} chars):")
-                # Print first 500 chars of prompt
-                for line in prompt[:500].split("\n"):
-                    print(f"      {line}")
-                if len(prompt) > 500:
-                    print(f"      ... ({len(prompt) - 500} more chars)")
-                stats["ok"] += 1
-                continue
-
-            result = send_bootstrap_message(client, agent_id, prompt)
-
-            if result["status"] == "ok":
-                content = result.get("content", "")
-                usage = result.get("usage", {})
-                print(f"    OK — response: {len(content)} chars")
-                if usage:
-                    print(f"    Tokens: in={usage.get('prompt_tokens', '?')}, out={usage.get('completion_tokens', '?')}")
-                # Print summary (last 200 chars often has the result)
-                if content:
-                    summary = content[-300:] if len(content) > 300 else content
-                    for line in summary.split("\n")[-5:]:
-                        if line.strip():
-                            print(f"    > {line.strip()[:100]}")
-                stats["ok"] += 1
-            else:
-                error = result.get("error", "unknown error")
-                print(f"    FAIL — {error}", file=sys.stderr)
-                stats["errors"] += 1
-
-            # Brief pause between batches to avoid rate limiting
-            if not dry_run and i < len(batches):
-                time.sleep(random.uniform(1.0, 4.0))
-
-    # ── Phase 2: Timeseries bootstrap (rough historical data) ──
-    if timeseries:
-        ts_kinds = [kind_filter] if kind_filter else sorted(TIMESERIES_INSTRUCTIONS.keys())
-        for kind in ts_kinds:
-            if kind not in targets or kind not in TIMESERIES_INSTRUCTIONS:
-                continue
-            kind_targets = targets[kind]
-            # Smaller batches for timeseries (more API calls per entity)
-            ts_batch_size = max(1, batch_size // 2)
-            batches = batch_targets(kind_targets, ts_batch_size)
-
-            print(f"\n{'='*60}")
-            print(f"Timeseries: {kind} — {len(kind_targets)} targets, {len(batches)} batches")
-            print(f"{'='*60}")
-
-            for i, batch in enumerate(batches, 1):
-                prompt = build_timeseries_prompt(kind, batch)
-                if not prompt:
+        if phase == "profiles":
+            for kind in kinds:
+                kind_targets = targets.get(kind, [])
+                if not kind_targets:
                     continue
+                existing = find_existing_profiles(profiles_dir, kind)
+                new = sum(1 for t in kind_targets if t["id"] not in existing)
+                log_phase("Profiles", kind, len(kind_targets))
+                print(f"  {new} new, {len(kind_targets) - new} enrich")
 
-                batch_ids = [t["id"] for t in batch]
-                print(f"\n  TS Batch {i}/{len(batches)}: {batch_ids}")
-                stats["batches"] += 1
-                stats["targets"] += len(batch)
+                prompt = build_profiles_prompt(kind, kind_targets, existing)
+                stats["calls"] += 1
 
                 if dry_run:
-                    print(f"    [DRY RUN] Timeseries prompt ({len(prompt)} chars):")
-                    for line in prompt[:500].split("\n"):
-                        print(f"      {line}")
-                    if len(prompt) > 500:
-                        print(f"      ... ({len(prompt) - 500} more chars)")
-                    stats["ok"] += 1
-                    continue
-
-                result = send_bootstrap_message(client, agent_id, prompt)
-
-                if result["status"] == "ok":
-                    content = result.get("content", "")
-                    print(f"    OK — response: {len(content)} chars")
+                    log_dry_run(prompt, kind)
                     stats["ok"] += 1
                 else:
-                    error = result.get("error", "unknown error")
-                    print(f"    FAIL — {error}", file=sys.stderr)
+                    result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
+                    if log_result(result, kind):
+                        stats["ok"] += 1
+                    else:
+                        stats["errors"] += 1
+
+        elif phase == "timeseries":
+            for kind in kinds:
+                if kind not in TIMESERIES_KINDS:
+                    continue
+                kind_targets = targets.get(kind, [])
+                if not kind_targets:
+                    continue
+                log_phase("Timeseries", kind, len(kind_targets))
+
+                prompt = build_timeseries_prompt(kind, kind_targets)
+                if not prompt:
+                    continue
+                stats["calls"] += 1
+
+                if dry_run:
+                    log_dry_run(prompt, kind)
+                    stats["ok"] += 1
+                else:
+                    result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
+                    if log_result(result, kind):
+                        stats["ok"] += 1
+                    else:
+                        stats["errors"] += 1
+
+        elif phase == "events":
+            for kind in kinds:
+                if kind not in EVENTS_KINDS:
+                    continue
+                kind_targets = targets.get(kind, [])
+                if not kind_targets:
+                    continue
+                log_phase("Events", kind, len(kind_targets))
+
+                prompt = build_events_prompt(kind, kind_targets)
+                stats["calls"] += 1
+
+                if dry_run:
+                    log_dry_run(prompt, kind)
+                    stats["ok"] += 1
+                else:
+                    result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
+                    if log_result(result, kind):
+                        stats["ok"] += 1
+                    else:
+                        stats["errors"] += 1
+
+        elif phase == "plans":
+            log_phase("Plans & Watchlists")
+            prompt = build_plans_prompt(targets)
+            stats["calls"] += 1
+
+            if dry_run:
+                log_dry_run(prompt, "plans")
+                stats["ok"] += 1
+            else:
+                result = client.invoke(agent_id, prompt, timeout=API_TIMEOUT)
+                if log_result(result, "plans"):
+                    stats["ok"] += 1
+                else:
                     stats["errors"] += 1
 
-                if not dry_run and i < len(batches):
-                    time.sleep(random.uniform(1.0, 4.0))
-
+    stats["elapsed"] = round(time.monotonic() - start, 1)
     return stats
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Bootstrap profile data via LibreChat Agents API"
+        description="Bootstrap data via the bootstrap agent"
     )
     parser.add_argument(
-        "--api-key",
-        default=os.environ.get("TA_AGENTS_API_KEY", ""),
-        help="LibreChat Agents API key (or set TA_AGENTS_API_KEY env var)",
+        "--api-key", default=None,
+        help="LibreChat API key (default: AUGUR_AGENTS_API_KEY from .env)",
     )
     parser.add_argument(
-        "--agent-id",
-        default=os.environ.get("TA_BOOTSTRAP_AGENT_ID", ""),
-        help="Agent ID to send prompts to (or set TA_BOOTSTRAP_AGENT_ID env var)",
+        "--agent-id", default=None,
+        help="Agent ID (default: auto-discovered)",
+    )
+    parser.add_argument(
+        "--agent-name", default=DEFAULT_AGENT_NAME,
+        help=f"Agent name to discover (default: {DEFAULT_AGENT_NAME})",
     )
     parser.add_argument(
         "--base-url",
@@ -507,19 +562,15 @@ def main():
         help=f"LibreChat base URL (default: {DEFAULT_BASE_URL})",
     )
     parser.add_argument(
-        "--kind",
-        default=None,
+        "--kind", default=None,
         help="Bootstrap only this kind (e.g., countries, stocks)",
     )
     parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=DEFAULT_BATCH_SIZE,
-        help=f"Entities per API call (default: {DEFAULT_BATCH_SIZE})",
+        "--phase", default=None, choices=ALL_PHASES,
+        help="Run only this phase (default: all phases)",
     )
     parser.add_argument(
-        "--targets-file",
-        default=TARGETS_FILE,
+        "--targets-file", default=TARGETS_FILE,
         help="Path to bootstrap-targets.json",
     )
     parser.add_argument(
@@ -528,68 +579,74 @@ def main():
         help="Path to profiles directory",
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
+        "--dry-run", action="store_true",
         help="Preview prompts without calling API",
-    )
-    parser.add_argument(
-        "--timeseries",
-        action="store_true",
-        help="Also bootstrap rough historical timeseries data via store_snapshot()",
     )
     args = parser.parse_args()
 
-    # Validate args
-    if not args.dry_run:
-        if not args.api_key:
-            print("ERROR: --api-key required (or set TA_AGENTS_API_KEY)", file=sys.stderr)
-            sys.exit(1)
-        if not args.agent_id:
-            print("ERROR: --agent-id required (or set TA_BOOTSTRAP_AGENT_ID)", file=sys.stderr)
-            sys.exit(1)
-
     if args.kind and args.kind not in VALID_KINDS:
-        print(f"ERROR: unknown kind '{args.kind}', valid: {sorted(VALID_KINDS)}", file=sys.stderr)
+        print(f"ERROR: unknown kind '{args.kind}', valid: {sorted(VALID_KINDS)}",
+              file=sys.stderr)
         sys.exit(1)
 
-    # Load targets
+    load_env()
+    api_key = args.api_key or os.environ.get("AUGUR_AGENTS_API_KEY", "")
+
+    if not args.dry_run and not api_key:
+        print("ERROR: No API key. Set AUGUR_AGENTS_API_KEY in .env or pass --api-key",
+              file=sys.stderr)
+        sys.exit(1)
+
     targets = load_targets(args.targets_file)
     total = sum(len(v) for v in targets.values())
-    print(f"Loaded {total} bootstrap targets across {len(targets)} kinds from {args.targets_file}")
 
+    phases = [args.phase] if args.phase else ALL_PHASES
+
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    print(f"Bootstrap started at {ts}")
+    print(f"  Targets: {total} entities across {len(targets)} kinds")
+    print(f"  Phases:  {' → '.join(phases)}")
+    if args.kind:
+        print(f"  Filter:  {args.kind} only")
     if args.dry_run:
-        print("[DRY RUN MODE — no API calls will be made]\n")
+        print("  Mode:    DRY RUN (no API calls)")
 
-    # Set up HTTP client
-    client = httpx.Client(base_url=args.base_url, timeout=30)
+    # Before stats
+    print_data_stats(args.profiles_dir, targets, "Before")
+
+    client = None
+    agent_id = args.agent_id or "dry-run"
+
     if not args.dry_run:
-        client.headers["Authorization"] = f"Bearer {args.api_key}"
-        client.headers["Content-Type"] = "application/json"
-        print(f"Targeting agent {args.agent_id} at {args.base_url}")
+        client = AgentClient(args.base_url, api_key)
+        if not args.agent_id:
+            print(f"  Agent:   discovering '{args.agent_name}'...")
+            agent_id = client.find_agent(args.agent_name)
+            if not agent_id:
+                print(f"ERROR: Agent '{args.agent_name}' not found. "
+                      f"Run: seed-agents.py --mode bootstrap", file=sys.stderr)
+                sys.exit(1)
+        print(f"  Agent:   {agent_id} @ {args.base_url}")
 
-    # Run bootstrap
     stats = run_bootstrap(
         client=client,
-        agent_id=args.agent_id or "dry-run",
+        agent_id=agent_id,
         targets=targets,
         profiles_dir=args.profiles_dir,
         kind_filter=args.kind,
-        batch_size=args.batch_size,
+        phases=phases,
         dry_run=args.dry_run,
-        timeseries=args.timeseries,
     )
 
-    client.close()
+    # After stats
+    print_data_stats(args.profiles_dir, targets, "After")
 
     # Summary
-    print(f"\n{'='*60}")
-    print("Bootstrap Summary")
-    print(f"{'='*60}")
-    print(f"  Kinds processed: {stats['kinds']}")
-    print(f"  Batches sent:    {stats['batches']}")
-    print(f"  Total targets:   {stats['targets']}")
-    print(f"  Successful:      {stats['ok']}")
-    print(f"  Errors:          {stats['errors']}")
+    print(f"\n{'='*50}")
+    print(f"Bootstrap complete in {stats['elapsed']}s")
+    print(f"  Phases: {' → '.join(stats['phases'])}")
+    print(f"  Calls:  {stats['calls']} ({stats['ok']} ok, {stats['errors']} errors)")
+    print(f"{'='*50}")
 
     if stats["errors"] > 0:
         sys.exit(1)

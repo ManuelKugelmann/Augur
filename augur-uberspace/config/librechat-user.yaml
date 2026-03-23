@@ -39,7 +39,7 @@ webSearch:
 endpoints:
   custom:
 
-    # ── Groq (free, very fast inference) ──
+    # ── Groq (free: 30 RPM, ~500K tok/day on 70B models) ──
     # Key: https://console.groq.com/keys
     - name: "Groq"
       apiKey: "${GROQ_API_KEY}"
@@ -48,14 +48,15 @@ endpoints:
         default:
           - openai/gpt-oss-120b
           - llama-3.3-70b-versatile
+          - moonshotai/kimi-k2-instruct
+          - qwen/qwen3-32b
           - llama-3.1-8b-instant
-          - kimi-k2-0905
         fetch: false
       titleConvo: true
       titleModel: "llama-3.1-8b-instant"
       modelDisplayLabel: "Groq"
 
-    # ── Google Gemini (free tier, 15 RPM / 1M TPD) ──
+    # ── Google Gemini (free: Flash 10 RPM / 250 RPD, Pro 5 RPM / 100 RPD) ──
     # Key: https://aistudio.google.com/apikey
     - name: "Gemini"
       apiKey: "${GEMINI_API_KEY}"
@@ -70,7 +71,7 @@ endpoints:
       titleModel: "gemini-2.5-flash"
       modelDisplayLabel: "Gemini"
 
-    # ── Mistral (free tier: mistral-small) ──
+    # ── Mistral (free: 2 RPM, 1B tok/month — all models incl. Large) ──
     # Key: https://console.mistral.ai/api-keys
     - name: "Mistral"
       apiKey: "${MISTRAL_API_KEY}"
@@ -86,22 +87,21 @@ endpoints:
       titleModel: "mistral-small-latest"
       modelDisplayLabel: "Mistral"
 
-    # ── Cerebras (free, 30 RPM / 14.4K RPD, fast inference) ──
+    # ── Cerebras (free: 1M tok/day, 30 RPM, very fast inference) ──
     # Key: https://cloud.cerebras.ai
     - name: "Cerebras"
       apiKey: "${CEREBRAS_API_KEY}"
       baseURL: "https://api.cerebras.ai/v1"
       models:
         default:
-          - qwen3-235b
-          - gpt-oss-120b
+          - qwen-3-235b-a22b-instruct-2507
           - llama3.1-8b
         fetch: false
       titleConvo: true
       titleModel: "llama3.1-8b"
       modelDisplayLabel: "Cerebras"
 
-    # ── Cohere (free, 20 RPM / 1K req/month) ──
+    # ── Cohere (free: 20 RPM, 1K req/month — all models incl. Command-A) ──
     # Key: https://dashboard.cohere.com/api-keys
     - name: "Cohere"
       apiKey: "${COHERE_API_KEY}"
@@ -116,7 +116,7 @@ endpoints:
       titleModel: "command-r7b-12-2024"
       modelDisplayLabel: "Cohere"
 
-    # ── GitHub Models (free, uses GitHub PAT) ──
+    # ── GitHub Models (free: 10 RPM / 50 RPD high-end, ~150 RPD small) ──
     # Key: https://github.com/settings/tokens (classic PAT or fine-grained with "Models" read permission)
     - name: "GitHub Models"
       apiKey: "${GITHUB_MODELS_PAT}"
@@ -124,14 +124,13 @@ endpoints:
       models:
         default:
           - gpt-4o-mini
-          - o4-mini
           - Phi-4
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
       modelDisplayLabel: "GitHub Models"
 
-    # ── Alibaba Cloud / Qwen (free 1M tokens/month) ──
+    # ── Alibaba Cloud / Qwen (free: 1M tokens/model, 90-day grant, then paid) ──
     # Key: https://dashscope.console.aliyun.com/apiKey
     - name: "Qwen"
       apiKey: "${DASHSCOPE_API_KEY}"
@@ -141,26 +140,25 @@ endpoints:
           - qwen3-max
           - qwen-plus
           - qwen-flash
-          - qwen-long
         fetch: false
       titleConvo: true
       titleModel: "qwen-flash"
       modelDisplayLabel: "Qwen"
 
-    # ── OpenRouter (some free models with :free suffix) ──
+    # ── OpenRouter (free: 20 RPM / 50 RPD on :free models, ~29 models) ──
     # Key: https://openrouter.ai/keys
     - name: "OpenRouter"
       apiKey: "${OPENROUTER_API_KEY}"
       baseURL: "https://openrouter.ai/api/v1"
       models:
         default:
-          - "google/gemini-2.5-flash:free"
-          - "nvidia/nemotron-3-super-120b:free"
+          - "minimax/minimax-m2.5:free"
+          - "nvidia/nemotron-3-super-120b-a12b:free"
+          - "openai/gpt-oss-120b:free"
           - "meta-llama/llama-3.3-70b-instruct:free"
-          - "deepseek/deepseek-r1:free"
         fetch: false
       titleConvo: true
-      titleModel: "meta-llama/llama-3.3-70b-instruct:free"
+      titleModel: "minimax/minimax-m2.5:free"
       modelDisplayLabel: "OpenRouter"
 
     # ── Claude Max (subscription via CLIProxyAPI) ──
