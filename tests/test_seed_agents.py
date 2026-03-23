@@ -323,36 +323,32 @@ class TestConnectivityCheck:
         assert exc_info.value.code == 1
         assert get_count() > 1  # retried at least once
 
-    def test_mode_continuous_selects_default_models(self, seed_agents, monkeypatch):
-        """--mode continuous selects agent-models.json."""
-        expected = seed_agents.MODE_MODELS_FILES["continuous"]
-        assert expected.endswith("agent-models.json")
-        assert os.path.isfile(expected), f"Missing: {expected}"
+    def test_default_models_file_exists(self, seed_agents):
+        """Default models file (agent-models.json) exists."""
+        assert seed_agents.MODELS_FILE.endswith("agent-models.json")
+        assert os.path.isfile(seed_agents.MODELS_FILE), f"Missing: {seed_agents.MODELS_FILE}"
 
-    def test_mode_bootstrap_selects_bootstrap_models(self, seed_agents, monkeypatch):
-        """--mode bootstrap selects agent-models-bootstrap.json."""
-        expected = seed_agents.MODE_MODELS_FILES["bootstrap"]
-        assert expected.endswith("agent-models-bootstrap.json")
-        assert os.path.isfile(expected), f"Missing: {expected}"
+    def test_bootstrap_models_file_exists(self, seed_agents):
+        """Bootstrap models file (agent-models-bootstrap.json) exists."""
+        assert seed_agents.BOOTSTRAP_MODELS_FILE.endswith("agent-models-bootstrap.json")
+        assert os.path.isfile(seed_agents.BOOTSTRAP_MODELS_FILE), f"Missing: {seed_agents.BOOTSTRAP_MODELS_FILE}"
 
-    def test_valid_modes(self, seed_agents):
-        """Both mode files are valid JSON with required structure."""
-        for mode, path in seed_agents.MODE_MODELS_FILES.items():
+    def test_models_files_valid(self, seed_agents):
+        """Both models files are valid JSON with required structure."""
+        for label, path in [("default", seed_agents.MODELS_FILE),
+                            ("bootstrap", seed_agents.BOOTSTRAP_MODELS_FILE)]:
             with open(path) as f:
                 data = json.load(f)
-            assert "defaults" in data, f"{mode}: missing 'defaults'"
-            assert "agents" in data, f"{mode}: missing 'agents'"
-            # Defaults must have L1-L4 at minimum
+            assert "defaults" in data, f"{label}: missing 'defaults'"
+            assert "agents" in data, f"{label}: missing 'agents'"
             for layer in ("L1", "L2", "L3", "L4"):
-                assert layer in data["defaults"], f"{mode}: missing default for {layer}"
+                assert layer in data["defaults"], f"{label}: missing default for {layer}"
                 assert "provider" in data["defaults"][layer]
                 assert "model" in data["defaults"][layer]
 
     def test_bootstrap_uses_qwen_for_data_agents(self, seed_agents):
         """Bootstrap mode must assign Qwen to L1 data agents."""
-        overrides = seed_agents.load_model_overrides(
-            seed_agents.MODE_MODELS_FILES["bootstrap"]
-        )
+        overrides = seed_agents.load_model_overrides(seed_agents.BOOTSTRAP_MODELS_FILE)
         agents = overrides["agents"]
         for name in ("market-data", "osint-data", "signals-data"):
             assert agents[name]["provider"] == "Qwen", (
@@ -360,18 +356,15 @@ class TestConnectivityCheck:
             )
 
     def test_continuous_no_qwen_in_l1_l4(self, seed_agents):
-        """Continuous mode must not use Qwen/GitHub Models/OpenRouter/Cohere in L1-L4."""
+        """Default/continuous models must not use Qwen/GitHub Models/OpenRouter in L1-L4."""
         restricted = {"Qwen", "GitHub Models", "OpenRouter"}
-        overrides = seed_agents.load_model_overrides(
-            seed_agents.MODE_MODELS_FILES["continuous"]
-        )
+        overrides = seed_agents.load_model_overrides(seed_agents.MODELS_FILE)
         agents_json_path = os.path.join(
             os.path.dirname(__file__), os.pardir,
             "augur-uberspace", "config", "agents.json",
         )
         with open(os.path.normpath(agents_json_path)) as f:
             agent_defs = json.load(f)
-        # Apply overrides
         seed_agents.apply_model_overrides(agent_defs, overrides)
         for a in agent_defs:
             if a["_layer"] in ("L1", "L2", "L3", "L4"):
