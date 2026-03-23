@@ -1270,9 +1270,7 @@ SVCEOF
                 --all) _AGENTS_ARGS+=("--all"); shift ;;
                 --trading) _AGENTS_ARGS+=("--group" "trading"); shift ;;
                 --news) _AGENTS_ARGS+=("--group" "news"); shift ;;
-                --bootstrap) _AGENTS_ARGS+=("--mode" "bootstrap"); shift ;;
-                --mode) _AGENTS_ARGS+=("--mode" "$2"); shift 2 ;;
-                --mode=*) _AGENTS_ARGS+=("--mode" "${1#*=}"); shift ;;
+                --bootstrap) _AGENTS_ARGS+=("--bootstrap"); shift ;;
                 -*) echo "Unknown flag: $1" >&2; exit 1 ;;
                 *)
                     if [[ -z "$_AGENTS_EMAIL" ]]; then _AGENTS_EMAIL="$1"
@@ -1293,11 +1291,8 @@ SVCEOF
             echo "    (default)       Core agents only (data + analysis + planning)"
             echo "    --trading       Add trading agents (broker)"
             echo "    --news          Add news agents (4 brands)"
+            echo "    --bootstrap     Add bootstrap agent + use Qwen models (free tokens)"
             echo "    --all           All groups"
-            echo ""
-            echo "  Mode:"
-            echo "    (default)           Regular/continuous (production providers)"
-            echo "    --bootstrap         Use Qwen models for initial data seeding (core only)"
             echo ""
             echo "  Options:"
             echo "    --dry-run       Preview only"

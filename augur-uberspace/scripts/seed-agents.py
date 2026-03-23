@@ -2,15 +2,17 @@
 """Seed LibreChat agents from agents.json definition file.
 
 Creates or updates agents for a given user, organized by group:
-  core     — data + analysis + planning (default, always seeded)
-  trading  — broker agent (addon)
-  news     — 4 news brand agents (addon)
+  core      — data + analysis + planning (default, always seeded)
+  bootstrap — bulk data bootstrapper (on-demand)
+  trading   — broker agent (addon)
+  news      — 4 news brand agents (addon)
 
 Handles: login, list existing agents, create/update, wire handoff edges.
 Edges to agents outside the seeded groups are silently skipped.
 
 Usage:
     python seed-agents.py --email admin@example.com --password secret
+    python seed-agents.py --email admin@example.com --password secret --bootstrap
     python seed-agents.py --email admin@example.com --password secret --group trading
     python seed-agents.py --email admin@example.com --password secret --group news --group trading
     python seed-agents.py --email admin@example.com --password secret --dry-run
@@ -37,12 +39,8 @@ AGENTS_FILE = os.path.join(CONFIG_DIR, "agents.json")
 MODELS_FILE = os.path.join(CONFIG_DIR, "agent-models.json")
 PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 
-ALL_GROUPS = {"core", "trading", "news", "bootstrap"}
-VALID_MODES = {"continuous", "bootstrap"}
-MODE_MODELS_FILES = {
-    "continuous": os.path.join(CONFIG_DIR, "agent-models.json"),
-    "bootstrap":  os.path.join(CONFIG_DIR, "agent-models-bootstrap.json"),
-}
+ALL_GROUPS = {"core", "bootstrap", "trading", "news"}
+BOOTSTRAP_MODELS_FILE = os.path.join(CONFIG_DIR, "agent-models-bootstrap.json")
 DEFAULT_BASE_URL = "http://localhost:3080"
 
 # Browser-like headers to avoid LibreChat's non-browser violation scoring.
@@ -232,18 +230,17 @@ def main():
     parser.add_argument("--password", required=True, help="LibreChat user password")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="LibreChat base URL")
     parser.add_argument("--group", action="append", dest="groups", metavar="GROUP",
-                        help="Agent groups to seed (core, trading, news). "
+                        help="Agent groups to seed (core, bootstrap, trading, news). "
                              "Core is always included. Repeat for multiple: "
                              "--group trading --group news")
     parser.add_argument("--all", action="store_true", help="Seed all groups")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
     parser.add_argument("--agents-file", default=AGENTS_FILE, help="Path to agents.json")
-    parser.add_argument("--mode", choices=sorted(VALID_MODES), default=None,
-                        help="Seeder mode: 'continuous' (production providers) or "
-                             "'bootstrap' (Qwen-heavy for initial data seeding). "
-                             "Selects the matching agent-models file automatically.")
+    parser.add_argument("--bootstrap", action="store_true",
+                        help="Bootstrap mode: include bootstrap group and use Qwen-heavy "
+                             "models (agent-models-bootstrap.json) for initial data seeding")
     parser.add_argument("--models-file", default=None,
-                        help="Path to agent-models JSON file (overrides --mode)")
+                        help="Path to agent-models JSON file (overrides default)")
     parser.add_argument("--no-model-overrides", action="store_true",
                         help="Ignore agent-models.json, use agents.json models as-is")
     parser.add_argument("--export", action="store_true",
@@ -263,6 +260,8 @@ def main():
                   f"(valid: {', '.join(sorted(ALL_GROUPS))})", file=sys.stderr)
     else:
         groups = {"core"}
+    if args.bootstrap:
+        groups.add("bootstrap")
 
     # Load agent definitions
     with open(args.agents_file) as f:
@@ -279,14 +278,14 @@ def main():
             agent_def["instructions"] = prompt
             prompt_count += 1
 
-    # Resolve which models file to use: --models-file > --mode > default (continuous)
+    # Resolve which models file to use: --models-file > --bootstrap > default
     if not args.no_model_overrides:
         if args.models_file:
             models_path = args.models_file
-        elif args.mode:
-            models_path = MODE_MODELS_FILES[args.mode]
+        elif args.bootstrap:
+            models_path = BOOTSTRAP_MODELS_FILE
         else:
-            models_path = MODE_MODELS_FILES["continuous"]
+            models_path = MODELS_FILE
         overrides = load_model_overrides(models_path)
         override_count = apply_model_overrides(agent_defs, overrides)
     else:
@@ -298,8 +297,7 @@ def main():
     if prompt_count:
         print(f"  ({prompt_count} instructions loaded from {PROMPTS_DIR}/)")
     if override_count:
-        mode_label = f" [{args.mode}]" if args.mode else ""
-        print(f"  ({override_count} model overrides applied from {models_path}{mode_label})")
+        print(f"  ({override_count} model overrides applied from {models_path})")
 
     if args.dry_run:
         print(f"\n[DRY RUN] Would create/update these agents (groups: {group_str}):")
