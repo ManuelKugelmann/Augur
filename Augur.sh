@@ -1270,7 +1270,7 @@ SVCEOF
                 --all) _AGENTS_ARGS+=("--all"); shift ;;
                 --trading) _AGENTS_ARGS+=("--group" "trading"); shift ;;
                 --news) _AGENTS_ARGS+=("--group" "news"); shift ;;
-                --bootstrap) _AGENTS_ARGS+=("--mode" "bootstrap"); shift ;;
+                --bootstrap) _AGENTS_ARGS+=("--mode" "bootstrap" "--group" "bootstrap"); shift ;;
                 --mode) _AGENTS_ARGS+=("--mode" "$2"); shift 2 ;;
                 --mode=*) _AGENTS_ARGS+=("--mode" "${1#*=}"); shift ;;
                 -*) echo "Unknown flag: $1" >&2; exit 1 ;;

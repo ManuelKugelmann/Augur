@@ -204,7 +204,7 @@
   {
     "_name": "bootstrap",
     "_layer": "L4",
-    "_group": "core",
+    "_group": "bootstrap",
     "name": "Bootstrap",
     "description": "Bulk bootstrapper. Delegates to L1 data agents for profiles, events, snapshots, and creates initial plans for cron-planner.",
     "instructions": "See prompts/bootstrap.md",
@@ -440,7 +440,6 @@
       "signals-analyst",
       "synthesizer",
       "cron-planner",
-      "bootstrap",
       "news-the-augur",
       "news-der-augur",
       "news-financial-augur",

@@ -2,9 +2,10 @@
 """Seed LibreChat agents from agents.json definition file.
 
 Creates or updates agents for a given user, organized by group:
-  core     — data + analysis + planning (default, always seeded)
-  trading  — broker agent (addon)
-  news     — 4 news brand agents (addon)
+  core      — data + analysis + planning (default, always seeded)
+  bootstrap — bulk data bootstrapper (on-demand)
+  trading   — broker agent (addon)
+  news      — 4 news brand agents (addon)
 
 Handles: login, list existing agents, create/update, wire handoff edges.
 Edges to agents outside the seeded groups are silently skipped.
@@ -37,7 +38,7 @@ AGENTS_FILE = os.path.join(CONFIG_DIR, "agents.json")
 MODELS_FILE = os.path.join(CONFIG_DIR, "agent-models.json")
 PROMPTS_DIR = os.path.join(CONFIG_DIR, "prompts")
 
-ALL_GROUPS = {"core", "trading", "news"}
+ALL_GROUPS = {"core", "bootstrap", "trading", "news"}
 VALID_MODES = {"continuous", "bootstrap"}
 MODE_MODELS_FILES = {
     "continuous": os.path.join(CONFIG_DIR, "agent-models.json"),
@@ -232,7 +233,7 @@ def main():
     parser.add_argument("--password", required=True, help="LibreChat user password")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="LibreChat base URL")
     parser.add_argument("--group", action="append", dest="groups", metavar="GROUP",
-                        help="Agent groups to seed (core, trading, news). "
+                        help="Agent groups to seed (core, bootstrap, trading, news). "
                              "Core is always included. Repeat for multiple: "
                              "--group trading --group news")
     parser.add_argument("--all", action="store_true", help="Seed all groups")
